@@ -35,7 +35,7 @@ preload_app = True
 accesslog = "logs/gunicorn_access.log"
 
 # Error Log - Log de erros
-errorlog = "logs/gunicorn_error.log"
+# errorlog = "logs/gunicorn_error.log"
 
 # Log Level - Nível de log (debug, info, warning, error, critical)
 loglevel = "info"
