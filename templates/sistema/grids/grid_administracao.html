@@ -1,0 +1,99 @@
+<div class="ge-grid-wrapper" style="padding: 10px 20px;">
+    <div class="ge-section-title" style="color: #7A255F; border-bottom: 2px solid #7A255F; padding-bottom: 8px; margin-bottom: 20px; font-weight: 800; display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-user-shield"></i>
+        <span>Administração de Acessos & Perfis</span>
+    </div>
+
+    <div class="ge-cards-container">
+
+        <!-- USUÁRIOS -->
+        <div class="ge-card" id="card-usuarios" onclick="window.location.href='{{ url_for('sistema.form_usuarios') }}'" style="--card-cor:#34495E;--card-cor-bg:rgba(52,73,94,0.10);">
+            <i class="fas fa-user-shield ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-users-cog ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Usuários</span>
+            <span class="ge-card-desc">Gerenciar acessos e senhas</span>
+        </div>
+
+        <!-- PERFIS -->
+        <div class="ge-card" id="card-perfis" onclick="window.location.href='{{ url_for('sistema.form_perfis') }}'" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-id-badge ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-id-badge ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Perfis</span>
+            <span class="ge-card-desc">Atribuir níveis de permissão</span>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* Badge de Conclusão AriOne (Padrão Ouro) */
+    .ge-card-done-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #7A255F;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        z-index: 10;
+        border: 1.5px solid #fff;
+        animation: badgeShine 3s infinite;
+    }
+    @keyframes badgeShine {
+        0% { transform: scale(1); filter: brightness(1); }
+        50% { transform: scale(1.1); filter: brightness(1.3); }
+        100% { transform: scale(1); filter: brightness(1); }
+    }
+</style>
+
+<script>
+{% if is_ari_dev %}
+// ── CARD SEAL DETECTOR (SISTEMA — ADMINISTRAÇÃO) ──
+function updateAdminSeals() {
+    const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    
+    const mappings = {
+        'card-usuarios': { sub: "SISTEMA — Administração", tela: "Usuários" },
+        'card-perfis':   { sub: "SISTEMA — Administração", tela: "Perfis" }
+    };
+
+    Object.entries(mappings).forEach(([cardId, info]) => {
+        const sId = getSafeId(info.sub + "_" + info.tela);
+        const isPronto = localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+        const card = document.getElementById(cardId);
+        
+        if (card) {
+            let badge = card.querySelector('.ge-card-done-badge');
+            if (isPronto) {
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'ge-card-done-badge';
+                    badge.innerHTML = '<i class="fas fa-award"></i>';
+                    badge.title = "AriOne Golden Standard";
+                    card.appendChild(badge);
+                    card.style.borderColor = "#FFD700";
+                }
+            } else if (badge) {
+                badge.remove();
+                card.style.borderColor = "";
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateAdminSeals();
+    setInterval(updateAdminSeals, 2000);
+});
+{% endif %}
+</script>

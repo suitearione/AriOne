@@ -1,0 +1,401 @@
+{# =============================================================================
+   Caminho  : templates/sistema/cards/armazenamento/form_agendamento.html
+   Função   : Configuração de Agendamentos (Cron) e Retenção de Dados.
+============================================================================= #}
+{% extends "base.html" %}
+{% block content %}
+<div class="arione-page-wrapper">
+
+    {# ── CABEÇALHO PREMIUM ── #}
+    <div class="arione-header-premium" style="background: linear-gradient(135deg, #7A255F 0%, #4a154b 100%);">
+        <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:rgba(255,255,255,0.1); border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-clock" style="font-size:20px; color:#fff;"></i>
+                </div>
+                <div>
+                    <h2 style="margin:0; font-size:22px; font-weight:800; letter-spacing:-0.5px;">Automação de Backups</h2>
+                    <div style="font-size:12px; opacity:0.8; font-weight:500;">Estratégia 3-2-1 • Sincronização em Nuvem • Retenção Inteligente</div>
+                </div>
+            </div>
+        </div>
+        <div class="fe-header-actions">
+            <a href="{{ url_for('sistema.armazenamento') }}" class="fe-btn-arione-ghost">
+                <i class="fas fa-arrow-left"></i> Retornar
+            </a>
+        </div>
+    </div>
+
+    <div class="fe-row" style="gap:25px; margin-top:20px;">
+        
+        {# ── COLUNA DE CONFIGURAÇÃO (ESQUERDA) ── #}
+        <div class="fe-flex-1">
+            <form action="{{ url_for('sistema.salvar_agendamento') }}" method="POST">
+                
+                {# CARD: CRONOGRAMA #}
+                <div class="fe-card" style="border-radius:16px; overflow:hidden; border:none; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="fe-card-title" style="background:#f8fafc; padding:20px; border-bottom:1px solid #edf2f7; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700; color:#1e293b;"><i class="fas fa-calendar-alt" style="color:#7A255F; margin-right:8px;"></i> Cronograma de Snapshots</span>
+                        <div id="status-automacao" class="status-badge active">Ativo</div>
+                    </div>
+                    
+                    <div class="fe-card-body" style="padding:25px;">
+                        
+                        {# DATABASE BACKUP #}
+                        <div class="config-section">
+                            <div class="section-info">
+                                <label class="fe-label" style="font-size:14px; color:#1e293b;">Backup Diário do Banco de Dados (DB)</label>
+                                <p style="font-size:12px; color:#64748b; margin:4px 0 15px 0;">O sistema realizará um snapshot completo da estrutura e dados SQL.</p>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:15px; background:#f1f5f9; padding:15px; border-radius:12px;">
+                                <i class="fas fa-database" style="color:#7A255F; font-size:18px;"></i>
+                                <input type="time" name="horario_db" class="fe-input" value="{{ config.horario_db or '03:00' }}" style="width:140px; font-weight:700; font-size:16px; border:2px solid #e2e8f0;">
+                                <div style="flex:1;">
+                                    <span style="display:block; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase;">Próxima Execução</span>
+                                    <span id="next-run-db" style="font-size:13px; color:#27ae60; font-weight:600;">Calculando...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr style="border:0; border-top:1px solid #f1f5f9; margin:25px 0;">
+
+                        {# MEDIA BACKUP #}
+                        <div class="config-section">
+                            <div class="section-info">
+                                <label class="fe-label" style="font-size:14px; color:#1e293b;">Sincronização de Mídias (Uploads)</label>
+                                <p style="font-size:12px; color:#64748b; margin:4px 0 15px 0;">Compactação de fotos, documentos e anexos do sistema.</p>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 140px; gap:15px;">
+                                <div style="position:relative;">
+                                    <select name="frequencia_media" class="fe-input" style="padding-left:40px; font-weight:600;">
+                                        <option value="daily" {{ 'selected' if config.frequencia_media == 'daily' }}>Todo dia</option>
+                                        <option value="weekly" {{ 'selected' if config.frequencia_media == 'weekly' }}>Uma vez por semana</option>
+                                        <option value="monthly" {{ 'selected' if config.frequencia_media == 'monthly' }}>Uma vez por mês</option>
+                                    </select>
+                                    <i class="fas fa-sync-alt" style="position:absolute; left:15px; top:12px; color:#64748b;"></i>
+                                </div>
+                                <input type="time" name="horario_media" class="fe-input" value="{{ config.horario_media or '04:00' }}" style="font-weight:700; border:2px solid #e2e8f0;">
+                            </div>
+                        </div>
+
+                        <hr style="border:0; border-top:1px solid #f1f5f9; margin:25px 0;">
+
+                        {# RETENÇÃO #}
+                        <div class="config-section">
+                            <label class="fe-label" style="font-size:14px; color:#1e293b;">Política de Retenção (Purge Local)</label>
+                            <div class="retention-box">
+                                <div class="retention-icon"><i class="fas fa-trash-alt"></i></div>
+                                <div style="flex:1;">
+                                    <span style="font-size:13px; color:#475569;">Manter apenas os últimos</span>
+                                    <input type="number" name="limite_retencao" class="fe-input" value="{{ config.limite_retencao or 30 }}" min="1" max="365" style="width:65px; text-align:center; font-weight:800; padding:5px; margin:0 5px;">
+                                    <span style="font-size:13px; color:#475569;">backups no servidor.</span>
+                                </div>
+                                <div style="font-size:11px; color:#94a3b8; font-style:italic;">Arquivos em Cloud não são afetados.</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {# CARD: DESTINOS CLOUD #}
+                <div class="fe-card" style="margin-top:20px; border-radius:16px;">
+                    <div class="fe-card-title" style="padding:15px 20px; font-size:14px;"><i class="fas fa-cloud-upload-alt"></i> Redundância Externa (Cloud)</div>
+                    <div class="fe-card-body" style="padding:20px; display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                        
+                        <label class="cloud-option {{ 'selected' if config.sync_aws }}">
+                            <input type="checkbox" name="sync_aws" {{ 'checked' if config.sync_aws }} hidden>
+                            <div class="cloud-icon aws"><i class="fab fa-aws"></i></div>
+                            <div class="cloud-info">
+                                <span class="cloud-name">Amazon S3</span>
+                                <span class="cloud-status">{{ 'Configurado' if config.sync_aws else 'Desativado' }}</span>
+                            </div>
+                            <div class="cloud-check"><i class="fas fa-check-circle"></i></div>
+                        </label>
+
+                        <label class="cloud-option {{ 'selected' if config.sync_google }}">
+                            <input type="checkbox" name="sync_google" {{ 'checked' if config.sync_google }} hidden>
+                            <div class="cloud-icon google"><i class="fab fa-google-drive"></i></div>
+                            <div class="cloud-info">
+                                <span class="cloud-name">Google Drive</span>
+                                <span class="cloud-status">{{ 'Configurado' if config.sync_google else 'Desativado' }}</span>
+                            </div>
+                            <div class="cloud-check"><i class="fas fa-check-circle"></i></div>
+                        </label>
+
+                    </div>
+                </div>
+
+                <div style="margin-top:25px; display:flex; gap:15px;">
+                    <a href="{{ url_for('sistema.armazenamento') }}" class="fe-btn-arione-full" style="padding:15px; font-size:15px; background:#f1f5f9; color:#475569; text-decoration:none; display:flex; align-items:center; justify-content:center; box-shadow:none; border:1px solid #e2e8f0;">
+                        <i class="fas fa-arrow-left"></i> Retornar
+                    </a>
+                    <button type="submit" class="fe-btn-arione-full" style="padding:15px; font-size:15px; flex:1;">
+                        <i class="fas fa-check-circle"></i> Aplicar e Sincronizar Automação
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        {# ── COLUNA LATERAL (LOGS & STATUS) ── #}
+        <div style="width:400px;">
+            
+            {# STATUS DE SAÚDE #}
+            <div class="fe-card" style="border-radius:16px; background:linear-gradient(to bottom, #ffffff, #f8fafc);">
+                <div class="fe-card-body" style="padding:20px;">
+                    <div style="text-align:center; padding-bottom:15px;">
+                        <div class="health-gauge">
+                            <svg viewBox="0 0 36 36" class="circular-chart green">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <text x="18" y="20.35" class="percentage">100%</text>
+                            </svg>
+                        </div>
+                        <h4 style="margin:10px 0 5px 0; color:#1e293b;">Saúde dos Backups</h4>
+                        <p style="font-size:12px; color:#64748b;">Nenhuma falha detectada nos últimos 7 dias.</p>
+                    </div>
+                    
+                    <div class="health-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Último Sucesso</span>
+                            <span class="stat-value">Hoje, 03:00 AM</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Espaço em Disco</span>
+                            <span class="stat-value">12.4 GB ocupados</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Redundância</span>
+                            <span class="stat-value" style="color:#27ae60;">Ativa (AWS)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# LOG DE EXECUÇÃO #}
+            <div class="fe-card" style="margin-top:20px; border-radius:16px;">
+                <div class="fe-card-title" style="padding:15px 20px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between;">
+                    <span><i class="fas fa-terminal"></i> Histórico de Automação</span>
+                    <i class="fas fa-ellipsis-h" style="color:#94a3b8; cursor:pointer;"></i>
+                </div>
+                <div class="fe-card-body" style="padding:0;">
+                    <div class="automation-logs">
+                        <div class="log-entry success">
+                            <div class="log-time">03:00</div>
+                            <div class="log-content">
+                                <strong>Backup Automático (DB)</strong>
+                                <span>snapshot_db_20260418.zip • 45MB</span>
+                            </div>
+                            <div class="log-badge"><i class="fas fa-check"></i></div>
+                        </div>
+                        <div class="log-entry cloud">
+                            <div class="log-time">03:01</div>
+                            <div class="log-content">
+                                <strong>Sincronização Cloud</strong>
+                                <span>Upload para AWS S3 concluído com sucesso.</span>
+                            </div>
+                            <div class="log-badge"><i class="fas fa-cloud-upload-alt"></i></div>
+                        </div>
+                        <div class="log-entry info">
+                            <div class="log-time">Ontem</div>
+                            <div class="log-content">
+                                <strong>Limpeza Automática (Purge)</strong>
+                                <span>2 arquivos antigos removidos por política de retenção.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding:15px; text-align:center; border-top:1px solid #f1f5f9;">
+                    <a href="{{ url_for('sistema.form_restauracao') }}" style="font-size:12px; font-weight:700; color:#7A255F; text-decoration:none;">Ver todos os snapshots <i class="fas fa-external-link-alt" style="font-size:10px;"></i></a>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+    /* ── DESIGN SYSTEM EXCLUSIVO BACKUP ── */
+    .section-info { margin-bottom: 10px; }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+    .status-badge.active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+    .retention-box {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: #fff5f8;
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px dashed #7A255F;
+        margin-top: 10px;
+    }
+    .retention-icon {
+        width: 36px;
+        height: 36px;
+        background: #7A255F;
+        color: #fff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Cloud Options */
+    .cloud-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        border: 2px solid #f1f5f9;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .cloud-option:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .cloud-option.selected { border-color: #7A255F; background: #fff5f8; }
+    
+    .cloud-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    .cloud-icon.aws { background: #FF9900; color: #fff; }
+    .cloud-icon.google { background: #4285F4; color: #fff; }
+
+    .cloud-name { display: block; font-weight: 700; font-size: 13px; color: #1e293b; }
+    .cloud-status { font-size: 11px; color: #64748b; }
+
+    .cloud-check { position: absolute; top: -8px; right: -8px; color: #7A255F; font-size: 18px; display: none; background: #fff; border-radius: 50%; }
+    .cloud-option.selected .cloud-check { display: block; }
+
+    /* Health Gauge */
+    .health-gauge { width: 100px; margin: 0 auto; }
+    .circular-chart { display: block; margin: 10px auto; max-width: 100%; max-height: 250px; }
+    .circle-bg { fill: none; stroke: #eee; stroke-width: 3.8; }
+    .circle { fill: none; stroke-width: 2.8; stroke-linecap: round; animation: progress 1s ease-out forwards; }
+    .circular-chart.green .circle { stroke: #27ae60; }
+    .percentage { fill: #1e293b; font-size: 8px; text-anchor: middle; font-weight: 800; }
+    @keyframes progress { 0% { stroke-dasharray: 0 100; } }
+
+    .health-stats { margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+    .stat-item { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .stat-label { font-size: 12px; color: #64748b; }
+    .stat-value { font-size: 12px; font-weight: 700; color: #1e293b; }
+
+    /* Logs */
+    .automation-logs { max-height: 300px; overflow-y: auto; }
+    .log-entry {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        position: relative;
+    }
+    .log-time { font-size: 11px; font-weight: 700; color: #94a3b8; min-width: 45px; }
+    .log-content { flex: 1; }
+    .log-content strong { display: block; font-size: 12px; color: #1e293b; }
+    .log-content span { font-size: 11px; color: #64748b; }
+    .log-badge { font-size: 14px; }
+    .log-entry.success .log-badge { color: #27ae60; }
+    .log-entry.cloud .log-badge { color: #3498DB; }
+
+    /* Buttons */
+    .fe-btn-arione-full {
+        background: #7A255F;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+        box-shadow: 0 4px 15px rgba(122, 37, 95, 0.2);
+    }
+    .fe-btn-arione-full:hover {
+        background: #631d4d;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(122, 37, 95, 0.3);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cálculo de Próxima Execução
+        function updateNextRun() {
+            const timeInput = document.querySelector('input[name="horario_db"]');
+            const display = document.getElementById('next-run-db');
+            
+            if (!timeInput.value) return;
+
+            const now = new Date();
+            const [hours, minutes] = timeInput.value.split(':');
+            let next = new Date();
+            next.setHours(hours, minutes, 0, 0);
+
+            if (next <= now) {
+                next.setDate(next.getDate() + 1);
+            }
+
+            const diff = next - now;
+            const hoursDiff = Math.floor(diff / (1000 * 60 * 60));
+            const minutesDiff = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            display.textContent = `Em ${hoursDiff}h ${minutesDiff}m (Amanhã às ${timeInput.value})`;
+        }
+
+        // Fetch Real Status
+        function fetchStatus() {
+            fetch('{{ url_for("sistema.backup_status") }}')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.last_backup) {
+                        document.querySelector('.stat-item:nth-child(1) .stat-value').textContent = data.last_backup.created_at;
+                    }
+                    if (data.disk_usage) {
+                        const mb = (data.disk_usage / (1024 * 1024)).toFixed(1);
+                        document.querySelector('.stat-item:nth-child(2) .stat-value').textContent = `${mb} MB ocupados`;
+                    }
+                })
+                .catch(err => console.error("Erro ao carregar status:", err));
+        }
+
+        document.querySelector('input[name="horario_db"]').addEventListener('change', updateNextRun);
+        updateNextRun();
+        fetchStatus();
+        setInterval(updateNextRun, 60000);
+
+        // Toggle Visual das Opções Cloud
+        const cloudCheckboxes = document.querySelectorAll('.cloud-option input');
+        cloudCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const label = this.closest('.cloud-option');
+                const status = label.querySelector('.cloud-status');
+                if (this.checked) {
+                    label.classList.add('selected');
+                    status.textContent = 'Configurado';
+                } else {
+                    label.classList.remove('selected');
+                    status.textContent = 'Desativado';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+

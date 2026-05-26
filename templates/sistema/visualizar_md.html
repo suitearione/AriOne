@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>AriOne — {{ titulo }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <style>
+        :root { 
+            --pri: #7A255F; 
+            --pri-light: #fdf2f8;
+            --bg: #f3f4f6; 
+            --text: #334155;
+            --header: #1e293b;
+        }
+        
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; padding: 0; 
+            line-height: 1.8;
+            scroll-behavior: smooth;
+        }
+
+        .nav-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 12px 10%;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        
+        .logo-title { 
+            font-size: 11px; font-weight: 800; color: var(--pri); 
+            text-transform: uppercase; letter-spacing: 2px; 
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .content-wrap { 
+            max-width: 800px; 
+            margin: 30px auto; 
+            background: #fff; 
+            padding: 40px 60px; 
+            border-radius: 4px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05); 
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .doc-meta-header {
+            border-left: 3px solid var(--pri);
+            padding: 15px 20px;
+            background: #f8fafc;
+            margin-bottom: 40px;
+            border-radius: 0 4px 4px 0;
+        }
+        .meta-row { display: flex; font-size: 10px; margin-bottom: 5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 3px; }
+        .meta-label { font-weight: 800; width: 100px; color: var(--header); text-transform: uppercase; }
+        .meta-value { color: #64748b; font-weight: 500; }
+
+        #doc-render h1 { 
+            font-family: 'Playfair Display', serif; 
+            font-size: 1.6rem; color: var(--header); 
+            margin: 0 0 25px 0; letter-spacing: -0.5px;
+        }
+        #doc-render h2 { 
+            font-size: 1.1rem; margin-top: 35px; color: var(--header); 
+            font-weight: 800; border-bottom: 2px solid var(--pri-light);
+            padding-bottom: 6px;
+        }
+        #doc-render p { font-size: 13px; margin-bottom: 15px; color: #475569; }
+        
+        #doc-render table { width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #f1f5f9; border-radius: 6px; overflow: hidden; }
+        #doc-render th { background: #f8fafc; padding: 10px; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; border-bottom: 2px solid #edf2f7; }
+        #doc-render td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 12px; color: #475569; }
+        #doc-render tr:hover { background: #fdf2f8; }
+
+        .alert-block {
+            padding: 20px 25px;
+            margin: 30px 0;
+            border-radius: 12px;
+            border-left: 6px solid;
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+        }
+        .alert-important { background: #fdf2f8; border-color: #be185d; color: #9d174d; }
+        .alert-note { background: #eff6ff; border-color: #1d4ed8; color: #1e40af; }
+        
+        .alert-icon { font-size: 20px; margin-top: 2px; }
+
+        pre { background: #1e293b !important; padding: 25px !important; border-radius: 12px; margin: 30px 0; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
+        code { font-family: 'Fira Code', monospace; font-size: 13px; }
+        :not(pre) > code { background: var(--pri-light); color: var(--pri); padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+
+        .btn-action { 
+            background: var(--pri); color: #fff; border: none; 
+            padding: 12px 24px; border-radius: 50px; 
+            font-weight: 800; font-size: 10px; text-transform: uppercase;
+            cursor: pointer; transition: 0.3s; 
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 20px rgba(122, 37, 95, 0.2);
+        }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(122, 37, 95, 0.3); }
+
+        @media print {
+            body { background: #fff; }
+            .nav-header { display: none; }
+            .content-wrap { box-shadow: none; border: none; margin: 0; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <div class="logo-title">
+            <i class="fas fa-triangle-exclamation" style="font-size: 20px; color: #7A255F;"></i>
+            <span>TriOne Governance Framework — Integrity & Standards</span>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">TriOne Verified Protocol</div>
+            <button onclick="window.print()" class="btn-action"><i class="fas fa-file-pdf"></i> Exportar Executivo</button>
+            <button onclick="window.close()" style="background: none; border: 1px solid #e2e8f0; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; color: #94a3b8;"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="content-wrap">
+        <div class="doc-meta-header">
+            <div class="meta-row"><div class="meta-label">Protocolo</div><div class="meta-value">{{ titulo }}</div></div>
+            <div class="meta-row"><div class="meta-label">Classificação</div><div class="meta-value">Confidencial / Engenharia</div></div>
+            <div class="meta-row"><div class="meta-label">Data Emissão</div><div class="meta-value" id="data-emissao"></div></div>
+            <div class="meta-row" style="border:none;"><div class="meta-label">Responsável</div><div class="meta-value">Cortex AI / AriOne Master</div></div>
+        </div>
+        <div id="doc-render"></div>
+
+        {# 💎 RODAPÉ DE MARCA (QUIET LUXURY - SELO DE ENGENHARIA) #}
+        <div style="margin-top: 80px; padding: 40px 0; text-align: center; border-top: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+            <p style="font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; margin: 0;">
+                © 2026 <span style="font-weight: 900; color: #7A255F; letter-spacing: 0;">Ari<span style="color:#1e293b">One</span></span> Operational Suite • <span style="font-style: italic; opacity: 0.7;">All Rights Reserved</span>
+            </p>
+            <div style="font-size: 9px; color: #94a3b8; opacity: 0.9; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px;">
+                {{ sistema_versao }}
+            </div>
+        </div>
+    </div>
+
+    <script id="markdown-source" type="text/markdown">
+{{ conteudo | safe }}
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const source = document.getElementById('markdown-source').textContent;
+                let html = marked.parse(source);
+                
+                // Alertas
+                html = html.replace(/<blockquote>\s*<p>\[!IMPORTANT\]/gi, '<div class="alert-block alert-important"><i class="fas fa-exclamation-triangle alert-icon"></i><div><strong>IMPORTANTE</strong><br>');
+                html = html.replace(/<blockquote>\s*<p>\[!NOTE\]/gi, '<div class="alert-block alert-note"><i class="fas fa-info-circle alert-icon"></i><div><strong>NOTA</strong><br>');
+                html = html.replace(/<\/p>\s*<\/blockquote>/g, '</div></div>');
+
+                const display = document.getElementById('doc-render');
+                display.innerHTML = html;
+
+                // Âncoras
+                display.querySelectorAll('h1, h2, h3').forEach(el => {
+                    const slug = el.innerText.toLowerCase()
+                                   .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                                   .replace(/[^\w\s-]/g, '')
+                                   .trim()
+                                   .replace(/\s+/g, '-');
+                    el.id = slug;
+                });
+
+                document.getElementById('data-emissao').innerText = new Date().toLocaleDateString('pt-BR');
+                document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+
+            } catch (e) {
+                document.getElementById('doc-render').innerHTML = '<p style="color:red">Erro: ' + e.message + '</p>';
+            }
+        });
+    </script>
+</body>
+</html>

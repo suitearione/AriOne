@@ -1,0 +1,468 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fp-wrap mod-marcas" id="ctx-mar-{{ mar_id|default('new') }}">
+    <style>
+        .arione-page { padding: 0 !important; }
+        .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
+    </style>
+
+    {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0 24px; margin: 0; border-bottom: 2px solid #e2e8f0; transition: none !important;">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+        {{ cabecalho_mestre_arione(
+            titulo='Branding & Marcas',
+            subtitulo='Catálogos > Marcas e Fabricantes',
+            icone='fa-trademark',
+            cor_tema='#E67E22',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
+            form_id='mar-form-area',
+            onclick_novo='resetFormMarca()',
+            onclick_save='salvarMarca()',
+            onclick_search='focarPesquisaMarca()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            onclick_clonar='clonarMarcaAtivo()',
+            onclick_export='exportarMarcaCSV()',
+            onclick_import='abrirModalImportacaoXML()',
+            onclick_print='imprimirRelatorioMarca()',
+            onclick_email='enviarMarcaEmail()',
+            onclick_whatsapp='enviarMarcaWhatsApp()',
+            status='Ativo',
+            ajuda='Gerencie as marcas e fabricantes dos produtos, incluindo identidade visual e branding.',
+            tamanho='medio'
+        ) }}
+    </div>
+
+
+
+    <div id="area-formulario-marcas" class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px; background: #f4f6f9;">
+        <div id="mar-form-area" style="animation: feFadeUp 0.6s ease-out;">
+            <form id="mar-form" method="POST" action="{{ url_for('cadastros.card_marcas') }}" enctype="multipart/form-data">
+                <div class="fp-card" style="border-left: 4px solid #E67E22;">
+                    <div class="fp-card-title" style="background: rgba(230, 126, 34, 0.03); color: #E67E22;"><i class="fas fa-certificate"></i> Identidade & Branding</div>
+                    <div class="fp-card-body">
+                        <div class="fp-row" style="align-items: flex-start;">
+                            {# UPLOAD DE LOGO #}
+                            <div class="fp-group" style="flex: 0 0 120px; text-align: center;">
+                                <label class="fp-label">Logo Marca</label>
+                                <div class="mar-logo-upload" onclick="document.getElementById('mar-logo-input').click()" 
+                                     style="width: 100px; height: 100px; border: 2px dashed #ddd; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; background: #fafafa; transition: all 0.2s; position: relative;">
+                                    <div id="mar-logo-preview" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        {% if mar and mar.logo %}
+                                        <img src="{{ url_for('static', filename='uploads/marcas/'~mar.logo) }}" style="width: 100%; height: 100%; object-fit: contain;">
+                                        {% else %}
+                                        <i class="fas fa-image" style="font-size: 24px; color: #ccc;"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div style="position: absolute; bottom: 0; background: rgba(0,0,0,0.4); width: 100%; color: #fff; font-size: 8px; padding: 2px 0;">ALTERAR</div>
+                                </div>
+                                <input type="file" id="mar-logo-input" name="logo_marca" accept="image/*" style="display: none;" onchange="previewMarLogo(this)">
+                            </div>
+
+                            <div style="flex: 1;">
+                                <div class="fp-row">
+                                    <div class="fp-group fp-flex-2">
+                                        <label class="fp-label">Nome da Marca <span class="fp-req">*</span></label>
+                                        <input type="text" class="fp-input fp-track fp-mask-upper" name="nome_marca" id="mar-nome-input" value="{{ mar.nome if mar else '' }}" placeholder="Ex: NIKE, APPLE..." required>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">País de Origem</label>
+                                        <input type="text" class="fp-input fp-track fp-mask-upper" name="pais_origem" value="{{ mar.pais_origem if mar else '' }}" placeholder="Ex: BRASIL">
+                                    </div>
+                                </div>
+                                <div class="fp-row" style="margin-top: 15px;">
+                                    <div class="fp-group fp-flex-2">
+                                        <label class="fp-label">Website Oficial</label>
+                                        <input type="url" class="fp-input fp-track" name="website" id="mar-website" value="{{ mar.website if mar else '' }}" placeholder="https://www.marca.com.br">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Status</label>
+                                        <select class="fp-input fp-track" name="status_marca">
+                                            <option value="ATIVO" {{ 'selected' if mar and mar.status == 'ATIVO' else '' }}>Ativo</option>
+                                            <option value="INATIVO" {{ 'selected' if mar and mar.status == 'INATIVO' else '' }}>Inativo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="fp-footer-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding: 10px 0 20px;">
+                    <a href="{{ url_for('cadastros.abas', aba='catalogos') }}" class="fp-btn fp-btn-ghost-dark">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                    <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-mar" onclick="forceSubmitMarca()">
+                        <i class="fas fa-save"></i> Confirmar e Salvar Marca
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# ── PAINEL DE FILTROS AVANÇADOS ── #}
+        <div id="filter-bar-mar" style="display:none; background:#fef9f5; border:2px solid #f0c898; padding:18px 22px; border-radius:12px; margin:12px 0 0 0; box-shadow:0 10px 25px rgba(230,126,34,0.12); animation: feFadeDown 0.35s cubic-bezier(0.175,0.885,0.32,1.275);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; color:#E67E22; border-bottom:1px solid rgba(230,126,34,0.15); padding-bottom:8px; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-sliders" style="font-size:13px;"></i>
+                    <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Painel de Filtros — Marcas e Fabricantes</span>
+                </div>
+                <button type="button" onclick="limparFiltrosMarcas()" style="background:rgba(230,126,34,0.1); border:1px solid rgba(230,126,34,0.3); color:#E67E22; padding:3px 10px; border-radius:6px; font-size:10px; font-weight:700; cursor:pointer; letter-spacing:0.5px;"><i class="fas fa-eraser"></i> LIMPAR</button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px;">
+                <div>
+                    <label style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:4px;">Nome / Marca</label>
+                    <input type="text" id="f-mar-nome" oninput="executarFiltroMarcas()" placeholder="Pesquisar nome..." style="width:100%; padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:12px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#E67E22'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:4px;">País de Origem</label>
+                    <input type="text" id="f-mar-pais" oninput="executarFiltroMarcas()" placeholder="Ex: Brasil, Itália..." style="width:100%; padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:12px; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#E67E22'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:4px;">Status</label>
+                    <select id="f-mar-status" onchange="executarFiltroMarcas()" style="width:100%; padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:12px; outline:none; background:#fff;">
+                        <option value="">-- Todos --</option>
+                        <option value="ATIVO">Ativo</option>
+                        <option value="INATIVO">Inativo</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:4px;">Origem Comercial</label>
+                    <select id="f-mar-status" onchange="executarFiltroMarcas()" style="width:100%; padding:7px 10px; border:1.5px solid #e2e8f0; border-radius:7px; font-size:12px; outline:none; background:#fff;">
+                        <option value="">-- Todas --</option>
+                        <option value="NACIONAL">Nacional</option>
+                        <option value="IMPORTADA">Importada</option>
+                        <option value="PROPRIA">Marca Própria</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top:10px; font-size:10px; color:#94a3b8; text-align:right;" id="f-mar-count"></div>
+        </div>
+
+        {# ── LISTA DE CONSULTA ── #}
+        <div id="mar-list-area" class="fp-card" style="margin-top: 15px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px 20px;">
+                <span><i class="fas fa-table"></i> Marcas no Sistema</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 12px;"></i>
+                        <input type="text" id="mar-search-input" oninput="executarFiltroMarcas()" placeholder="Pesquisa rápida..." 
+                               style="padding: 6px 10px 6px 30px; border: 1.5px solid #ddd; border-radius: 20px; font-size: 12px; width: 200px; outline: none; transition:0.2s;"
+                               onfocus="this.style.borderColor='#E67E22'" onblur="this.style.borderColor='#ddd'">
+                    </div>
+                    <span id="mar-total-badge" style="background:#E67E22; color:#fff; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700;">{{ marcas|length }} total</span>
+                </div>
+            </div>
+            <div class="fp-card-body" style="padding: 0;">
+                <table class="fp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">Logo</th>
+                            <th>Marca</th>
+                            <th>Origem</th>
+                            <th>Status</th>
+                            <th style="width: 80px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-marcas">
+                        {% for m in marcas %}
+                        <tr class="mar-row"
+                            data-nome="{{ m.nome|upper }}"
+                            data-pais="{{ (m.pais_origem or '')|upper }}"
+                            data-status="{{ m.status or 'ATIVO' }}"
+                            data-origem="{{ (m.origem_comercial or '')|upper }}">
+                            <td style="text-align: center;">
+                                <div style="width: 24px; height: 24px; border-radius: 4px; border: 1px solid #eee; overflow: hidden; background: #fff; margin: 0 auto;">
+                                    {% if m.logo %}
+                                    <img src="{{ url_for('static', filename='uploads/marcas/'~m.logo) }}" style="width: 100%; height: 100%; object-fit: contain;">
+                                    {% else %}
+                                    <i class="fas fa-image" style="font-size: 12px; color: #ddd; margin-top: 5px;"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="mar-name-cell"><strong>{{ m.nome }}</strong></td>
+                            <td><span style="font-size:11px; font-weight:600; color:#495057;">{{ m.origem_comercial or m.pais_origem or '—' }}</span></td>
+                            <td>
+                                <span style="font-size: 9px; padding: 2px 8px; border-radius: 10px; background: {{ '#e8f5e9' if m.status == 'ATIVO' else '#fff5f5' }}; color: {{ '#2e7d32' if m.status == 'ATIVO' else '#c62828' }}; font-weight: 700;">
+                                    {{ m.status or 'ATIVO' }}
+                                </span>
+                            </td>
+                            <td class="fp-actions" style="text-align: center;">
+                                <button type="button" class="fp-btn-icon" onclick='editarMarca("{{ m.id }}", {{ m.nome|tojson|safe }})' title="Editar"><i class="fas fa-edit"></i></button>
+                                <button type="button" class="fp-btn-icon fp-btn-delete" onclick="excluirMarca('{{ m.id }}', this)" title="Excluir"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewMarLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('mar-logo-preview').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:contain;">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // ── SUBMISSÃO AJAX (PADRÃO GOLDEN HCM) ──
+    async function forceSubmitMarca() {
+        const form = document.getElementById('mar-form');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+
+        const btn = document.getElementById('btn-salvar-mar');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+
+        const formData = new FormData(form);
+        const url = form.action;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (response.ok) {
+                arioneToast('Marca salva com sucesso!', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                const err = await response.json().catch(() => ({}));
+                arioneToast('Erro de Integridade: ' + (err.message || 'Falha ao salvar.'), 'danger');
+            }
+        } catch (e) {
+            console.error('Erro no fetch:', e);
+            arioneToast('Falha crítica de comunicação com o servidor.', 'danger');
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+        }
+    }
+
+    function novoRegistroMarca() {
+        const form = document.getElementById('mar-form');
+        form.reset();
+        form.action = "{{ url_for('cadastros.card_marcas') }}";
+        document.getElementById('mar-logo-preview').innerHTML = `<i class="fas fa-image" style="font-size: 24px; color: #ccc;"></i>`;
+        document.getElementById('mar-nome-input').focus();
+        
+        // Remove IDs de edição se houver
+        const idInput = form.querySelector('input[name="id"]');
+        if (idInput) idInput.remove();
+    }
+
+    // ── MOTOR DE FILTROS ──
+    function toggleFiltroMarca() {
+        var bar    = document.getElementById('filter-bar-mar');
+        var isHidden = bar.style.display === 'none' || bar.style.display === '';
+        bar.style.display = isHidden ? 'block' : 'none';
+
+        if (isHidden) {
+            var formArea = document.getElementById('mar-form-area');
+            if (formArea && formArea.style.display !== 'none') {
+                formArea.style.display = 'none';
+            }
+            setTimeout(function() {
+                bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                var fNome = document.getElementById('f-mar-nome');
+                if (fNome) fNome.focus();
+            }, 200);
+        }
+
+        var btn = document.querySelector('[onclick*="toggleFiltroMarca"], [onclick="toggleFiltroMarca()"]');
+        if (btn) {
+            btn.style.background = isHidden ? 'rgba(255,255,255,0.3)' : 'transparent';
+            btn.style.boxShadow  = isHidden ? 'inset 0 2px 4px rgba(0,0,0,0.15)' : 'none';
+            btn.style.color      = isHidden ? '#fff' : '';
+        }
+    }
+
+    function executarFiltroMarcas() {
+        var fNome   = (document.getElementById('f-mar-nome')   ? document.getElementById('f-mar-nome').value.toUpperCase()   : '');
+        var fPais   = (document.getElementById('f-mar-pais')   ? document.getElementById('f-mar-pais').value.toUpperCase()   : '');
+        var fStatus = (document.getElementById('f-mar-status') ? document.getElementById('f-mar-status').value               : '');
+        var fGlobal = (document.getElementById('mar-search-input') ? document.getElementById('mar-search-input').value.toUpperCase() : '');
+
+        var rows    = document.querySelectorAll('#tbody-marcas .mar-row');
+        var visiveis = 0;
+
+        rows.forEach(function(row) {
+            var dNome   = row.getAttribute('data-nome')   || '';
+            var dPais   = row.getAttribute('data-pais')   || '';
+            var dStatus = row.getAttribute('data-status') || '';
+
+            var matchNome   = !fNome   || dNome.includes(fNome);
+            var matchPais   = !fPais   || dPais.includes(fPais);
+            var matchStatus = !fStatus || dStatus === fStatus;
+            var matchGlobal = !fGlobal || dNome.includes(fGlobal) || dPais.includes(fGlobal);
+
+            if (matchNome && matchPais && matchStatus && matchGlobal) {
+                row.style.display = '';
+                visiveis++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        var countEl = document.getElementById('f-mar-count');
+        var badge   = document.getElementById('mar-total-badge');
+        if (countEl) countEl.textContent = visiveis + ' de ' + rows.length + ' marca(s) exibida(s)';
+        if (badge)   badge.textContent   = visiveis + ' resultado(s)';
+    }
+
+    function focarBuscaMarca() {
+        var listArea = document.getElementById('mar-list-area');
+        var s = document.getElementById('mar-search-input');
+        if (listArea) listArea.style.display = 'block';
+        if (s) {
+            s.focus();
+            s.style.borderColor = '#E67E22';
+            s.style.boxShadow = '0 0 0 3px rgba(230,126,34,0.15)';
+            setTimeout(function() { s.style.boxShadow = 'none'; }, 1200);
+            s.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function limparFiltrosMarcas() {
+        var ids = ['f-mar-nome', 'f-mar-pais', 'f-mar-status', 'mar-search-input'];
+        ids.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        executarFiltroMarcas();
+        arioneToast('✅ Filtros limpos — exibindo todas as marcas.', 'info');
+    }
+
+    async function editarMarca(id, nome) {
+        var formArea = document.getElementById('mar-form-area');
+        var filterBar = document.getElementById('filter-bar-mar');
+        if (formArea) formArea.style.display = 'block';
+        if (filterBar) filterBar.style.display = 'none';
+
+        var form = document.getElementById('mar-form');
+        form.action = '/cadastros/cards/marcas/' + id;
+        document.getElementById('mar-nome-input').value = nome;
+
+        var old = form.querySelector('input[name="id"]');
+        if (old) old.remove();
+        var hidId = document.createElement('input');
+        hidId.type = 'hidden'; hidId.name = 'id'; hidId.value = id;
+        form.appendChild(hidId);
+
+        formArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(function() {
+            var inp = document.getElementById('mar-nome-input');
+            if (inp) { inp.focus(); inp.select(); }
+        }, 350);
+
+        arioneToast('✏️ Editando marca: ' + nome, 'info');
+    }
+
+    async function excluirMarca(id, btn) {
+        if (!confirm('🛡️ AriOne: Deseja realmente excluir esta marca permanentemente?')) return;
+        try {
+            const response = await fetch(`/cadastros/cards/marcas/excluir/${id}`, { 
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const res = await response.json();
+            if (res.success) {
+                const row = btn.closest('tr');
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+                arioneToast('Marca excluída com sucesso.', 'success');
+            } else {
+                arioneToast("Erro ao excluir: " + res.message, 'danger');
+            }
+        } catch (e) {
+            arioneToast("Erro na requisição de exclusão.", 'danger');
+        }
+    }
+
+    function importarMarcas() {
+        arioneImportar({
+            aceitar: '.csv,.json',
+            onDados: function(dados) {
+                console.log('🛡️ AriOne: ' + dados.length + ' marcas prontas para processar.', dados);
+            }
+        });
+    }
+
+    function exportarMarcas() {
+        arioneExportar({
+            url: '/cadastros/cards/marcas/dados-json',
+            nomeArquivo: 'marcas_arione',
+            formato: 'csv',
+            modulo: 'Marcas e Fabricantes'
+        });
+    }
+
+    // Funções do cabeçalho mestre
+    function resetFormMarca() {
+        window.location.href = "{{ url_for('cadastros.card_marcas') }}";
+    }
+
+    function salvarMarca() {
+        forceSubmitMarca();
+    }
+
+    function focarPesquisaMarca() {
+        focarBuscaMarca();
+    }
+
+    function abrirModalFiltrosAvancados() {
+        toggleFiltroMarca();
+    }
+
+    function alternarVisaoFormLista() {
+        const formArea = document.getElementById('mar-form-area');
+        const listArea = document.getElementById('mar-list-area');
+        if (formArea && listArea) {
+            if (formArea.style.display === 'none') {
+                formArea.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                formArea.style.display = 'none';
+                listArea.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }
+
+    function clonarMarcaAtivo() {
+        arioneToast('Função de clonar marca em desenvolvimento.', 'info');
+    }
+
+    function exportarMarcaCSV() {
+        exportarMarcas();
+    }
+
+    function abrirModalImportacaoXML() {
+        importarMarcas();
+    }
+
+    function imprimirRelatorioMarca() {
+        window.print();
+    }
+
+    function enviarMarcaEmail() {
+        arioneToast('Função de e-mail em desenvolvimento.', 'info');
+    }
+
+    function enviarMarcaWhatsApp() {
+        arioneToast('Função de WhatsApp em desenvolvimento.', 'info');
+    }
+
+    document.querySelectorAll('.fp-mask-upper').forEach(el => {
+        el.addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+    });
+</script>
+{% endblock %}
+

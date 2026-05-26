@@ -1,0 +1,296 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fe-wrap">
+
+    {# ── Flash Messages (PAAv1 §1-C) ── #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="fe-flash fe-flash-{{ cat }}">
+          <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form id="form-novo-cargo" method="POST">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione, info_icon %}
+
+        {# ── CABEÇALHO MESTRE STICKY (PAAv1 §12-B) ── #}
+        {{ cabecalho_mestre_arione(
+            titulo='Gestão de Cargos & Funções',
+            subtitulo='Cadastros > Empresa > Cargos e Níveis',
+            icone='fa-briefcase',
+            cor_tema='#8E44AD',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='empresa') ~ "'",
+            form_id='form-novo-cargo',
+            onclick_novo='submeterCargo()',
+            onclick_save='submeterCargo()',
+            onclick_search='focarPesquisaCargo()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            onclick_clonar='clonarCargoAtivo()',
+            onclick_export="arioneToast('Exportação em desenvolvimento para Cargos.','info')",
+            onclick_import="arioneToast('Importação em desenvolvimento para Cargos.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Cargos')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Cargos')",
+            status='Ativo',
+            ajuda='Gerencie os cargos e funções da empresa, definindo hierarquias e responsabilidades.',
+            tamanho='medio'
+        ) }}
+
+        <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ══════════ FORMULÁRIO ══════════ #}
+        {% if cargo %}<input type="hidden" name="id" value="{{ cargo.id }}">{% endif %}
+        <div class="fe-card" id="card-form-cargo" style="border-left: 4px solid #8E44AD;">
+            <div class="fe-card-title" style="background:{% if cargo %}#FFF4E5{% else %}var(--pri-bg){% endif %}; color:{% if cargo %}#E67E22{% else %}var(--pri){% endif %};">
+                <i class="fas {% if cargo %}fa-edit{% else %}fa-plus-circle{% endif %}"></i> 
+                {% if cargo %}Editar Cargo: <span class="fe-badge-id" style="margin-left:8px;">{{ cargo.codigo }}</span>{% else %}Novo Cargo/Função{% endif %}
+            </div>
+            <div class="fe-card-body">
+                <div class="fe-row">
+                    <div class="fe-group" style="max-width:150px;">
+                        <label class="fe-label">Código</label>
+                        <input class="fe-input" type="text" name="codigo" readonly placeholder="(Automático)" style="background:#f8fafc; cursor:not-allowed;" value="{{ cargo.codigo if cargo else '' }}">
+                    </div>
+                    <div class="fe-group" style="flex:2;">
+                        <label class="fe-label">Nome do Cargo <span style="color:#e74c3c;">*</span> {{ info_icon('Nome da função ou cargo exercido.') }}</label>
+                        <input class="fe-input" type="text" name="nome" id="cargo_nome" value="{{ cargo.nome if cargo else '' }}" placeholder="Ex: Diretor, Gerente, Analista" required onblur="checkDuplicateField(this, 'Cargo', 'nome')">
+                    </div>
+                    <div class="fe-group">
+                        <label class="fe-label">CBO (Opcional)</label>
+                        <input class="fe-input" type="text" name="cbo" value="{{ cargo.cbo if cargo else '' }}" placeholder="0000-00">
+                    </div>
+                </div>
+                <div class="fe-row" style="justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="window.location.href='{{ url_for('gestao.card_cargos') }}'">Limpar</button>
+                    <button type="button" id="btn-salvar-cargo" class="fe-btn fe-btn-salvar-footer" style="background: #8E44AD; color: #fff;" onclick="submeterCargo()">
+                        <i class="fas fa-save"></i> {% if cargo %}Atualizar Cargo{% else %}Salvar Cargo{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# ══════════ LISTAGEM ══════════ #}
+        <div class="fe-card" id="card-lista-cargos" style="border-left: 4px solid #3399ee; margin-top: 12px;">
+            <div class="fe-card-title" style="color:#3399ee; background:rgba(51,153,238,0.05);">
+                <i class="fas fa-list"></i> Cargos Cadastrados
+            </div>
+            <div class="fe-card-body" style="padding:0;">
+                <div style="padding:10px 15px; border-bottom:1px solid #eee;">
+                    <input type="text" id="filtro-cargo" oninput="filtrarTabelaCargos()" placeholder="Pesquisar cargo por nome..."
+                        style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13px; outline:none; font-weight:700;">
+                </div>
+                <table class="fe-table-listing" id="tabela-cargos">
+                    <thead>
+                        <tr>
+                            <th style="width:100px;">Código</th>
+                            <th>Cargo / Função</th>
+                            <th>CBO</th>
+                            <th style="width:80px; text-align:center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-cargos">
+                        {% for c in cargos_lista %}
+                        <tr>
+                            <td><span style="font-weight: 700; color: #8E44AD;">{{ c.codigo }}</span></td>
+                            <td><strong style="font-size: 13px;">{{ c.nome }}</strong></td>
+                            <td><code style="font-family: monospace; font-weight: 700;">{{ c.cbo or '—' }}</code></td>
+                            <td style="text-align:right;">
+                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px;" onclick="window.location.href='{{ url_for('gestao.card_cargos') }}?id={{ c.id }}'"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px; color: #e74c3c; border-color: #fbd38d;" onclick="confirmarExcluirCargo({{ c.id }}, '{{ c.nome }}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" style="text-align:center; padding:30px; color:#aaa;">Nenhum cargo cadastrado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        </div>{# /fe-form-stage-medio #}
+    </form>
+</div>
+
+<script>
+async function submeterCargo() {
+    const form = document.getElementById('form-novo-cargo');
+    const btn  = document.getElementById('btn-salvar-cargo');
+    const nome = form.querySelector('[name="nome"]');
+
+    nome.classList.remove('error');
+    if (!nome.value.trim()) {
+        nome.classList.add('error');
+        arioneToast('Nome do cargo é obrigatório!', 'warning');
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    }
+
+    try {
+        const response = await fetch('/cadastros/cargos/novo', {
+            method: 'POST', body: new URLSearchParams(new FormData(form))
+        });
+        if (response.ok) {
+            arioneToast('Cargo salvo com sucesso!', 'success');
+            setTimeout(() => window.location.href='{{ url_for('gestao.card_cargos') }}', 1000);
+        } else {
+            arioneToast('Erro ao salvar cargo.', 'danger');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Salvar Cargo';
+            }
+        }
+    } catch(e) {
+        arioneToast('Erro crítico na persistência.', 'danger');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Cargo';
+        }
+    }
+}
+
+async function confirmarExcluirCargo(id, nome) {
+    if(!confirm('Deseja realmente excluir o cargo "' + nome + '"?')) return;
+    try {
+        const response = await fetch('/cadastros/cargos/excluir/' + id);
+        if(response.ok) { window.location.href='{{ url_for('gestao.card_cargos') }}'; }
+    } catch(e) { console.error(e); }
+}
+
+function focarPesquisaCargo() {
+    const input = document.getElementById('filtro-cargo');
+    if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => input.focus(), 350);
+        arioneToast('🔍 Campo de pesquisa ativado', 'info');
+    } else {
+        arioneToast('Campo de pesquisa não encontrado.', 'warning');
+    }
+}
+
+function abrirModalFiltrosAvancados() {
+    let modal = document.getElementById('modal-filtros-cargos');
+    if (modal) {
+        modal.style.display = 'flex';
+        return;
+    }
+
+    modal = document.createElement('div');
+    modal.id = 'modal-filtros-cargos';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:10000;';
+    modal.innerHTML = `
+        <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:#8E44AD; font-size:18px; font-weight:700;">Filtros Avançados</h3>
+                <button onclick="document.getElementById('modal-filtros-cargos').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#999;">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Código</label>
+                    <input type="text" id="filtro-codigo-cargo" placeholder="Ex: 001" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Nome</label>
+                    <input type="text" id="filtro-nome-cargo" placeholder="Ex: Gerente" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:24px;">
+                <button onclick="aplicarFiltrosCargos()" style="flex:1; background:#8E44AD; color:#fff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Aplicar</button>
+                <button onclick="limparFiltrosCargos()" style="flex:1; background:#f1f5f9; color:#64748b; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Limpar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function aplicarFiltrosCargos() {
+    const filtroCodigo = document.getElementById('filtro-codigo-cargo').value.toLowerCase();
+    const filtroNome = document.getElementById('filtro-nome-cargo').value.toLowerCase();
+
+    const table = document.getElementById('tabela-cargos');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) {
+        const tds = tr[i].getElementsByTagName('td');
+        if (tds.length < 2) continue;
+
+        const codigo = (tds[0].textContent || '').toLowerCase();
+        const nome = (tds[1].textContent || '').toLowerCase();
+
+        let mostrar = true;
+
+        if (filtroCodigo && !codigo.includes(filtroCodigo)) mostrar = false;
+        if (filtroNome && !nome.includes(filtroNome)) mostrar = false;
+
+        tr[i].style.display = mostrar ? '' : 'none';
+    }
+
+    document.getElementById('modal-filtros-cargos').style.display = 'none';
+    arioneToast('Filtros aplicados com sucesso', 'success');
+}
+
+function limparFiltrosCargos() {
+    document.getElementById('filtro-codigo-cargo').value = '';
+    document.getElementById('filtro-nome-cargo').value = '';
+
+    const table = document.getElementById('tabela-cargos');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+    for (let i = 1; i < tr.length; i++) {
+        tr[i].style.display = '';
+    }
+
+    document.getElementById('modal-filtros-cargos').style.display = 'none';
+    arioneToast('Filtros limpos', 'info');
+}
+
+function alternarVisaoFormLista() {
+    const cardForm = document.getElementById('card-form-cargo');
+    const lista = document.getElementById('card-lista-cargos');
+    if (!cardForm || !lista) { arioneToast('Nenhum container localizado', 'warning'); return; }
+    if (cardForm.style.display === 'none') {
+        cardForm.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        arioneToast('Visualizando Formulário + Lista', 'info');
+    } else {
+        cardForm.style.display = 'none';
+        lista.scrollIntoView({ behavior: 'smooth' });
+        arioneToast('Visualizando Lista de Registros', 'info');
+    }
+}
+
+function clonarCargoAtivo() {
+    const form = document.getElementById('form-novo-cargo');
+    const idInput = form ? form.querySelector('[name="id"]') : null;
+    if (!idInput || !idInput.value || idInput.value === 'new' || idInput.value === '0') {
+        arioneToast('Apenas registros salvos podem ser clonados.', 'info');
+        return;
+    }
+    if (!confirm('🛡️ AriOne: Deseja clonar este registro para criar um novo item idêntico?')) return;
+    idInput.value = 'new';
+    const nome = form.querySelector('[name="nome"]') || form.querySelector('[name="descricao"]');
+    if (nome && !nome.value.startsWith('CÓPIA - ')) nome.value = 'CÓPIA - ' + nome.value;
+    arioneToast('✅ Modo Clonagem Ativado! Ajuste os dados e salve como novo.', 'success');
+}
+
+function filtrarTabelaCargos() {
+    const input = document.getElementById('filtro-cargo');
+    if (!input) return;
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('tabela-cargos');
+    if (!table) return;
+    table.querySelectorAll('tbody tr').forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

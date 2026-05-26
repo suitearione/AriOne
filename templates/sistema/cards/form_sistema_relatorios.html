@@ -1,0 +1,130 @@
+{# =============================================================================
+   Arquivo  : form_sistema_relatorios.html
+   Caminho  : templates/sistema/cards/form_sistema_relatorios.html
+   Função   : Sub-Gateway (Nível 2) para Relatórios Específicos de Infra & Sistema.
+   Padrão   : DNA AriOne (Configurações & Governança).
+   ============================================================================= #}
+
+<div class="fe-card-relatorio" style="min-height: 450px; background: #fff; border-radius: 14px; overflow: hidden;">
+    
+    <!-- Estilo para limpar resquícios de cabeçalhos de cadastro -->
+    <style>
+        #header-action-status, .fp-header-status { display: none !important; }
+    </style>
+
+    <!-- Header Contextual (Cor Dinâmica via Rota) -->
+    <div style="background: {{ cor }}; padding: 15px 25px; color: #fff; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button type="button" onclick="voltarParaGatewaySistema()" style="background: rgba(255,255,255,0.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div>
+                <h3 id="sistema-header-titulo" style="margin: 0; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">{{ titulo }}</h3>
+                <span id="sistema-header-subtitle" style="font-size: 10px; opacity: 0.8; font-weight: 600; text-transform: uppercase;">Parametrização & Extração de Dados Master</span>
+            </div>
+        </div>
+        <button type="button" class="ge-modal-fechar" onclick="fecharModalGlobal()" style="background: rgba(255,255,255,0.15); border:none; width: 28px; height: 28px; border-radius: 6px; color:#fff; cursor:pointer;">
+            <i class="fas fa-times" style="font-size: 12px;"></i>
+        </button>
+    </div>
+
+    <script>
+        // Força a limpeza de qualquer título de "Inclusão" que possa ter ficado no modal global
+        if (typeof setModalStatus === 'function') {
+            setModalStatus(''); // Limpa o status de inclusão/edição do modal pai
+        }
+    </script>
+
+    <!-- Conteúdo Dinâmico (Relatório ou Card Específico) -->
+    <div id="relatorio-content-area">
+        {% if modulo == 'developer' %}
+            {% include 'sistema/grids/grid_developer.html' %}
+        {% elif modulo == 'documentacao' %}
+            {% include 'sistema/cards/developer/form_documentacao.html' %}
+        {% else %}
+            <!-- Filtros & Parâmetros Padrão de Relatórios -->
+            <div style="padding: 25px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                    
+                    <div class="fe-group">
+                        <label class="fe-label" style="color: {{ cor }};">Período de Análise</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="date" class="fe-input" style="flex: 1;">
+                            <input type="date" class="fe-input" style="flex: 1;">
+                        </div>
+                    </div>
+
+                    <div class="fe-group">
+                        <label class="fe-label" style="color: {{ cor }};">Filtro de Entidade / Usuário</label>
+                        <select class="fe-input">
+                            <option value="">Todos os Registros</option>
+                            <option value="1">Administrador Geral</option>
+                            <option value="2">Sistema (Automático)</option>
+                        </select>
+                    </div>
+
+                    {% if modulo == 'auditoria' %}
+                    <div class="fe-group" style="grid-column: span 2;">
+                        <label class="fe-label" style="color: {{ cor }};">Ação Específica (Evento)</label>
+                        <select class="fe-input">
+                            <option value="">Todas as Ações</option>
+                            <option value="create">Inserção (Create)</option>
+                            <option value="update">Alteração (Update)</option>
+                            <option value="delete">Exclusão (Delete)</option>
+                            <option value="login">Acesso (Login)</option>
+                        </select>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <!-- Seção de Ação Master -->
+                <div style="background: #f8fafc; border: 1px dashed {{ cor }}; padding: 25px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px;">
+                        Selecione o Formato de Saída do Relatório
+                    </div>
+                    
+                    <div style="display: flex; justify-content: center; gap: 15px;">
+                        <button type="button" class="fe-btn" style="background: #fff; color: #1e293b; border: 1.5px solid #e2e8f0; padding: 10px 20px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-file-pdf" style="color: #e74c3c;"></i> PDF Executivo
+                        </button>
+                        <button type="button" class="fe-btn" style="background: #fff; color: #1e293b; border: 1.5px solid #e2e8f0; padding: 10px 20px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-file-excel" style="color: #27ae60;"></i> Planilha (XLSX)
+                        </button>
+                        <button type="button" class="fe-btn" style="background: {{ cor }}; color: #fff; border: none; padding: 10px 25px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            <i class="fas fa-print"></i> Gerar Relatório Agora
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+/**
+ * Volta para o Gateway Principal do Sistema
+ */
+function voltarParaGatewaySistema() {
+    const url = "{{ url_for('sistema.gateway_modulos_sistema') }}";
+    const content = document.getElementById('arione-modal-content');
+    
+    if (content && url) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // Re-injetar scripts do Gateway
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+    }
+}
+</script>

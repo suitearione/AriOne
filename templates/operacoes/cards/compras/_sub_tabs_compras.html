@@ -1,0 +1,151 @@
+{# =============================================================================
+   Arquivo  : _sub_tabs_compras.html
+   Caminho  : templates/operacoes/cards/compras/_sub_tabs_compras.html
+   Função   : Snippet de abas secundárias comuns para Operações de Compra.
+============================================================================= #}
+
+<div class="ope-tabs-nav">
+    <div class="ope-tab active" data-ope-tab="pagamento"><i class="fas fa-credit-card"></i> Pagamento</div>
+    <div class="ope-tab" data-ope-tab="logistica"><i class="fas fa-truck"></i> Logística</div>
+    <div class="ope-tab" data-ope-tab="observacoes"><i class="fas fa-comment-alt"></i> Observações</div>
+    <div class="ope-tab" data-ope-tab="anexos"><i class="fas fa-paperclip"></i> Anexos</div>
+    <div class="ope-tab" data-ope-tab="financeiro" style="color:#e74c3c;"><i class="fas fa-hand-holding-usd"></i> Financeiro</div>
+</div>
+
+<div class="ope-tab-panel active" id="ope-tab-pagamento">
+    <div class="ope-row">
+        <div class="ope-group">
+            <label class="ope-label">Condição de Pagamento</label>
+            <select class="ope-input">
+                <option>30 / 60 / 90 dias</option>
+                <option>À Vista (Pix/Boleto)</option>
+                <option>Antecipado</option>
+            </select>
+        </div>
+        <div class="ope-group">
+            <label class="ope-label">Meio de Pagamento</label>
+            <select class="ope-input">
+                <option>Boleto Bancário</option>
+                <option>PIX (Transferência)</option>
+                <option>Cartão de Crédito Corp.</option>
+            </select>
+        </div>
+        <div class="ope-group">
+            <label class="ope-label">Conta de Origem</label>
+            <select class="ope-input">
+                <option>Caixa Principal</option>
+                <option>Conta Itau 001</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="ope-tab-panel" id="ope-tab-logistica">
+    <div class="ope-row">
+        <div class="ope-group">
+            <label class="ope-label">Tipo de Frete</label>
+            <select class="ope-input">
+                <option>CIF (Emitente)</option>
+                <option>FOB (Destinatário)</option>
+            </select>
+        </div>
+        <div class="ope-group">
+            <label class="ope-label">Transportadora</label>
+            <input type="text" class="ope-input" placeholder="Busca automática...">
+        </div>
+        <div class="ope-group">
+            <label class="ope-label">Peso Est. (Kg)</label>
+            <input type="number" class="ope-input" placeholder="0.00">
+        </div>
+    </div>
+</div>
+
+<div class="ope-tab-panel" id="ope-tab-observacoes">
+    <div class="ope-row">
+        <div class="ope-group" style="flex:1;">
+            <label class="ope-label">Notas Internas (Não saem na NF)</label>
+            <textarea class="ope-input" rows="3"></textarea>
+        </div>
+        <div class="ope-group" style="flex:1;">
+            <label class="ope-label">Observações p/ o Fisco</label>
+            <textarea class="ope-input" rows="3"></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="ope-tab-panel" id="ope-tab-anexos">
+    <div style="border:2px dashed #e2e8f0; padding:30px; border-radius:12px; text-align:center; color:#94a3b8;">
+        <i class="fas fa-cloud-upload-alt" style="font-size:32px; margin-bottom:10px;"></i><br>
+        <span style="font-size:13px; font-weight:600;">Arraste orçamentos (PDF) ou fotos aqui</span><br>
+        <button type="button" style="margin-top:10px; border:1px solid #e2e8f0; padding:8px 15px; border-radius:6px; cursor:pointer;">Selecionar Arquivos</button>
+    </div>
+</div>
+
+<!-- Aba 5: Financeiro (Integração Direta) -->
+<div class="ope-tab-panel" id="ope-tab-financeiro">
+    <div class="ope-row">
+        <div class="ope-group">
+            <label class="ope-label">Centro de Custo</label>
+            <select class="ope-input">
+                <option>02.01 - Produção Direta</option>
+                <option>02.02 - Manutenção Industrial</option>
+                <option>05.01 - Administrativo Central</option>
+            </select>
+        </div>
+        <div class="ope-group">
+            <label class="ope-label">Conta Gerencial</label>
+            <select class="ope-input">
+                <option>4.01.001 - Compra de Materiais p/ Revenda</option>
+                <option>4.01.002 - Compra de Insumos</option>
+            </select>
+        </div>
+        <div class="ope-group">
+            <label class="ope-label">Classificação DRE</label>
+            <div style="padding:10px; background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; font-size:11px; color:#1e293b; font-weight:700;">Custo de Mercadoria Vendida (CMV)</div>
+        </div>
+    </div>
+    
+    <div style="margin-top:15px; background:#fff1f2; border:1px solid #fecdd3; padding:15px; border-radius:10px;">
+        <div style="font-size:11px; font-weight:800; color:#9f1239; margin-bottom:10px; display:flex; justify-content:space-between;">
+            <span>PROVISÃO DE PAGAMENTO (CONTAS A PAGAR)</span>
+            <span>Estoque Vinculado: <i class="fas fa-check-circle"></i> ENTRADA AUTOMÁTICA</span>
+        </div>
+        <table style="width:100%; font-size:11px; border-collapse:collapse;">
+            <thead>
+                <tr style="text-align:left; color:#9f1239; border-bottom:1px solid #fecdd3;">
+                    <th style="padding:8px 5px;">Parcela</th>
+                    <th>Vencimento</th>
+                    <th>Forma</th>
+                    <th style="text-align:right;">Valor (R$)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:8px 5px;">01/01</td>
+                    <td>10/05/2026</td>
+                    <td>Boleto Bancário</td>
+                    <td style="text-align:right; font-weight:700;">R$ 0,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Inicialização de Abas (caso não carregadas via AJAX)
+    if (!window.tabsOperacionaisIniciadas) {
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('ope-tab')) {
+                const tab = e.target;
+                const wrap = tab.closest('.ctx-ope-wrap');
+                wrap.querySelectorAll('.ope-tab').forEach(t => t.classList.remove('active'));
+                wrap.querySelectorAll('.ope-tab-panel').forEach(p => p.classList.remove('active'));
+                
+                tab.classList.add('active');
+                const panel = wrap.querySelector('#ope-tab-' + tab.dataset.opeTab);
+                if (panel) panel.classList.add('active');
+            }
+        });
+        window.tabsOperacionaisIniciadas = true;
+    }
+</script>

@@ -1,0 +1,300 @@
+
+/* ============================================================ */
+/* ⬜ RESPONSIVIDADE – AJUSTE PARA TELAS REDUZIDAS               */
+/* ============================================================ */
+@media (max-width: 900px) {
+    .sidebar {
+        width: 220px;
+    }
+    .arione-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}
+
+
+/* ============================================================
+   🟪 ARIONEDEV – ESTILO GERAL
+   📂 Local: /AriOneDev/static/css/estilo.css
+   📘 Layout limpo, moderno e reutilizável
+   ============================================================ */
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f5f5fa;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+header h2 {
+    margin: 0 0 5px;
+    color: #5b31a5;
+    font-weight: 600;
+}
+
+header p {
+    margin: 0 0 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.bloco {
+    background: #f9f8ff;
+    border-radius: 14px;
+    padding: 14px 14px 16px;
+    border: 1px solid #ece9ff;
+}
+
+.bloco h3 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    color: #5b31a5;
+}
+
+.bloco input,
+.bloco select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    border: 1px solid #d4d4e7;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.bloco input:focus,
+.bloco select:focus {
+    outline: none;
+    border-color: #5b31a5;
+    box-shadow: 0 0 0 1px rgba(91, 49, 165, 0.12);
+}
+
+.botoes {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 5px;
+}
+
+.botoes button {
+    background-color: #5b31a5;
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.botoes button:hover {
+    background-color: #45258a;
+    transform: translateY(-1px);
+}
+
+.lista h3 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    color: #5b31a5;
+    font-size: 16px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+th, td {
+    padding: 8px 6px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+th {
+    background: #f4f2ff;
+    color: #5b31a5;
+    font-weight: 500;
+}
+
+.alert {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.alert.success {
+    background: #e8f9f0;
+    color: #0a8842;
+    border: 1px solid #b2ebc3;
+}
+
+.alert.error {
+    background: #fdeaea;
+    color: #9e1b1b;
+    border: 1px solid #f3c0c0;
+}
+
+
+/* ============================================================ */
+/* 🎨 ESTILO: BOTÃO DE LIMPEZA DO BANCO (DESENVOLVEDOR)         */
+/* ============================================================ */
+.btn-limpar {
+  display: inline-block;
+  background-color: #8b0000;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.btn-limpar:hover {
+  background-color: #c62828;
+}
+
+.alerta {
+  color: #b71c1c;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* ============================================================
+   🟪 ARIONEDEV – CSS DE RESPONSIVIDADE GERAL
+   📌 Aplicação mobile/tablet para telas até 1024px
+   ============================================================ */
+
+/* ============================================================
+   🟪 TABLETS (até 1024px)
+   ------------------------------------------------------------ */
+@media (max-width: 1024px) {
+
+    /* Ajusta cabeçalho geral */
+    .arione-header {
+        flex-wrap: wrap;                     /* permite quebrar linha */
+        padding: 12px 14px;
+        gap: 12px;
+    }
+
+    .header-left img {
+        width: 65px;                          /* logo menor */
+    }
+
+    .header-center h2 {
+        font-size: 20px;
+    }
+
+    .header-right {
+        width: 100%;                          /* barra de ações ganha linha própria */
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    .campo-busca {
+        width: 100%;                          /* busca ocupa linha inteira */
+    }
+
+    /* Navegação em container elegante */
+    .arione-nav-group {
+        width: 100%;
+        justify-content: center;
+        padding: 6px 10px;
+    }
+}
+
+
+/* ============================================================
+   🟪 MOBILE – VERSÃO COMPLETA (até 768px)
+   ------------------------------------------------------------ */
+@media (max-width: 768px) {
+
+    /* Cabeçalho vira 2 linhas */
+    .arione-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-center {
+        width: 100%;
+    }
+
+    .header-center h2 {
+        font-size: 18px;
+    }
+
+    .header-center p {
+        font-size: 12px;
+    }
+
+    /* BLOCO DIREITO ENTRA EM MODO COLUNA */
+    .header-right {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    /* Campo de busca 100% largura */
+    .campo-busca {
+        width: 100%;
+    }
+
+    /* Grupo de navegação ajustado */
+    .arione-nav-group {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .arione-nav-btn {
+        flex: 1;
+        text-align: center;
+    }
+
+    /* Botão Voltar como linha inteira */
+    .btn-voltar {
+        width: 100%;
+        margin-top: 4px;
+    }
+}
+
+
+/* ============================================================
+   🟪 TABELAS RESPONSIVAS (todas as telas até 1024px)
+   ------------------------------------------------------------ */
+@media (max-width: 1024px) {
+
+    /* Wrapper automático */
+    .tabela-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        padding-bottom: 6px;
+    }
+
+    .tabela-arione {
+        min-width: 700px;   /* evita quebra feia dos campos */
+    }
+}
+
+

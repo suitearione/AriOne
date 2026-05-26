@@ -1,0 +1,70 @@
+{# =============================================================================
+Caminho : templates/cadastros/cards/catalogos/form_produto_comp_acess.html
+Função  : Formulário de Inserção Rápida de Acessório na Composição
+============================================================================= #}
+<div class="fp-comp-form-row" id="form-comp-acess" style="display:flex; flex-direction:column; gap:0; background:#fff; border-radius:12px; border:1px solid #7F8C8D; margin-bottom:20px; animation: slideInDown 0.3s ease; overflow:visible;">
+    <!-- Cabeçalho Padrão Sistema -->
+    <div style="background:#7F8C8D; color:#fff; padding:8px 15px; font-size:10px; font-weight:800; display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-puzzle-piece"></i> INSERÇÃO RÁPIDA DE ACESSÓRIO
+    </div>
+    
+    <div style="display:flex; gap:12px; align-items:flex-end; padding:15px; background:rgba(127,140,141,0.03);">
+    
+    <div style="width:280px;">
+        <label class="fp-label" style="font-size:10px; margin-bottom:4px; display:flex; align-items:center; gap:4px;">
+            SKU / Acessório
+            {{ comp.info_icon("O Pilar da Informação: Selecione um acessório para compor o produto acabado.") }}
+            {{ comp.master_icon("acessorios", "Navegar para Cadastro Mestre", "abrirModalMaster('acessorios')") }}
+        </label>
+        <div style="position:relative;">
+            <input type="text" id="input-comp-acess" class="fp-input comp-item-nome-input" placeholder="Digite o SKU..." style="height:34px; font-size:11px;">
+            <div class="comp-item-results-div" style="display:none; position:absolute; top:36px; left:0; width:100%; background:#fff; border:1px solid #ddd; border-radius:8px; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+        </div>
+    </div>
+
+    <div style="flex:1;">
+        <label class="fp-label" style="font-size:10px; margin-bottom:4px;">Descrição do Item</label>
+        <input type="text" class="fp-input comp-item-desc-input" placeholder="Descrição automática..." readonly style="height:34px; font-size:11px; background:rgba(127,140,141,0.02); color:#555; border-color:rgba(127,140,141,0.1);">
+    </div>
+
+    <div style="width:100px;">
+        <label class="fp-label" style="font-size:10px; margin-bottom:4px;">Quantidade</label>
+        <input type="number" class="fp-input comp-item-qtd-input" value="1.000" step="0.001" style="height:34px; font-size:11px; text-align:center;" oninput="calcCompTotal(this)" onchange="calcCompTotal(this)">
+    </div>
+
+    <div style="width:80px;">
+        <label class="fp-label" style="font-size:10px; margin-bottom:4px;">Unidade</label>
+        <select class="fp-input comp-item-un-select" style="height:34px; font-size:11px; padding:0 5px;">
+            <option value="UN">UN</option>
+            <option value="MT">MT</option>
+            <option value="KG">KG</option>
+            <option value="PC">PC</option>
+        </select>
+    </div>
+
+    <div style="width:120px;">
+        <label class="fp-label" style="font-size:10px; margin-bottom:4px;">Custo Unitário</label>
+        <input type="text" class="fp-input fp-mask-money comp-item-custo-input" value="0,00" style="height:34px; font-size:11px; text-align:right;" oninput="calcCompTotal(this)">
+    </div>
+
+    <div style="width:120px;">
+        <label class="fp-label" style="font-size:10px; margin-bottom:4px;">Custo Total</label>
+        <input type="text" class="fp-input comp-item-total-input" value="R$ 0,00" readonly style="height:34px; font-size:11px; text-align:right; background:rgba(127,140,141,0.03); font-weight:800; color:#7F8C8D;">
+    </div>
+
+    <div style="display:flex; gap:8px;">
+        <button type="button" onclick="confirmarInclusaoComp('Acessório')" class="fp-btn" style="background:#7F8C8D; color:#fff; height:34px; padding:0 20px;">INCLUIR</button>
+        <button type="button" onclick="fecharFormComp()" class="fp-btn-ghost-dark" style="height:34px; width:34px; padding:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-times"></i></button>
+    </div>
+</div>
+</div>
+
+<script>
+    function calcCompTotal(el) {
+        const row = el.closest('.fp-comp-form-row');
+        const qtd = parseFloat(row.querySelector('.comp-item-qtd-input').value) || 0;
+        const custo = parseMoney(row.querySelector('.comp-item-custo-input').value) || 0;
+        const total = qtd * custo;
+        row.querySelector('.comp-item-total-input').value = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+</script>

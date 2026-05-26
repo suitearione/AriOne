@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ sistema_nome }} {{ sistema_versao }}</title>
+
+    <!-- CSS do projeto -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/componentes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/grids.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/arione-premium-forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fp-standard.css') }}">
+
+    <!-- ✅ Fontes Premium (Google Fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@100;200;300;400;500;600;700;800;900&family=Montserrat:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- ✅ Font Awesome (movido para o head) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- ✅ Material Icons (adicionado) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/arione-utils.js') }}?v={{ range(1, 9999) | random }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v={{ range(1, 9999) | random }}"></script>
+
+    <script>
+        /* 🛡️ AriOne FP-Engine: Núcleo de Comando Global */
+        window.fpAction = function(btn, actionName) {
+            console.log('🛡️ AriOne Command:', actionName);
+            const wrap = btn.closest('.fp-wrap') || btn.closest('.fe-wrap') || document.body;
+            
+            try {
+                if (actionName === 'toggle-form') {
+                    const bodies = wrap.querySelectorAll('.fp-card-body, .fe-card-body');
+                    const isHidden = btn.classList.toggle('active');
+                    bodies.forEach(b => b.style.display = isHidden ? 'none' : 'block');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = isHidden ? 'fas fa-eye' : 'fas fa-eye-slash';
+                } 
+                else if (actionName === 'search') {
+                    const inp = wrap.querySelector('input[type="text"]:not([disabled])');
+                    if (inp) { inp.focus(); inp.classList.add('fp-highlight'); setTimeout(()=>inp.classList.remove('fp-highlight'), 1000); }
+                } 
+                else if (actionName === 'save') {
+                    const form = wrap.querySelector('form') || wrap.closest('form');
+                    if (form) form.submit();
+                } 
+                else if (actionName === 'new') {
+                    const form = wrap.querySelector('form');
+                    if (form) form.reset(); else window.location.reload();
+                } 
+                else if (actionName === 'back') {
+                    if (typeof fecharModalCat === 'function') fecharModalCat();
+                    else if (typeof fecharModal === 'function') fecharModal();
+                    else window.history.back();
+                }
+                else if (actionName === 'toggle-list') {
+                    const table = wrap.querySelector('.fp-table-wrap, table');
+                    if (table) table.style.display = (table.style.display === 'none') ? 'block' : 'none';
+                }
+            } catch(e) { console.error('FP Error:', e); }
+        };
+    </script>
+
+    <!-- ✅ Estilo Crítico da Barra Superior AriOne -->
+    <style>
+        .arione-bar-blue-new {
+            height: 10px !important;
+            background: linear-gradient(to right, #7A255F, #00B7EE) !important;
+            width: 100% !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 9999 !important;
+            display: block !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+        }
+
+        /* 🏛️ PADRÃO INDUSTRIAL ARIONE: UPPERCASE GLOBAL */
+        input[type="text"], input[type="search"], textarea, .tool-search-input {
+            text-transform: uppercase !important;
+        }
+        input[type="email"], input[type="password"], .no-uppercase {
+            text-transform: none !important;
+        }
+    </style>
+    <!-- ✅ Utilitários globais AriOne (Carregados no topo para disponibilidade imediata) -->
+    <!-- ✅ Utilitários globais AriOne (Carregados no topo para disponibilidade imediata) -->
+    <script src="{{ url_for('static', filename='js/arione-utils.js') }}?v={{ range(1, 9999) | random }}"></script>
+</head>
+
+<body class="arione-body">
+
+    {% include 'partials/_navbar.html' ignore missing %}
+
+    <aside class="arione-sidebar">
+        {% include 'partials/_sidebar.html' ignore missing %}
+    </aside>
+
+    <div class="arione-main-wrapper">
+
+        <div class="arione-new-header-container">
+            <header>
+                {% include 'partials/_info_bar.html' ignore missing %}
+            </header>
+
+        <main class="arione-page">
+                {% block content %}
+                {% endblock %}
+
+                {% if show_selo != False %}
+                    {% include 'partials/_selo_arione.html' ignore missing %}
+                {% endif %}
+
+                <!-- ✅ ZONA DE STATUS ARIONE (Mensagens de Feedback Integradas) -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    <div class="arione-status-zone" style="margin-top: 25px; display: flex; flex-direction: column; gap: 10px; padding: 0 5px;">
+                      {% for category, message in messages %}
+                        <div class="arione-status-banner status-{{ category }}" 
+                             style="background: {{ 'rgba(22, 101, 52, 0.08)' if category == 'success' else 'rgba(153, 27, 27, 0.08)' }}; 
+                                    border: 1px solid {{ '#166534' if category == 'success' else '#991b1b' }}; 
+                                    border-left: 5px solid {{ '#166534' if category == 'success' else '#991b1b' }};
+                                    border-radius: 8px; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
+                                    animation: slideUpFade 0.4s ease-out;">
+                          <div style="display: flex; align-items: center; gap: 12px; color: {{ '#166534' if category == 'success' else '#991b1b' }}; font-weight: 600; font-size: 13px;">
+                            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }}"></i>
+                            <span>{{ message }}</span>
+                          </div>
+                          <button type="button" onclick="this.parentElement.remove()" style="background:transparent; border:none; color:inherit; cursor:pointer; font-size: 18px; opacity: 0.5;">&times;</button>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+            </main>
+
+            <style>
+                @keyframes slideUpFade {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .arione-status-banner.fade-out {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                    transition: all 0.5s ease;
+                }
+            </style>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    // Seleciona apenas os banners de SUCESSO para auto-dismiss
+                    const successBanners = document.querySelectorAll('.arione-status-banner.status-success');
+                    
+                    successBanners.forEach(banner => {
+                        setTimeout(() => {
+                            banner.classList.add('fade-out');
+                            setTimeout(() => banner.remove(), 550); // Remove do DOM após a animação
+                        }, 12000); // 12 Segundos de exibição
+                    });
+                });
+
+                // ── MOTOR DE PADRONIZAÇÃO INDUSTRIAL (AUTO-UPPERCASE) ──
+                document.addEventListener('input', function(e) {
+                    const el = e.target;
+                    if ((el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'search')) || el.tagName === 'TEXTAREA') {
+                        if (!el.classList.contains('no-uppercase') && el.type !== 'password' && el.type !== 'email') {
+                            const start = el.selectionStart;
+                            const end = el.selectionEnd;
+                            el.value = el.value.toUpperCase();
+                            el.setSelectionRange(start, end);
+                        }
+                    }
+                }, true);
+            </script>
+        </div>
+
+    </div>
+    
+    <!-- ✅ Modal Global AriOne (para F2 e outros chamados dinâmicos) -->
+    <div id="arione-modal-global" class="arione-modal-backdrop" 
+         onclick="if(event.target === this) this.style.display='none'"
+         style="display:none;">
+        <div class="arione-modal-window">
+            <div id="arione-modal-content"></div>
+        </div>
+    </div>
+
+</body>
+
+</html>

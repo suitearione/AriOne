@@ -1,0 +1,77 @@
+{# =============================================================================
+   Arquivo  : form_producao_vmc.html
+   Caminho  : templates/operacoes/cards/producao/form_producao_vmc.html
+   Função   : Controle Visual de Fábrica (VMC) - Kanban e Gargalos.
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% block content %}
+<div class="ctx-prd-wrap">
+    <style>
+        :root { --prd-pri: #8E44AD; --prd-acc: #9B59B6; }
+        .ctx-prd-header { background: linear-gradient(135deg, #8E44AD, #5B2C6F); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-prd-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        /* Ocultar elementos base caso vazem por erro de renderização */
+        .arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
+        .arione-main-wrapper { margin-left: 0 !important; }
+        
+        /* Grid VMC */
+        .vmc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .vmc-card { background: #fff; border: 1.5px solid #edf2f7; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .vmc-status-bar { height: 10px; }
+        .vmc-content { padding: 15px; }
+        .vmc-photo { width: 100%; height: 150px; background: #f1f5f9; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+        
+        .gargalo-alerta { background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 8px; border-radius: 6px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 5px; margin-top: 10px; }
+    </style>
+
+    <div class="ctx-prd-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-eye"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Gestão à Vista (VMC)</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Mapa da Fábrica, Coleções e Fluxo de Gargalos</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.15) !important; color:#fff !important; border:1px solid rgba(255,255,255,0.2) !important; padding:8px 20px !important;" onclick="fecharModalPrd()">Sair</button>
+        </div>
+    </div>
+
+    <div class="ctx-prd-body">
+        <div class="vmc-grid">
+            <!-- Camiseta Polo -->
+            <div class="vmc-card">
+                <div class="vmc-status-bar" style="background:#E67E22;"></div>
+                <div class="vmc-content">
+                    <img src="https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=300&h=200&fit=crop" class="vmc-photo" alt="Produto">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:10px; font-weight:800; color:#94a3b8;">OP #8594</span>
+                        <span style="background:#ffedd5; color:#9a3412; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:800;">EM COSTURA</span>
+                    </div>
+                    <div style="font-weight:800; font-size:13px; margin:5px 0;">CAMISETA POLO VERÃO - AZUL</div>
+                    <div style="font-size:11px; color:#64748b;">Qtd: 500 un | Entrega: 20/04</div>
+                    
+                    <div class="gargalo-alerta">
+                        <i class="fas fa-exclamation-triangle"></i> GARGALO: Setor Costura com +12 OPs paradas.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outro Produto -->
+            <div class="vmc-card">
+                <div class="vmc-status-bar" style="background:#3498DB;"></div>
+                <div class="vmc-content">
+                    <div class="vmc-photo" style="display:flex; align-items:center; justify-content:center;"><i class="fas fa-image fa-3x" style="color:#cbd5e1;"></i></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:10px; font-weight:800; color:#94a3b8;">OP #8595</span>
+                        <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:800;">PLANEJADA</span>
+                    </div>
+                    <div style="font-weight:800; font-size:13px; margin:5px 0;">BERMUDA JEANS SLIM - REF: 45</div>
+                    <div style="font-size:11px; color:#64748b;">Qtd: 200 un | Coleção: Outono-Inverno</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

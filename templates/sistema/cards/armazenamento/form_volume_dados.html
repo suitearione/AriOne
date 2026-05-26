@@ -1,0 +1,373 @@
+{# =============================================================================
+   Caminho  : templates/sistema/cards/armazenamento/form_volume_dados.html
+   Função   : Painel de Telemetria de Dados AriOne (Quiet Luxury)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap" style="background: #f8fafc; min-height: 100vh;">
+
+    {# CABEÇALHO MESTRE (PADRÃO OURO) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Volume de Dados",
+        subtitulo="Sistema > Armazenamento > Telemetria",
+        icone="fa-server",
+        form_id="form-volume-dados",
+        cor_tema="#2c3e50",
+        func_fechar="fecharModalGlobal()",
+        aba_retorno="armazenamento",
+        blueprint_retorno="sistema",
+        status="Sincronizado",
+        ajuda="Este painel exibe a saúde volumétrica do AriOne. Ele analisa em tempo real o diretório raiz, ignorando ambientes virtuais e metadados de desenvolvimento para fornecer uma visão precisa do core do sistema."
+    ) }}
+
+    <div class="fp-body" style="padding: 25px; max-width: 900px; margin: 0 auto;">
+        
+        {# STATUS DE ANALISE #}
+        <div id="status-analise" style="margin-bottom: 20px; display: none;">
+            <div style="background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #edf2f7; display: flex; align-items: center; gap: 15px;">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <span style="font-size: 13px; font-weight: 700; color: #64748b;">Escaneando infraestrutura...</span>
+            </div>
+        </div>
+
+        {# GRID DE KPIs #}
+        <div class="fp-row" style="margin-bottom: 25px;">
+            <div class="fp-group fp-flex-1">
+                <div class="telemetria-card">
+                    <div class="telemetria-icon" style="background: rgba(41, 128, 185, 0.1); color: #2980B9;"><i class="fas fa-folder-open"></i></div>
+                    <div class="telemetria-info">
+                        <span class="telemetria-label">Estrutura de Pastas</span>
+                        <span class="telemetria-value" id="val-pastas">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="fp-group fp-flex-1">
+                <div class="telemetria-card">
+                    <div class="telemetria-icon" style="background: rgba(39, 174, 96, 0.1); color: #27AE60;"><i class="fas fa-file-code"></i></div>
+                    <div class="telemetria-info">
+                        <span class="telemetria-label">Arquivos do Core</span>
+                        <span class="telemetria-value" id="val-arquivos">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# DETALHAMENTO POR TECNOLOGIA #}
+        <div style="margin-bottom: 30px;">
+            <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;">Detalhamento por Arquitetura</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                
+                <!-- MODELS -->
+                <div class="detalhe-item">
+                    <div class="detalhe-header">
+                        <i class="fas fa-database" style="color: #3498DB;"></i>
+                        <span>MODELS (.py)</span>
+                    </div>
+                    <div class="detalhe-body">
+                        <div class="detalhe-main"><span id="det-models-mb">0</span> <small>MB</small></div>
+                        <div class="detalhe-sub"><span id="det-models-count">0</span> arquivos de banco</div>
+                    </div>
+                </div>
+
+                <!-- ROUTES -->
+                <div class="detalhe-item">
+                    <div class="detalhe-header">
+                        <i class="fas fa-route" style="color: #E67E22;"></i>
+                        <span>ROTAS (.py)</span>
+                    </div>
+                    <div class="detalhe-body">
+                        <div class="detalhe-main"><span id="det-routes-mb">0</span> <small>MB</small></div>
+                        <div class="detalhe-sub"><span id="det-routes-count">0</span> arquivos de lógica</div>
+                    </div>
+                </div>
+
+                <!-- HTML -->
+                <div class="detalhe-item">
+                    <div class="detalhe-header">
+                        <i class="fab fa-html5" style="color: #E74C3C;"></i>
+                        <span>INTERFACES (.html)</span>
+                    </div>
+                    <div class="detalhe-body">
+                        <div class="detalhe-main"><span id="det-html-mb">0</span> <small>MB</small></div>
+                        <div class="detalhe-sub"><span id="det-html-count">0</span> templates jinja2</div>
+                    </div>
+                </div>
+
+                <!-- DB FISICO -->
+                <div class="detalhe-item">
+                    <div class="detalhe-header">
+                        <i class="fas fa-file-invoice" style="color: #9B59B6;"></i>
+                        <span>BANCO FÍSICO (.db)</span>
+                    </div>
+                    <div class="detalhe-body">
+                        <div class="detalhe-main"><span id="det-db-mb">0</span> <small>MB</small></div>
+                        <div class="detalhe-sub"><span id="det-db-count">0</span> bases sqlite</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {# SEÇÃO CLOUD #}
+        <div style="margin-bottom: 30px;">
+            <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;">Sincronização Cloud (Backup)</div>
+            <div class="fp-row">
+                <div class="fp-group fp-flex-1">
+                    <div class="cloud-card">
+                        <i class="fab fa-aws cloud-logo" style="color: #FF9900;"></i>
+                        <div style="flex: 1;">
+                            <div class="cloud-name">Amazon S3 Storage</div>
+                            <div class="cloud-status" id="cloud-aws-status">Verificando...</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="cloud-size"><span id="cloud-aws-gb">0.000</span> GB</div>
+                            <div class="cloud-count"><span id="cloud-aws-count">0</span> Snapshots</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fp-group fp-flex-1">
+                    <div class="cloud-card">
+                        <i class="fab fa-google-drive cloud-logo" style="color: #1DA1F2;"></i>
+                        <div style="flex: 1;">
+                            <div class="cloud-name">Google Drive Sync</div>
+                            <div class="cloud-status" id="cloud-gdrive-status">Verificando...</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="cloud-size">AUTOMÁTICO</div>
+                            <div class="cloud-count">Via G-Cloud API</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD CENTRAL DE ARMAZENAMENTO #}
+        <div class="fp-card" style="border: none; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; position: relative; border-radius: 20px;">
+            <i class="fas fa-microchip" style="position: absolute; right: -20px; bottom: -20px; font-size: 150px; opacity: 0.05; transform: rotate(-15deg);"></i>
+            
+            <div class="fp-card-body" style="padding: 40px; text-align: center; position: relative; z-index: 2;">
+                <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; opacity: 0.6; margin-bottom: 15px;">Workspace Total Payload</div>
+                
+                <div style="display: flex; align-items: baseline; justify-content: center; gap: 10px;">
+                    <span id="val-gb" style="font-size: 64px; font-weight: 900; letter-spacing: -2px; text-shadow: 0 10px 20px rgba(0,0,0,0.3);">0.000</span>
+                    <span style="font-size: 24px; font-weight: 700; opacity: 0.8;">GB</span>
+                </div>
+
+                <div style="margin-top: 30px; background: rgba(255,255,255,0.1); border-radius: 100px; height: 10px; width: 100%; position: relative; border: 1px solid rgba(255,255,255,0.05);">
+                    <div id="prog-space" style="position: absolute; left: 0; top: 0; height: 100%; background: linear-gradient(90deg, #3498DB, #2ECC71); border-radius: 100px; width: 0%; transition: 2s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
+                </div>
+            </div>
+        </div>
+
+                <div style="margin-top: 40px; display: flex; justify-content: center; gap: 40px;">
+                    <div style="text-align: left;">
+                        <div style="font-size: 10px; opacity: 0.5; font-weight: 800; text-transform: uppercase;">Versão do Core</div>
+                        <div style="font-size: 14px; font-weight: 700;">AriOne v1.8.4-PRO</div>
+                    </div>
+                    <div style="text-align: left;">
+                        <div style="font-size: 10px; opacity: 0.5; font-weight: 800; text-transform: uppercase;">Integridade</div>
+                        <div style="font-size: 14px; font-weight: 700; color: #2ecc71;"><i class="fas fa-check-circle"></i> Excelente</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# DETALHES DO DIRETÓRIO #}
+        <div style="margin-top: 30px;">
+            <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; padding-left: 10px;">Localização do Workspace</div>
+            <div style="background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #edf2f7; display: flex; align-items: center; justify-content: space-between;">
+                <code id="val-root" style="font-family: 'Roboto Mono', monospace; font-size: 11px; color: #1e293b; font-weight: 600;">C:\AriOneDEV</code>
+                <button class="fp-btn" style="height: 28px; font-size: 10px; background: #f1f5f9; color: #475569;" onclick="arioneToast('Caminho copiado!', 'info')">
+                    <i class="fas fa-copy"></i> COPIAR
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            <p style="font-size: 11px; color: #94a3b8; font-weight: 600;">
+                <i class="fas fa-shield-alt"></i> Relatório gerado de forma segura pelo Engine AriOneDEV.<br>
+                Arquivos temporários e logs de debug são excluídos desta métrica.
+            </p>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .telemetria-card {
+        background: #fff;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #edf2f7;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: 0.3s;
+    }
+    .telemetria-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.02);
+        border-color: #e2e8f0;
+    }
+    .telemetria-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    .telemetria-info {
+        display: flex;
+        flex-direction: column;
+    }
+    .telemetria-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+    }
+    .telemetria-value {
+        font-size: 24px;
+        font-weight: 900;
+        color: #1e293b;
+        letter-spacing: -0.5px;
+    }
+
+    .detalhe-item {
+        background: #fff;
+        padding: 15px;
+        border-radius: 14px;
+        border: 1px solid #edf2f7;
+    }
+    .detalhe-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 9px;
+        font-weight: 800;
+        color: #94a3b8;
+        margin-bottom: 12px;
+    }
+    .detalhe-main {
+        font-size: 20px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+    .detalhe-main small {
+        font-size: 10px;
+        opacity: 0.5;
+    }
+    .detalhe-sub {
+        font-size: 9px;
+        color: #64748b;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .cloud-card {
+        background: #fff;
+        padding: 15px;
+        border-radius: 14px;
+        border: 1px solid #edf2f7;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .cloud-logo {
+        font-size: 24px;
+    }
+    .cloud-name {
+        font-size: 11px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+    .cloud-status {
+        font-size: 9px;
+        font-weight: 700;
+        color: #27ae60;
+    }
+    .cloud-size {
+        font-size: 14px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+    .cloud-count {
+        font-size: 9px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+</style>
+
+<script>
+    function carregarTelemetria() {
+        const loading = document.getElementById('status-analise');
+        loading.style.display = 'block';
+
+        fetch('/sistema/api/estatisticas-sistema')
+            .then(res => res.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                // Animação dos Números KPIs
+                arioneAnimateNumber('val-pastas', data.pastas);
+                arioneAnimateNumber('val-arquivos', data.arquivos);
+                
+                // Detalhes Técnicos
+                arioneAnimateNumber('det-models-mb', data.detalhes.models_mb);
+                arioneAnimateNumber('det-models-count', data.detalhes.models_count);
+                arioneAnimateNumber('det-routes-mb', data.detalhes.routes_mb);
+                arioneAnimateNumber('det-routes-count', data.detalhes.routes_count);
+                arioneAnimateNumber('det-html-mb', data.detalhes.html_mb);
+                arioneAnimateNumber('det-html-count', data.detalhes.html_count);
+                arioneAnimateNumber('det-db-mb', data.detalhes.db_fisico_mb);
+                arioneAnimateNumber('det-db-count', data.detalhes.db_fisico_count);
+
+                // Cloud Stats
+                document.getElementById('cloud-aws-gb').innerText = data.cloud.aws_gb.toFixed(3);
+                document.getElementById('cloud-aws-count').innerText = data.cloud.aws_count;
+                document.getElementById('cloud-aws-status').innerText = data.cloud.aws_status;
+                document.getElementById('cloud-gdrive-status').innerText = data.cloud.gdrive_status;
+
+                // Payload Total
+                document.getElementById('val-gb').innerText = data.espaco_gb.toFixed(3);
+                document.getElementById('val-root').innerText = data.root;
+                
+                // Barra de Progresso
+                setTimeout(() => {
+                    document.getElementById('prog-space').style.width = '100%';
+                }, 100);
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                console.error(err);
+                arioneToast('Erro na telemetria', 'danger');
+            });
+    }
+
+    function arioneAnimateNumber(id, final) {
+        const el = document.getElementById(id);
+        if(!el) return;
+        let start = 0;
+        const duration = 1200;
+        const step = (timestamp) => {
+            if (!start) start = timestamp;
+            const progress = Math.min((timestamp - start) / duration, 1);
+            const value = (progress * final);
+            el.innerText = (final % 1 === 0) ? Math.floor(value).toLocaleString('pt-BR') : value.toFixed(2);
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // Inicializa
+    setTimeout(carregarTelemetria, 500);
+</script>
+{% endblock %}

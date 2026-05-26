@@ -1,0 +1,178 @@
+{# =============================================================================
+   Arquivo  : form_comprasservicos.html
+   Caminho  : templates/operacoes/cards/compras/form_comprasservicos.html
+   Função   : Compra de Serviços (Layout Limpo).
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% block content %}
+<div class="ctx-ope-wrap">
+    <style>
+        :root { --ope-pri: {{ cor or '#8E44AD' }}; --ope-acc: {{ cor or '#9B59B6' }}; --ope-success: #27AE60; }
+        .ctx-ope-header { background: linear-gradient(135deg, var(--ope-pri), #71368A); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-ope-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        .ope-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .ope-title { font-size: 11px; font-weight: 800; color: var(--ope-pri); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .ope-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .ope-group { display: flex; flex-direction: column; gap: 5px; }
+        .ope-label { font-size: 11px; font-weight: 700; color: #64748b; }
+        .ope-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
+        .ope-tabs-nav { display: flex; gap: 5px; border-bottom: 2px solid #f1f5f9; margin-top: 15px; }
+        .ope-tab { padding: 12px 20px; cursor: pointer; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; border-bottom: 3px solid transparent; }
+        .ope-tab.active { color: var(--ope-acc); border-bottom-color: var(--ope-acc); }
+        .ope-tab-panel { display: none; padding-top: 20px; }
+        .ope-tab-panel.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from {opacity:0; transform: translateY(5px);} to {opacity:1; transform: translateY(0);} }
+
+        /* Toolbar CRUD */
+        .ope-toolbar { background: #f8fafc; border-bottom: 1.5px solid #edf2f7; padding: 10px 22px; display: flex; gap: 10px; }
+        .btn-crud { background: #fff; border: 1.5px solid #e2e8f0; padding: 6px 15px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; }
+        .btn-crud:hover { border-color: var(--ope-pri); color: var(--ope-pri); }
+        .btn-crud.active { background: var(--ope-pri); color: #fff; border-color: var(--ope-pri); }
+    </style>
+
+    <div class="ctx-ope-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-tools"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">{{ titulo or 'Compra de Serviços' }}</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Gestão de Prestadores & Retenções</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);" onclick="fecharModalOpe()">Sair</button>
+            <button class="ge-btn-salvar" style="background:#fff; color:var(--ope-pri); border:none; padding:8px 24px; border-radius:6px; font-weight:700; cursor:pointer;"><i class="fas fa-check-double"></i> Finalizar Compra</button>
+        </div>
+    </div>
+
+    <!-- Toolbar de Ações -->
+    <div class="ope-toolbar">
+        <button class="btn-crud active"><i class="fas fa-plus"></i> Novo</button>
+        <button class="btn-crud"><i class="fas fa-edit"></i> Editar</button>
+        <button class="btn-crud"><i class="fas fa-search"></i> Consultar</button>
+        <button class="btn-crud"><i class="fas fa-print"></i> Imprimir</button>
+        <button class="btn-crud" style="margin-left:auto; color:#cc3333;"><i class="fas fa-trash"></i> Excluir</button>
+    </div>
+
+    <div class="ctx-ope-body">
+        <form>
+            <div class="ope-section">
+                <div class="ope-row">
+                    <div class="ope-group" style="flex:2.5;">
+                        <label class="ope-label">Prestador de Serviço</label>
+                        <select class="ope-input" onchange="const info = this.nextElementSibling; info.style.display = this.value ? 'flex' : 'none';">
+                            <option value="">Selecione...</option>
+                            <option value="1">Consultor TI Especialista</option>
+                        </select>
+                        <div class="prestador-info-quick" style="display:none; background: #f5f0f7; border-radius: 8px; padding: 10px 15px; border-left: 4px solid var(--ope-pri); margin-top: 5px; gap: 20px; font-size: 11px; color: #4a235a;">
+                            <div style="display:flex; flex-direction:column;"><span style="font-weight:800; font-size:9px; color:#94a3b8; text-transform:uppercase;">Documento</span><span>00.000.000/0001-00</span></div>
+                            <div style="display:flex; flex-direction:column;"><span style="font-weight:800; font-size:9px; color:#94a3b8; text-transform:uppercase;">Última NFSe</span><span>nº 455 (15/03)</span></div>
+                        </div>
+                    </div>
+                    <div class="ope-group"><label class="ope-label">Competência</label><input type="month" class="ope-input"></div>
+                    <div class="ope-group"><label class="ope-label">Comprador</label><select class="ope-input"><option>André Silva</option></select></div>
+                </div>
+                <div class="ope-row">
+                    <div class="ope-group"><label class="ope-label">Conta Gerencial</label><select class="ope-input"><option>Serviços Técnicos</option></select></div>
+                    <div class="ope-group"><label class="ope-label">Centro de Custo</label><select class="ope-input"><option>Administrativo</option></select></div>
+                    <div class="ope-group"><label class="ope-label">Local Prestação</label><select class="ope-input"><option>Interno</option><option>Externo</option></select></div>
+                </div>
+            </div>
+
+            <!-- Retenções -->
+            <div class="ope-section">
+                <div class="ope-title">Valores e Retenções de Impostos</div>
+                <div class="ope-row">
+                    <div class="ope-group"><label class="ope-label">Valor Bruto (R$)</label><input type="text" class="ope-input" placeholder="0,00"></div>
+                    <div class="ope-group"><label class="ope-label">ISS Retido</label><input type="text" class="ope-input" readonly value="R$ 0,00" style="background:#f8fafc;"></div>
+                    <div class="ope-group"><label class="ope-label">INSS / IRRF</label><input type="text" class="ope-input" readonly value="R$ 0,00" style="background:#f8fafc;"></div>
+                    <div class="ope-group"><label class="ope-label" style="color:var(--ope-pri);">LÍQUIDO A PAGAR</label><input type="text" class="ope-input" readonly value="R$ 0,00" style="font-weight:900; border-color:var(--ope-pri);"></div>
+                </div>
+            </div>
+
+            <div class="ope-tabs-nav">
+                <div class="ope-tab active" data-ope-tab="pagamento">Pagamento</div>
+                <div class="ope-tab" data-ope-tab="decisao">Aprovação</div>
+                <div class="ope-tab" data-ope-tab="observacoes">Observações</div>
+            </div>
+
+            <div class="ope-tab-panel active" id="ope-tab-pagamento">
+                <div class="ope-row">
+                    <div class="ope-group"><label class="ope-label">Meio de Pagamento</label><select class="ope-input"><option>Transferência</option><option>Boleto</option></select></div>
+                    <div class="ope-group"><label class="ope-label">Data Vencimento</label><input type="date" class="ope-input"></div>
+                </div>
+            </div>
+
+            <div class="ope-tab-panel" id="ope-tab-decisao">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:10px; display:flex; gap:10px;">
+                    <button type="button" class="ope-tab" style="background:var(--ope-success); color:#fff; border:none; border-radius:6px;">Aprovar Pagamento</button>
+                    <button type="button" class="ope-tab" style="background:#fff; color:var(--ope-danger); border:1px solid var(--ope-danger); border-radius:6px;">Auditoria Necessária</button>
+                </div>
+            </div>
+
+            <div class="ope-tab-panel" id="ope-tab-observacoes">
+                 <textarea class="ope-input" style="width:100%;" rows="3" placeholder="Descrição do serviço executado..."></textarea>
+            </div>
+            
+        </form>
+
+        {# ── LISTA DE LANÇAMENTOS RECENTES (PADRÃO ARIONE) ── #}
+        <div class="ope-section" style="margin-top:25px; padding:0; overflow:hidden;">
+            <div style="background:var(--ope-pri); color:#fff; padding:10px 18px; font-size:11px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fas fa-list"></i> ÚLTIMOS SERVIÇOS CONTRATADOS</span>
+                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px;">Contratações de Terceiros</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="ope-table-list">
+                    <thead>
+                        <tr>
+                            <th>ID OS</th>
+                            <th>Prestador</th>
+                            <th>Serviço</th>
+                            <th>Vencimento</th>
+                            <th>Valor Líquido</th>
+                            <th>Status Pagto</th>
+                            <th style="width:50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="ope-badge-id">#SV-0102</span></td>
+                            <td><strong>André TI Soluções</strong></td>
+                            <td>Manutenção de Servidores</td>
+                            <td>15/04/2026</td>
+                            <td style="font-weight:700;">R$ 1.850,00</td>
+                            <td><span class="ope-status-badge">Agendado</span></td>
+                            <td><button class="ope-btn-acao"><i class="fas fa-eye"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ope-table-list { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .ope-table-list th { background: #f8fafc; padding: 12px 15px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; border-bottom: 2px solid #edf2f7; }
+    .ope-table-list td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+    .ope-table-list tbody tr:hover { background: #f5f0f7; }
+    
+    .ope-badge-id { background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 10px; }
+    .ope-status-badge { background: #f3e5f5; color: #7b1fa2; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 10px; display: inline-flex; align-items: center; gap: 5px; }
+    
+    .ope-btn-acao { background: #f1f5f9; border: none; width: 28px; height: 28px; border-radius: 6px; color: var(--ope-pri); cursor: pointer; transition: 0.2s; }
+    .ope-btn-acao:hover { background: var(--ope-pri); color: #fff; }
+</style>
+
+<script>
+    document.querySelectorAll('.ope-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const wrap = tab.closest('.ctx-ope-wrap');
+            wrap.querySelectorAll('.ope-tab').forEach(t => t.classList.remove('active'));
+            wrap.querySelectorAll('.ope-tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            wrap.querySelector('#ope-tab-' + tab.dataset.opeTab).classList.add('active');
+        });
+    });
+</script>
+{% endblock %}

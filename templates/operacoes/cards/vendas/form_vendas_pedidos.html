@@ -1,0 +1,2213 @@
+{# =============================================================================
+Caminho : templates/operacoes/cards/vendas/form_vendas_pedidos.html
+Função : Pedido de Vendas (PADRÃO HCM GOLDEN STANDARD - MONOLÍTICO LUXURY)
+============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+{% set target = pedido if pedido else (orcamento if orcamento else None) %}
+{% set is_conversao = True if orcamento and not pedido else False %}
+
+{# ── CONTEÚDO FIXO NO TOPO (Cabeçalho Mestre) ── #}
+{{ comp.cabecalho_mestre_arione(
+titulo="Pedido de Venda",
+subtitulo="Operacional > Vendas > Pedidos",
+icone="fa-shopping-cart",
+form_id="form-pedido-venda",
+onclick_save="arioneSalvarDocumento('Pedido de Venda', this, 'form-pedido-venda')",
+onclick_clonar="arioneClonarRegistro('form-pedido-venda')",
+onclick_novo="arioneResetForm('form-pedido-venda')",
+onclick_search="focusSearchMaster()",
+onclick_filter="arioneToast('Filtros Avançados', 'info')",
+cor_tema="#03A9F4",
+func_fechar="fecharModalGlobal()",
+aba_retorno="vendas",
+blueprint_retorno="operacoes",
+status=pedido.status|upper if pedido else "NOVO",
+ajuda="O Pedido de Venda oficializa a negociação e inicia os fluxos de faturamento e produção."
+) }}
+
+<div class="fe-wrap mod-vendas" style="padding: 0 24px 40px 24px;">
+
+    <form id="form-pedido-venda" action="{{ url_for('operacoes.salvar_pedido_venda') }}" method="POST" novalidate
+        style="display: flex; flex-direction: column; gap: 20px; padding-bottom: 50px;">
+        <input type="hidden" name="pedido_id" id="pedido_id" value="{{ pedido.id if pedido else '' }}">
+        <input type="hidden" name="orcamento_id" id="orcamento_id" value="{{ target.id if is_conversao else (pedido.orcamento_id if pedido else '') }}">
+
+        {# CARD 1: IDENTIFICAÇÃO #}
+        <div class="fp-card"
+            style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff;">
+            <div class="fp-card-body" style="padding: 20px;">
+
+                {# LINHA 1: METADADOS DO DOCUMENTO #}
+                <div class="fp-row" style="gap: 12px; margin-bottom: 15px; flex-wrap: nowrap;">
+                    <div class="fp-group" style="width: 130px !important; min-width: 0 !important; flex: none;">
+                        <label class="fp-label">Nº PEDIDO</label>
+                        <input class="fp-input" type="text" name="numero" id="doc_numero" placeholder="PED-..."
+                            value="{{ pedido.numero if pedido else '' }}"
+                            style="font-weight: 900; color: #2980B9; background: #f8fafc; height: 38px; text-align: center;">
+                    </div>
+                    <div class="fp-group" style="width: 130px !important; min-width: 0 !important; flex: none;">
+                        <label class="fp-label">EMISSÃO</label>
+                        <input class="fp-input" type="date" name="data_emissao" value="{{ today }}"
+                            style="height: 38px;">
+                    </div>
+                    <div class="fp-group" style="width: 130px !important; min-width: 0 !important; flex: none;">
+                        <label class="fp-label">PRAZO DE ENTREGA</label>
+                        <input class="fp-input" type="date" name="data_promessa" id="data_promessa"
+                            style="height: 38px; color: #E67E22; font-weight: 700;">
+                    </div>
+                    <div class="fp-group" style="flex: 2;">
+                        <label class="fp-label">CONSULTOR RESPONSÁVEL</label>
+                        <select class="fp-input" name="vendedor_id" style="height: 38px; font-weight: 700;">
+                            {% for v in vendedores %}
+                            <option value="{{ v.id }}" {% if target and target.vendedor_id == v.id %}selected{% endif %}>{{ v.nome_exibivel|upper if v.nome_exibivel else v.nome|upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="fp-group" style="width: 150px !important; min-width: 0 !important; flex: none;">
+                        <label class="fp-label">TIPO DE VENDA</label>
+                        <select class="fp-input" name="tipo_venda" style="height: 38px; font-weight: 700; color: #7A255F;">
+                            <option value="Produtos" {% if target and target.tipo_venda == 'Produtos' %}selected{% endif %}>PRODUTOS</option>
+                            <option value="Serviços" {% if target and target.tipo_venda == 'Serviços' %}selected{% endif %}>SERVIÇOS</option>
+                        </select>
+                    </div>
+                    <div class="fp-group" style="width: 180px !important; min-width: 0 !important; flex: none;">
+                        <label class="fp-label">STATUS {{ comp.master_icon("status") }}</label>
+                        <select class="fp-input" name="status_documento" id="doc_status"
+                            style="height: 38px; font-weight: 800; color: #fff; background: #2980B9; border-radius: 8px; text-align: center;"
+                            onchange="atualizarStatusVenda(); const opt = this.options[this.selectedIndex]; if(opt.dataset.cor) this.style.background = opt.dataset.cor;">
+                            {% for s in status_lista %}
+                            <option value="{{ s.nome }}" data-cor="{{ s.cor }}"
+                                {% if (pedido and pedido.status == s.nome) or (not pedido and loop.first) %}selected{% endif %}
+                                style="background: #fff; color: #333;">{{ s.nome|upper }}</option>
+                            {% else %}
+                            <option value="AGUARDANDO" data-cor="#94a3b8">AGUARDANDO</option>
+                            <option value="CONFIRMADO" data-cor="#27AE60">CONFIRMADO (RESERVA)</option>
+                            <option value="FATURADO" data-cor="#16A085">FATURADO (SAÍDA)</option>
+                            <option value="CANCELADO" data-cor="#E74C3C">CANCELADO</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                {# LINHA 2: CLIENTE + PARÂMETROS COMERCIAIS #}
+                <div class="fp-row" style="gap: 12px; align-items: flex-end; margin-bottom: 15px;">
+                    <div class="fp-group" style="flex: 2; min-width: 0 !important;">
+                        <label class="fp-label">NOME DO CLIENTE
+                            {{ comp.master_icon("clientes") }}
+                            <button type="button" onclick="toggleDetails()"
+                                style="background: #f1f5f9; border: none; padding: 2px 6px; border-radius: 4px; font-size: 8px; font-weight: 800; color: #64748b; cursor: pointer; margin-left: 5px;">
+                                <i class="fas fa-eye"></i> DADOS
+                            </button>
+                        </label>
+                        <div class="fp-input-wrapper" style="position: relative;">
+                            <input type="hidden" name="cliente_id" id="cliente_id" value="{{ target.cliente_id if target else '' }}">
+                            <input class="fp-input" list="lista-clientes" name="cliente_nome" id="cliente_busca"
+                                placeholder="Pesquisar cliente..."
+                                value="{{ ('[' ~ ('PJ' if target.cliente.tipo_pessoa == 'J' else 'PF') ~ '] ' ~ target.cliente.nome|upper) if target and target.cliente else '' }}"
+                                style="font-weight: 700; border-color: #cbd5e1; height: 38px; padding-left: 12px;"
+                                oninput="this.value = this.value.toUpperCase(); syncCliente(this);">
+                            <i class="fas fa-search"
+                                style="position: absolute; right: 12px; top: 11px; color: #94a3b8; font-size: 12px;"></i>
+                        </div>
+                    </div>
+
+                    <div class="fp-group" style="width: 50px !important; min-width: 50px !important; flex: none;">
+                        <label class="fp-label" style="font-size: 9px; text-align: center; width: 100%;">TIPO</label>
+                        <input class="fp-input" id="cliente_tipo_display" readonly
+                            style="height: 38px; text-align: center; background: #f8fafc; font-weight: 800; color: #2980B9; padding: 0; font-size: 11px;"
+                            placeholder="--">
+                    </div>
+
+                    <div class="fp-group" style="width: 160px !important; min-width: 160px !important; flex: none;">
+                        <label class="fp-label" style="font-size: 10px;">PERFIL VENDA</label>
+                        <select class="fp-input" name="perfil_id"
+                            style="height: 38px; font-weight: 700; color: #7A255F; font-size: 11px; padding: 0 10px;">
+                            {% for p in perfis %}
+                            <option value="{{ p.id }}">{{ p.nome|upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="fp-group" style="width: 160px !important; min-width: 160px !important; flex: none;">
+                        <label class="fp-label" style="font-size: 10px;">TABELA PREÇO</label>
+                        <select class="fp-input" name="tabela_id"
+                            style="height: 38px; font-weight: 700; color: #2980B9; font-size: 11px; padding: 0 10px;">
+                            {% for t in tabelas %}
+                            <option value="{{ t.id }}">{{ t.nome|upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="fp-group" style="width: 160px !important; min-width: 160px !important; flex: none;">
+                        <label class="fp-label" style="font-size: 10px;">CANAL DE VENDA <i class="fas fa-headset"></i></label>
+                        <select class="fp-input" name="canal_venda" id="canal_venda"
+                            style="height: 38px; font-weight: 700; color: #0284c7; font-size: 11px; padding: 0 10px;">
+                            <option value="">-- SELECIONE --</option>
+                            {% for c in canais_digitais %}
+                            <option value="{{ c.nome }}" {% if target and target.canal_venda == c.nome %}selected{% endif %}>{{ c.nome|upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                {# PAINEL DE DETALHES (OCULTO POR PADRÃO) #}
+                <div id="panel-cliente-details"
+                    style="display: none; margin-bottom: 15px; padding: 15px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                    <div style="display: flex; gap: 40px; align-items: flex-start;">
+                        <div>
+                            <div id="det-doc" style="font-weight: 800; font-size: 14px; color: #1e293b; letter-spacing: -0.2px;">-</div>
+                            <div id="det-whats" style="color: #27AE60; font-weight: 700; font-size: 12px; margin-top: 2px;">WhatsApp: -</div>
+                            <div id="det-email" style="color: #64748b; font-weight: 600; font-size: 11px; margin-top: 2px; text-transform: lowercase;">-</div>
+                        </div>
+                        <div style="flex: 1;">
+                            <div id="det-endereco-completo" style="display: flex; gap: 0; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 11px; color: #334155; animation: feFadeUp 0.3s ease; overflow: hidden;">
+                                {# Coluna 1: Principal #}
+                                <div style="flex: 1; padding: 15px; border-right: 1px solid #e2e8f0;">
+                                    <div style="font-weight: 900; color: #7A255F; text-transform: uppercase; font-size: 9px; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-home"></i> Endereço Principal
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px;">
+                                        {# Linha 1: CEP | Cidade | UF #}
+                                        <div style="grid-column: span 4;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">CEP</label>
+                                            <input class="fp-input" id="det-cep" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
+                                        </div>
+                                        <div style="grid-column: span 6;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Cidade</label>
+                                            <input class="fp-input" id="det-cidade" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
+                                        </div>
+                                        <div style="grid-column: span 2;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">UF</label>
+                                            <input class="fp-input" id="det-uf" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; text-align: center; padding: 0;">
+                                        </div>
+
+                                        {# Linha 2: Logradouro | Número #}
+                                        <div style="grid-column: span 9;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Logradouro</label>
+                                            <input class="fp-input" id="det-rua" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
+                                        </div>
+                                        <div style="grid-column: span 3;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Número</label>
+                                            <input class="fp-input" id="det-num" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
+                                        </div>
+
+                                        {# Linha 3: Complemento | Bairro #}
+                                        <div style="grid-column: span 6;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Complemento</label>
+                                            <input class="fp-input" id="det-compl" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
+                                        </div>
+                                        <div style="grid-column: span 6;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Bairro</label>
+                                            <input class="fp-input" id="det-bairro" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {# Separador Visual: Travessão Vertical #}
+                                <div style="width: 1px; background: #e2e8f0; height: 100%;"></div>
+
+                                {# Coluna 2: Entrega #}
+                                <div style="flex: 1; padding: 15px; background: #fff;">
+                                    <div style="font-weight: 900; color: #2980B9; text-transform: uppercase; font-size: 9px; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                                        <div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-truck-fast"></i> Endereço para Entrega</div>
+                                        <div style="font-size: 8px; color: #94a3b8; font-weight: 700;">CAMPOS EDITÁVEIS</div>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px;">
+                                        {# Linha 1: CEP | Cidade | UF #}
+                                        <div style="grid-column: span 4;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">CEP</label>
+                                            <div style="display: flex; gap: 5px;">
+                                                 <input type="text" name="ent_cep" id="det-cep-ent" class="fp-input" value="{{ pedido.ent_cep or '' }}" style="height: 28px; font-size: 11px; font-weight: 700; width: 100%;" placeholder="00000-000" onblur="consultarCEPEntrega(this.value)">
+                                                 <button type="button" onclick="consultarCEPEntrega(document.getElementById('det-cep-ent').value)" style="background: #2980B9; color: #fff; border: none; border-radius: 4px; padding: 0 8px; cursor: pointer;"><i class="fas fa-search"></i></button>
+                                             </div>
+                                        </div>
+                                        <div style="grid-column: span 6;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Cidade</label>
+                                            <input type="text" name="ent_cidade" id="det-cidade-ent" class="fp-input" value="{{ pedido.ent_cidade or '' }}" style="height: 28px; font-size: 11px; font-weight: 700;" placeholder="Cidade">
+                                        </div>
+                                        <div style="grid-column: span 2;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">UF</label>
+                                            <input type="text" name="ent_uf" id="det-uf-ent" class="fp-input" value="{{ pedido.ent_uf or '' }}" style="height: 28px; font-size: 11px; font-weight: 700;" placeholder="UF">
+                                        </div>
+
+                                        {# Linha 2: Logradouro | Número #}
+                                        <div style="grid-column: span 9;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Logradouro</label>
+                                            <input type="text" name="ent_logradouro" id="det-rua-ent" class="fp-input" value="{{ pedido.ent_logradouro or '' }}" style="height: 28px; font-size: 11px; font-weight: 700;" placeholder="Rua / Av...">
+                                        </div>
+                                        <div style="grid-column: span 3;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Número</label>
+                                            <input type="text" name="ent_numero" id="det-num-ent" class="fp-input" value="{{ pedido.ent_numero or '' }}" style="height: 28px; font-size: 11px; font-weight: 700;" placeholder="Nº">
+                                        </div>
+
+                                        {# Linha 3: Complemento | Bairro #}
+                                        <div style="grid-column: span 6;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Complemento / Referências</label>
+                                            <input type="text" name="ent_complemento" id="det-compl-ent" class="fp-input" value="{{ pedido.ent_complemento or '' }}" style="height: 28px; font-size: 11px; font-weight: 700;" placeholder="Apto, Bloco, etc...">
+                                        </div>
+                                        <div style="grid-column: span 6;">
+                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Bairro</label>
+                                            <input type="text" name="ent_bairro" id="det-bairro-ent" class="fp-input" value="{{ pedido.ent_bairro or '' }}" style="height: 28px; font-size: 11px; font-weight: 700;" placeholder="Bairro">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 2: ITENS E RESUMO INTEGRADO #}
+        <div class="fp-card"
+            style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff; overflow: hidden;">
+            <div class="fp-card-title"
+                style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; background: #fff;">
+                <div style="font-weight: 800; color: #1e293b; font-size: 13px;">
+                    <i class="fas fa-boxes" style="color: #2980B9; margin-right: 8px;"></i> ITENS DO PEDIDO
+                </div>
+                <button type="button" onclick="arioneAdicionarLinhaPedido()" class="fp-btn"
+                    style="background: #2980B9; color: #fff; font-size: 11px; padding: 6px 15px; border-radius: 6px; font-weight: 700;">
+                    <i class="fas fa-plus"></i> ADICIONAR ITEM
+                </button>
+            </div>
+            <div class="fp-card-body" style="padding: 0;">
+                <table class="arione-table-hcm" id="tabela-itens-ped">
+                    <thead>
+                        <tr>
+                            <th style="width: 250px;">SKU / CÓDIGO</th>
+                            <th>DESCRIÇÃO DO PRODUTO</th>
+                            <th style="width: 85px; text-align: center;">UN</th>
+                            <th style="width: 100px; text-align: center;">QTD</th>
+                            <th style="width: 120px; text-align: right;">VALOR UNIT.</th>
+                            <th style="width: 75px; text-align: center;">DESC.</th>
+                            <th style="width: 130px; text-align: right;">SUBTOTAL</th>
+                            <th style="width: 80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if target and target.itens %}
+                            {% for item in target.itens %}
+                            <tr class="item-row" data-peso="{{ item.produto.peso|float if item.produto.peso else 0.0 }}">
+                                <td>
+                                    <div class="arione-arrow-wrapper">
+                                        <input type="text" class="fp-input table-input-sku arione-input-with-arrow" name="item_sku[]" 
+                                            value="{{ item.variacao.sku if item.variacao else (item.produto.referencia or item.produto.cod_interno or '') }}"
+                                            oninput="this.value = this.value.toUpperCase(); syncSKU(this)"
+                                            onclick="syncSKU(this)"
+                                            autocomplete="off"
+                                            style="width: 100% !important; height: 34px !important; font-family: monospace;">
+                                        <i class="fas fa-caret-down arione-physical-arrow" onclick="syncSKU(this.previousElementSibling)"></i>
+                                    </div>
+                                    <div style="font-size: 8px; color: #94a3b8; font-weight: 700; margin-top: 2px;">
+                                        PESO: <span class="row-peso-debug">{{ item.produto.peso|float if item.produto.peso else 0.0 }}</span> KG | ID: {{ item.produto.id }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="arione-arrow-wrapper">
+                                        <input type="text" class="fp-input table-input-desc arione-input-with-arrow" name="item_nome[]" 
+                                            value="{{ (item.produto.descricao ~ ' - ' ~ item.variacao.nome) if item.variacao else item.produto.descricao }}"
+                                            autocomplete="off" style="width: 100% !important; height: 34px !important;"
+                                            oninput="syncProduto(this)"
+                                            onclick="syncProduto(this)">
+                                        <i class="fas fa-caret-down arione-physical-arrow" onclick="syncProduto(this.previousElementSibling)"></i>
+                                        <button type="button" onclick="toggleItemObs(this)" title="Observação do Item"
+                                            style="color: {{ '#0072CE' if item.observacoes else '#94a3b8' }}; background: none; border: none; cursor: pointer; padding: 0 5px; z-index: 10; margin-left: 5px;"><i
+                                                class="fas fa-comment-dots"></i></button>
+                                        <input type="hidden" class="table-input-obs" name="item_obs[]" value="{{ item.observacoes or '' }}">
+                                        <input type="hidden" class="table-input-id" name="item_produto_id[]" value="{{ item.produto_id }}">
+                                    </div>
+                                </td>
+                                <td><input type="text" class="fp-input table-input-un" name="item_un[]" value="{{ item.produto.unidade or 'UN' }}"
+                                        style="text-align: center; height: 34px !important; background: #f8fafc;" readonly>
+                                </td>
+                                <td><input type="number" class="fp-input table-input-qtd" name="item_qtd[]" value="{{ item.quantidade|int if item.quantidade == item.quantidade|int else item.quantidade }}"
+                                        style="text-align: center; height: 34px !important;"
+                                        oninput="calcularTotaisPedido()"></td>
+                                <td><input type="text" class="fp-input table-input-vlr" name="item_preco[]" 
+                                        value="{{ '{:,.2f}'.format(item.valor_unitario).replace(',','v').replace('.',',').replace('v','.') }}"
+                                        style="text-align: right; height: 34px !important;"
+                                        oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedido()"></td>
+                                <td>
+                                    <div style="display: flex; gap: 0; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                                        <input type="text" class="table-input-desc-val" name="item_desc_val[]" value="0,00"
+                                            style="flex: 1; border: none; text-align: right; padding: 6px 1px; font-size: 11px; font-weight: 600;"
+                                            oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedido()">
+                                        <select class="table-input-desc-tipo" name="item_desc_tipo[]"
+                                            style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; font-weight: 800; color: #64748b; padding: 6px 0px;"
+                                            onchange="calcularTotaisPedido()">
+                                            <option value="VALOR">R$</option>
+                                            <option value="PERCENT">%</option>
+                                        </select>
+                                    </div>
+                                </td>
+                                <td style="text-align: right; font-weight: 800; color: #2980B9;" class="col-total-linha">
+                                    R$ {{ '{:,.2f}'.format(item.total_item).replace(',','v').replace('.',',').replace('v','.') }}
+                                </td>
+                                <td style="text-align: center;"><button type="button"
+                                        onclick="this.closest('tr').remove(); calcularTotaisPedido();"
+                                        style="color: #ef4444; background: none; border: none; cursor: pointer;"><i
+                                            class="fas fa-trash-alt"></i></button></td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr class="item-row" data-peso="0">
+                                <td><input type="text" class="fp-input table-input-sku" name="item_sku[]" placeholder="SKU..."
+                                        list="lista-skus" oninput="this.value = this.value.toUpperCase(); syncSKU(this)"
+                                        style="height: 34px !important; font-family: monospace;"></td>
+                                <td>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="text" class="fp-input table-input-desc" name="item_nome[]" placeholder="Buscar produto..."
+                                            list="lista-produtos" style="flex: 1; height: 34px !important;"
+                                            oninput="syncProduto(this)">
+                                        <button type="button" onclick="toggleItemObs(this)" title="Observação do Item"
+                                            style="color: #94a3b8; background: none; border: none; cursor: pointer;"><i
+                                                class="fas fa-comment-dots"></i></button>
+                                        <input type="hidden" class="table-input-obs" name="item_obs[]">
+                                        <input type="hidden" class="table-input-id" name="item_produto_id[]">
+                                    </div>
+                                </td>
+                                <td><input type="text" class="fp-input table-input-un" name="item_un[]" value="UN"
+                                        style="text-align: center; height: 34px !important; background: #f8fafc;" readonly>
+                                </td>
+                                <td><input type="number" class="fp-input table-input-qtd" name="item_qtd[]" value="1"
+                                        style="text-align: center; height: 34px !important;"
+                                        oninput="calcularTotaisPedido()"></td>
+                                <td><input type="text" class="fp-input table-input-vlr" name="item_preco[]" value="0,00"
+                                        style="text-align: right; height: 34px !important;"
+                                        oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedido()"></td>
+                                <td>
+                                    <div
+                                        style="display: flex; gap: 0; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                                        <input type="text" class="table-input-desc-val" name="item_desc_val[]" value="0,00"
+                                            style="flex: 1; border: none; text-align: right; padding: 6px 1px; font-size: 11px; font-weight: 600;"
+                                            oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedido()">
+                                        <select class="table-input-desc-tipo" name="item_desc_tipo[]"
+                                            style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; font-weight: 800; color: #64748b; padding: 6px 0px;"
+                                            onchange="calcularTotaisPedido()">
+                                            <option value="VALOR">R$</option>
+                                            <option value="PERCENT">%</option>
+                                        </select>
+                                    </div>
+                                </td>
+                                <td style="text-align: right; font-weight: 800; color: #2980B9;" class="col-total-linha">R$
+                                    0,00</td>
+                                <td style="text-align: center;"><button type="button"
+                                        onclick="this.closest('tr').remove(); calcularTotaisPedido();"
+                                        style="color: #ef4444; background: none; border: none; cursor: pointer;"><i
+                                            class="fas fa-trash-alt"></i></button></td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                    <tfoot style="background: #fff; border-top: 2px solid #f1f5f9;">
+                        <tr>
+                            {# Alinhamento Garantido AriOne + Botão de Ação #}
+                            <td colspan="3" style="padding-left: 20px; vertical-align: middle;">
+                                <button type="button" onclick="arioneAdicionarLinhaPedido()" class="fp-btn"
+                                    style="background: #fff; border: 1.5px solid #2980B9; color: #2980B9; font-size: 11px; padding: 7px 18px; border-radius: 6px; font-weight: 800; transition: all 0.3s; box-shadow: 0 2px 8px rgba(41,128,185,0.1);">
+                                    <i class="fas fa-plus"></i> ADICIONAR MAIS PRODUTOS
+                                </button>
+                            </td>
+                            
+                            {# QTD (80) #}
+                            <td style="text-align: center; padding: 12px 0;">
+                                <div style="font-size: 9px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Qtd. Itens</div>
+                                <div id="resumo-qtd-itens" style="font-size: 15px; font-weight: 700; color: #1e293b;">0</div>
+                            </td>
+                            
+                            {# VALOR UNIT (120) - Vazio #}
+                            <td></td>
+                            
+                            {# DESC (75) #}
+                            <td style="text-align: center; padding: 12px 0;">
+                                <div style="font-size: 9px; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Total Desc.</div>
+                                <div id="resumo-total-desconto-itens" style="font-size: 15px; font-weight: 700; color: #ef4444;">R$ 0,00</div>
+                            </td>
+                            
+                            {# SUBTOTAL (130) #}
+                            <td style="text-align: right; padding: 12px 10px;">
+                                <div style="font-size: 9px; color: #64748b; font-weight: 800; text-transform: uppercase;">Total Itens</div>
+                                <div id="resumo-total-itens" style="font-size: 13px; font-weight: 800; color: #1e293b;">R$ 0,00</div>
+                                <div style="font-size: 8px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Valor c/ Descontos</div>
+                                <div id="resumo-valor-com-descontos" style="font-size: 11px; font-weight: 800; color: #1e293b;">R$ 0,00</div>
+                                <div style="height: 1px; background: #e2e8f0; margin-top: 6px;"></div>
+                            </td>
+                            
+                            {# AÇÕES (80) #}
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" style="padding: 15px 24px; border-top: 1px dashed #f1f5f9; background: #f8fafc;">
+                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 30px; flex-wrap: wrap;">
+                                    
+                                    {# 🔵 BLOCO 1: AJUSTE GLOBAL INTERATIVO #}
+                                    <div style="display: flex; align-items: flex-end; gap: 10px;">
+                                        <div style="font-size: 10px; font-weight: 800; color: #2980B9; text-transform: uppercase; margin-right: 5px; padding-bottom: 8px; letter-spacing: 0.5px;">Ajustes Gerais:</div>
+                                        <div class="fp-group" style="margin:0;">
+                                            <label class="fp-label" style="font-size: 8px;">OPERAÇÃO</label>
+                                            <div style="display:flex; border:1.5px solid #cbd5e1; border-radius:6px; overflow:hidden;">
+                                                <button type="button" id="btn-op-desconto" onclick="setOperacaoGlobal('desconto')"
+                                                    style="padding:6px 12px; border:none; background:#ef4444; color:#fff; font-weight:800; font-size:10px; cursor:pointer;">DESC.</button>
+                                                <button type="button" id="btn-op-acrescimo" onclick="setOperacaoGlobal('acrescimo')"
+                                                    style="padding:6px 12px; border:none; background:#f8fafc; color:#94a3b8; font-weight:800; font-size:10px; cursor:pointer;">ACRÉS.</button>
+                                            </div>
+                                            <input type="hidden" name="ajuste_global_tipo" id="ajuste_global_tipo" value="desconto">
+                                        </div>
+
+                                        <div class="fp-group" style="margin:0;">
+                                            <label class="fp-label" style="font-size: 8px;">MODO</label>
+                                            <div style="display:flex; border:1.5px solid #cbd5e1; border-radius:6px; overflow:hidden;">
+                                                <button type="button" id="btn-mod-pct" onclick="setModalidadeGlobal('PERCENT')"
+                                                    style="padding:6px 10px; border:none; background:#2980B9; color:#fff; font-weight:800; font-size:10px; cursor:pointer;">%</button>
+                                                <button type="button" id="btn-mod-val" onclick="setModalidadeGlobal('VALOR')"
+                                                    style="padding:6px 10px; border:none; background:#f8fafc; color:#94a3b8; font-weight:800; font-size:10px; cursor:pointer;">R$</button>
+                                            </div>
+                                            <input type="hidden" name="ajuste_global_modalidade" id="ajuste_global_modalidade" value="PERCENT">
+                                        </div>
+
+                                        <div class="fp-group" style="margin:0; width: 80px;">
+                                            <label class="fp-label" style="font-size: 8px;">VALOR (%)</label>
+                                            <input type="text" class="fp-input" id="ajuste_global_pct" value="0,00"
+                                                style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #ef4444;"
+                                                oninput="this.value=arioneMaskMoney(this.value); syncAjusteGlobal('PERCENT')">
+                                        </div>
+
+                                        <div class="fp-group" style="margin:0; width: 100px;">
+                                            <label id="label-ajuste-final" class="fp-label" style="font-size: 8px;">VALOR DESC/ACRESC.</label>
+                                            <input type="text" class="fp-input" name="ajuste_global_valor" id="ajuste_global_valor" value="0,00"
+                                                style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #ef4444;"
+                                                oninput="this.value=arioneMaskMoney(this.value); syncAjusteGlobal('VALOR')">
+                                        </div>
+
+                                        <div class="fp-group" style="margin:0; width: 110px;">
+                                            <label class="fp-label" style="font-size: 8px;">VALOR DO DESCONTO GLOBAL</label>
+                                            <input type="text" class="fp-input" id="resumo-ajuste-global" value="0,00"
+                                                style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #ef4444; background: #fff1f2; border-color: #fecaca;"
+                                                readonly tabindex="-1">
+                                        </div>
+
+                                        <div class="fp-group" style="margin:0; width: 80px;">
+                                            <label class="fp-label" style="font-size: 8px;">VALOR COLETA</label>
+                                            <input type="text" class="fp-input" id="resumo-valor-coleta" value="0,00"
+                                                style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #2980B9; background: #ebf5fb; border-color: #b3d7f2;"
+                                                readonly tabindex="-1">
+                                        </div>
+
+                                        <div class="fp-group" style="margin:0; width: 80px;">
+                                            <label class="fp-label" style="font-size: 8px;">VALOR DO FRETE</label>
+                                            <input type="text" class="fp-input" id="resumo-valor-frete" value="0,00"
+                                                style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #27AE60; background: #f0fdf4; border-color: #bbf7d0;"
+                                                readonly tabindex="-1">
+                                        </div>
+
+                                    </div>
+
+                                    {# 🔴 BLOCO 3: TOTAL FINAL #}
+                                    <div style="text-align: right; padding-left: 20px; border-left: 1px solid #e2e8f0;">
+                                        <div style="font-size: 10px; color: #2980B9; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">VALOR TOTAL DO PEDIDO</div>
+                                        <div id="resumo-total-geral" style="font-size: 24px; font-weight: 900; color: #2980B9; letter-spacing: -1px; line-height: 1;">R$ 0,00</div>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                {# Removido botão redundante (agora no tfoot) #}
+            </div>
+        </div>
+
+        {# ABAS OPERACIONAIS: LOGÍSTICA + PAGAMENTO + CRM #}
+        <div class="fp-tabs-wrap" style="background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-tabs-nav" style="padding: 0 20px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 5px;">
+                <button type="button" class="fp-tab active" onclick="switchOpeTab(this, 'tab-frete')">
+                    <i class="fas fa-truck-fast"></i> Logística / Frete
+                </button>
+                <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-pagamento')">
+                    <i class="fas fa-credit-card"></i> Forma de Pagamento
+                </button>
+                <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-crm')">
+                    <i class="fas fa-comment-dots"></i> Histórico / Observações
+                </button>
+            </div>
+            <div class="fp-tab-content" style="padding: 20px;">
+                <div id="tab-frete" class="fp-tab-panel active">
+                    {# 📦 BLOCO: COBRANÇA DE COLETA #}
+                    <div style="display: flex; align-items: center; gap: 30px; padding: 15px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Cobrar a coleta do cliente?</div>
+                            <div style="display: flex; border: 1.5px solid #cbd5e1; border-radius: 8px; overflow: hidden; width: fit-content;">
+                                <button type="button" id="btn-coleta-sim" onclick="setColeta(true)" 
+                                    style="padding: 8px 20px; border: none; background: #f8fafc; color: #94a3b8; font-weight: 800; font-size: 11px; cursor: pointer;">SIM</button>
+                                <button type="button" id="id-btn-coleta-nao" onclick="setColeta(false)" 
+                                    style="padding: 8px 20px; border: none; background: #ef4444; color: #fff; font-weight: 800; font-size: 11px; cursor: pointer;">NÃO</button>
+                            </div>
+                            <input type="hidden" name="tem_coleta" id="tem_coleta" value="NÃO">
+                        </div>
+
+                        <div id="group-valor-coleta" style="display: none; align-items: center; gap: 10px; animation: feFadeUp 0.3s ease;">
+                            <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Valor:</div>
+                            <input type="text" class="fp-input" name="valor_coleta" id="valor_coleta" value="0,00"
+                                style="height: 36px; width: 120px; font-weight: 800; text-align: center; color: #2980B9; border-color: #b3d7f2;"
+                                oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedido()">
+                        </div>
+                        <input type="hidden" name="valor_envio" id="valor_envio" value="0,00">
+                    </div>
+
+
+                    <div style="display:flex; gap:12px; margin-bottom:20px;">
+                        <label class="frete-tipo-btn" id="btn-cif" onclick="selecionarTipoFrete('CIF')"
+                            style="flex:1; display:flex; align-items:center; gap:12px; padding:10px 18px; border-radius:10px; border:1.5px solid #0072CE; background:#e8f4fd; cursor:pointer; transition:0.3s;">
+                            <input type="radio" name="frete_tipo" value="CIF" id="radio-cif" checked style="display:none;">
+                            <div style="width:36px; height:36px; background:#0072CE; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <i class="fas fa-building" style="color:#fff; font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:800; color:#0072CE; font-size:12px;">CIF</div>
+                                <div style="font-size:10px; color:#475569; font-weight:700; margin-top:2px;">Por conta do Emitente</div>
+                            </div>
+                        </label>
+                        <label class="frete-tipo-btn" id="btn-fob" onclick="selecionarTipoFrete('FOB')"
+                            style="flex:1; display:flex; align-items:center; gap:12px; padding:10px 18px; border-radius:10px; border:1.5px solid #e2e8f0; background:#f8fafc; cursor:pointer; transition:0.3s;">
+                            <input type="radio" name="frete_tipo" value="FOB" id="radio-fob" style="display:none;">
+                            <div style="width:36px; height:36px; background:#64748b; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <i class="fas fa-user-tie" style="color:#fff; font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:800; color:#475569; font-size:12px;">FOB</div>
+                                <div style="font-size:10px; color:#475569; font-weight:700; margin-top:2px;">Por conta do Destinatário</div>
+                            </div>
+                        </label>
+                    </div>
+
+
+                    
+                    {# Campos de Volume Ocultos (removidos da UI conforme solicitação) #}
+                    <input type="hidden" id="modal_vol_p" value="0">
+                    <input type="hidden" id="modal_vol_m" value="0">
+                    <input type="hidden" id="modal_vol_g" value="0">
+
+                    {# Resumo da Logística Selecionada (Aparece após seleção) #}
+                    <div id="logistica-selecionada" style="display:none; align-items:center; gap:15px; padding:15px 20px; background:linear-gradient(135deg,#f0f9ff,#fff); border:1.5px solid #2980B9; border-radius:12px; margin-bottom:20px; box-shadow:0 10px 30px rgba(41,128,185,0.08); animation: feFadeUp 0.3s ease;">
+                        <div style="width:48px; height:48px; background:#2980B9; color:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 4px 12px rgba(41,128,185,0.2);">
+                            <i class="fas fa-truck-fast"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:12px; font-weight:800; color:#1e293b;" id="display-transp-nome">-</div>
+                            <div style="display:flex; gap:12px; margin-top:4px;">
+                                <span style="font-size:11px; color:#64748b; font-weight:700;"><i class="fas fa-clock" style="margin-right:4px;"></i> Prazo: <strong id="display-transp-prazo" style="color:#2980B9;">-</strong></span>
+                                <span style="font-size:11px; color:#475569; font-weight:700;"><i class="fas fa-circle-check" style="color:#27AE60; margin-right:4px;"></i> Status: <strong style="color:#27AE60;">VINCULADA</strong></span>
+                            </div>
+                        </div>
+                        <div style="text-align:right; border-left:1px solid #e2e8f0; padding-left:20px; margin-left:10px;">
+                            <button type="button" onclick="buscarTransportadoras()" style="background:#f1f5f9; border:none; color:#2980B9; font-weight:800; font-size:11px; cursor:pointer; padding:8px 15px; border-radius:6px; transition:0.2s;">
+                                <i class="fas fa-sync-alt"></i> TROCAR
+                            </button>
+                        </div>
+                    </div>
+
+                    {# Campos ocultos para envio do formulário #}
+                    <input type="hidden" name="transportadora_id" id="transp_id_hidden">
+                    <input type="hidden" name="frete_valor" id="frete_valor" value="0,00">
+                    <input type="hidden" name="frete_prazo_dias" id="frete_prazo_dias" value="0">
+                    <input type="hidden" name="volumes_p" id="volumes_p" value="0">
+                    <input type="hidden" name="volumes_m" id="volumes_m" value="0">
+                    <input type="hidden" name="volumes_g" id="volumes_g" value="0">
+                    <input type="hidden" id="hidden_vlr_p" value="0">
+                    <input type="hidden" id="hidden_vlr_m" value="0">
+                    <input type="hidden" id="hidden_vlr_g" value="0">
+                    <input type="hidden" id="transp_nome_display"> {# Legado para compatibilidade JS #}
+
+                    {# Painel de Resultados das Transportadoras (MODAL NÃO-BLOQUEANTE) #}
+                    <div id="painel-transportadoras" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 750px; background: #fff; border-radius: 16px; box-shadow: 0 30px 90px rgba(0,0,0,0.3); z-index: 9999; padding: 0; overflow: hidden; animation: modalEntrar 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
+                        <div style="background:linear-gradient(135deg, #2980B9, #3498DB); padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="color:#fff; font-weight:800; font-size:14px; display:flex; align-items:center; gap:10px;">
+                                <i class="fas fa-truck-fast"></i>
+                                Seleção de Transportadora para <span id="label-cidade-destino" style="text-decoration: underline; opacity: 0.9;"></span>
+                            </div>
+                            <button type="button" onclick="document.getElementById('painel-transportadoras').style.display='none'"
+                                style="background:rgba(255,255,255,0.2); border:none; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; transition:0.2s;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div style="padding: 20px;">
+                            {# 🚀 SIMULAÇÃO ONLINE (DENTRO DO MODAL) #}
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <button type="button" id="btn-simular-online" onclick="simularFreteOnline()" class="fp-btn" 
+                                        style="flex: 1; background: #27AE60; color: #fff; font-size: 11px; padding: 10px 20px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 12px rgba(39,174,96,0.1); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                        <i class="fas fa-shipping-fast"></i> SIMULAR FRETE ONLINE
+                                    </button>
+                                    <button type="button" onclick="arioneSyncPesos()" class="fp-btn" 
+                                        style="background: #F39C12; color: #fff; font-size: 10px; padding: 10px 15px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer; transition: 0.3s;">
+                                        <i class="fas fa-sync-alt"></i> SINCRONIZAR PESOS
+                                    </button>
+                                </div>
+                                
+                                <div id="online-shipping-results" style="display:none; margin-top: 10px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden; animation: feFadeUp 0.3s ease;">
+                                    <div style="background: #f8fafc; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-size: 9px; font-weight: 800; color: #64748b; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>OPÇÕES CORREIOS / MELHOR ENVIO</span>
+                                        <span id="online-weight-info" style="color: #2980B9;">PESO TOTAL: 0.000 KG</span>
+                                    </div>
+                                    <div id="online-shipping-list" style="max-height: 200px; overflow-y: auto;">
+                                        <!-- Resultados via JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:10px 15px; border-radius:8px; border:1px solid #e2e8f0;">
+                                <div style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.5px;">
+                                    <i class="fas fa-info-circle" style="color:#2980B9; margin-right:5px;"></i> Compare os valores por volume
+                                </div>
+                                <div style="display:flex; gap:10px; font-size:10px; font-weight:700; color:#94a3b8;">
+                                    <span>P = Pequeno</span>
+                                    <span>M = Médio</span>
+                                    <span>G = Grande</span>
+                                </div>
+                            </div>
+                            <div id="lista-transportadoras" style="display:grid; grid-template-columns: 1fr; gap:12px; max-height:400px; overflow-y:auto; padding-right:5px;">
+                                {# Spinner inicial #}
+                                <div style="text-align:center; padding:40px;">
+                                    <i class="fas fa-spinner fa-spin" style="color:#2980B9; font-size:32px; display:block; margin-bottom:15px;"></i>
+                                    <span style="font-weight:700; color:#64748b; font-size:12px;">Buscando rotas disponíveis...</span>
+                                </div>
+                            </div>
+                            <div style="margin-top:15px; padding-top:15px; border-top:1px solid #f1f5f9; font-size:10px; color:#94a3b8; font-weight:700; text-align:center; text-transform:uppercase; letter-spacing:0.5px;">
+                                <i class="fas fa-mouse-pointer" style="margin-right:5px;"></i> Clique em uma transportadora para confirmar a seleção
+                            </div>
+                        </div>
+                    </div>
+                    <div id="frete-info-empty" style="text-align:center; padding:25px; background:#f8fafc; border-radius:10px; border:1.5px dashed #e2e8f0;">
+                        <i class="fas fa-truck-fast" style="font-size:28px; color:#cbd5e1; display:block; margin-bottom:8px;"></i>
+                        <div style="font-size:12px; color:#94a3b8; font-weight:600;">Selecione o tipo de frete (CIF ou FOB) para carregar as transportadoras disponíveis automaticamente.</div>
+                    </div>
+                </div>
+
+                {# ABA 2: PAGAMENTO #}
+                <div id="tab-pagamento" class="fp-tab-panel">
+                    <input type="hidden" name="forma_pagamento_id" id="forma_pagamento_id_hidden">
+                    <input type="hidden" name="parcelas_selecionadas" id="parcelas_selecionadas_hidden" value="1">
+                    <div style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Selecione a modalidade de pagamento</div>
+                    <div id="grid-formas-pagamento" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
+                        {% for f in formas_pagamento %}
+                        <div class="pag-card" data-id="{{ f.id }}" data-nome="{{ f.nome }}"
+                            data-parcelas="{{ f.max_parcelas }}" data-intervalo="{{ f.intervalo_dias }}"
+                            data-juros="{{ f.taxa_juros }}" data-desconto="{{ f.percentual_desconto }}"
+                            data-cor="{{ f.cor }}" onclick="selecionarFormaPagamento(this)"
+                            style="border:2px solid #e2e8f0; border-radius:10px; padding:14px; cursor:pointer; transition:all 0.25s; background:#fff; position:relative; overflow:hidden;">
+                            <div style="position:absolute; top:0; left:0; width:100%; height:3px; background:{{ f.cor }};"></div>
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                                <div style="width:32px; height:32px; background:{{ f.cor }}18; color:{{ f.cor }}; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:15px;">
+                                    <i class="{{ f.icone }}"></i>
+                                </div>
+                                <div style="font-weight:800; color:#1e293b; font-size:12px; line-height:1.2;">{{ f.nome }}</div>
+                            </div>
+                            <div style="font-size:9px; color:#94a3b8; font-weight:700; text-transform:uppercase;">{{ f.tipo }}</div>
+                            <div style="margin-top:6px; display:flex; justify-content:space-between;">
+                                {% if f.max_parcelas > 1 %}<span style="font-size:10px; font-weight:800; color:{{ f.cor }};">até {{ f.max_parcelas }}x</span>
+                                {% else %}<span style="font-size:10px; font-weight:800; color:#27ae60;">À VISTA</span>{% endif %}
+                                {% if f.taxa_juros > 0 %}<span style="font-size:9px; color:#e74c3c; font-weight:700;">+{{ "%.1f"|format(f.taxa_juros) }}%</span>
+                                {% elif f.percentual_desconto > 0 %}<span style="font-size:9px; color:#27ae60; font-weight:700;">-{{ "%.1f"|format(f.percentual_desconto) }}%</span>{% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;">
+                            <i class="fas fa-credit-card" style="font-size:24px; display:block; margin-bottom:8px; opacity:0.3;"></i>
+                            Nenhuma forma configurada. <a href="/financeiro/?aba=gerencial" target="_blank" style="color:#2980B9; font-weight:700;">Configurar</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div id="painel-parcelamento" style="display:none; background:#f8fafc; border-radius:10px; padding:16px; border:1px solid #e2e8f0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                            <div style="font-size:11px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-calculator" style="color:#2980B9;"></i>
+                                <span id="pag-nome-display">—</span>
+                            </div>
+                            <div id="pag-ajuste-badge" style="font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; display:none;"></div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;" id="grid-parcelas"></div>
+                    </div>
+                    <div id="pag-resumo" style="display:none; margin-top:12px; padding:12px 16px; background:linear-gradient(135deg,rgba(41,128,185,0.05),rgba(39,174,96,0.05)); border-radius:8px; border:1px solid #e2e8f0; justify-content:space-between; align-items:center;">
+                        <div><div style="font-size:9px; color:#64748b; font-weight:800; text-transform:uppercase;">FORMA</div><div id="resumo-forma-nome" style="font-size:13px; font-weight:800; color:#1e293b;">—</div></div>
+                        <div style="text-align:center;"><div style="font-size:9px; color:#64748b; font-weight:800; text-transform:uppercase;">PARCELAS</div><div id="resumo-forma-parcelas" style="font-size:18px; font-weight:900; color:#2980B9;">—</div></div>
+                        <div style="text-align:right;"><div style="font-size:9px; color:#64748b; font-weight:800; text-transform:uppercase;">TOTAL c/ AJUSTE</div><div id="resumo-forma-total" style="font-size:18px; font-weight:900; color:#27ae60;">R$ 0,00</div></div>
+                    </div>
+                </div>
+
+                {# ABA 3: CRM #}
+                <div id="tab-crm" class="fp-tab-panel">
+                    <textarea class="fp-input" name="observacoes" rows="5"
+                        placeholder="Notas sobre o pedido, condições especiais..."></textarea>
+                </div>
+            </div>
+        </div>
+
+
+
+        {# BOTÕES DE RODAPÉ REMOVIDOS - AÇÃO CENTRALIZADA NO CABEÇALHO MESTRE #}
+
+        {# DATALISTS REMOVIDOS PARA USAR ARIONE SEARCH PANEL (WIDE) #}
+
+
+        <datalist id="lista-clientes">
+            {% for c in clientes %}
+            {% set t = 'PJ' if c.tipo_pessoa == 'J' else 'PF' %}
+            <option value="[{{ t }}] {{ c.nome|upper }}" 
+                data-id="{{ c.id }}" 
+                data-tipo="{{ t }}"
+                data-doc="{{ c.cpf_cnpj }}" 
+                data-whats="{{ c.whatsapp or 'N/A' }}"
+                data-email="{{ c.email or 'N/A' }}"
+                data-rua="{{ c.end_res_logradouro or '' }}"
+                data-num="{{ c.end_res_numero or '' }}"
+                data-bairro="{{ c.end_res_bairro or '' }}"
+                data-cidade="{{ c.end_res_cidade or '' }}"
+                data-uf="{{ c.end_res_uf or '' }}"
+                data-cep="{{ c.end_res_cep or '' }}"
+                data-compl="{{ c.end_res_complemento or '' }}"
+                data-ref="{{ c.end_res_obs or '' }}"
+                data-rua-ent="{{ c.end_ent_logradouro or '' }}"
+                data-num-ent="{{ c.end_ent_numero or '' }}"
+                data-bairro-ent="{{ c.end_ent_bairro or '' }}"
+                data-cidade-ent="{{ c.end_ent_cidade or '' }}"
+                data-uf-ent="{{ c.end_ent_uf or '' }}"
+                data-cep-ent="{{ c.end_ent_cep or '' }}"
+                data-compl-ent="{{ c.end_ent_complemento or '' }}"
+                data-ref-ent="{{ c.end_ent_obs or '' }}"
+                data-fat="{{ (c.end_res_logradouro or '') ~ (', ' ~ c.end_res_numero if c.end_res_numero else '') ~ (' - ' ~ c.end_res_cidade if c.end_res_cidade else '') ~ '/' ~ (c.end_res_uf if c.end_res_uf else '') }}">
+                [{{ t }}] {{ c.cpf_cnpj }} - {{ c.nome|upper }}
+            </option>
+            {% endfor %}
+        </datalist>
+
+        <!-- Campos Financeiros Ocultos (Sincronizados via JS) -->
+        <input type="hidden" name="total_bruto" id="hidden_total_bruto" value="{{ '{:,.2f}'.format(target.total_bruto or 0).replace(',','v').replace('.',',').replace('v','.') if target else '0,00' }}">
+        <input type="hidden" name="valor_desconto" id="hidden_valor_desconto" value="{{ '{:,.2f}'.format(target.valor_desconto or 0).replace(',','v').replace('.',',').replace('v','.') if target else '0,00' }}">
+        <input type="hidden" name="outros_custos" id="hidden_outros_custos" value="{{ '{:,.2f}'.format(target.outros_custos or 0).replace(',','v').replace('.',',').replace('v','.') if target else '0,00' }}">
+        <input type="hidden" name="total_frete" id="hidden_total_frete" value="{{ '{:,.2f}'.format(target.total_frete if is_conversao else (pedido.frete if pedido else 0)).replace(',','v').replace('.',',').replace('v','.') if target else '0,00' }}">
+        <input type="hidden" name="total_liquido" id="hidden_total_liquido" value="{{ '{:,.2f}'.format(target.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') if target else '0,00' }}">
+    </form>
+
+    {# 📋 SEÇÃO DE LISTAGEM INFERIOR (ÚLTIMOS PEDIDOS) #}
+    <div style="width: 100%; margin-top: 10px;">
+        <div class="fp-card" style="margin: 0; border: 1.5px solid #e2e8f0; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+            <div class="fp-card-title" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px;">
+                <span style="color: #1e293b; font-weight: 800; font-size: 12px;"><i class="fas fa-list-ul" style="color: #2980B9; margin-right: 8px;"></i> ÚLTIMOS PEDIDOS REALIZADOS</span>
+                <span style="background: #2980B9; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 800;">RECENTES</span>
+            </div>
+            <div class="fp-card-body" style="padding: 20px;">
+                <div style="overflow-x: auto;" id="grid-vendas-recentes">
+                    <table class="arione-table-hcm" style="width: 100%; border-radius: 8px; overflow: hidden;">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">CÓD.</th>
+                                <th style="width: 110px;">Nº PEDIDO</th>
+                                <th style="width: 110px;">DATA</th>
+                                <th>CLIENTE</th>
+                                <th style="width: 140px;">CONSULTOR</th>
+                                <th style="width: 130px;">CANAL DE VENDA</th>
+                                <th style="width: 130px; text-align: right;">VALOR TOTAL</th>
+                                <th style="width: 120px; text-align: center;">STATUS</th>
+                                <th style="width: 60px; text-align: center;">AÇÃO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if pedidos_recentes %}
+                                {% for ped in pedidos_recentes %}
+                                <tr style="cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'" onclick="window.location.href='/operacoes/vendas/pedido/edit/{{ ped.id }}'">
+                                    <td style="font-weight: 700; color: #94a3b8; font-size: 10px;">#{{ ped.id }}</td>
+                                    <td style="font-weight: 900; color: #2980B9; font-size: 14px;">{{ (ped.numero or ped.id)|string|replace('PDV-', '')|replace('PED-', '') }}</td>
+                                    <td style="font-size: 11px; font-weight: 700; color: #64748b;">{{ ped.data_pedido.strftime('%d/%m/%Y') if ped.data_pedido else '--' }}</td>
+                                    <td style="font-weight: 700; color: #1e293b; font-size: 12px;">{{ ped.cliente.nome|upper if ped.cliente else 'CLIENTE NÃO IDENTIFICADO' }}</td>
+                                    <td style="font-size: 11px; font-weight: 700; color: #64748b;">{{ ped.vendedor.nome_exibivel|upper if ped.vendedor and ped.vendedor.nome_exibivel else (ped.vendedor.nome|upper if ped.vendedor else '--') }}</td>
+                                    <td style="font-weight: 800; color: #1e293b; font-size: 11px;">{{ ped.canal_venda or 'Balcão / Presencial' }}</td>
+                                    <td style="text-align: right; font-weight: 800; color: #27AE60; font-size: 12px;">R$ {{ "{:,.2f}".format(ped.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}</td>
+                                    <td style="text-align: center;">
+                                        {% set st_upper = (ped.status or 'ABERTO')|upper %}
+                                        {% set badge_style = "background: #f1f5f9; color: #64748b;" %}
+                                        
+                                        {% if st_upper in ['FATURADO', 'ENTREGUE', 'FINALIZADO'] %}
+                                            {% set badge_style = "background: #dcfce7; color: #166534;" %}
+                                        {% elif st_upper in ['CANCELADO', 'REPROVADO'] %}
+                                            {% set badge_style = "background: #fee2e2; color: #991b1b;" %}
+                                        {% elif st_upper in ['ABERTO', 'EM EDIÇÃO', 'AGUARDANDO'] %}
+                                            {% set badge_style = "background: #e0f2fe; color: #075985;" %}
+                                        {% elif st_upper in ['PRODUÇÃO', 'COSTURA', 'PINTURA', 'PRENSA', 'PRODUCAO'] %}
+                                            {% set badge_style = "background: #fdf2f8; color: #9d174d;" %}
+                                        {% endif %}
+                                        
+                                        <span style="font-size: 9px; font-weight: 800; {{ badge_style }} padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">{{ ped.status or 'ABERTO' }}</span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <button type="button" style="background: none; border: none; color: #94a3b8; cursor: pointer;"><i class="fas fa-external-link-alt"></i></button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                     <td colspan="8" style="padding: 40px; text-align: center; color: #94a3b8;">
+                                        <i class="fas fa-history" style="font-size: 24px; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+                                        <span style="font-size: 11px; font-weight: 600;">Nenhum pedido encontrado nesta empresa.</span>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .arione-table-hcm {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .arione-table-hcm th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 12px 15px;
+        border-bottom: 2px solid #edf2f7;
+        text-align: left;
+    }
+
+    .arione-table-hcm td {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .table-input-sku {
+        font-family: 'Roboto Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .fp-tab {
+        padding: 15px 5px;
+        background: none;
+        border: none;
+        font-family: 'Outfit', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        color: #94a3b8;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+    .fp-tab.active {
+        color: #2980B9;
+    }
+
+    .fp-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #2980B9;
+        border-radius: 3px 3px 0 0;
+    }
+
+    .fp-tab-panel {
+        display: none;
+    }
+
+    .fp-tab-panel.active {
+        display: block;
+        animation: feFadeUp 0.3s ease;
+    }
+
+    @keyframes feFadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes modalEntrar {
+        from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
+        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    .pag-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+    .pag-card.selected { transform: translateY(-2px); }
+    .parcela-btn { padding:8px 16px; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; font-weight:800; font-size:12px; cursor:pointer; transition:all 0.2s; color:#475569; }
+    .parcela-btn.selected { color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+    .parcela-btn:hover:not(.selected) { border-color:#2980B9; color:#2980B9; }
+    .transp-card { background:#fff; border:1.5px solid #e2e8f0; border-radius:10px; padding:14px; cursor:pointer; transition:all 0.25s; }
+    .transp-card:hover { border-color:#2980B9; box-shadow:0 4px 15px rgba(41,128,185,0.1); transform:translateY(-1px); }
+    .transp-card.selected { border-color:#2980B9; background:#ebf5fb; }
+    .transp-modal-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:9px; font-weight:800; }
+    
+    .table-input-sku {
+        font-family: 'Roboto Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        width: 100% !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .table-input-sku:focus {
+        border-color: #2980B9 !important;
+        background: #fff !important;
+        box-shadow: 0 4px 15px rgba(41,128,185,0.1);
+    }
+
+    /* 🔍 AriOne Custom Search Panel */
+    .arione-search-panel {
+        position: absolute;
+        z-index: 9999;
+        background: #fff;
+        border: 1.5px solid #2980B9;
+        border-radius: 10px;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        max-height: 300px;
+        overflow-y: auto;
+        width: 550px;
+        display: none;
+        animation: feFadeUp 0.2s ease;
+    }
+    .arione-search-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.2s;
+    }
+    .arione-search-item:hover, .arione-search-item.active {
+        background: #ebf5fb;
+    }
+    .arione-search-sku {
+        font-family: 'Roboto Mono', monospace;
+        font-weight: 800;
+        color: #2980B9;
+        font-size: 11px;
+        background: #eef2ff;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    .arione-search-desc {
+        font-size: 12px;
+        font-weight: 700;
+        color: #1e293b;
+        flex: 1;
+        margin-left: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 🏹 AriOne Super Arrow (Physical Icon) */
+    .arione-arrow-wrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .arione-input-with-arrow {
+        padding-right: 32px !important;
+    }
+    .arione-physical-arrow {
+        position: absolute;
+        right: 10px;
+        color: #2980B9;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 100;
+        transition: all 0.2s ease;
+        padding: 5px;
+    }
+    .arione-physical-arrow:hover {
+        transform: scale(1.3);
+        color: #1e6091;
+    }
+</style>
+
+<script>
+    console.log('💎 AriOne Pedidos Master Luxury Loaded');
+
+    function selecionarTipoFrete(tipo) {
+        document.getElementById('radio-cif').checked = (tipo === 'CIF');
+        document.getElementById('radio-fob').checked = (tipo === 'FOB');
+        const btnCif = document.getElementById('btn-cif');
+        const btnFob = document.getElementById('btn-fob');
+        if (tipo === 'CIF') {
+            btnCif.style.borderColor = '#2980B9'; btnCif.style.background = '#ebf5fb';
+            btnFob.style.borderColor = '#e2e8f0'; btnFob.style.background = '#f8fafc';
+            btnCif.classList.add('ativo'); btnFob.classList.remove('ativo');
+        } else {
+            btnFob.style.borderColor = '#475569'; btnFob.style.background = '#f0f4f8';
+            btnCif.style.borderColor = '#e2e8f0'; btnCif.style.background = '#f8fafc';
+            btnFob.classList.add('ativo'); btnCif.classList.remove('ativo');
+        }
+
+        // Pesquisa automática de transportadoras ao mudar o tipo
+        if (tipo === 'CIF' || tipo === 'FOB') {
+            buscarTransportadoras();
+        }
+    }
+
+    function atualizarStatusVenda() {
+        const statusSelect = document.getElementById('doc_status');
+        const status = statusSelect.value;
+        
+        // Se status for CONFIRMADO, atualiza saldo_reservado dos produtos
+        if (status === 'CONFIRMADO') {
+            const rows = document.querySelectorAll('#tabela-itens-venda tbody tr');
+            rows.forEach(row => {
+                const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
+                // Aqui seria chamada AJAX para atualizar saldo_reservado no backend
+                console.log(`Atualizando saldo_reservado: +${qtd} para o produto`);
+            });
+            arioneToast('✅ Pedido Confirmado - Saldo Reservado Atualizado!', 'success');
+        } else if (status === 'FATURADO') {
+            // Se status for FATURADO, atualiza saldo_fisico e reduz saldo_reservado
+            const rows = document.querySelectorAll('#tabela-itens-venda tbody tr');
+            rows.forEach(row => {
+                const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
+                // Aqui seria chamada AJAX para atualizar saldo_fisico e saldo_reservado no backend
+                console.log(`Atualizando saldo_fisico: -${qtd} e saldo_reservado: -${qtd} para o produto`);
+            });
+            arioneToast('✅ Pedido Faturado - Saída de Estoque Processada!', 'success');
+        }
+    }
+
+    async function buscarTransportadoras() {
+        const clienteId = document.getElementById('cliente_id')?.value || '';
+        const clienteNome = document.getElementById('cliente_busca')?.value || '';
+        if (!clienteNome) { arioneToast('⚠️ Selecione um cliente primeiro.', 'warning'); return; }
+        if (!clienteId) { arioneToast('⚠️ Selecione o cliente na lista.', 'warning'); return; }
+        arioneToast('🔍 Buscando transportadoras...', 'info');
+        const listEl = document.getElementById('lista-transportadoras');
+        const painel = document.getElementById('painel-transportadoras');
+        const emptyEl = document.getElementById('frete-info-empty');
+        listEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin" style="color:#2980B9;font-size:24px;"></i></div>';
+        painel.style.display = 'block'; emptyEl.style.display = 'none';
+        try {
+            console.log(`[Logística] Buscando transportadoras para cliente ID: ${clienteId}`);
+            const res = await fetch(`/operacoes/api/transportadoras/por-cliente?cliente_id=${clienteId}`);
+            
+            if (!res.ok) throw new Error('Falha na resposta do servidor');
+            
+            const data = await res.json();
+            const labelEl = document.getElementById('label-cidade-destino');
+            if (labelEl) labelEl.textContent = data.cidade ? `${data.cidade} / ${data.uf}` : 'destino';
+            
+            if (!data.transportadoras || !data.transportadoras.length) {
+                listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#94a3b8;"><i class="fas fa-truck" style="font-size:28px;display:block;margin-bottom:10px;opacity:0.3;"></i>Nenhuma transportadora para esta rota.</div>';
+                return;
+            }
+            
+            const modalIcons = { aereo:'fa-plane', terrestre:'fa-road', naval:'fa-ship', '':`fa-truck` };
+            const avaliacoes = { A:{icon:'⭐⭐⭐',cor:'#27AE60'}, B:{icon:'⭐⭐',cor:'#2980B9'}, C:{icon:'⭐',cor:'#E67E22'}, D:{icon:'⚠️',cor:'#e53e3e'} };
+            
+            listEl.innerHTML = data.transportadoras.map(t => {
+                const modals = (t.modal || t.modal_transporte || '').split(',').filter(Boolean);
+                const avalia = avaliacoes[t.avaliacao] || { icon: '—', cor: '#94a3b8' };
+                const prazo = t.prazo_entrega ? `${t.prazo_entrega} dia(s)` : 'Consultar';
+                const p = t.precos?.p || 'R$ --';
+                const m = t.precos?.m || 'R$ --';
+                const g = t.precos?.g || 'R$ --';
+
+                const p_raw = p.replace('R$ ', '').replace(/\./g, '').replace(',', '.') || 0;
+                const m_raw = m.replace('R$ ', '').replace(/\./g, '').replace(',', '.') || 0;
+                const g_raw = g.replace('R$ ', '').replace(/\./g, '').replace(',', '.') || 0;
+                
+                return `<div class="transp-card" data-id="${t.id}" data-nome="${t.nome}" data-prazo="${t.prazo_entrega || ''}" data-p_raw="${p_raw}" data-m_raw="${m_raw}" data-g_raw="${g_raw}" onclick="selecionarTransportadora(this)" style="display:flex; align-items:center; gap:12px; padding:12px 18px; margin-bottom:10px; border:1px solid #e2e8f0; border-radius:12px; cursor:pointer; background:#fff; transition:0.2s;">
+                    <div style="width:40px; height:40px; background:#f1f5f9; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#2980B9;">
+                        <i class="fas ${modalIcons[modals[0]] || 'fa-truck'}" style="font-size:18px;"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-weight:800; color:#1e293b; font-size:13px;">${t.nome}</div>
+                            <span style="color:${avalia.cor}; font-size:10px; font-weight:700;">${avalia.icon}</span>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:3px;">
+                            <div style="font-size:11px; color:#94a3b8; font-weight:700;"><i class="fas fa-clock"></i> ${prazo}</div>
+                            <div style="font-size:11px; color:#27AE60; font-weight:700;"><i class="fas fa-check-circle"></i> Disponível</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:15px; padding-left:15px; border-left:1px solid #f1f5f9; min-width:240px; justify-content:space-around;">
+                        <div style="text-align:center;">
+                            <div style="font-size:8px; font-weight:800; color:#94a3b8; text-transform:uppercase;">PEQ (P)</div>
+                            <div style="font-size:12px; font-weight:900; color:#2980B9;">${p.replace('R$ ', '')}</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:8px; font-weight:800; color:#94a3b8; text-transform:uppercase;">MÉD (M)</div>
+                            <div style="font-size:12px; font-weight:900; color:#2980B9;">${m.replace('R$ ', '')}</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:8px; font-weight:800; color:#94a3b8; text-transform:uppercase;">GRD (G)</div>
+                            <div style="font-size:12px; font-weight:900; color:#2980B9;">${g.replace('R$ ', '')}</div>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:12px;"></i>
+                </div>`;
+            }).join('');
+        } catch(e) {
+            console.error('[Logística] Erro:', e);
+            listEl.innerHTML = `<div style="text-align:center;padding:20px;color:#e53e3e;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar transportadoras.</div>`;
+            arioneToast('❌ Erro ao buscar transportadoras', 'danger');
+        }
+    }
+
+    function selecionarTransportadora(card) {
+        const id = card.dataset.id;
+        const nome = card.dataset.nome;
+        const prazo = card.dataset.prazo;
+        
+        // Atualiza campos ocultos da transportadora
+        document.getElementById('transp_id_hidden').value = id;
+        document.getElementById('transp_nome_display').value = nome;
+        if (prazo) {
+            document.getElementById('frete_prazo_dias').value = prazo;
+            
+            // 📅 Estimar data de entrega (Hoje + Prazo)
+            const hoje = new Date();
+            hoje.setDate(hoje.getDate() + parseInt(prazo));
+            const elData = document.getElementById('data_promessa');
+            if (elData) elData.value = hoje.toISOString().split('T')[0];
+        }
+        
+        // Salva preços unitários para recalcular total
+        document.getElementById('hidden_vlr_p').value = card.dataset.p_raw || 0;
+        document.getElementById('hidden_vlr_m').value = card.dataset.m_raw || 0;
+        document.getElementById('hidden_vlr_g').value = card.dataset.g_raw || 0;
+        
+        recalcularFreteTotal();
+        
+        // Atualiza display de resumo
+        const summary = document.getElementById('logistica-selecionada');
+        if (summary) {
+            summary.style.display = 'flex';
+            document.getElementById('display-transp-nome').textContent = nome;
+            document.getElementById('display-transp-prazo').textContent = prazo ? `${prazo} dia(s)` : 'A Combinar';
+        }
+        
+        // Esconde o painel de busca e o estado vazio
+        document.getElementById('painel-transportadoras').style.display = 'none';
+        const emptyEl = document.getElementById('frete-info-empty');
+        if (emptyEl) emptyEl.style.display = 'none';
+        
+        arioneToast(`✅ Transportadora: ${nome}`, 'success');
+    }
+
+    function recalcularFreteTotal() {
+        const id = document.getElementById('transp_id_hidden').value;
+        if (!id) return;
+        
+        const vP = parseFloat(document.getElementById('hidden_vlr_p').value) || 0;
+        const vM = parseFloat(document.getElementById('hidden_vlr_m').value) || 0;
+        const vG = parseFloat(document.getElementById('hidden_vlr_g').value) || 0;
+        
+        const qP = parseInt(document.getElementById('modal_vol_p').value) || 0;
+        const qM = parseInt(document.getElementById('modal_vol_m').value) || 0;
+        const qG = parseInt(document.getElementById('modal_vol_g').value) || 0;
+        
+        const total = (qP * vP) + (qM * vM) + (qG * vG);
+        
+        const freteInp = document.getElementById('frete_valor');
+        if (freteInp) freteInp.value = total.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+        
+        document.getElementById('volumes_p').value = qP;
+        document.getElementById('volumes_m').value = qM;
+        document.getElementById('volumes_g').value = qG;
+        
+        const resumoVolumes = document.getElementById('display-volumes-resumo');
+        if (resumoVolumes) resumoVolumes.textContent = `P:${qP} M:${qM} G:${qG}`;
+        
+        if (typeof calcularTotaisPedido === 'function') calcularTotaisPedido();
+    }
+
+    function selecionarFormaPagamento(card) {
+        document.querySelectorAll('.pag-card').forEach(c => {
+            c.classList.remove('selected'); c.style.borderColor='#e2e8f0'; c.style.background='#fff'; c.style.boxShadow='none';
+        });
+        const cor = card.dataset.cor || '#2980B9';
+        card.classList.add('selected'); card.style.borderColor=cor; card.style.background=cor+'08'; card.style.boxShadow=`0 4px 20px ${cor}25`;
+        const id=card.dataset.id, nome=card.dataset.nome;
+        const maxParcelas=parseInt(card.dataset.parcelas)||1;
+        const juros=parseFloat(card.dataset.juros)||0, desconto=parseFloat(card.dataset.desconto)||0;
+        document.getElementById('forma_pagamento_id_hidden').value = id;
+        const painel=document.getElementById('painel-parcelamento');
+        painel.style.display='block';
+        document.getElementById('pag-nome-display').textContent = nome;
+        const badge=document.getElementById('pag-ajuste-badge');
+        if(juros>0){badge.style.display='inline-flex';badge.style.background='#fee2e2';badge.style.color='#dc2626';badge.textContent=`+ ${juros}% de juros`;}
+        else if(desconto>0){badge.style.display='inline-flex';badge.style.background='#dcfce7';badge.style.color='#16a34a';badge.textContent=`- ${desconto}% de desconto`;}
+        else{badge.style.display='none';}
+        const totalLiq=parseTotalAtual();
+        const gridParcelas=document.getElementById('grid-parcelas');
+        gridParcelas.innerHTML='';
+        for(let i=1;i<=maxParcelas;i++){
+            let tot=totalLiq;
+            if(juros>0) tot=totalLiq*(1+juros/100);
+            else if(desconto>0) tot=totalLiq*(1-desconto/100);
+            const vParcela=tot/i;
+            const btn=document.createElement('button');
+            btn.type='button'; btn.className='parcela-btn'+(i===1?' selected':'');
+            btn.style.background=i===1?cor:'#fff'; btn.style.color=i===1?'#fff':'#475569';
+            btn.innerHTML=`<div style="font-size:14px;font-weight:900;">${i}x</div><div style="font-size:9px;font-weight:600;opacity:0.8;">R$ ${vParcela.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>`;
+            btn.onclick=()=>{
+                gridParcelas.querySelectorAll('.parcela-btn').forEach(b=>{b.classList.remove('selected');b.style.background='#fff';b.style.color='#475569';});
+                btn.classList.add('selected');btn.style.background=cor;btn.style.color='#fff';
+                document.getElementById('parcelas_selecionadas_hidden').value=i;
+                atualizarResumoPagamento(nome,i,tot);
+            };
+            gridParcelas.appendChild(btn);
+        }
+        document.getElementById('parcelas_selecionadas_hidden').value=1;
+        const totInit=juros>0?totalLiq*(1+juros/100):(desconto>0?totalLiq*(1-desconto/100):totalLiq);
+        atualizarResumoPagamento(nome,1,totInit);
+    }
+
+    function parseTotalAtual(){
+        const el=document.getElementById('resumo-total-geral');
+        if(!el) return 0;
+        return parseFloat(el.innerText.replace('R$ ','').replace(/\./g,'').replace(',','.'))||0;
+    }
+
+    function atualizarResumoPagamento(nome,parcelas,total){
+        const resumo=document.getElementById('pag-resumo');
+        resumo.style.display='flex';
+        document.getElementById('resumo-forma-nome').textContent=nome;
+        document.getElementById('resumo-forma-parcelas').textContent=parcelas+'x';
+        document.getElementById('resumo-forma-total').textContent='R$ '+total.toLocaleString('pt-BR',{minimumFractionDigits:2});
+    }
+
+    {# 📚 Datalists Originais (Para restaurar a setinha nativa) #}
+    <datalist id="lista_sku_vendas">
+        {% for v in variacoes %}<option value="{{ (v.sku or v.produto_pai.referencia or v.produto_pai.cod_interno or "")|upper }}">{{ v.produto_pai.descricao|upper }} - {{ v.nome|upper }}</option>{% endfor %}
+        {% for p in produtos if p.tipo_estoque != 'grade' %}<option value="{{ (p.referencia or p.cod_interno or "")|upper }}">{{ p.descricao|upper }}</option>{% endfor %}
+    </datalist>
+    <datalist id="lista_produto_vendas">
+        {% for v in variacoes %}<option value="{{ v.produto_pai.descricao|upper }} - {{ v.nome|upper }}">{{ (v.sku or v.produto_pai.referencia or v.produto_pai.cod_interno or "")|upper }}</option>{% endfor %}
+        {% for p in produtos if p.tipo_estoque != 'grade' %}<option value="{{ p.descricao|upper }}">{{ (p.referencia or p.cod_interno or "")|upper }}</option>{% endfor %}
+    </datalist>
+
+    <script>
+    // 🗃️ Base de dados para o Busca Rápida AriOne
+    const arioneDatabase = [
+        {% for v in variacoes %}
+        { sku: '{{ (v.sku or v.produto_pai.referencia or v.produto_pai.cod_interno or "")|upper }}', desc: '{{ v.produto_pai.descricao|upper }} - {{ v.nome|upper }}', id: '{{ v.id }}' },
+        {% endfor %}
+        {% for p in produtos if p.tipo_estoque != 'grade' %}
+        { sku: '{{ (p.referencia or p.cod_interno or "")|upper }}', desc: '{{ p.descricao|upper }}', id: '{{ p.id }}' },
+        {% endfor %}
+    ];
+
+    let currentSearchPanel = null;
+
+    function syncSKU(input) {
+        const val = input.value.toUpperCase();
+        
+        // Se vazio, mostra os primeiros itens (comportamento da "setinha")
+        const results = val.length === 0 
+            ? arioneDatabase.slice(0, 20)
+            : arioneDatabase.filter(item => item.sku.includes(val) || item.desc.includes(val)).slice(0, 15);
+
+        showSearchPanel(input, results, (item) => {
+            input.value = item.sku;
+            fetchItemBySKU(input);
+        });
+    }
+
+    function syncProduto(input) {
+        const val = input.value.toUpperCase();
+        
+        const results = val.length < 1 
+            ? arioneDatabase.slice(0, 20)
+            : arioneDatabase.filter(item => item.desc.includes(val) || item.sku.includes(val)).slice(0, 15);
+
+        showSearchPanel(input, results, (item) => {
+            const row = input.closest('tr');
+            const skuInput = row.querySelector('.table-input-sku');
+            if (skuInput) {
+                skuInput.value = item.sku;
+                fetchItemBySKU(skuInput);
+            }
+        });
+    }
+
+    function showSearchPanel(input, results, onSelect) {
+        closeSearchPanel();
+        if (results.length === 0) return;
+
+        const panel = document.createElement('div');
+        panel.className = 'arione-search-panel';
+        panel.style.display = 'block';
+        
+        // Posicionamento inteligente
+        const rect = input.getBoundingClientRect();
+        panel.style.top = (window.scrollY + rect.bottom + 5) + 'px';
+        panel.style.left = (window.scrollX + rect.left) + 'px';
+
+        results.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'arione-search-item';
+            div.innerHTML = `
+                <span class="arione-search-sku">${item.sku}</span>
+                <span class="arione-search-desc">${item.desc}</span>
+            `;
+            div.onclick = () => {
+                onSelect(item);
+                closeSearchPanel();
+            };
+            panel.appendChild(div);
+        });
+
+        document.body.appendChild(panel);
+        currentSearchPanel = panel;
+
+        // Fecha ao clicar fora
+        const clickHandler = (e) => {
+            if (!panel.contains(e.target) && e.target !== input) {
+                closeSearchPanel();
+                document.removeEventListener('click', clickHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', clickHandler), 10);
+    }
+
+    function closeSearchPanel() {
+        if (currentSearchPanel) {
+            currentSearchPanel.remove();
+            currentSearchPanel = null;
+        }
+    }
+
+    async function fetchItemBySKU(input) {
+        const sku = input.value.trim();
+        if (!sku || sku.length < 1) return;
+
+        const row = input.closest('tr');
+        const perfilSelect = document.querySelector('select[name="perfil_id"]');
+        const perfil = perfilSelect ? perfilSelect.options[perfilSelect.selectedIndex].text : 'Consumidor';
+
+        try {
+            const res = await fetch(`/operacoes/api/produtos/get-by-sku?sku=${encodeURIComponent(sku)}&perfil=${encodeURIComponent(perfil)}`);
+            const data = await res.json();
+
+            if (data.ok) {
+                // Preenchimento Garantido AriOne
+                const skuField = row.querySelector('.table-input-sku');
+                const descField = row.querySelector('.table-input-desc');
+                const vlrField = row.querySelector('.table-input-vlr');
+                const unField = row.querySelector('.table-input-un');
+
+                if (skuField && data.sku) skuField.value = data.sku;
+                row.dataset.itemId = data.id;
+                row.dataset.variacaoId = data.variacao_id || '';
+                // 📦 Sincroniza Metadados de Logística
+                row.dataset.peso = data.peso || 0;
+                row.dataset.altura = data.altura || 0;
+                row.dataset.largura = data.largura || 0;
+                row.dataset.comprimento = data.comprimento || 0;
+
+                const pDisp = row.querySelector('.row-peso-display');
+                if (pDisp) pDisp.innerText = (data.peso || 0).toFixed(3) + ' KG';
+                const idField = row.querySelector('.table-input-id');
+                if (idField) idField.value = data.id;
+                if (descField) descField.value = data.descricao;
+                if (unField) unField.value = data.unidade || 'UN';
+                if (vlrField) {
+                    vlrField.value = data.valor_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+
+                arioneToast('✨ ' + data.descricao, 'success');
+                calcularTotaisPedido();
+
+                const qtdInp = row.querySelector('.table-input-qtd');
+                if (qtdInp) { qtdInp.focus(); qtdInp.select(); }
+            } else {
+                console.warn('SKU não encontrado:', sku);
+            }
+        } catch (err) { console.error('Erro na busca por SKU:', err); }
+    }
+
+    function calcularTotaisPedido() {
+        let subtotal = 0; let descontoTotal = 0; let qtdTotal = 0;
+        
+        // Loop pelos itens da tabela
+        document.querySelectorAll('#tabela-itens-ped tbody tr').forEach(row => {
+            const q = parseFloat(row.querySelector('.table-input-qtd')?.value) || 0;
+            const v = parseFloat(row.querySelector('.table-input-vlr')?.value.replace(/\./g, '').replace(',', '.')) || 0;
+            const dVal = parseFloat(row.querySelector('.table-input-desc-val')?.value.replace(/\./g, '').replace(',', '.')) || 0;
+            const dTipo = row.querySelector('.table-input-desc-tipo')?.value || 'VALOR';
+            
+            let itemSubtotal = q * v;
+            let itemDesconto = (dTipo === 'PERCENT') ? (itemSubtotal * dVal / 100) : dVal;
+            const tL = itemSubtotal - itemDesconto;
+            
+            subtotal += itemSubtotal;
+            descontoTotal += itemDesconto;
+            qtdTotal += q;
+            
+            const elTotalLinha = row.querySelector('.col-total-linha');
+            if (elTotalLinha) {
+                elTotalLinha.innerText = 'R$ ' + tL.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        });
+
+        const fmt = (val) => 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const parse = (id) => parseFloat(document.getElementById(id)?.value.replace(/\./g, '').replace(',', '.')) || 0;
+        
+        const frete = parse('frete_valor');
+        const vlrColeta = parse('valor_coleta');
+        const vlrEnvio = parse('valor_envio');
+        const valorComDescontos = subtotal - descontoTotal;
+
+        // 🔥 NOVO: Cálculo dinâmico se for PERCENT
+        const ajMod = document.getElementById('ajuste_global_modalidade')?.value || 'PERCENT';
+        const ajTipo = document.getElementById('ajuste_global_tipo')?.value || 'desconto';
+        let ajVal = parse('ajuste_global_valor');
+
+        if (ajMod === 'PERCENT') {
+            const pct = parse('ajuste_global_pct');
+            ajVal = (valorComDescontos * pct) / 100;
+            // Atualiza o campo de valor para reflexão visual
+            const elVal = document.getElementById('ajuste_global_valor');
+            if (elVal) elVal.value = ajVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        const ajusteFinal = (ajTipo === 'desconto') ? ajVal : -ajVal;
+        const totalFinalReal = (valorComDescontos - ajusteFinal) + vlrColeta + frete;
+
+        const elResumoAjuste = document.getElementById('resumo-ajuste-global');
+        if (elResumoAjuste) {
+            elResumoAjuste.value = ajVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            elResumoAjuste.style.color = (ajTipo === 'desconto') ? '#ef4444' : '#27AE60';
+            elResumoAjuste.style.borderColor = (ajTipo === 'desconto') ? '#fecaca' : '#bbf7d0';
+            elResumoAjuste.style.background = (ajTipo === 'desconto') ? '#fff1f2' : '#f0fdf4';
+        }
+
+        const elResumoColeta = document.getElementById('resumo-valor-coleta');
+        if (elResumoColeta) elResumoColeta.value = vlrColeta.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const elResumoFrete = document.getElementById('resumo-valor-frete');
+        if (elResumoFrete) elResumoFrete.value = frete.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const safeSet = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.tagName === 'INPUT') el.value = val;
+                else el.innerText = val;
+            }
+        };
+
+        safeSet('resumo-qtd-itens', qtdTotal);
+        safeSet('resumo-total-desconto-itens', fmt(descontoTotal));
+        safeSet('resumo-total-itens', fmt(subtotal));
+        safeSet('resumo-valor-com-descontos', fmt(valorComDescontos));
+        safeSet('resumo-total-geral', fmt(totalFinalReal));
+
+        // 🛡️ Sincronização AriOne (Campos para o Backend)
+        const fmtVal = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        safeSet('hidden_total_bruto', fmtVal(subtotal));
+        safeSet('hidden_valor_desconto', fmtVal(descontoTotal + (ajTipo === 'desconto' ? ajVal : 0)));
+        safeSet('hidden_total_liquido', fmtVal(totalFinalReal));
+        safeSet('hidden_total_frete', fmtVal(vlrColeta + frete));
+        safeSet('hidden_outros_custos', fmtVal(ajTipo === 'acrescimo' ? ajVal : 0));
+    }
+
+    function setColeta(tem) {
+        const btnSim = document.getElementById('btn-coleta-sim');
+        const btnNao = document.getElementById('id-btn-coleta-nao');
+        const groupVlr = document.getElementById('group-valor-coleta');
+        const inputHidden = document.getElementById('tem_coleta');
+        const inputVlr = document.getElementById('valor_coleta');
+
+        if (tem) {
+            btnSim.style.background = '#2980B9'; btnSim.style.color = '#fff';
+            btnNao.style.background = '#f8fafc'; btnNao.style.color = '#94a3b8';
+            groupVlr.style.display = 'flex';
+            inputHidden.value = 'SIM';
+        } else {
+            btnNao.style.background = '#ef4444'; btnNao.style.color = '#fff';
+            btnSim.style.background = '#f8fafc'; btnSim.style.color = '#94a3b8';
+            groupVlr.style.display = 'none';
+            inputHidden.value = 'NÃO';
+            inputVlr.value = '0,00';
+        }
+        calcularTotaisPedido();
+    }
+
+    function syncCliente(input) {
+        const val = input.value.toUpperCase();
+        const list = document.getElementById('lista-clientes');
+        const opt = Array.from(list.options).find(o => o.value === val);
+        const panel = document.getElementById('panel-cliente-details');
+
+        if (opt) {
+            document.getElementById('cliente_id').value = opt.dataset.id;
+            document.getElementById('det-doc').innerText = opt.dataset.doc || '-';
+            document.getElementById('det-whats').innerText = "WhatsApp: " + (opt.dataset.whats || 'N/A');
+            document.getElementById('det-email').innerText = opt.dataset.email || '-';
+            
+            // Endereço Principal (Read Only)
+            document.getElementById('det-rua').value = opt.dataset.rua || '';
+            document.getElementById('det-num').value = opt.dataset.num || '';
+            document.getElementById('det-bairro').value = opt.dataset.bairro || '';
+            document.getElementById('det-cep').value = opt.dataset.cep || '';
+            document.getElementById('det-cidade').value = opt.dataset.cidade || '';
+            document.getElementById('det-uf').value = opt.dataset.uf || '';
+            document.getElementById('det-compl').value = opt.dataset.compl || '';
+            const elRef = document.getElementById('det-ref');
+            if (elRef) {
+                if (elRef.tagName === 'INPUT') elRef.value = opt.dataset.ref || '';
+                else elRef.innerText = opt.dataset.ref || '-';
+            }
+
+            // Endereço para Entrega (Editable)
+            // Preenche se for um novo pedido OU se os campos de entrega estiverem vazios
+            const isNew = !document.getElementById('pedido_id').value;
+            const cepVal = document.getElementById('det-cep-ent').value;
+            const hasDelivery = cepVal && cepVal.trim() !== '' && cepVal !== 'None';
+            
+            if (isNew || !hasDelivery) {
+                const getVal = (v1, v2) => (v1 && v1 !== 'None') ? v1 : (v2 && v2 !== 'None' ? v2 : '');
+                document.getElementById('det-rua-ent').value = getVal(opt.dataset.ruaEnt, opt.dataset.rua);
+                document.getElementById('det-num-ent').value = getVal(opt.dataset.numEnt, opt.dataset.num);
+                document.getElementById('det-bairro-ent').value = getVal(opt.dataset.bairroEnt, opt.dataset.bairro);
+                document.getElementById('det-cep-ent').value = getVal(opt.dataset.cepEnt, opt.dataset.cep);
+                document.getElementById('det-cidade-ent').value = getVal(opt.dataset.cidadeEnt, opt.dataset.cidade);
+                document.getElementById('det-uf-ent').value = getVal(opt.dataset.ufEnt, opt.dataset.uf);
+                document.getElementById('det-compl-ent').value = getVal(opt.dataset.complEnt, opt.dataset.compl);
+            }
+            
+            const tipoDisp = document.getElementById('cliente_tipo_display');
+            if (tipoDisp) tipoDisp.value = opt.dataset.tipo || '--';
+            
+            panel.style.display = 'block';
+            arioneToast('👤 Cliente: ' + val, 'info');
+        } else {
+            document.getElementById('cliente_id').value = '';
+            panel.style.display = 'none';
+        }
+    }
+
+    function consultarCEPEntrega(cep) {
+        const cleanCep = cep.replace(/\D/g, '');
+        if (cleanCep.length !== 8) return;
+
+        arioneToast('🔍 Buscando CEP...', 'info');
+        fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.erro) {
+                    arioneToast('❌ CEP não encontrado.', 'danger');
+                } else {
+                    document.getElementById('det-rua-ent').value = data.logradouro.toUpperCase();
+                    document.getElementById('det-bairro-ent').value = data.bairro.toUpperCase();
+                    document.getElementById('det-cidade-ent').value = data.localidade.toUpperCase();
+                    document.getElementById('det-uf-ent').value = data.uf.toUpperCase();
+                    document.getElementById('det-num-ent').focus();
+                    arioneToast('✅ Endereço localizado!', 'success');
+                }
+            })
+            .catch(() => arioneToast('❌ Erro ao consultar CEP.', 'danger'));
+    }
+
+    function toggleDetails() {
+        const panel = document.getElementById('panel-cliente-details');
+        if (!panel) return;
+        panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
+    }
+
+    let _ajusteOp = 'desconto';
+    let _ajusteMod = 'PERCENT';
+
+    function setOperacaoGlobal(op) {
+        _ajusteOp = op;
+        document.getElementById('ajuste_global_tipo').value = op;
+        const btnD = document.getElementById('btn-op-desconto');
+        const btnA = document.getElementById('btn-op-acrescimo');
+        const valInp = document.getElementById('ajuste_global_valor');
+        const pctInp = document.getElementById('ajuste_global_pct');
+
+        if (op === 'desconto') {
+            btnD.style.background='#ef4444'; btnD.style.color='#fff';
+            btnA.style.background='#f8fafc'; btnA.style.color='#94a3b8';
+            valInp.style.color='#ef4444';
+            pctInp.style.color='#ef4444';
+        } else {
+            btnA.style.background='#27AE60'; btnA.style.color='#fff';
+            btnD.style.background='#f8fafc'; btnD.style.color='#94a3b8';
+            valInp.style.color='#27AE60';
+            pctInp.style.color='#27AE60';
+        }
+        calcularTotaisPedido();
+    }
+
+    function setModalidadeGlobal(mod) {
+        _ajusteMod = mod;
+        document.getElementById('ajuste_global_modalidade').value = mod;
+        const btnP = document.getElementById('btn-mod-pct');
+        const btnV = document.getElementById('btn-mod-val');
+        
+        if (mod === 'PERCENT') {
+            btnP.style.background='#2980B9'; btnP.style.color='#fff';
+            btnV.style.background='#f8fafc'; btnV.style.color='#94a3b8';
+            document.getElementById('ajuste_global_pct').focus();
+        } else {
+            btnV.style.background='#2980B9'; btnV.style.color='#fff';
+            btnP.style.background='#f8fafc'; btnP.style.color='#94a3b8';
+            document.getElementById('ajuste_global_valor').focus();
+        }
+    }
+
+    function syncAjusteGlobal(origem) {
+        const valTxt = document.getElementById('resumo-valor-com-descontos')?.innerText || '0,00';
+        const totalBase = parseFloat(valTxt.replace('R$ ','').replace(/\./g,'').replace(',','.')) || 0;
+        
+        if (origem === 'PERCENT') {
+            const pct = parseFloat(document.getElementById('ajuste_global_pct').value.replace(/\./g,'').replace(',','.')) || 0;
+            const val = (totalBase * pct) / 100;
+            document.getElementById('ajuste_global_valor').value = val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+            _ajusteMod = 'PERCENT';
+        } else {
+            const val = parseFloat(document.getElementById('ajuste_global_valor').value.replace(/\./g,'').replace(',','.')) || 0;
+            const pct = totalBase > 0 ? (val * 100) / totalBase : 0;
+            document.getElementById('ajuste_global_pct').value = pct.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+            _ajusteMod = 'VALOR';
+        }
+        document.getElementById('ajuste_global_modalidade').value = _ajusteMod;
+        
+        const btnP = document.getElementById('btn-mod-pct');
+        const btnV = document.getElementById('btn-mod-val');
+        if (_ajusteMod === 'PERCENT') {
+            btnP.style.background='#2980B9'; btnP.style.color='#fff';
+            btnV.style.background='#f8fafc'; btnV.style.color='#94a3b8';
+        } else {
+            btnV.style.background='#2980B9'; btnV.style.color='#fff';
+            btnP.style.background='#f8fafc'; btnP.style.color='#94a3b8';
+        }
+        
+        calcularTotaisPedido();
+    }
+
+    function arioneMaskMoney(val) {
+        let v = val.replace(/\D/g, '');
+        v = (v / 100).toFixed(2) + '';
+        v = v.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return v;
+    }
+
+    function switchOpeTab(btn, tabId) {
+        const wrap = btn.closest('.fp-tabs-wrap');
+        wrap.querySelectorAll('.fp-tab').forEach(t => t.classList.remove('active'));
+        wrap.querySelectorAll('.fp-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function toggleItemObs(btn) {
+        const row = btn.closest('tr');
+        let obsRow = row.nextElementSibling;
+        if (obsRow && obsRow.classList.contains('item-obs-row')) { obsRow.remove(); return; }
+        obsRow = document.createElement('tr');
+        obsRow.className = 'item-obs-row';
+        const currentObs = row.querySelector('.table-input-obs').value || '';
+        obsRow.innerHTML = `
+            <td colspan="8" style="padding: 0 20px 15px 160px; background: #fff;">
+                <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-top: none; border-radius: 0 0 12px 12px; padding: 15px; position: relative;">
+                    <label style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">Anotações Internas do Item</label>
+                    <textarea class="fp-input" style="width: 100%; height: 60px; min-height: 60px; font-size: 13px; background: #fff; border-color: #cbd5e1; resize: vertical;" oninput="saveItemObs(this)">${currentObs}</textarea>
+                </div>
+            </td>
+        `;
+        row.after(obsRow);
+        obsRow.querySelector('textarea').focus();
+    }
+
+    function saveItemObs(textarea) {
+        const mainRow = textarea.closest('tr').previousElementSibling;
+        mainRow.querySelector('.table-input-obs').value = textarea.value;
+        mainRow.querySelector('[title="Observação do Item"]').style.color = textarea.value.trim() ? '#2980B9' : '#94a3b8';
+    }
+
+    function arioneAdicionarLinhaPedido() {
+        const table = document.querySelector('#tabela-itens-ped tbody');
+        const row = document.createElement('tr');
+        row.className = 'item-row';
+        row.dataset.peso = "0.0";
+        row.innerHTML = `
+            <td>
+                <div class="arione-arrow-wrapper">
+                    <input type="text" class="fp-input table-input-sku arione-input-with-arrow" name="item_sku[]" placeholder="SKU..." oninput="syncSKU(this)" onclick="syncSKU(this)" onfocus="this.select()" autocomplete="off" style="width: 100% !important; height: 34px !important; font-family: monospace;">
+                    <i class="fas fa-caret-down arione-physical-arrow" onclick="syncSKU(this.previousElementSibling)"></i>
+                </div>
+            </td>
+            <td>
+                <div style="display: flex; align-items: center; width: 100%;">
+                    <div class="arione-arrow-wrapper" style="flex: 1;">
+                        <input type="text" class="fp-input table-input-desc arione-input-with-arrow" name="item_nome[]" placeholder="Buscar produto..." oninput="syncProduto(this)" onclick="syncProduto(this)" onfocus="this.select()" autocomplete="off" style="width: 100% !important; height: 34px !important;">
+                        <i class="fas fa-caret-down arione-physical-arrow" onclick="syncProduto(this.previousElementSibling)"></i>
+                    </div>
+                    <button type="button" onclick="toggleItemObs(this)" title="Observação do Item" style="color: #94a3b8; background: none; border: none; cursor: pointer; padding: 0 5px; z-index: 10; margin-left: 5px;"><i class="fas fa-comment-dots"></i></button>
+                    <input type="hidden" class="table-input-obs" name="item_obs[]">
+                    <input type="hidden" class="table-input-id" name="item_produto_id[]">
+                </div>
+            </td>
+            <td><input type="text" class="fp-input table-input-un" name="item_un[]" value="UN" style="text-align: center; height: 34px !important; background: #f8fafc;" readonly tabindex="-1"></td>
+            <td><input type="number" class="fp-input table-input-qtd" name="item_qtd[]" value="1" style="text-align: center; height: 34px !important;" oninput="calcularTotaisPedido()" onfocus="this.select()"></td>
+            <td><input type="text" class="fp-input table-input-vlr" name="item_preco[]" value="0,00" style="text-align: right; height: 34px !important;" oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedido()" onfocus="this.select()"></td>
+            <td>
+                <div style="display: flex; gap: 0; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                    <input type="text" class="table-input-desc-val" name="item_desc_val[]" value="0,00" style="flex: 1; border: none; text-align: right; padding: 6px 1px; font-size: 11px; font-weight: 600;" oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedido()">
+                    <select class="table-input-desc-tipo" name="item_desc_tipo[]" style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; font-weight: 800; color: #64748b; padding: 6px 0px;" onchange="calcularTotaisPedido()">
+                        <option value="VALOR">R$</option><option value="PERCENT">%</option>
+                    </select>
+                </div>
+            </td>
+            <td style="text-align: right; font-weight: 800; color: #2980B9;" class="col-total-linha">R$ 0,00</td>
+            <td style="text-align: center;">
+                <div class="row-peso-display" style="font-size: 9px; font-weight: 800; color: #94a3b8;">0.000 KG</div>
+                <button type="button" onclick="this.closest('tr').remove(); calcularTotaisPedido();" style="color: #ef4444; background: none; border: none; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        `;
+        table.appendChild(row);
+        row.querySelector('input').focus();
+    }
+
+    async function buscarTransportadoras() {
+        const clienteId = document.getElementById('cliente_id')?.value;
+        if (!clienteId) {
+            arioneToast('⚠️ Selecione o cliente na lista para carregar as transportadoras.', 'warning');
+            return;
+        }
+
+        arioneToast('🔍 Buscando transportadoras disponíveis...', 'info');
+        const listEl = document.getElementById('lista-transportadoras');
+        const painel = document.getElementById('painel-transportadoras');
+        const emptyEl = document.getElementById('frete-info-empty');
+        listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin" style="color:#2980B9; font-size:24px;"></i></div>';
+        painel.style.display = 'block';
+        if (emptyEl) emptyEl.style.display = 'none';
+
+        try {
+            const pesoTotal = calcularPesoTotalPedido();
+            const res = await fetch(`/operacoes/api/transportadoras/por-cliente?cliente_id=${clienteId}&peso=${pesoTotal}`);
+            const data = await res.json();
+
+            const labelEl = document.getElementById('label-cidade-destino');
+            if (labelEl) labelEl.textContent = data.cidade ? `${data.cidade} / ${data.uf}` : 'destino do cliente';
+
+            if (!data.transportadoras || data.transportadoras.length === 0) {
+                listEl.innerHTML = `
+                    <div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;">
+                        <i class="fas fa-truck" style="font-size:28px; display:block; margin-bottom:10px; opacity:0.3;"></i>
+                        <div style="font-size:13px; font-weight:700;">Nenhuma transportadora cadastrada para esta rota.</div>
+                    </div>`;
+                return;
+            }
+
+            const modalIcons = { aereo: 'fa-plane', terrestre: 'fa-road', naval: 'fa-ship', '': 'fa-truck' };
+            const modalCors  = { aereo: '#0072CE',  terrestre: '#27AE60', naval: '#16A085', '': '#64748b' };
+            const avaliacoes = { A: { icon: '⭐⭐⭐', cor: '#27AE60' }, B: { icon: '⭐⭐', cor: '#0072CE' }, C: { icon: '⭐', cor: '#E67E22' }, D: { icon: '⚠️', cor: '#e53e3e' } };
+
+            listEl.innerHTML = data.transportadoras.map(t => {
+                const icon = modalIcons[t.modal] || 'fa-truck';
+                const cor = modalCors[t.modal] || '#64748b';
+                const av = avaliacoes[t.avaliacao] || avaliacoes['B'];
+                
+                return `
+                    <div class="transp-card" 
+                         data-id="${t.id}" 
+                         data-nome="${t.nome}" 
+                         data-prazo="${t.prazo_entrega || ''}"
+                         data-p_raw="${t.precos.p.replace('R$ ','').replace('.','').replace(',','.')}"
+                         data-m_raw="${t.precos.m.replace('R$ ','').replace('.','').replace(',','.')}"
+                         data-g_raw="${t.precos.g.replace('R$ ','').replace('.','').replace(',','.')}"
+                         onclick="selecionarTransportadora(this)">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                            <div style="width:40px; height:40px; background:${cor}15; color:${cor}; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;">
+                                <i class="fas ${icon}"></i>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="transp-modal-badge" style="background:${av.cor}15; color:${av.cor};">
+                                    ${av.icon} ${t.avaliacao || 'B'}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-weight:800; color:#1e293b; font-size:12px; margin-bottom:10px;">${t.nome}</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; background:#f8fafc; padding:8px; border-radius:8px;">
+                            <div style="text-align:center;"><div style="font-size:7px; font-weight:800; color:#94a3b8;">P</div><div style="font-size:10px; font-weight:800;">${t.precos.p}</div></div>
+                            <div style="text-align:center;"><div style="font-size:7px; font-weight:800; color:#94a3b8;">M</div><div style="font-size:10px; font-weight:800;">${t.precos.m}</div></div>
+                            <div style="text-align:center;"><div style="font-size:7px; font-weight:800; color:#94a3b8;">G</div><div style="font-size:10px; font-weight:800;">${t.precos.g}</div></div>
+                        </div>
+                        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:10px; color:#64748b; font-weight:700;"><i class="fas fa-clock"></i> ${t.prazo_entrega ? t.prazo_entrega + ' dias' : 'A combinar'}</span>
+                            <span style="font-size:9px; color:#2980B9; font-weight:800;">SELECIONAR <i class="fas fa-chevron-right"></i></span>
+                        </div>
+                    </div>`;
+            }).join('');
+        } catch(e) {
+            listEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#e74c3c;"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar transportadoras.</div>';
+        }
+    }
+
+    function selecionarTransportadora(card) {
+        const id = card.dataset.id;
+        const nome = card.dataset.nome;
+        const prazo = card.dataset.prazo;
+        
+        document.getElementById('transp_id_hidden').value = id;
+        document.getElementById('transp_nome_display').value = nome;
+        if (prazo) document.getElementById('frete_prazo_dias').value = prazo;
+        
+        document.getElementById('hidden_vlr_p').value = card.dataset.p_raw || 0;
+        document.getElementById('hidden_vlr_m').value = card.dataset.m_raw || 0;
+        document.getElementById('hidden_vlr_g').value = card.dataset.g_raw || 0;
+        
+        recalcularFreteTotal();
+        
+        const summary = document.getElementById('logistica-selecionada');
+        if (summary) {
+            summary.style.display = 'flex';
+            document.getElementById('display-transp-nome').textContent = nome;
+            document.getElementById('display-transp-prazo').textContent = prazo ? `${prazo} dia(s)` : 'A Combinar';
+        }
+        
+        document.getElementById('painel-transportadoras').style.display = 'none';
+        calcularTotaisPedido();
+        arioneToast('🚚 Transportadora vinculada!', 'success');
+    }
+
+    function selecionarTipoFrete(tipo) {
+        document.getElementById('radio-cif').checked = (tipo === 'CIF');
+        document.getElementById('radio-fob').checked = (tipo === 'FOB');
+        const btnCif = document.getElementById('btn-cif');
+        const btnFob = document.getElementById('btn-fob');
+        if (tipo === 'CIF') {
+            btnCif.style.borderColor = '#2980B9'; btnCif.style.background = '#e8f4fd';
+            btnFob.style.borderColor = '#e2e8f0'; btnFob.style.background = '#f8fafc';
+        } else {
+            btnFob.style.borderColor = '#475569'; btnFob.style.background = '#f0f4f8';
+            btnCif.style.borderColor = '#e2e8f0'; btnCif.style.background = '#f8fafc';
+        }
+        buscarTransportadoras();
+    }
+
+    function recalcularFreteTotal() {
+        const id = document.getElementById('transp_id_hidden').value;
+        if (!id) return;
+        
+        const vP = parseFloat(document.getElementById('hidden_vlr_p').value) || 0;
+        const vM = parseFloat(document.getElementById('hidden_vlr_m').value) || 0;
+        const vG = parseFloat(document.getElementById('hidden_vlr_g').value) || 0;
+        
+        // Em Pedidos, podemos usar pesos ou volumes. Se volumes ocultos, assume 1M como base ou 1P
+        const total = vP || vM || vG; 
+        
+        const freteInp = document.getElementById('frete_valor');
+        if (freteInp) freteInp.value = total.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+        
+        calcularTotaisPedido();
+    }
+
+    window.carregarParametrosVendas = async function () {
+        try {
+            const res = await fetch('/cadastros/parametros/get?grupo=vendas');
+            const data = await res.json();
+
+            // 1. Numeração Automática
+            const elNumero = document.getElementById('doc_numero');
+            if (elNumero && !elNumero.value && data.ult_pedido) {
+                const usarAuto = data.usar_sequencia_automatica_ped !== '0';
+                if (usarAuto) {
+                    const inc = parseInt(data.incremento) || 1;
+                    let pref = data.pref_ped || 'PV-';
+                    const reiniciarAnual = data.reiniciar_anual === '1';
+                    if (reiniciarAnual) {
+                        const ano = new Date().getFullYear().toString();
+                        if (!pref.includes(ano)) {
+                            pref = pref.replace(/-$/, '') + '-' + ano + '-';
+                        }
+                    }
+                    const proxNum = (parseInt(data.ult_pedido) || 8210) + inc;
+                    elNumero.value = pref + proxNum;
+                }
+            }
+
+            // 2. Datas Automáticas
+            const hoje = new Date();
+            const formatar = (d) => d.toISOString().split('T')[0];
+
+            // Prazo de Entrega (Ex: +15 dias)
+            if (data.prazo_entrega_padrao) {
+                const dEnt = new Date();
+                dEnt.setDate(hoje.getDate() + parseInt(data.prazo_entrega_padrao));
+                const inputEnt = document.getElementById('data_promessa');
+                if (inputEnt) inputEnt.value = formatar(dEnt);
+            }
+
+            // 3. Inicialização de Totais (Se houver itens pré-carregados)
+            setTimeout(() => {
+                calcularTotaisPedido();
+                
+                // 4. Detalhes do Cliente (Se pré-carregado)
+                const clienteBusca = document.getElementById('cliente_busca');
+                if (clienteBusca && clienteBusca.value) {
+                    syncCliente(clienteBusca);
+                }
+
+                // 5. Forma de Pagamento (Se pré-carregado)
+                {% if target and target.condicao_pagamento %}
+                    const formaNome = "{{ target.condicao_pagamento }}".split(' (')[0];
+                    const cards = document.querySelectorAll('.pag-card');
+                    cards.forEach(c => {
+                        if (c.dataset.nome === formaNome) selecionarFormaPagamento(c);
+                    });
+                {% endif %}
+
+                // 6. Logística (Se pré-carregado)
+                {% if target and target.forma_envio %}
+                    selecionarTipoFrete("{{ target.forma_envio }}");
+                {% endif %}
+            }, 100);
+        } catch (e) { console.error('Erro ao carregar parâmetros:', e); }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        window.carregarParametrosVendas();
+    });
+
+    function calcularPesoTotalPedido() {
+        let total = 0;
+        const items = document.querySelectorAll('.item-row');
+        console.log('📦 AriOne Logística: Iniciando cálculo de peso para', items.length, 'itens.');
+        
+        items.forEach((row, idx) => {
+            const qtdInp = row.querySelector('.table-input-qtd');
+            const qtd = qtdInp ? parseFloat(qtdInp.value) || 0 : 0;
+            const pesoRaw = (row.dataset.peso || '0').toString().replace(',', '.');
+            const pesoUnit = parseFloat(pesoRaw) || 0;
+            
+            console.log(`   - Item ${idx+1}: Qtd=${qtd}, PesoUnit=${pesoUnit}, Subtotal=${(qtd * pesoUnit).toFixed(3)}`);
+            total += (qtd * pesoUnit);
+        });
+        
+        console.log('📦 AriOne Logística: Peso Total Final:', total.toFixed(3));
+        return total.toFixed(3);
+    }
+
+    async function simularFreteOnline() {
+        const cepDestino = document.getElementById('det-cep-ent').value.replace(/\D/g, '') || 
+                           document.getElementById('det-cep').value.replace(/\D/g, '');
+        
+        if (!cepDestino || cepDestino.length < 8) {
+            arioneToast('⚠️ Selecione um cliente com CEP válido para simular.', 'warning');
+            return;
+        }
+
+        const pesoTotal = calcularPesoTotalPedido();
+        if (parseFloat(pesoTotal) <= 0) {
+            const rowCount = document.querySelectorAll('.item-row').length;
+            arioneToast(`⚠️ Peso: ${pesoTotal}kg em ${rowCount} itens. Adicione itens com peso.`, 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('btn-simular-online');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CALCULANDO...';
+        
+        const listDiv = document.getElementById('online-shipping-list');
+        const resWrap = document.getElementById('online-shipping-results');
+        
+        // 📏 AriOne Cubagem: Garante que o painel de volume exista e o atualiza
+        let volPanel = document.getElementById('volume-data-panel');
+        if (!volPanel && resWrap) {
+            const htmlVol = `
+                <div id="volume-data-panel" style="margin-top:10px; padding:12px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; animation: feFadeUp 0.3s ease;">
+                    <div style="font-size:9px; font-weight:800; color:#94a3b8; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-box-open" style="color:#2980B9;"></i> DADOS DO VOLUME ESTIMADO (V6 SAFE)
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; text-align:center;">
+                        <div>
+                            <div style="font-size:8px; color:#64748b; font-weight:700;">ALTURA</div>
+                            <div id="vol-display-alt" style="font-size:12px; font-weight:900; color:#1e293b; padding:4px;">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size:8px; color:#64748b; font-weight:700;">LARGURA</div>
+                            <div id="vol-display-larg" style="font-size:12px; font-weight:900; color:#1e293b; padding:4px;">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size:8px; color:#64748b; font-weight:700;">COMPR.</div>
+                            <div id="vol-display-comp" style="font-size:12px; font-weight:900; color:#1e293b; padding:4px;">-</div>
+                        </div>
+                                <div style="border-left:1px solid #e2e8f0;">
+                            <div style="font-size:8px; color:#2980B9; font-weight:700;">PESO (KG)</div>
+                            <div id="vol-display-peso" style="font-size:12px; font-weight:900; color:#2980B9; padding:4px;">-</div>
+                        </div>
+                    </div>
+                </div>`;
+            resWrap.insertAdjacentHTML('beforebegin', htmlVol);
+            volPanel = document.getElementById('volume-data-panel');
+        }
+
+        const qtdTotal = parseInt(document.getElementById('resumo-qtd-itens')?.value || 0) || 0;
+        
+        // 📊 AriOne Cubagem Universal: Soma o volume de cada item individual
+        let totalVolume = 0;
+        let maxLarg = 0;
+        let maxComp = 0;
+        let totalPeso = 0;
+
+        document.querySelectorAll('.item-row').forEach(row => {
+            const q = parseFloat(row.querySelector('.table-input-qtd')?.value || 0);
+            const alt = parseFloat(row.dataset.altura || 0);
+            const larg = parseFloat(row.dataset.largura || 0);
+            const comp = parseFloat(row.dataset.comprimento || 0);
+            const peso = parseFloat(row.dataset.peso || 0);
+
+            if (q > 0) {
+                totalVolume += (q * alt * larg * comp);
+                maxLarg = Math.max(maxLarg, larg);
+                maxComp = Math.max(maxComp, comp);
+                totalPeso += (q * peso);
+            }
+        });
+
+        // Se não houver medidas no catálogo, usa o Fallback Moda Master
+        let larguraEst = maxLarg || 22;
+        let compEst = maxComp || 22;
+        let alturaEst = 0;
+
+        if (totalVolume > 0 && larguraEst > 0 && compEst > 0) {
+            alturaEst = totalVolume / (larguraEst * compEst);
+        } else {
+            larguraEst = 22 + (qtdTotal * 0.60);
+            compEst = 22 + (qtdTotal * 0.35);
+            alturaEst = (qtdTotal <= 10) ? (qtdTotal * 1.5) : (15 + (qtdTotal - 10) * 0.25);
+        }
+
+        if (document.getElementById('vol-display-alt')) document.getElementById('vol-display-alt').innerText = alturaEst.toFixed(1) + ' cm';
+        if (document.getElementById('vol-display-larg')) document.getElementById('vol-display-larg').innerText = larguraEst.toFixed(1) + ' cm';
+        if (document.getElementById('vol-display-comp')) document.getElementById('vol-display-comp').innerText = compEst.toFixed(1) + ' cm';
+        if (document.getElementById('vol-display-peso')) document.getElementById('vol-display-peso').innerText = totalPeso.toFixed(3) + ' KG';
+
+        if (resWrap) resWrap.style.display = 'block';
+        if (listDiv) listDiv.innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fas fa-sync fa-spin"></i> Consultando Correios...</div>';
+
+        try {
+            const response = await fetch('/operacoes/logistica/simular', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    cep_destino: cepDestino, 
+                    peso: totalPeso || pesoTotal, 
+                    qtd: qtdTotal,
+                    total_volume: totalVolume,
+                    max_largura: maxLarg,
+                    max_comprimento: maxComp
+                })
+            });
+            const data = await response.json();
+
+            if (data.ok && data.opcoes.length > 0) {
+                listDiv.innerHTML = '';
+                data.opcoes.forEach(opt => {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'padding: 12px 15px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; cursor: pointer;';
+                    row.onmouseover = () => row.style.background = '#f8fafc';
+                    row.onmouseout = () => row.style.background = 'transparent';
+                    row.onclick = () => selecionarFreteOnline(opt);
+
+                    row.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 32px; height: 32px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #2980B9;">
+                                <i class="${opt.provedor === 'correios' ? 'fas fa-envelope' : 'fas fa-shipping-fast'}"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; font-weight: 800; color: #1e293b;">${opt.servico.toUpperCase()}</div>
+                                <div style="font-size: 9px; color: #64748b; font-weight: 700;">PROVEDOR: ${opt.provedor.toUpperCase()} | PRAZO: ${opt.prazo} DIAS</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 13px; font-weight: 900; color: #27AE60;">R$ ${opt.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                            <div style="font-size: 8px; color: #94a3b8; font-weight: 800;">CLIQUE PARA SELECIONAR</div>
+                        </div>
+                    `;
+                    listDiv.appendChild(row);
+                });
+            } else {
+                listDiv.innerHTML = `<div style="padding: 20px; text-align: center; color: #ef4444; font-weight: 700;">${data.error || 'Nenhuma opção de frete disponível.'}</div>`;
+            }
+        } catch (err) {
+            listDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #ef4444; font-weight: 700;">Erro ao conectar com o servidor de logística.</div>';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    function selecionarFreteOnline(opt) {
+        const freteInp = document.getElementById('frete_valor');
+        if (freteInp) {
+            freteInp.value = opt.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        const prazoInp = document.getElementById('frete_prazo_dias');
+        if (prazoInp) {
+            prazoInp.value = opt.prazo;
+        }
+        
+        const logResumo = document.getElementById('logistica-selecionada');
+        if (logResumo) {
+            logResumo.style.display = 'flex';
+            const nomeDisp = document.getElementById('display-transp-nome');
+            if (nomeDisp) nomeDisp.innerText = `FRETE ONLINE: ${opt.servico.toUpperCase()} (${opt.provedor.toUpperCase()})`;
+            const prazoDisp = document.getElementById('display-transp-prazo');
+            if (prazoDisp) prazoDisp.innerText = `${opt.prazo} DIAS ÚTEIS`;
+        }
+        
+        arioneToast(`✅ Frete ${opt.servico} selecionado: R$ ${opt.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 'success');
+        
+        const onlineResults = document.getElementById('online-shipping-results');
+        if (onlineResults) onlineResults.style.display = 'none';
+        
+        const transpPainel = document.getElementById('painel-transportadoras');
+        if (transpPainel) transpPainel.style.display = 'none';
+        
+        calcularTotaisPedido();
+    }
+
+    async function arioneSyncPesos() {
+        if (!confirm('🛡️ AriOne: Deseja forçar a sincronização dos pesos do catálogo com este pedido? (Isso corrigirá itens com peso 0.0)')) return;
+
+        try {
+            const res = await fetch('/operacoes/vendas/fix-weights', { method: 'POST' });
+            const data = await res.json();
+            
+            if (data.success) {
+                arioneToast(data.message, 'success');
+                // 🔄 Re-busca pesos de todos os itens na tela
+                const rows = document.querySelectorAll('#tabela-itens-ped tbody tr.item-row');
+                for (let row of rows) {
+                    const skuInput = row.querySelector('.table-input-sku');
+                    if (skuInput && skuInput.value) {
+                        await fetchItemBySKU(skuInput);
+                    }
+                }
+                arioneToast('Pesos atualizados na interface!', 'info');
+                calcularTotaisPedido();
+            } else {
+                arioneToast('Erro: ' + data.error, 'danger');
+            }
+        } catch (e) {
+            arioneToast('Erro de rede ao sincronizar.', 'danger');
+        }
+    }
+</script>
+{% endblock %}

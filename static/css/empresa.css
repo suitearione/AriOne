@@ -1,0 +1,322 @@
+/* =========================================================== */
+/* 🟪 ARIONEDEV – CSS EXCLUSIVO DA TELA EMPRESA                */
+/* Estilos modernos, limpos e padronizados                     */
+/* =========================================================== */
+
+
+/* ============================== */
+/* 🔹 Container Global            */
+/* ============================== */
+.arione-container {
+    padding: 20px 30px;
+    font-family: Poppins, sans-serif;
+}
+
+
+/* ============================== */
+/* 🔹 Cabeçalho Moderno           */
+/* ============================== */
+.empresa-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    border-left: 4px solid #5A2EA6;
+    margin-bottom: 30px;
+}
+
+.empresa-header-left img {
+    width: 80px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.empresa-header-center h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: #5A2EA6;
+}
+
+.empresa-header-center p {
+    margin: 2px 0 0 0;
+    font-size: 13px;
+    color: #666;
+}
+
+/* ============================== */
+/* 🔹 Ações */
+.empresa-acoes {
+    position: relative;
+}
+
+.btn-acoes {
+    padding: 6px 12px;
+    font-size: 13px;
+    background: #f3ecff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #4b2b8f;
+    transition: 0.2s;
+}
+
+.btn-acoes:hover {
+    background: #e7dcff;
+}
+
+.acoes-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 34px;
+    background: white;
+    border-radius: 8px;
+    min-width: 160px;
+    padding: 5px 0;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+}
+
+.acoes-menu button {
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: Poppins;
+}
+
+.acoes-menu button:hover {
+    background: #f3ecff;
+}
+
+/* ============================== */
+/* 🔹 Busca */
+.empresa-busca {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 220px;
+}
+
+/* ============================== */
+/* 🔹 Navegação */
+.empresa-navegacao .nav-btn {
+    background: #eee;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.empresa-navegacao .nav-btn:hover {
+    background: #ddd;
+}
+
+/* ============================== */
+/* 🔹 Botão Voltar */
+.btn-voltar {
+    padding: 6px 12px;
+    background: #e8e4ff;
+    border: 1px solid #d3cfff;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #4b2b8f;
+    transition: 0.2s;
+}
+
+.btn-voltar:hover {
+    background: #dcd6ff;
+}
+
+
+/* =========================================================== */
+/* 🟪 FORMULÁRIO – GRID MODERNO                                */
+/* =========================================================== */
+.empresa-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+.form-bloco {
+    background: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 3px solid #5A2EA6;
+}
+
+.form-bloco h3 {
+    margin-top: 0;
+    color: #5A2EA6;
+    font-size: 18px;
+}
+
+.form-bloco input,
+.form-bloco select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border: 1px solid #d4d4d4;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.form-bloco input:focus,
+.form-bloco select:focus {
+    border-color: #5A2EA6;
+    box-shadow: 0 0 0 2px #e8e2ff;
+}
+
+
+/* =========================================================== */
+/* 🟪 BOTÃO SALVAR                                              */
+/* =========================================================== */
+.form-botoes {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.btn-salvar {
+    background: #5A2EA6;
+    color: white;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-salvar:hover {
+    background: #4a238d;
+}
+
+
+/* =========================================================== */
+/* 🟪 LISTAGEM DE EMPRESAS                                      */
+/* =========================================================== */
+.empresa-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 35px;
+    font-size: 14px;
+}
+
+.empresa-tabela th {
+    background: #5A2EA6;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+.empresa-tabela td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.empresa-tabela tr:hover {
+    background: #f7f5ff;
+}
+
+/* Logo preview */
+.empresa-logo-preview {
+    max-width: 160px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+
+/* =========================================================== */
+/* 🟪 MOBILE RESPONSIVO                                         */
+/* =========================================================== */
+@media (max-width: 780px) {
+    .empresa-header {
+        flex-direction: column;
+        gap: 14px;
+        text-align: center;
+    }
+
+    .empresa-header-right {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .empresa-busca {
+        width: 100%;
+    }
+
+    .empresa-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================================= */
+/* 🟪 CAB_FORM — BARRA DE AÇÕES                              */
+/* ========================================================= */
+.empresa-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* ⚙️ Botão ações */
+.btn-acoes {
+    background: #f5f1ff;
+    color: #5A2EA6;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #ccbdf5;
+    cursor: pointer;
+    font-family: Poppins;
+}
+
+/* 🔍 Busca */
+.empresa-busca {
+    flex: 1;                       /* ocupa todo o espaço disponível */
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: Poppins;
+}
+
+/* ⬅➡ Navegação */
+.empresa-navegacao .nav-btn {
+    background: #eee;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 16px;
+}
+.empresa-navegacao .nav-btn:hover {
+    background: #ddd;
+}
+
+/* ⬅️ Voltar */
+.btn-voltar {
+    background: #e6ddff;
+    color: #4b2e9f;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #c7b6ff;
+    cursor: pointer;
+    font-family: Poppins;
+}

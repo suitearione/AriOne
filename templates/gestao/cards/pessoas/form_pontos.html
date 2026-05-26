@@ -1,0 +1,469 @@
+<div class="ponto-wrapper">
+    <style>
+        .ponto-wrapper { padding: 0; font-family: 'Inter', sans-serif; color: #1e293b; }
+        
+        /* Barra de Ferramentas Premium */
+        .ponto-header-bar {
+            background: linear-gradient(135deg, #7A255F, #5A1945);
+            padding: 20px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 4px 12px rgba(122, 37, 95, 0.2);
+        }
+        .ponto-header-title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        
+        .ponto-body { padding: 25px; background: #fff; border-radius: 0 0 12px 12px; }
+
+        /* Seletor de Colaborador */
+        .ponto-user-selector {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 25px;
+            transition: 0.3s;
+        }
+        .ponto-user-selector:focus-within { border-color: #7A255F; box-shadow: 0 0 0 4px rgba(122, 37, 95, 0.1); }
+        
+        /* Card do Colaborador (Executive) */
+        .ponto-user-card {
+            background: #1e293b;
+            background-image: radial-gradient(circle at top right, rgba(122, 37, 95, 0.2), transparent);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .ponto-user-photo { width: 65px; height: 65px; border-radius: 18px; object-fit: cover; border: 2px solid #7A255F; box-shadow: 0 0 15px rgba(122, 37, 95, 0.4); }
+        .ponto-user-name { color: #fff; font-size: 18px; font-weight: 800; margin: 0; letter-spacing: -0.5px; }
+        .ponto-user-info { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+
+        /* Relógio e Status */
+        .ponto-clock-area {
+            text-align: center;
+            padding: 30px;
+            background: #fff;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        #ponto-digital-clock { font-size: 52px; font-weight: 900; color: #1e293b; letter-spacing: -2px; line-height: 1; }
+        .ponto-date-label { font-size: 13px; font-weight: 700; color: #7A255F; text-transform: uppercase; margin-top: 10px; margin-bottom: 20px; }
+        
+        .ponto-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-waiting { background: #fef3c7; color: #92400e; }
+        .status-working { background: #dcfce7; color: #166534; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+        .status-finished { background: #fee2e2; color: #991b1b; }
+
+        /* Botão de Registro */
+        .ponto-btn-primary {
+            background: linear-gradient(135deg, #7A255F, #5A1945);
+            color: #fff;
+            border: none;
+            padding: 22px 50px;
+            border-radius: 100px;
+            font-size: 17px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 15px 35px rgba(122, 37, 95, 0.35);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        .ponto-btn-primary:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 20px 45px rgba(122, 37, 95, 0.45); }
+        .ponto-btn-primary:active { transform: translateY(0) scale(0.98); }
+        .ponto-btn-primary i { font-size: 24px; animation: pulse-icon 2s infinite; }
+        
+        @keyframes pulse-icon {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Time Cards */
+        .ponto-times-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 40px 0; }
+        .time-card {
+            background: #fff;
+            border: 1.5px solid #f1f5f9;
+            padding: 18px 10px;
+            border-radius: 18px;
+            text-align: center;
+            transition: 0.3s;
+            position: relative;
+        }
+        .time-card:hover { border-color: #7A255F; background: #fdf5fa; transform: translateY(-3px); }
+        .time-card.active { border-color: #7A255F; background: #fdf5fa; }
+        .time-card.active::before { content: ''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 30px; height: 3px; background: #7A255F; border-radius: 10px; }
+        
+        .time-label { display: block; font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .time-value { font-size: 16px; font-weight: 900; color: #1e293b; font-variant-numeric: tabular-nums; }
+        .time-value.empty { color: #cbd5e1; }
+
+        /* Histórico */
+        .ponto-history-box { border: 1.5px solid #f1f5f9; border-radius: 18px; overflow: hidden; background: #fff; }
+        .ponto-history-header { background: #f8fafc; padding: 15px 20px; font-size: 11px; font-weight: 800; color: #475569; display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; }
+        .ponto-table { width: 100%; border-collapse: collapse; }
+        .ponto-table th { padding: 15px 20px; text-align: left; font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+        .ponto-table td { padding: 15px 20px; font-size: 12px; color: #334155; border-bottom: 1px solid #f8fafc; }
+        .ponto-table tr:hover { background: #fcfcfc; }
+        
+        .btn-action { background: none; border: none; cursor: pointer; padding: 5px; color: #94a3b8; transition: 0.2s; }
+        .btn-edit:hover { color: #7A255F; }
+        .btn-delete:hover { color: #e11d48; }
+    </style>
+
+    <div class="ponto-header-bar">
+        <div class="ponto-header-title">
+            <i class="fas fa-fingerprint"></i> Módulo de Frequência
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="irParaManual()" class="fe-btn" style="background:rgba(255,255,255,0.15); color:#fff; border:none; padding:8px 15px; font-size:11px; font-weight:700; border-radius:6px; cursor:pointer;">
+                <i class="fas fa-plus"></i> NOVO AJUSTE
+            </button>
+            <button type="button" class="fe-btn" onclick="togglePontoPrintMenu()" style="background:#fff; color:#7A255F; border:none; padding:8px 15px; font-size:11px; font-weight:700; border-radius:6px; cursor:pointer;">
+                <i class="fas fa-print"></i> RELATÓRIOS
+            </button>
+        </div>
+    </div>
+
+    <div class="ponto-body">
+        
+        <div id="view-automatico">
+            <!-- Selector -->
+            <div class="ponto-user-selector">
+                <label class="ponto-user-info" style="color: #7A255F; margin-bottom: 8px; display: block;">Localizar Colaborador</label>
+                <div style="position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <select id="select-ponto-user" class="gf-input" style="padding-left: 45px; width: 100%; height: 45px; cursor: pointer; border:none; background:transparent;" onchange="trocarUsuarioPonto(this.value)">
+                        <option value="" disabled>Selecione um funcionário...</option>
+                        {% for f in funcionarios %}
+                            {% set f_uid = f.usuario_id if f.usuario_id else 0 %}
+                            <option value="{{ f_uid }}" {{ 'selected' if f_uid == (target_user.id if target_user else 0) else '' }}>
+                                {{ f.nome }} ({{ f.matricula or 'S/M' }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Colaborador Card -->
+            <div class="ponto-user-card">
+                <img src="/static/assets/{{ target_user.foto_url if target_user else 'usuarios/avatar.png' }}" class="ponto-user-photo">
+                <div style="flex: 1;">
+                    <div class="ponto-user-info">HCM / Colaborador Selecionado</div>
+                    <h3 class="ponto-user-name">{{ target_user.nome if target_user else 'Funcionário' }}</h3>
+                    <div style="display: flex; gap: 15px; margin-top: 6px;">
+                        <span class="ponto-user-info" style="color: #7A255F;"><i class="fas fa-id-badge"></i> #{{ "%04d"|format(target_user.id) if target_user and target_user.id else '0000' }}</span>
+                        <span class="ponto-user-info"><i class="fas fa-building"></i> {{ target_user.empresa.apelido if target_user and target_user.empresa else 'AriOne Digital' }}</span>
+                    </div>
+                </div>
+                <div style="text-align: right; opacity: 0.6;">
+                    <div class="ponto-user-info">Status</div>
+                    <div style="color: #fff; font-size: 12px; font-weight: 800;">ATIVO</div>
+                </div>
+            </div>
+
+            <!-- Relógio Central -->
+            <div class="ponto-clock-area">
+                <div id="ponto-digital-clock">00:00:00</div>
+                <div id="ponto-formatted-date" class="ponto-date-label">
+                    <i class="fas fa-calendar-day"></i> Carregando data...
+                </div>
+
+                <div style="margin: 20px 0;">
+                    {% if not ponto %}
+                        <div class="ponto-status-badge status-waiting"><i class="fas fa-clock"></i> Aguardando Entrada</div>
+                    {% elif not ponto.saida %}
+                        <div class="ponto-status-badge status-working"><i class="fas fa-running"></i> Em Expediente</div>
+                    {% else %}
+                        <div class="ponto-status-badge status-finished"><i class="fas fa-check-double"></i> Jornada Concluída</div>
+                    {% endif %}
+                </div>
+
+                <!-- Botão de Registro -->
+                <div style="margin-top: 30px;">
+                    {% set proximo = "ENTRADA" %}
+                    {% if ponto %}
+                        {% if not ponto.saida_intervalo %}{% set proximo = "SAÍDA INTERVALO" %}
+                        {% elif not ponto.retorno_intervalo %}{% set proximo = "RETORNO INTERVALO" %}
+                        {% elif not ponto.saida %}{% set proximo = "SAÍDA FINAL" %}
+                        {% else %}{% set proximo = "CONCLUÍDO" %}
+                        {% endif %}
+                    {% endif %}
+
+                    {% if proximo != "CONCLUÍDO" %}
+                        <div style="font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 20px; text-transform: uppercase;">
+                            Clique abaixo para registrar: <span style="color: #7A255F;">{{ proximo }}</span>
+                        </div>
+                        <form onsubmit="registrarPontoSeguroV2(event)">
+                            <input type="hidden" name="usuario_id" value="{{ target_user.id if target_user else '' }}">
+                            <input type="hidden" name="geolocalizacao" id="geo-v2">
+                            <button type="submit" class="ponto-btn-primary">
+                                <i class="fas fa-fingerprint"></i>
+                                <span>CONFIRMAR REGISTRO</span>
+                            </button>
+                        </form>
+                    {% else %}
+                        <div style="padding: 10px;">
+                            <i class="fas fa-glass-cheers" style="font-size: 40px; color: #7A255F; margin-bottom: 15px;"></i>
+                            <div style="font-weight: 800; font-size: 18px; color: #1e293b;">Tudo certo por hoje!</div>
+                            <div style="color: #64748b; font-size: 12px; margin-top: 5px;">Sua jornada foi registrada com sucesso.</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Times Grid -->
+            <div class="ponto-times-grid">
+                <div class="time-card {% if ponto and not ponto.saida_intervalo %}active{% endif %}">
+                    <span class="time-label">Entrada</span>
+                    <span class="time-value {{ 'empty' if not (ponto and ponto.entrada) else '' }}">
+                        {{ ponto.entrada.strftime('%H:%M') if ponto and ponto.entrada else '--:--' }}
+                    </span>
+                </div>
+                <div class="time-card {% if ponto and ponto.saida_intervalo and not ponto.retorno_intervalo %}active{% endif %}">
+                    <span class="time-label">Almoço</span>
+                    <span class="time-value {{ 'empty' if not (ponto and ponto.saida_intervalo) else '' }}">
+                        {{ ponto.saida_intervalo.strftime('%H:%M') if ponto and ponto.saida_intervalo else '--:--' }}
+                    </span>
+                </div>
+                <div class="time-card {% if ponto and ponto.retorno_intervalo and not ponto.saida %}active{% endif %}">
+                    <span class="time-label">Retorno</span>
+                    <span class="time-value {{ 'empty' if not (ponto and ponto.retorno_intervalo) else '' }}">
+                        {{ ponto.retorno_intervalo.strftime('%H:%M') if ponto and ponto.retorno_intervalo else '--:--' }}
+                    </span>
+                </div>
+                <div class="time-card">
+                    <span class="time-label">Saída</span>
+                    <span class="time-value {{ 'empty' if not (ponto and ponto.saida) else '' }}">
+                        {{ ponto.saida.strftime('%H:%M') if ponto and ponto.saida else '--:--' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modo Manual -->
+        <div id="view-manual" style="display: none;">
+            <div style="background: #fff; border: 2.5px solid #7A255F; border-radius: 20px; padding: 30px; box-shadow: 0 15px 40px rgba(122, 37, 95, 0.1);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                    <h3 style="margin:0; color:#7A255F; font-weight:900; text-transform:uppercase; font-size:15px; display:flex; align-items:center; gap:12px;">
+                        <i class="fas fa-edit"></i> <span id="manual-title">Ajuste de Registro</span>
+                    </h3>
+                    <button type="button" onclick="irParaAutomatico()" style="background:#f1f5f9; border:none; color:#475569; padding:8px 15px; border-radius:50px; font-size:10px; font-weight:800; cursor:pointer;">
+                        VOLTAR AO RELÓGIO
+                    </button>
+                </div>
+                
+                <form id="form-ponto-manual" onsubmit="salvarPontoManualV2(event)">
+                    <input type="hidden" name="usuario_id" value="{{ target_user.id if target_user else '' }}">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 25px;">
+                        
+                        <div class="gf-group" style="grid-column: span 2;">
+                            <label class="gf-label">Data do Registro</label>
+                            <input type="date" name="data" id="input-data" class="gf-input" value="{{ hoje.strftime('%Y-%m-%d') }}" required>
+                        </div>
+
+                        <div class="gf-group">
+                            <label class="gf-label">Entrada</label>
+                            <input type="time" name="entrada" id="input-entrada" class="gf-input" value="{{ ponto.entrada.strftime('%H:%M') if ponto and ponto.entrada else '' }}">
+                        </div>
+                        <div class="gf-group">
+                            <label class="gf-label">Saída Almoço</label>
+                            <input type="time" name="saida_intervalo" id="input-saida-almoço" class="gf-input" value="{{ ponto.saida_intervalo.strftime('%H:%M') if ponto and ponto.saida_intervalo else '' }}">
+                        </div>
+                        <div class="gf-group">
+                            <label class="gf-label">Volta Almoço</label>
+                            <input type="time" name="retorno_intervalo" id="input-volta-almoço" class="gf-input" value="{{ ponto.retorno_intervalo.strftime('%H:%M') if ponto and ponto.retorno_intervalo else '' }}">
+                        </div>
+                        <div class="gf-group">
+                            <label class="gf-label">Saída Final</label>
+                            <input type="time" name="saida" id="input-saida-final" class="gf-input" value="{{ ponto.saida.strftime('%H:%M') if ponto and ponto.saida else '' }}">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 30px;">
+                        <label class="gf-label">Justificativa <span style="font-size:8px; opacity:0.6;">(OBRIGATÓRIO)</span></label>
+                        <textarea name="observacao" id="input-obs" class="gf-input" rows="2" style="resize:none;" placeholder="Descreva o motivo do ajuste manual..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button type="button" onclick="irParaAutomatico()" style="flex:1; background:#fff; border:1px solid #e2e8f0; padding:15px; border-radius:15px; font-size:12px; font-weight:800; cursor:pointer;">CANCELAR</button>
+                        <button type="submit" style="flex:2; background:#7A255F; color:#fff; border:none; padding:15px; border-radius:15px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 8px 20px rgba(122,37,95,0.2);">SALVAR ALTERAÇÕES</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Histórico -->
+        <div class="ponto-history-box">
+            <div class="ponto-history-header">
+                <span><i class="fas fa-history"></i> ÚLTIMOS LANÇAMENTOS</span>
+                <span style="opacity:0.6; font-weight:700;">REGISTROS RECENTES</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="ponto-table" id="pontoHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th style="text-align: center;">Batidas (E | S1 | E2 | S)</th>
+                            <th style="text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in historico %}
+                        <tr data-search="{{ p.data.strftime('%d/%m/%Y') }}">
+                            <td style="font-weight: 800; color: #1e293b;">{{ p.data.strftime('%d/%m/%Y') }}</td>
+                            <td style="text-align: center; color: #64748b; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+                                {{ p.entrada.strftime('%H:%M') if p.entrada else '--' }} | 
+                                {{ p.saida_intervalo.strftime('%H:%M') if p.saida_intervalo else '--' }} | 
+                                {{ p.retorno_intervalo.strftime('%H:%M') if p.retorno_intervalo else '--' }} | 
+                                {{ p.saida.strftime('%H:%M') if p.saida else '--' }}
+                            </td>
+                            <td style="text-align: right;">
+                                <button onclick="editarPontoV2({
+                                    data: '{{ p.data.strftime('%Y-%m-%d') }}',
+                                    e: '{{ p.entrada.strftime('%H:%M') if p.entrada else '' }}',
+                                    si: '{{ p.saida_intervalo.strftime('%H:%M') if p.saida_intervalo else '' }}',
+                                    ri: '{{ p.retorno_intervalo.strftime('%H:%M') if p.retorno_intervalo else '' }}',
+                                    s: '{{ p.saida.strftime('%H:%M') if p.saida else '' }}',
+                                    obs: '{{ p.observacao or '' }}'
+                                })" class="btn-action btn-edit"><i class="fas fa-edit"></i></button>
+                                <button onclick="excluirPontoV2({{ p.id }}, '{{ p.data.strftime('%d/%m/%Y') }}')" class="btn-action btn-delete"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // Data e Hora Localizada (Fix para meses em inglês)
+        function updateDateTime() {
+            const clockEl = document.getElementById('ponto-digital-clock');
+            const dateEl = document.getElementById('ponto-formatted-date');
+            if (!clockEl) return;
+
+            const agora = new Date();
+            clockEl.textContent = agora.toLocaleTimeString('pt-BR');
+
+            const options = { day: '2-digit', month: 'long', year: 'numeric' };
+            const dataExtensa = agora.toLocaleDateString('pt-BR', options).toUpperCase();
+            dateEl.innerHTML = `<i class="fas fa-calendar-alt"></i> ${dataExtensa}`;
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        window.trocarUsuarioPonto = function(uid) {
+            if (!uid || uid === '0') return;
+            abrirModalRh('pontos', `uid=${uid}`);
+        };
+
+        window.irParaManual = function(isEdit = false) {
+            document.getElementById('view-automatico').style.display = 'none';
+            document.getElementById('view-manual').style.display = 'block';
+            document.getElementById('manual-title').textContent = isEdit ? "Editar Registro" : "Novo Ajuste Manual";
+        };
+
+        window.irParaAutomatico = function() {
+            document.getElementById('view-automatico').style.display = 'block';
+            document.getElementById('view-manual').style.display = 'none';
+        };
+
+        window.editarPontoV2 = function(p) {
+            irParaManual(true);
+            document.getElementById('input-data').value = p.data;
+            document.getElementById('input-entrada').value = p.e;
+            document.getElementById('input-saida-almoço').value = p.si;
+            document.getElementById('input-volta-almoço').value = p.ri;
+            document.getElementById('input-saida-final').value = p.s;
+            document.getElementById('input-obs').value = p.obs.replace('[AJUSTE MANUAL] ', '');
+        };
+
+        window.registrarPontoSeguroV2 = async function(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            const formData = new FormData(e.target);
+            try {
+                const r = await fetch('/gestao/cards/salvar-ponto', { method: 'POST', body: formData });
+                const res = await r.json();
+                if(res.success) {
+                    Swal.fire({ icon: 'success', title: 'Sucesso!', text: res.message, timer: 2000, showConfirmButton: false });
+                    setTimeout(() => abrirModalRh('pontos'), 1000);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Erro', text: res.message || res.error });
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            } catch (err) { btn.disabled = false; btn.style.opacity = '1'; }
+        };
+
+        window.salvarPontoManualV2 = async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            try {
+                const r = await fetch('/gestao/cards/salvar-ponto-manual', { method: 'POST', body: formData });
+                const res = await r.json();
+                if (res.success) {
+                    Swal.fire({ icon: 'success', title: 'Salvo!', text: res.message, timer: 1500, showConfirmButton: false });
+                    setTimeout(() => abrirModalRh('pontos'), 1000);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Atenção', text: res.error });
+                }
+            } catch (err) { alert('Erro de conexão'); }
+        };
+
+        window.excluirPontoV2 = async function(id, dataStr) {
+            const result = await Swal.fire({
+                title: 'Excluir registro?',
+                text: `Deseja realmente apagar o ponto do dia ${dataStr}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#7A255F',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Sim, excluir!',
+                cancelButtonText: 'Cancelar'
+            });
+            if (!result.isConfirmed) return;
+            
+            try {
+                const r = await fetch(`/gestao/cards/excluir-ponto/${id}`, { method: 'POST' });
+                const res = await r.json();
+                if (res.success) abrirModalRh('pontos');
+            } catch (err) { alert('Erro de conexão ao excluir'); }
+        };
+        
+        // Geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const el = document.getElementById('geo-v2');
+                if(el) el.value = pos.coords.latitude + ',' + pos.coords.longitude;
+            });
+        }
+    })();
+</script>

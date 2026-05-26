@@ -1,0 +1,94 @@
+{# =============================================================================
+Caminho : templates/gestao/relatorios/partial_extrato_ponto.html
+Arquivo : partial_extrato_ponto.html
+Função  : Visualização prévia do extrato de ponto
+============================================================================= #}
+
+<div style="padding: 25px; background: #fff;">
+    
+    <!-- Cabeçalho do Extrato -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #7A255F; padding-bottom: 15px;">
+        <div>
+            <h3 style="margin: 0; color: #7A255F; font-size: 18px; font-weight: 800; text-transform: uppercase;">Extrato de Frequência Individual</h3>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;">
+                Período: <strong>{{ d_inicio.strftime('%d/%m/%Y') }}</strong> até <strong>{{ d_fim.strftime('%d/%m/%Y') }}</strong>
+            </p>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Gerado em</div>
+            <div style="font-size: 13px; font-weight: 800; color: #1e293b;">{{ hoje.strftime('%d/%m/%Y %H:%M') }}</div>
+        </div>
+    </div>
+
+    <!-- Tabela de Registros -->
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+            <thead>
+                <tr style="background: #f1f5f9;">
+                    <th style="padding: 12px; text-align: left; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border: 1px solid #e2e8f0;">Data</th>
+                    <th style="padding: 12px; text-align: center; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border: 1px solid #e2e8f0;">Entrada</th>
+                    <th style="padding: 12px; text-align: center; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border: 1px solid #e2e8f0;">Saída Alm.</th>
+                    <th style="padding: 12px; text-align: center; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border: 1px solid #e2e8f0;">Volta Alm.</th>
+                    <th style="padding: 12px; text-align: center; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border: 1px solid #e2e8f0;">Saída</th>
+                    <th style="padding: 12px; text-align: center; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border: 1px solid #e2e8f0;">Total</th>
+                    <th style="padding: 12px; text-align: left; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; border: 1px solid #e2e8f0;">Observações / Ajustes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in extrato %}
+                {% set p = item.ponto %}
+                <tr style="{{ 'background: #fdf2f2;' if not p and item.data.weekday() < 5 else '' }} border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 10px 12px; font-size: 12px; font-weight: 700; color: #334155; border: 1px solid #e2e8f0;">
+                        {{ item.data.strftime('%d/%m') }} 
+                        <span style="font-size: 9px; font-weight: 500; color: #94a3b8; display: block;">{{ ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][item.data.weekday()] }}</span>
+                    </td>
+                    <td style="padding: 10px; text-align: center; font-size: 13px; color: #1e293b; border: 1px solid #e2e8f0;">
+                        {{ p.entrada.strftime('%H:%M') if p and p.entrada else '--:--' }}
+                    </td>
+                    <td style="padding: 10px; text-align: center; font-size: 13px; color: #64748b; border: 1px solid #e2e8f0;">
+                        {{ p.saida_intervalo.strftime('%H:%M') if p and p.saida_intervalo else '--:--' }}
+                    </td>
+                    <td style="padding: 10px; text-align: center; font-size: 13px; color: #64748b; border: 1px solid #e2e8f0;">
+                        {{ p.retorno_intervalo.strftime('%H:%M') if p and p.retorno_intervalo else '--:--' }}
+                    </td>
+                    <td style="padding: 10px; text-align: center; font-size: 13px; color: #1e293b; border: 1px solid #e2e8f0;">
+                        {{ p.saida.strftime('%H:%M') if p and p.saida else '--:--' }}
+                    </td>
+                    <td style="padding: 10px; text-align: center; font-size: 13px; font-weight: 800; color: #7A255F; border: 1px solid #e2e8f0;">
+                        {{ item.total }}
+                    </td>
+                    <td style="padding: 10px; font-size: 10px; color: #64748b; border: 1px solid #e2e8f0; max-width: 200px;">
+                        {% if p and p.observacao %}
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> {{ p.observacao }}
+                        {% elif not p and item.data.weekday() < 5 and item.data < hoje %}
+                            <span style="color: #ef4444; font-weight: 700;">AUSÊNCIA DE REGISTRO</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Rodapé do Relatório -->
+    <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; gap: 20px;">
+            <div>
+                <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Dias Trabalhados</div>
+                <div style="font-size: 16px; font-weight: 800; color: #1e293b;">{{ extrato|selectattr('ponto')|list|length }} d</div>
+            </div>
+            <div>
+                <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Total do Período</div>
+                <div style="font-size: 16px; font-weight: 800; color: #7A255F;">160:00h</div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="gf-btn" style="background:#fff; border:1px solid #e2e8f0; color:#475569;" onclick="window.print()">
+                <i class="fas fa-print"></i> IMPRIMIR PDF
+            </button>
+            <button type="button" class="gf-btn" style="background:#1e293b; color:#fff;" onclick="alert('Exportando para Excel...')">
+                <i class="fas fa-file-excel"></i> EXPORTAR XLS
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,206 @@
+{# =============================================================================
+   Arquivo  : form_gateway_modulos_sistema.html
+   Caminho  : templates/sistema/cards/form_gateway_modulos_sistema.html
+   Função   : Menu Mestre (Nível 1) de Relatórios de Sistema & Infra.
+   Padrão   : DNA Cadastros (Quiet Luxury).
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-mestre {
+            padding: 15px 25px;
+            /* Gradiente Camaleão Sistema: Deep Blues, Purples e Teal */
+            background: linear-gradient(90deg, #2C3E50 0%, #34495E 11%, #7F8C8D 22%, #95A5A6 33%, #2980B9 44%, #3498DB 55%, #1ABC9C 66%, #16A085 77%, #27AE60 88%, #2C3E50 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 22px 30px;
+            background: #fff;
+            border: 1.5px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gateway-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: color-mix(in srgb, var(--c), white 97%);
+            border-color: var(--c);
+        }
+
+        .gateway-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--c-bg, rgba(0,0,0,0.04));
+            color: var(--c, #2C3E50);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .gateway-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .gateway-label { font-size: 18px; font-weight: 900; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; }
+        .gateway-desc { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+    </style>
+
+    <div class="gateway-header-mestre">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fas fa-cogs" style="font-size: 1.4rem; color: #90A4AE;"></i>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <div class="gateway-title" style="gap:0; color: #90A4AE;">Central de Relatórios: Módulo Sistema</div>
+                <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Arquitetura & Governança de TI</span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">GRIDs</span>
+            <button type="button" class="ge-modal-fechar" onclick="fecharModalGlobal()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            <!-- ADMINISTRAÇÃO -->
+            <div class="gateway-item" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarSistema('administracao')">
+                <div class="gateway-icon"><i class="fas fa-user-shield"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Administração</span>
+                    <span class="gateway-desc">Acessos & Perfis</span>
+                </div>
+            </div>
+
+            <!-- CONEXÕES -->
+            <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarSistema('conexoes')">
+                <div class="gateway-icon"><i class="fas fa-plug"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Conexões</span>
+                    <span class="gateway-desc">Logs de API & Sync</span>
+                </div>
+            </div>
+
+            <!-- ARMAZENAMENTO -->
+            <div class="gateway-item" style="--c:#1ABC9C; --c-bg:rgba(26,188,156,0.08);" onclick="navegarSistema('armazenamento')">
+                <div class="gateway-icon"><i class="fas fa-database"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Armazenamento</span>
+                    <span class="gateway-desc">Infra & Backups</span>
+                </div>
+            </div>
+
+            <!-- AUDITORIA -->
+            <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarSistema('auditoria')">
+                <div class="gateway-icon"><i class="fas fa-history"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Auditoria</span>
+                    <span class="gateway-desc">Rastro de Ações</span>
+                </div>
+            </div>
+
+            <!-- VERSÕES -->
+            <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarSistema('versoes')">
+                <div class="gateway-icon"><i class="fas fa-code-branch"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Versões</span>
+                    <span class="gateway-desc">Logs de Release</span>
+                </div>
+            </div>
+
+            <!-- SEGURANÇA -->
+            <div class="gateway-item" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarSistema('seguranca')">
+                <div class="gateway-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Segurança</span>
+                    <span class="gateway-desc">Compliance Log</span>
+                </div>
+            </div>
+
+            <!-- DEVELOPER (HUB DE ENGENHARIA) - SOMENTE PARA DEVS -->
+            {% if current_user.perfil in ['developer', 'master', 'admin'] %}
+            <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarDeveloper()">
+                <div class="gateway-icon"><i class="fas fa-code"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Developer</span>
+                    <span class="gateway-desc">Docs & Progresso</span>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Navega para a área de Developer (Progresso / Documentação).
+ */
+function navegarDeveloper() {
+    const url = "{{ url_for('sistema.card_sistema_relatorios') }}?modulo=developer";
+    navegarSistemaUrl(url);
+}
+
+function navegarSistemaUrl(url) {
+    const content = document.getElementById('arione-modal-content');
+    if (content && url) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+    }
+}
+
+/**
+ * Navega para o sub-gateway de sistema (Padrão Ouro).
+ */
+function navegarSistema(modulo) {
+    const url = "{{ url_for('sistema.card_sistema_relatorios') }}?modulo=" + modulo;
+    navegarSistemaUrl(url);
+}
+</script>

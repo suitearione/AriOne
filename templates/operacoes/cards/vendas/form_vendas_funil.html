@@ -1,0 +1,214 @@
+{# =============================================================================
+   Arquivo  : form_vendas_funil.html
+   Caminho  : templates/operacoes/cards/vendas/form_vendas_funil.html
+   Função   : Kanban / Análise de Funil de Vendas (Quiet Luxury)
+   Cor Tema : #0284c7 (Azul Funil)
+   ============================================================================= #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-vendas" style="background: #f8fafc; min-height: 100vh;">
+    
+    <style>
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 10px 0;
+            align-items: start;
+        }
+
+        .kanban-col {
+            background: #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 500px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .k-col-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .k-title { font-size: 12px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .k-count { font-size: 11px; font-weight: 800; background: #fff; color: #64748b; padding: 2px 8px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .k-total { font-size: 13px; font-weight: 800; color: #0284c7; margin-top: -6px; text-align: right; }
+
+        .kanban-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kanban-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+            border-color: #0284c7;
+        }
+
+        .k-card-top { display: flex; justify-content: space-between; align-items: center; }
+        .k-ref { font-size: 11px; font-weight: 800; color: #94a3b8; }
+        .k-date { font-size: 10px; font-weight: 700; color: #94a3b8; }
+
+        .k-client { font-size: 13px; font-weight: 800; color: #1e293b; line-height: 1.2; }
+        .k-vendedor { font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 6px; }
+
+        .k-card-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #f1f5f9; }
+        .k-val { font-size: 14px; font-weight: 800; color: #0284c7; }
+        
+        .k-aging { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; background: #f1f5f9; color: #64748b; }
+        .k-aging.high { background: rgba(231,76,60,0.1); color: #E74C3C; }
+
+        /* Cores específicas de topo de coluna */
+        .col-prospec { border-top: 4px solid #94a3b8; }
+        .col-proposta { border-top: 4px solid #f59e0b; }
+        .col-negocia { border-top: 4px solid #3b82f6; }
+        .col-ganho { border-top: 4px solid #10b981; }
+
+        @media (max-width: 1400px) {
+            .kanban-board { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 800px) {
+            .kanban-board { grid-template-columns: 1fr; }
+        }
+    </style>
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Análise de Funil de Vendas",
+        subtitulo="Vendas > Inteligência Comercial > Pipeline & Conversão",
+        icone="fa-chart-pie",
+        form_id="funil-container",
+        cor_tema="#0284c7",
+        func_fechar="window.location.href='/operacoes/vendas/central?modal=1'" if is_modal else "window.location.href='/operacoes/vendas/central'",
+        tamanho="grande"
+    ) }}
+
+    <div id="funil-container" class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px;">
+        
+        <div class="kanban-board">
+            
+            {# COLUNA 1: PROSPECÇÃO #}
+            <div class="kanban-col col-prospec">
+                <div class="k-col-header">
+                    <span class="k-title"><i class="fas fa-search-dollar" style="color:#94a3b8;"></i> Prospecção</span>
+                    <span class="k-count">{{ etapas['PROSPECÇÃO']|length }}</span>
+                </div>
+                {% set tot_prospec = etapas['PROSPECÇÃO']|sum(attribute='total_liquido') %}
+                <div class="k-total" style="color:#64748b;">R$ {{ "{:,.2f}".format(tot_prospec or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                
+                {% for o in etapas['PROSPECÇÃO'] %}
+                <div class="kanban-card" onclick="window.location.href='/operacoes/vendas/orcamento/edit/{{ o.id }}'">
+                    <div class="k-card-top">
+                        <span class="k-ref">REF #{{ (o.numero or o.id)|string }}</span>
+                        <span class="k-date">{{ o.data_emissao.strftime('%d/%m') if o.data_emissao else '--' }}</span>
+                    </div>
+                    <div class="k-client">{{ (o.cliente.nome if o.cliente else 'CLIENTE NÃO INFORMADO')|upper }}</div>
+                    <div class="k-vendedor"><i class="fas fa-user-tie"></i> {{ o.vendedor.nome_exibivel or o.vendedor.nome if o.vendedor else '--' }}</div>
+                    <div class="k-card-bottom">
+                        <span class="k-val">R$ {{ "{:,.2f}".format(o.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}</span>
+                        <span class="k-aging">Aberto</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# COLUNA 2: PROPOSTA ENVIADA #}
+            <div class="kanban-col col-proposta">
+                <div class="k-col-header">
+                    <span class="k-title"><i class="fas fa-file-export" style="color:#f59e0b;"></i> Proposta Enviada</span>
+                    <span class="k-count">{{ etapas['PROPOSTA ENVIADA']|length }}</span>
+                </div>
+                {% set tot_prop = etapas['PROPOSTA ENVIADA']|sum(attribute='total_liquido') %}
+                <div class="k-total" style="color:#f59e0b;">R$ {{ "{:,.2f}".format(tot_prop or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                
+                {% for o in etapas['PROPOSTA ENVIADA'] %}
+                <div class="kanban-card" onclick="window.location.href='/operacoes/vendas/orcamento/edit/{{ o.id }}'">
+                    <div class="k-card-top">
+                        <span class="k-ref">REF #{{ (o.numero or o.id)|string }}</span>
+                        <span class="k-date">{{ o.data_emissao.strftime('%d/%m') if o.data_emissao else '--' }}</span>
+                    </div>
+                    <div class="k-client">{{ (o.cliente.nome if o.cliente else 'CLIENTE NÃO INFORMADO')|upper }}</div>
+                    <div class="k-vendedor"><i class="fas fa-user-tie"></i> {{ o.vendedor.nome_exibivel or o.vendedor.nome if o.vendedor else '--' }}</div>
+                    <div class="k-card-bottom">
+                        <span class="k-val" style="color:#f59e0b;">R$ {{ "{:,.2f}".format(o.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}</span>
+                        <span class="k-aging {{ 'high' if loop.index > 2 else '' }}">{{ loop.index * 2 }}d</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# COLUNA 3: EM NEGOCIAÇÃO #}
+            <div class="kanban-col col-negocia">
+                <div class="k-col-header">
+                    <span class="k-title"><i class="fas fa-comments-dollar" style="color:#3b82f6;"></i> Em Negociação</span>
+                    <span class="k-count">{{ etapas['EM NEGOCIAÇÃO']|length }}</span>
+                </div>
+                {% set tot_neg = etapas['EM NEGOCIAÇÃO']|sum(attribute='total_liquido') %}
+                <div class="k-total" style="color:#3b82f6;">R$ {{ "{:,.2f}".format(tot_neg or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                
+                {% for o in etapas['EM NEGOCIAÇÃO'] %}
+                <div class="kanban-card" onclick="window.location.href='/operacoes/vendas/orcamento/edit/{{ o.id }}'">
+                    <div class="k-card-top">
+                        <span class="k-ref">REF #{{ (o.numero or o.id)|string }}</span>
+                        <span class="k-date">{{ o.data_emissao.strftime('%d/%m') if o.data_emissao else '--' }}</span>
+                    </div>
+                    <div class="k-client">{{ (o.cliente.nome if o.cliente else 'CLIENTE NÃO INFORMADO')|upper }}</div>
+                    <div class="k-vendedor"><i class="fas fa-user-tie"></i> {{ o.vendedor.nome_exibivel or o.vendedor.nome if o.vendedor else '--' }}</div>
+                    <div class="k-card-bottom">
+                        <span class="k-val" style="color:#3b82f6;">R$ {{ "{:,.2f}".format(o.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}</span>
+                        <span class="k-aging">Quente</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {# COLUNA 4: GANHO / CONVERTIDO #}
+            <div class="kanban-col col-ganho">
+                <div class="k-col-header">
+                    <span class="k-title"><i class="fas fa-handshake" style="color:#10b981;"></i> Ganho / Convertido</span>
+                    <span class="k-count">{{ etapas['GANHO / CONVERTIDO']|length }}</span>
+                </div>
+                {% set tot_ganho = etapas['GANHO / CONVERTIDO']|sum(attribute='total_liquido') %}
+                <div class="k-total" style="color:#10b981;">R$ {{ "{:,.2f}".format(tot_ganho or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                
+                {% for o in etapas['GANHO / CONVERTIDO'] %}
+                <div class="kanban-card" onclick="window.location.href='/operacoes/vendas/orcamento/edit/{{ o.id }}'">
+                    <div class="k-card-top">
+                        <span class="k-ref">REF #{{ (o.numero or o.id)|string }}</span>
+                        <span class="k-date">{{ o.data_emissao.strftime('%d/%m') if o.data_emissao else '--' }}</span>
+                    </div>
+                    <div class="k-client">{{ (o.cliente.nome if o.cliente else 'CLIENTE NÃO INFORMADO')|upper }}</div>
+                    <div class="k-vendedor"><i class="fas fa-user-tie"></i> {{ o.vendedor.nome_exibivel or o.vendedor.nome if o.vendedor else '--' }}</div>
+                    <div class="k-card-bottom">
+                        <span class="k-val" style="color:#10b981;">R$ {{ "{:,.2f}".format(o.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}</span>
+                        <span class="k-aging" style="background: rgba(16,185,129,0.1); color:#10b981;">Fechado</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

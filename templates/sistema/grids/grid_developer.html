@@ -1,0 +1,133 @@
+{# =============================================================================
+   Caminho  : templates/sistema/grids/grid_developer.html
+   Arquivo  : grid_developer.html
+   Função   : Hub Developer - Console de Engenharia AriOne (High Fidelity)
+============================================================================= #}
+<div class="arione-grid-wrapper" style="padding: 10px 20px;">
+    
+    <div class="ge-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+        <div>
+            <i class="fas fa-laptop-code"></i>
+            <span>Developer Hub</span>
+        </div>
+        {% if is_ari_dev %}
+        <span style="font-size:10px; background:rgba(122,37,95,0.1); color:var(--pri); padding:4px 10px; border-radius:15px; font-weight:800; text-transform:uppercase;">Admin / Dev Console</span>
+        {% endif %}
+    </div>
+
+    <div class="ge-cards-container" style="margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+        
+        <!-- CARD: PROGRESSO DEV -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('sistema.progresso_dev') }}'" style="--card-cor:#059669;--card-cor-bg:rgba(5,150,105,0.08); position: relative;">
+            <i class="fas fa-chart-line ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" style="background:rgba(5,150,105,0.12);"><i class="fas fa-chart-line ge-card-icon"></i></div>
+            <span class="ge-card-label">Progresso DEV</span>
+        </div>
+
+        <!-- CARD: DOCUMENTAÇÃO -->
+        <div class="ge-card" onclick="carregarDocHub()" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.08); position:relative;">
+            <i class="fas fa-file-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" style="background:rgba(122,37,95,0.12);"><i class="fas fa-file-alt ge-card-icon" style="color:#7A255F;"></i></div>
+            <span class="ge-card-label">Documentação</span>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+// ── SELOS SERVER-SIDE (DEFINITIVO) ──
+// Formato original das chaves: getSafeId usa underscore
+// Ex: "SISTEMA — Developer_Documentação" → "SISTEMA____Developer_Documentacao"
+// Busca por fragmento para máxima compatibilidade
+
+const SELOS_KEYWORDS = {
+    'PROGRESSO DEV': ['Progresso_DEV', 'Progresso DEV', 'progressodev'],
+    'DOCUMENTAÇÃO':  ['Documentacao', 'Documentação', 'documentacao'],
+    'TESTE CABEÇALHO OURO': ['Cabeçalho Ouro', 'cabecalho_ouro', 'teste_cabecalho_ouro'],
+};
+
+function normalize(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function aplicarSelosHub(prontos) {
+    document.querySelectorAll('.ge-card').forEach(card => {
+        const label = card.querySelector('.ge-card-label');
+        if (!label) return;
+        const nome = label.innerText.trim().toUpperCase();
+        const keywords = SELOS_KEYWORDS[nome];
+        if (!keywords) return;
+
+        // Verifica se alguma chave do servidor bate com as palavras-chave
+        const pronto = Object.entries(prontos).some(([id, val]) => {
+            if (!val) return false;
+            const cleanId = normalize(id);
+            return keywords.some(kw => cleanId.includes(kw));
+        });
+
+        card.classList.toggle('arione-gold-standard', pronto);
+    });
+}
+
+// Carrega estado do servidor ao abrir o Hub
+setTimeout(function() {
+    fetch('/sistema/api/progresso-dev/status')
+        .then(r => r.json())
+        .then(prontos => aplicarSelosHub(prontos))
+        .catch(() => {}); // silencioso em caso de erro
+}, 200);
+
+// Atualiza em tempo real quando um item é marcado na mesma sessão
+document.addEventListener('arione:card:pronto', function() {
+    fetch('/sistema/api/progresso-dev/status')
+        .then(r => r.json())
+        .then(prontos => aplicarSelosHub(prontos))
+        .catch(() => {});
+});
+
+function carregarDocHub() {
+    const url = "{{ url_for('sistema.card_sistema_relatorios') }}?modulo=documentacao";
+    const content = document.querySelector('.arione-grid-wrapper').parentNode;
+    
+    if (content && url) {
+        content.style.opacity = '0.4';
+        
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                arioneToast('Erro ao carregar documentação', 'error');
+                content.style.opacity = '1';
+            });
+    }
+}
+</script>
+
+<style>
+/* 
+   DESIGN SYSTEM ARIONE HUB
+   Nota: O CSS do Selo agora é gerenciado pelo abas_sistema.html para garantir 
+   consistência global e evitar redundâncias. 
+*/
+.ge-section-title { font-size: 14px; font-weight: 800; color: #1e293b; font-family: 'Montserrat', sans-serif; gap: 10px; }
+.ge-card { 
+    background: #fff; padding: 20px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; min-height: 120px; position: relative; overflow: hidden; transition: 0.3s; cursor: pointer;
+}
+.ge-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+.ge-card-bg-icon { position: absolute; right: -10px; top: -10px; font-size: 70px; opacity: 0.04; color: var(--card-cor); transform: rotate(-15deg); }
+.ge-card-icon-wrap { width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+.ge-card-label { font-weight: 800; font-family: 'Montserrat', sans-serif; font-size: 13px; color: #1e293b; z-index: 2; }
+.ge-card-desc { font-size: 9px; color: #64748b; font-weight: 600; margin-top: 5px; z-index: 2; }
+</style>

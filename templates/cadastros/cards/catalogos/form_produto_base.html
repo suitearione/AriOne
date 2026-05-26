@@ -1,0 +1,478 @@
+{# =============================================================================
+Caminho : templates/cadastros/cards/catalogos/form_produto_base.html
+Função : Bloco de Identificação e Dados Básicos (Parte 1 do Formulário)
+============================================================================= #}
+
+<style>
+  #hero-photo-preview:hover {
+    border-color: var(--pri) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  #hero-photo-preview img {
+    transition: transform 0.5s ease;
+  }
+
+  #hero-photo-preview:hover img {
+    transform: scale(1.1);
+  }
+
+  .fp-group .fp-label {
+    cursor: default;
+  }
+
+  /* 🛡️ ARIONE MASTER OVERRIDE: Pilar A e C */
+  .fe-info-icon,
+  .arione-info-icon {
+    color: #7A255F !important;
+    font-size: 11px !important;
+    opacity: 0.8;
+    transition: all 0.2s;
+    cursor: help;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .fe-info-icon:hover,
+  .arione-info-icon:hover {
+    color: #5a1a45 !important;
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .fe-master-icon,
+  .arione-master-icon {
+    color: #0072CE !important;
+    font-size: 12px !important;
+    opacity: 0.7;
+    transition: all 0.2s;
+    cursor: pointer;
+    margin-left: 5px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .fe-master-icon:hover,
+  .arione-master-icon:hover {
+    color: #00569E !important;
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  @keyframes fpBounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+      transform: translateY(0);
+    }
+
+    40% {
+      transform: translateY(-5px);
+    }
+
+    60% {
+      transform: translateY(-3px);
+    }
+  }
+
+  /* Sticky Header para Identificação */
+  .identificacao-sticky {
+    position: sticky;
+    top: 70px;
+    z-index: 1001;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    border-color: var(--pri) !important;
+    animation: slideInDown 0.3s ease;
+  }
+
+  @keyframes slideInDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .fp-tab {
+    position: relative;
+  }
+</style>
+
+
+  {# ── Flash (Dentro do Sticky para Integridade Visual) ── #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}
+  <div class="fe-flash fe-flash-{{ cat }}" style="margin: 0 0 10px 0; z-index: 2001; position: relative;">
+    <i
+      class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>{{
+    msg }}
+  </div>
+  {% endfor %}
+  {% endwith %}
+<div class="fp-header-expand" id="header-expand">
+  {# Bloco de Resumo (Visível quando recolhido) #}
+  <div class="fe-header-resumo">
+    <div class="resumo-info" style="display:none;">
+      <h3 id="resumo-nome"></h3>
+      <p id="resumo-meta"></p>
+    </div>
+  </div>
+
+  {# ══════════ CARD 1 — IDENTIFICAÇÃO ══════════ #}
+  <div class="fe-header-identificacao">
+    <div class="fp-card" id="card-identificacao" style="transition: all 0.3s ease; border: 1px solid var(--border);">
+      <div class="fp-card-title" id="title-identificacao" onclick="const b = document.getElementById('body-identificacao'); const i = document.getElementById('icon-identificacao'); const bg = document.getElementById('badge-expandir'); const mod = document.querySelector('.mod-produto'); const isH = (b.style.display==='none'); b.style.display = isH?'flex':'none'; i.style.transform = isH?'rotate(0deg)':'rotate(180deg)'; if(bg) bg.style.display = isH?'none':'flex'; if(mod) mod.classList.toggle('is-collapsed', !isH); if(!isH && typeof positionExpandBadge === 'function') positionExpandBadge();"
+        style="cursor:pointer; display:flex; align-items:center; gap:10px; transition: 0.3s; padding: 12px 20px; position: relative;">
+        <i class="fas fa-info-circle" id="main-icon-identificacao"></i>
+        <div id="mini-photo-title"
+          style="display:none; width:30px; height:30px; border-radius:6px; overflow:hidden; border:1px solid rgba(0,0,0,0.1); background:#fff;">
+          {% if produto and produto.foto %}
+          <img src="{{ url_for('static', filename=produto.foto) }}"
+            style="width:100%; height:100%; object-fit:cover;">
+          {% else %}
+          <div
+            style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f0f0f0;">
+            <i class="fas fa-image" style="font-size:12px; color:#ccc;"></i></div>
+          {% endif %}
+        </div>
+        <span id="text-title-identificacao">Identificação</span>
+        <small style="font-size: 9px; color: var(--muted); margin-left: 10px; font-weight: 500;">(CLIQUE PARA RECOLHER/EXPANDIR FORMULÁRIO)</small>
+
+        <i class="fas fa-chevron-up" id="icon-identificacao"
+          style="margin-left:auto; font-size:12px; transition: 0.3s ease; opacity: 0.5;"></i>
+      </div>
+      <div class="fp-card-body" id="body-identificacao"
+        style="display:flex; gap:24px; flex-wrap:wrap; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow:hidden;">
+        <div style="flex:1; min-width:300px;">
+          <div class="fp-row">
+            <div class="fp-group" style="max-width:80px;">
+              <label class="fp-label">ID</label>
+              <input class="fp-input" type="text" value="{{ produto.id if produto else 'AUTO' }}" disabled
+                style="background:#f0f0f0;color:#999;text-align:center;font-weight:700;">
+            </div>
+            <div class="fp-group fp-flex-3">
+              <label class="fp-label">Descrição / Nome do Produto <span class="fp-req">*</span>
+                {{ comp.info_icon("Nome completo e comercial do produto. Evite abreviações para melhor indexação na busca.") }}
+              </label>
+              <input class="fp-input fp-track" type="text" name="descricao" id="campo-descricao"
+                value="{{ produto.descricao if produto else '' }}" placeholder="Nome completo e claro do produto"
+                required oninput="forceRenderMatrix()" {% if produto and not produto.ativo %}disabled{% endif %} {% if not produto %}autofocus{% endif %}>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Origem do Produto
+                {{ comp.info_icon("Indica se o produto é fabricado internamente ou adquirido de parceiros externos.") }}
+              </label>
+              <select class="fp-input fp-track" name="origem_produto" onchange="gerarCodInternoRegra()" {% if produto and not produto.ativo %}disabled{%
+                endif %}>
+                <option value="propria" {% if produto and produto.origem_produto=='propria' %}selected{% endif %}>
+                  Fabricação Própria</option>
+                <option value="terceiros" {% if produto and produto.origem_produto=='terceiros' %}selected{% endif %}>
+                  Adquirido</option>
+              </select>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Matéria Prima
+                {{ comp.info_icon("Base principal do produto. Essencial para o cálculo de custo e ficha técnica.") }}
+              </label>
+              <div class="fp-input-wrapper" style="display:flex; align-items:center; gap:8px;">
+                <select class="fp-input fp-track" name="tipo_material_id" onchange="gerarCodInternoRegra()" style="flex:1;" {% if produto and not produto.ativo %}disabled{% endif %}>
+                  <option value="">— Selecione —</option>
+                  {% for t in tipos_list|default([]) %}
+                  <option value="{{ t.id }}" {% if produto and produto.tipo_material_id==t.id %}selected{% endif %}>{{ t.nome }}</option>
+                  {% endfor %}
+                </select>
+                {{ comp.master_icon("materiaprima", "Gerenciar Matérias Primas", "abrirModalMaster('materiaprima')") }}
+              </div>
+            </div>
+          </div>
+
+          <div class="fp-row">
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label" style="justify-content:space-between;">Cód. de Barras (EAN/GTIN)
+                <button type="button" onclick="gerarEAN('campo-ean')"
+                  style="font-size:9px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--pri);cursor:pointer;font-weight:700;"><i
+                    class="fas fa-random"></i> Gerar</button>
+              </label>
+              <input class="fp-input fp-track" type="text" name="cod_barras" id="campo-ean"
+                value="{{ produto.cod_barras if produto and produto.cod_barras else '0' }}" placeholder="7890000000000" maxlength="14"
+                oninput="this.value = this.value.replace(/\D/g, '')"
+                onblur="validarDuplicidadeProduto(this, 'cod_barras')"
+                {% if produto and not produto.ativo %}disabled{% endif %}>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Gerar Cód. Interno
+                <i class="fas fa-question-circle arione-info-icon" style="cursor:pointer; color: var(--pri); margin-left: 5px;" 
+                   onclick="const box = document.getElementById('guide-regra'); box.style.display = box.style.display === 'none' ? 'block' : 'none';"></i>
+              </label>
+              <select class="fp-input fp-track" name="regra_cod_interno" onchange="gerarCodInternoRegra()" {% if produto and not produto.ativo
+                %}disabled{% endif %}>
+                <option value="automatico" {% if produto and produto.regra_cod_interno=='automatico' %}selected{% endif
+                  %}>Automático</option>
+                <option value="livre" {% if produto and produto.regra_cod_interno=='livre' %}selected{% endif %}>Livre
+                </option>
+                <option value="fornecedor" {% if produto and produto.regra_cod_interno=='fornecedor' %}selected{% endif
+                  %}>Código do Fornecedor</option>
+              </select>
+              <div id="guide-regra" style="display: none; background: rgba(122, 37, 95, 0.05); border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
+                <strong>Automático:</strong> O sistema gera sozinho.<br>
+                <strong>Livre:</strong> Você digita o código desejado.<br>
+                <strong>Fornecedor:</strong> Prefixo + Cód. do Parceiro.
+              </div>
+            </div>
+
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label" style="justify-content:space-between;">Código Interno (Controle)
+                <i class="fas fa-question-circle arione-info-icon" style="cursor:pointer; color: var(--pri); margin-left: 5px;" 
+                   onclick="const box = document.getElementById('guide-formato'); box.style.display = box.style.display === 'none' ? 'block' : 'none';"></i>
+              </label>
+              <input class="fp-input fp-track" type="text" name="cod_interno" id="campo-cod-interno"
+                value="{{ produto.cod_interno if produto else '' }}" placeholder="Automático" 
+                oninput="syncSkuPai(this.value)">
+              <div id="guide-formato" style="display: none; background: rgba(122, 37, 95, 0.05); border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
+                <strong>FP-:</strong> Fabricação Própria.<br>
+                <strong>AF-:</strong> Produto Adquirido.<br>
+                DNA: Prefixo + Iniciais MP + Cat + Sequencial.
+              </div>
+            </div>
+
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">SKU PAI
+                <i class="fas fa-question-circle arione-info-icon" style="cursor:pointer; color: var(--pri); margin-left: 5px;" 
+                   onclick="const box = document.getElementById('guide-espelho'); box.style.display = box.style.display === 'none' ? 'block' : 'none';"></i>
+              </label>
+              <input class="fp-input fp-track" type="text" name="referencia" id="campo-referencia"
+                value="{{ produto.referencia if produto else '' }}" placeholder="Automático" readonly tabindex="-1"
+                style="background:#f8fafc; cursor:not-allowed;">
+              <div id="guide-espelho" style="display: none; background: rgba(122, 37, 95, 0.05); border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
+                <strong>Espelhamento Digital:</strong> Este campo é um reflexo fiel do Código Interno para manter a integridade do catálogo.
+              </div>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label" style="display:flex; align-items:center; gap:6px;">Unidade
+                {{ comp.info_icon("Define a medida de comercialização e controle de estoque (Ex: UN, KG, PC).") }}
+                {{ comp.master_icon("unidades", "Gerenciar Unidades de Medida", "abrirModalMaster('unidades')") }}
+              </label>
+              <select class="fp-input fp-track" name="unidade" {% if produto and not produto.ativo %}disabled{% endif
+                %}>
+                <option value="">—</option>
+                {% if unidades %}
+                {% for u in unidades %}<option value="{{ u.sigla }}" {% if produto and produto.unidade==u.sigla
+                  %}selected{% endif %}>{{ u.sigla }}{% if u.descricao %} — {{ u.descricao }}{% endif %}</option>{%
+                endfor %}
+                {% else %}
+                {% for v in ['UN','KG','G','L','ML','M','CM','M²','M³','CX','PC','PAR','DZ','CT'] %}<option
+                  value="{{ v }}" {% if produto and produto.unidade==v %}selected{% endif %}>{{ v }}</option>{% endfor
+                %}
+                {% endif %}
+              </select>
+            </div>
+          </div>
+
+          <div class="fp-row">
+            <div class="fp-group fp-flex-2">
+              <label class="fp-label" style="display:flex; align-items:center; gap:6px;">Categoria
+                {{ comp.info_icon("Agrupamento principal para organização fiscal e relatórios gerenciais.") }}
+                {{ comp.master_icon("categorias", "Gerenciar Categorias", "abrirModalMaster('categorias')") }}
+              </label>
+              <select class="fp-input fp-track" name="categoria" id="sel-categoria"
+                onchange="filtrarSubcategorias(this.value); gerarCodInternoRegra();" {% if produto and not produto.ativo %}disabled{% endif %}>
+                <option value="">— Selecione —</option>
+                {% if categorias %}{% for c in categorias %}<option value="{{ c.nome }}" {% if produto and
+                  produto.categoria==c.nome %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}{% endif %}
+              </select>
+            </div>
+            <div class="fp-group fp-flex-2">
+              <label class="fp-label" style="display:flex; align-items:center; gap:6px;">Subcategoria
+                {{ comp.info_icon("Refinamento da categoria para detalhamento de vendas e estoque.") }}
+                {{ comp.master_icon("subcategorias", "Gerenciar Subcategorias", "abrirModalMaster('subcategorias')") }}
+              </label>
+              <select class="fp-input fp-track" name="subcategoria" id="sel-subcategoria" {% if produto and not
+                produto.ativo %}disabled{% endif %}>
+                <option value="">— Selecione a categoria —</option>
+                {% if subcategorias %}{% for s in subcategorias %}<option value="{{ s.nome }}"
+                  data-categoria="{{ s.categoria.nome }}" {% if produto and produto.subcategoria==s.nome %}selected{%
+                  endif %}>{{ s.nome }}</option>{% endfor %}{% endif %}
+              </select>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Marca
+                {{ comp.info_icon("Marca comercial vinculada ao produto. Importante para filtros e relatórios de desempenho.") }}
+              </label>
+              <div class="fp-input-wrapper" style="position:relative; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-search" style="position:absolute; left:12px; color:var(--muted); font-size:12px; opacity:0.6;"></i>
+                <input class="fp-input fp-track" list="lista-marcas" name="marca"
+                  value="{{ produto.marca if produto else '' }}" placeholder="Selecione ou busque..." 
+                  style="padding-left:34px; flex:1;"
+                  {% if produto and not produto.ativo %}disabled{% endif %}>
+                
+                {{ comp.master_icon("marcas", "Gerenciar Marcas", "abrirModalMaster('marcas')") }}
+              </div>
+              <datalist id="lista-marcas">
+                {% if marcas %}{% for m in marcas %}<option value="{{ m.nome }}">{{ m.nome }}</option>{% endfor %}{% endif %}
+              </datalist>
+            </div>
+          </div>
+
+          <div class="fp-row">
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label" style="display:flex; align-items:center; gap:6px;">Modelo / Referência
+                {{ comp.info_icon("Designação específica do modelo ou referência secundária do fabricante.") }}
+                {{ comp.master_icon("modelos", "Gerenciar Modelos", "abrirModalMaster('modelos')") }}
+              </label>
+              <select class="fp-input fp-track" name="modelo" {% if produto and not produto.ativo %}disabled{% endif %}>
+                <option value="">— Selecione o Modelo —</option>
+                {% if modelos_lista %}
+                {% for m in modelos_lista %}
+                <option value="{{ m.nome }}" {% if produto and produto.modelo==m.nome %}selected{% endif %}>{{
+                  m.nome|upper }}</option>
+                {% endfor %}
+                {% endif %}
+              </select>
+            </div>
+            <div class="fp-group fp-flex-3" id="wrap-fornecedor">
+              <label class="fp-label">Fornecedor Principal
+                {{ comp.info_icon("Parceiro principal que fornece este produto. Essencial para automação de compras.") }}
+              </label>
+              
+              <div class="fp-input-wrapper" style="position:relative; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-search" style="position:absolute; left:12px; color:var(--muted); font-size:12px; opacity:0.6;"></i>
+                <input class="fp-input fp-track" list="lista-fornecedores" name="fornecedor"
+                  value="{{ produto.fornecedor if produto else '' }}" placeholder="Busque por nome ou CNPJ..." 
+                  oninput="arioneSearchFornecedor(this)"
+                  style="padding-left:34px; flex:1;"
+                  {% if produto and not produto.ativo %}disabled{% endif %}>
+                
+                {{ comp.master_icon("fornecedores", "Ver Cadastro Master do Fornecedor", "abrirModalMaster('fornecedores')") }}
+              </div>
+
+              <datalist id="lista-fornecedores">
+                {% if fornecedores %}{% for f in fornecedores %}<option value="{{ f.razao_social }}">{{ f.cnpj_cpf
+                  if f.cnpj_cpf else '' }} - {{ f.razao_social|upper }}</option>{% endfor %}{% endif %}
+              </datalist>
+            </div>
+            <div class="fp-group fp-flex-3">
+              <label class="fp-label">Tags <small style="font-weight:400;text-transform:none;">(vírgula)</small>
+                {{ comp.info_icon("Palavras-chave para facilitar a busca interna e filtros no e-commerce.") }}
+              </label>
+              <input class="fp-input" type="text" name="tags" value="{{ produto.tags if produto else '' }}"
+                placeholder="Ex: feminino, casual, verão..." {% if produto and not produto.ativo %}disabled{% endif %}>
+            </div>
+          </div>
+
+          <div class="fp-row">
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Peso (kg)
+                {{ comp.info_icon("Peso bruto do produto, essencial para cálculo de frete e logística.") }}
+              </label>
+              <input class="fp-input fp-track" type="number" name="peso" step="0.001" min="0"
+                value="{{ produto.peso if produto else '' }}" placeholder="0,000" {% if produto and not produto.ativo
+                %}disabled{% endif %}>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Comprimento (cm)
+                {{ comp.info_icon("Dimensão para cálculo de cubagem no transporte.") }}
+              </label>
+              <input class="fp-input" type="number" name="dim_comprimento" step="0.1" min="0"
+                value="{{ produto.dim_comprimento if produto else '' }}" placeholder="0,0" {% if produto and not
+                produto.ativo %}disabled{% endif %}>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Largura (cm)</label>
+              <input class="fp-input" type="number" name="dim_largura" step="0.1" min="0"
+                value="{{ produto.dim_largura if produto else '' }}" placeholder="0,0" {% if produto and not
+                produto.ativo %}disabled{% endif %}>
+            </div>
+            <div class="fp-group fp-flex-1">
+              <label class="fp-label">Altura (cm)</label>
+              <input class="fp-input" type="number" name="dim_altura" step="0.1" min="0"
+                value="{{ produto.dim_altura if produto else '' }}" placeholder="0,0" {% if produto and not
+                produto.ativo %}disabled{% endif %}>
+            </div>
+          </div>
+        </div>
+
+        {# Lado da Foto #}
+        <div
+          style="width:180px; display:flex; flex-direction:column; align-items:center; gap:12px; border-left:1px solid var(--border); padding-left:24px;">
+          <label class="fp-label">Foto Principal</label>
+          <div id="hero-photo-preview"
+            style="width:160px; height:160px; border:2px dashed var(--border); border-radius:14px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#f8fafc; position:relative; transition: all 0.3s ease;">
+            {% if produto and produto.foto %}
+            <img src="{{ url_for('static', filename=produto.foto) }}"
+              style="width:100%; height:100%; object-fit:cover;" id="hero-img">
+            {% else %}
+            <div style="text-align:center; color:var(--muted); opacity:0.4;">
+              <i class="fas fa-image" style="font-size:40px; margin-bottom:8px;"></i>
+              <div style="font-size:10px; font-weight:700;">SEM FOTO</div>
+            </div>
+            {% endif %}
+          </div>
+
+          <button type="button" class="fp-btn-ghost-dark" onclick="document.getElementById('input-imagens').click()"
+            style="width:100%; font-size:11px; padding:6px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <i class="fas fa-camera"></i> Gerenciar Fotos
+          </button>
+
+          <div style="font-size:10px; color:#aaa; text-align:center; margin-bottom:10px;">Primeira imagem da galeria.
+          </div>
+
+          {# SELETOR DE STATUS FUNCIONAL #}
+          <div
+            style="width:100%; display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:10px; border-top:1px solid #f1f5f9;">
+            <label class="fp-label" style="font-size:9px; opacity:0.7;">Status do Produto</label>
+            <select class="fp-input fp-track" name="ativo" id="status-seletor"
+              style="width:100%; font-size:11px; font-weight:900; text-align:center; height:36px; padding:0 5px; border-color:{% if produto and not produto.ativo %}#e53e3e{% else %}#27AE60{% endif %}; color:{% if produto and not produto.ativo %}#e53e3e{% else %}#27AE60{% endif %}; cursor:pointer;"
+              onchange="this.style.color = this.value == '0' ? '#e53e3e' : '#27AE60'; this.style.borderColor = this.value == '0' ? '#e53e3e' : '#27AE60';">
+              <option value="1" {% if not produto or produto.ativo %}selected{% endif %} style="color:#27AE60;">🟢 ATIVO
+              </option>
+              <option value="0" {% if produto and not produto.ativo %}selected{% endif %} style="color:#e53e3e;">🔴
+                INATIVO</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{# ── Diretrizes de Movimentação (Quick Access) ── #}
+<div
+  style="display:flex; gap:20px; background:rgba(230, 126, 34, 0.05); border:1.5px solid rgba(230, 126, 34, 0.2); border-radius:12px; padding:12px 20px; margin-bottom:20px; align-items:center;">
+  <div
+    style="color:#E67E22; font-size:18px; width:40px; height:40px; background:#fff; border-radius:10px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(230, 126, 34, 0.1);">
+    <i class="fas fa-exchange-alt"></i>
+  </div>
+  <div style="flex:1; display:flex; gap:40px;">
+    <label class="fp-toggle-switch" style="margin:0;">
+      <input type="checkbox" name="mov_estoque" value="1" {% if produto and produto.mov_estoque %}checked{% endif %} {%
+        if produto and not produto.ativo %}disabled{% endif %}>
+      <span class="fp-switch-slider"></span>
+      <span class="fp-switch-label" style="font-weight:700; color:#444;">Movimentar Estoque <small
+          style="display:block; font-weight:400; font-size:10px;">Automático em compras e vendas</small></span>
+    </label>
+    <label class="fp-toggle-switch" style="margin:0;">
+      <input type="checkbox" name="has_composicao" id="chk-has-composicao" value="1" 
+             {% if produto and produto.has_composicao %}checked{% endif %} 
+             onchange="toggleComposicaoTab(this.checked)">
+      <span class="fp-switch-slider"></span>
+      <span class="fp-switch-label" style="font-weight:700; color:#444;">Possui Composição <small
+          style="display:block; font-weight:400; font-size:10px;">Habilitar aba de engenharia</small></span>
+    </label>
+    <label class="fp-toggle-switch" style="margin:0; display:none;" id="wrap-mov-composicao">
+      <input type="checkbox" name="mov_estoque_composicao" id="chk-mov-composicao" value="1" {% if produto and
+        produto.mov_estoque_composicao %}checked{% endif %} {% if produto and not produto.ativo %}disabled{% endif %}>
+      <span class="fp-switch-slider"></span>
+      <span class="fp-switch-label" style="font-weight:700; color:#444;">Movimentar Insumos da Composição <small
+          style="display:block; font-weight:400; font-size:10px;">Baixa os insumos ao produzir</small></span>
+    </label>
+  </div>
+</div>

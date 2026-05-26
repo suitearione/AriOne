@@ -1,0 +1,98 @@
+{% import "macros/componentes.html" as comp %}
+
+<div class="fe-wrap" style="background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+    
+    {# CABEÇALHO PADRÃO OURO #}
+    {{ comp.cabecalho_simples_arione(
+        titulo="Cadastro de Status",
+        subtitulo="Gestão de Fluxos e Identidade Visual",
+        icone="fa-circle-check",
+        form_id="form-status-mestre",
+        onclick_save="arioneSalvarDocumento('Status', this, 'form-status-mestre')",
+        cor_tema="#64748b"
+    ) }}
+
+    <div class="fe-card-body" style="padding: 24px;">
+        
+        <form id="form-status-mestre" method="POST" action="{{ url_for('sistema.form_status', id=status.id if status else None) }}">
+            <input type="hidden" name="id" value="{{ status.id if status else '' }}">
+            
+            <div class="fp-row" style="gap: 15px; margin-bottom: 20px;">
+                <div class="fp-group" style="flex: 2;">
+                    <label class="fp-label">NOME DO STATUS</label>
+                    <input type="text" name="nome" value="{{ status.nome if status else '' }}" class="fp-input" placeholder="Ex: EM EDIÇÃO, APROVADO..." required>
+                </div>
+                <div class="fp-group" style="flex: 1;">
+                    <label class="fp-label">TIPO DE FLUXO</label>
+                    <select name="tipo" class="fp-input">
+                        <option value="ORCAMENTO" {{ 'selected' if status and status.tipo == 'ORCAMENTO' }}>ORÇAMENTO DE VENDA</option>
+                        <option value="PEDIDO" {{ 'selected' if status and status.tipo == 'PEDIDO' }}>PEDIDO DE VENDA</option>
+                        <option value="VENDAS" {{ 'selected' if status and status.tipo == 'VENDAS' }}>VENDAS (GERAL)</option>
+                        <option value="COMPRAS" {{ 'selected' if status and status.tipo == 'COMPRAS' }}>COMPRAS</option>
+                        <option value="PRODUCAO" {{ 'selected' if status and status.tipo == 'PRODUCAO' }}>PRODUÇÃO</option>
+                        <option value="SISTEMA" {{ 'selected' if status and status.tipo == 'SISTEMA' }}>SISTEMA</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="fp-row" style="gap: 15px; margin-bottom: 25px;">
+                <div class="fp-group" style="width: 100px;">
+                    <label class="fp-label">COR BADGE</label>
+                    <input type="color" name="cor" value="{{ status.cor if status else '#2980B9' }}" class="fp-input" style="height: 38px; padding: 2px;">
+                </div>
+                <div class="fp-group" style="flex: 1;">
+                    <label class="fp-label">ÍCONE (FONT AWESOME)</label>
+                    <input type="text" name="icone" value="{{ status.icone if status else 'fas fa-circle' }}" class="fp-input" placeholder="fas fa-check">
+                </div>
+                <div class="fp-group" style="width: 80px;">
+                    <label class="fp-label">ORDEM</label>
+                    <input type="number" name="ordem" value="{{ status.ordem if status else 0 }}" class="fp-input" style="text-align: center;">
+                </div>
+                <div class="fp-group" style="display: flex; align-items: center; gap: 8px; padding-top: 25px;">
+                    <input type="checkbox" name="ativa" id="st_ativa" {{ 'checked' if not status or status.ativa }}>
+                    <label for="st_ativa" class="fp-label" style="margin: 0;">ATIVO</label>
+                </div>
+            </div>
+        </form>
+
+        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;">
+
+        {# LISTAGEM DOS STATUS EXISTENTES #}
+        <h4 style="font-size: 11px; font-weight: 800; color: #94a3b8; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Status Cadastrados</h4>
+        
+        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 12px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead style="background: #f8fafc; position: sticky; top: 0;">
+                    <tr>
+                        <th style="text-align: left; padding: 12px; color: #64748b;">NOME</th>
+                        <th style="text-align: left; padding: 12px; color: #64748b;">FLUXO</th>
+                        <th style="text-align: center; padding: 12px; color: #64748b;">BADGE</th>
+                        <th style="text-align: center; padding: 12px; color: #64748b;">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in status_lista %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px 12px; font-weight: 700; color: #1e293b;">{{ s.nome }}</td>
+                        <td style="padding: 10px 12px; color: #64748b;"><small>{{ s.tipo }}</small></td>
+                        <td style="padding: 10px 12px; text-align: center;">
+                            <span style="background: {{ s.cor }}; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 9px; font-weight: 800; text-transform: uppercase;">
+                                <i class="{{ s.icone }}"></i> {{ s.nome }}
+                            </span>
+                        </td>
+                        <td style="padding: 10px 12px; text-align: center;">
+                            <a href="{{ url_for('sistema.form_status', id=s.id) }}" style="color: #64748b; text-decoration: none; padding: 5px;" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="padding: 40px; text-align: center; color: #94a3b8;">Nenhum status cadastrado para este fluxo.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

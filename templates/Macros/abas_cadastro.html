@@ -1,0 +1,106 @@
+{# =============================================================================
+   Caminho  : templates/macros/abas_cadastro.html
+   Arquivo  : abas_cadastro.html
+   Função   : Macro de navegação por abas — genérico para todos os módulos.
+   Descrição: Gera as abas de navegação com ícone Material Icons, label e
+              estado ativo. Recebe o nome do blueprint e opcionalmente o nome
+              do endpoint (padrão: 'abas') para gerar a URL correta via
+              url_for('<blueprint>.<endpoint>', aba=aba.id).
+   Uso      : {{ nav.gerar_abas_arione(abas, aba_ativa, 'cadastros') }}
+              {{ nav.gerar_abas_arione(abas, aba_ativa, 'operacoes') }}
+              {{ nav.gerar_abas_arione(abas, aba_ativa, 'gestao', 'modulo') }}
+============================================================================= #}
+
+{% macro gerar_abas_arione(abas, aba_ativa, blueprint, endpoint='abas') %}
+
+<div class="arione-abas-container">
+    {% for aba in abas %}
+        <a
+            href="{{ url_for(blueprint + '.' + endpoint, aba=aba.id) }}"
+            class="arione-aba {{ 'active' if aba.id == aba_ativa }}"
+        >
+            {% if 'fa' in aba.icon %}
+                <i class="{{ aba.icon }} arione-aba-icon" style="font-size: 18px;"></i>
+            {% else %}
+                <span class="material-icons arione-aba-icon">{{ aba.icon }}</span>
+            {% endif %}
+            <span class="arione-aba-label">{{ aba.label }}</span>
+        </a>
+    {% endfor %}
+</div>
+
+{% endmacro %}
+
+<style>
+.arione-abas-container {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 25px;
+    border-bottom: none !important; /* Remoção definitiva da linha cinza de fundo */
+    padding: 0 4px;
+}
+
+/* RESET TOTAL DE DECORAÇÃO E BORDAS */
+.arione-aba, 
+.arione-aba:link, 
+.arione-aba:visited, 
+.arione-aba:hover, 
+.arione-aba:focus, 
+.arione-aba:active,
+.arione-aba *,
+.arione-aba-label {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+    border-bottom: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.arione-aba {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 22px;
+    height: 44px;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: #718096;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.arione-aba-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 18px;
+    line-height: 0;
+    flex-shrink: 0;
+}
+
+.arione-aba-label {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    line-height: normal; 
+}
+
+.arione-aba:hover {
+    background-color: rgba(122,37,95,0.05);
+    color: #7A255F;
+}
+
+.arione-aba.active {
+    background-color: rgba(122,37,95,0.1) !important;
+    color: #7A255F !important;
+    font-weight: 600 !important;
+}
+</style>

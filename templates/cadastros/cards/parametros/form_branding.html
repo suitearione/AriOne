@@ -1,0 +1,121 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+
+{% block content %}
+<div class="fe-wrap branding-wrap" style="background: #f8fafc; min-height: 100vh; padding: 0;">
+
+    {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+    {{ cabecalho_mestre_arione(
+        titulo='Identidade Visual',
+        subtitulo='Parâmetros > Branding > Gestão da Marca',
+        icone='fa-palette',
+        form_id='form-branding-save',
+        rota_novo='cadastros.form_branding',
+        sub_key='CADASTROS — Empresa',
+        tela='Identidade Visual',
+        tamanho='pequeno'
+    ) }}
+
+    {# ── BARRA DE ACENTO PREMIUM ── #}
+    <div style="height: 6px; background: #FF5722; width: 100%; margin-top: -20px; position: relative; z-index: 999; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></div>
+
+    <div class="fe-form-stage" style="max-width: 700px; margin: 0 auto; padding: 0 24px; animation: feFadeUp 0.6s ease-out;">
+        
+        <form id="form-branding-save" method="POST" enctype="multipart/form-data" action="{{ url_for('cadastros.form_branding') }}">
+            <input type="hidden" name="empresa_id" value="{{ empresa.id if empresa else '' }}">
+            
+            <div class="fe-card" style="border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; background: #fff;">
+                <div class="fe-card-title" style="background: #fff; border-bottom: 1px solid #f1f5f9; padding: 20px 30px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-image" style="color: #FF5722;"></i> 
+                    Logotipo do Sistema
+                </div>
+                
+                <div class="fe-card-body" style="padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 30px;">
+                    
+                    <p style="text-align: center; color: #64748b; font-size: 14px; max-width: 500px; margin: 0 auto 10px;">
+                        Esta imagem será utilizada em todos os cabeçalhos, relatórios e na tela de login do AriOne. 
+                        Recomendamos o uso de arquivos <strong>PNG com fundo transparente</strong>.
+                    </p>
+
+                    <div id="branding-upload-zone" 
+                         onclick="document.getElementById('branding-file-input').click()"
+                         style="width: 100%; max-width: 400px; height: 260px; border: 2px dashed #cbd5e1; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; background: #f8fafc; position: relative; overflow: hidden;">
+                        
+                        <div id="branding-placeholder" style="text-align: center; color: #94a3b8; transition: 0.3s; {% if empresa and empresa.logo %}display:none;{% endif %}">
+                            <div style="width: 80px; height: 80px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #FF5722;"></i>
+                            </div>
+                            <span style="font-weight: 800; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">Clique para fazer upload</span>
+                            <p style="font-size: 11px; margin-top: 8px; opacity: 0.7;">PNG, JPG ou SVG (Máx. 2MB)</p>
+                        </div>
+
+                        <img id="branding-preview" 
+                             src="{% if empresa and empresa.logo %}{{ url_for('static', filename='img/logo/' ~ empresa.logo) }}{% endif %}" 
+                             style="max-width: 90%; max-height: 80%; object-fit: contain; display: {% if empresa and empresa.logo %}block{% else %}none{% endif %}; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));">
+                        
+                        <div id="branding-overlay" style="position: absolute; inset: 0; background: rgba(255,87,34,0.05); display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s;">
+                             <span style="background: #FF5722; color: #fff; padding: 10px 20px; border-radius: 30px; font-weight: 800; font-size: 12px; box-shadow: 0 5px 15px rgba(255,87,34,0.3);">ALTERAR IMAGEM</span>
+                        </div>
+                    </div>
+
+                    <input type="file" name="logo_file" id="branding-file-input" accept="image/*" style="display: none;" onchange="handleBrandingPreview(this)">
+
+                    {% if empresa %}
+                    <div style="width: 100%; border-top: 1px solid #f1f5f9; padding-top: 20px; text-align: center;">
+                        <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">Empresa Vinculada</div>
+                        <div style="font-size: 16px; color: #1e293b; font-weight: 800;">{{ empresa.razao_social }}</div>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-top: 30px; gap: 15px;">
+                 <a href="{{ url_for('cadastros.abas', aba='parametros') }}" class="fe-btn fe-btn-ghost-dark" style="padding: 12px 30px; border-radius: 12px; font-weight: 700; text-decoration: none;">
+                    <i class="fas fa-times"></i> Cancelar
+                 </a>
+                 <button type="submit" class="fe-btn" style="background: linear-gradient(135deg, #FF5722, #FF8A65); color: #fff; padding: 12px 50px; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 10px 30px rgba(255,87,34,0.3); transition: 0.3s;">
+                    <i class="fas fa-check-circle"></i> Salvar Identidade
+                 </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<style>
+    #branding-upload-zone:hover {
+        border-color: #FF5722 !important;
+        background: #fff !important;
+    }
+    #branding-upload-zone:hover #branding-overlay {
+        display: flex !important;
+        opacity: 1 !important;
+    }
+    #branding-upload-zone:hover #branding-placeholder {
+        transform: scale(0.9);
+        opacity: 0.5;
+    }
+</style>
+
+<script>
+function handleBrandingPreview(input) {
+    const preview = document.getElementById('branding-preview');
+    const placeholder = document.getElementById('branding-placeholder');
+    const zone = document.getElementById('branding-upload-zone');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+            zone.style.borderColor = '#FF5722';
+            zone.style.background = '#fff';
+            
+            arioneToast('Nova imagem selecionada!', 'success');
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

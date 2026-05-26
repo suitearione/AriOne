@@ -1,0 +1,102 @@
+<!-- templates/financeiro/grids/grid_contas.html -->
+<div id="modal-overlay-cnt" class="ge-modal-overlay" onclick="fecharModalCnt(event)">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-cnt" class="ge-modal-icon"></i><span id="modal-titulo-cnt">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalCnt()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-cnt"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-receipt"></i><span>Contas</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_contas', tipo='RECEITA') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-arrow-circle-down ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-arrow-circle-down ge-card-icon"></i></div>
+            <span class="ge-card-label">A Receber</span><span class="ge-card-desc">Contas a receber</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_contas', tipo='DESPESA') }}'" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-arrow-circle-up ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-arrow-circle-up ge-card-icon"></i></div>
+            <span class="ge-card-label">A Pagar</span><span class="ge-card-desc">Contas a pagar</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_entradas_saidas') }}'" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-bolt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-bolt ge-card-icon"></i></div>
+            <span class="ge-card-label">Entradas & Saídas</span><span class="ge-card-desc">Lançamento Rápido Direto</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+async function abrirModalGerContas(tipo) {
+    let url = `/financeiro/card/contas?tipo=${tipo}`;
+    let titulo = tipo === 'RECEITA' ? 'Contas a Receber' : 'Contas a Pagar';
+    let icone = tipo === 'RECEITA' ? 'fas fa-arrow-circle-down' : 'fas fa-arrow-circle-up';
+
+    if (tipo === 'entradas-saidas') {
+        url = '/financeiro/card/entradas-saidas';
+        titulo = 'Lançamento Rápido de Entradas & Saídas';
+        icone = 'fas fa-bolt';
+    }
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        
+        document.getElementById('modal-titulo-cnt').textContent = titulo;
+        document.getElementById('modal-icon-cnt').className = icone + ' ge-modal-icon';
+        const body = document.getElementById('modal-body-cnt');
+        body.innerHTML = html;
+
+        const modalHeader = document.querySelector('#modal-overlay-cnt .ge-modal-header');
+        if (modalHeader) {
+            if (html.includes('fe-header-container') || html.includes('cabecalho_mestre_arione')) {
+                modalHeader.style.display = 'none';
+            } else {
+                modalHeader.style.display = 'flex';
+            }
+        }
+
+        // Blindagem de Scripts para o conteúdo carregado via AJAX
+        body.querySelectorAll('script').forEach(script => {
+            const novo = document.createElement('script');
+            [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+            novo.appendChild(document.createTextNode(script.innerHTML));
+            script.parentNode.replaceChild(novo, script);
+        });
+
+        document.getElementById('modal-overlay-cnt').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+    } catch (e) {
+        console.error("Erro ao carregar Contas:", e);
+        if (typeof arioneToast === 'function') arioneToast("Erro ao carregar módulo de contas", "danger");
+    }
+}
+function fecharModalCnt(e) { 
+    if (e && e.target !== document.getElementById('modal-overlay-cnt')) return;
+    document.getElementById('modal-overlay-cnt').classList.remove('ativo'); 
+    document.body.style.overflow = ''; 
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalCnt(); });
+</script>
+
+<style>
+    .ge-cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: flex-start !important;
+        padding: 10px 0;
+    }
+    .ge-card {
+        width: 180px;
+        margin: 0 !important;
+    }
+</style>

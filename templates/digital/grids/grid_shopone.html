@@ -1,0 +1,63 @@
+<!-- templates/digital/grids/grid_shopone.html -->
+<div id="modal-overlay-shp" class="ge-modal-overlay" onclick="fecharModalShp()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-shp" class="ge-modal-icon"></i><span id="modal-titulo-shp">ShopOne</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalShp()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-shp"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-store"></i><span>ShopOne</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalShp('vitrine')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-store ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-store ge-card-icon"></i></div>
+            <span class="ge-card-label">Vitrine</span><span class="ge-card-desc">Loja virtual</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalShp('pedidos')" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-shopping-bag ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-shopping-bag ge-card-icon"></i></div>
+            <span class="ge-card-label">Pedidos Online</span><span class="ge-card-desc">Pedidos da loja</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalShp('checkout')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-credit-card ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-credit-card ge-card-icon"></i></div>
+            <span class="ge-card-label">Checkout</span><span class="ge-card-desc">Links de pagamento</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalShp('frete')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-shipping-fast ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-shipping-fast ge-card-icon"></i></div>
+            <span class="ge-card-label">Frete</span><span class="ge-card-desc">Configurar entregas</span>
+        </div>
+
+
+    </div>
+</div>
+
+<script>
+const modaisShp = {
+    vitrine:  {titulo:'Vitrine',        icone:'fas fa-store',        campos:[['Nome da Loja *','nome','text'],['URL','url','text'],['Descrição','desc','text'],['Status','status','text']]},
+    pedidos:  {titulo:'Pedidos Online', icone:'fas fa-shopping-bag', campos:[['Nº Pedido','num','text'],['Cliente','cliente','text'],['Valor (R$)','valor','number'],['Status','status','text']]},
+    checkout: {titulo:'Checkout',       icone:'fas fa-credit-card',  campos:[['Produto *','produto','text'],['Valor (R$) *','valor','number'],['Gateway','gateway','text'],['Link Gerado','link','text']]},
+    frete:    {titulo:'Frete',          icone:'fas fa-shipping-fast',campos:[['Transportadora *','transp','text'],['CEP Origem','cep','text'],['Prazo (dias)','prazo','number'],['Valor Mínimo (R$)','min','number']]},
+};
+
+function abrirModalShp(tipo) {
+    const m = modaisShp[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-shp').textContent = m.titulo;
+    document.getElementById('modal-icon-shp').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-shp').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalShp()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-shp').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalShp() { document.getElementById('modal-overlay-shp').classList.remove('ativo'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalShp(); });
+</script>

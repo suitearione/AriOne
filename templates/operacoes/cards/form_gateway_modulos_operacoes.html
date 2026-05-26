@@ -1,0 +1,203 @@
+{# =============================================================================
+   Arquivo  : form_gateway_modulos_operacoes.html
+   Caminho  : templates/operacoes/cards/form_gateway_modulos_operacoes.html
+   Função   : Menu Mestre (Camada 1) de Relatórios de Operações & Logística.
+   Lógica   : Apresenta as categorias [Compras, Vendas, Estoque, Produção, Expedição]
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-mestre {
+            padding: 25px;
+            /* Gradiente Dinâmico AriOne: Mesclando as cores das abas de Operações */
+            background: linear-gradient(90deg, #E67E22 0%, #0072CE 25%, #27AE60 50%, #8E44AD 75%, #34495E 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 15px; }
+        .gateway-body { padding: 35px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid-mestre {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item-mestre {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 15px;
+            background: #fff;
+            border: 2px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .gateway-item-mestre:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border-color: var(--c);
+            background: #fff;
+        }
+
+        .gateway-icon-mestre {
+            width: 55px;
+            height: 55px;
+            background: var(--c-bg, rgba(0,0,0,0.05));
+            color: var(--c, #E67E22);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .gateway-item-mestre:hover .gateway-icon-mestre {
+            background: var(--c);
+            color: #fff;
+            transform: rotate(5deg) scale(1.1);
+        }
+
+        .gateway-label-mestre { font-size: 16px; font-weight: 800; color: #2d3748; }
+        .gateway-desc-mestre { font-size: 11px; color: #a0aec0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+
+        /* SKELETON LOADERS */
+        @keyframes shimmer {
+            0% { background-position: -468px 0; }
+            100% { background-position: 468px 0; }
+        }
+        .skeleton {
+            background: #f6f7f8;
+            background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+            background-repeat: no-repeat;
+            background-size: 800px 400px;
+            animation: shimmer 1.2s linear infinite forwards;
+        }
+    </style>
+
+    <div class="gateway-header-mestre">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fas fa-tasks" style="font-size: 1.4rem; color: #03A9F4;"></i>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <div class="gateway-title" style="gap:0; color: #03A9F4;">Central de Relatórios: Módulo Operações</div>
+                <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Controle Operacional & Cadeia de Suprimentos</span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">GRIDs</span>
+            <button type="button" class="ge-modal-fechar" onclick="fecharModalGlobal()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid-mestre">
+            
+            <!-- Compras -->
+            <div class="gateway-item-mestre" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarOperacoes('compras')">
+                <div class="gateway-icon-mestre"><i class="fas fa-shopping-cart"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Compras</span>
+                <span class="gateway-desc-mestre">Suprimentos & Pedidos</span>
+            </div>
+
+            <!-- Vendas -->
+            <div class="gateway-item-mestre" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarOperacoes('vendas')">
+                <div class="gateway-icon-mestre"><i class="fas fa-cash-register"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Vendas</span>
+                <span class="gateway-desc-mestre">Comercial & Varejo</span>
+            </div>
+
+            <!-- Estoque -->
+            <div class="gateway-item-mestre" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarOperacoes('estoque')">
+                <div class="gateway-icon-mestre"><i class="fas fa-boxes"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Estoque</span>
+                <span class="gateway-desc-mestre">Inventário & Giro</span>
+            </div>
+
+            <!-- Produção -->
+            <div class="gateway-item-mestre" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarOperacoes('producao')">
+                <div class="gateway-icon-mestre"><i class="fas fa-industry"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Produção</span>
+                <span class="gateway-desc-mestre">PCP & Fábrica</span>
+            </div>
+
+            <!-- Expedição -->
+            <div class="gateway-item-mestre" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarOperacoes('expedicao')">
+                <div class="gateway-icon-mestre"><i class="fas fa-shipping-fast"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Expedição</span>
+                <span class="gateway-desc-mestre">Logística & Entregas</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Navega de forma fluida para o próximo nível de seleção (Lógica Padronizada Cadastros).
+ */
+function navegarOperacoes(modulo) {
+    const url = "{{ url_for('operacoes.card_operacoes_relatorios') }}?modulo=" + modulo;
+    const content = document.getElementById('arione-modal-content');
+    
+    if (content && url) {
+        content.style.opacity = '0.4';
+        
+        // SKELETON LOADER DINÂMICO
+        content.innerHTML = `
+            <div style="padding:0; border-radius:14px; overflow:hidden;">
+                <div class="skeleton" style="height:88px; width:100%; border-radius:14px 14px 0 0;"></div>
+                <div style="padding:35px; background:#fff;">
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                    </div>
+                </div>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                
+                // Re-injeção de Scripts (Anti-Erro)
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar sub-gateway de operações:", err);
+                content.style.opacity = '1';
+            });
+    }
+}
+
+function fecharModalOperacoes() {
+    if (typeof fecharModalOpenLog === 'function') {
+        fecharModalOpenLog();
+    } else {
+        const overlay = document.getElementById('modal-overlay-operacoes');
+        if (overlay) overlay.classList.remove('ativo');
+        document.body.style.overflow = '';
+    }
+}
+</script>

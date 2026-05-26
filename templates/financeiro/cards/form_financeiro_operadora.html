@@ -1,0 +1,404 @@
+{# =============================================================================
+   Caminho  : templates/financeiro/cards/form_financeiro_operadora.html
+   Função   : Gestão de Operadoras Financeiras (Gold Standard Luxury)
+   ============================================================================= #}
+
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE (PAA §12-B) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Operadoras Financeiras",
+        subtitulo="Financeiro > Configurações > Gateways",
+        icone="fa-landmark",
+        cor_tema="#00E676",
+        func_fechar="voltarParaGridGerencial()",
+        form_id="form-operadora-financeira",
+        onclick_novo="resetFormOp()",
+        onclick_save="salvarOperadora()",
+        onclick_clonar="",
+        onclick_search="",
+        onclick_filter="",
+        onclick_export="",
+        onclick_import="",
+        onclick_print="window.print()",
+        onclick_email="",
+        onclick_whatsapp="",
+        onclick_list="",
+        status="Sincronização Gold Standard Ativa",
+        ajuda="Personalize os nomes das parcelas e defina a estratégia de repasse de juros.",
+        tamanho="medio"
+    ) }}
+
+<style>
+    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+</style>
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; min-height: 100vh; width: 100%;">
+
+    <div class="op-container-fluid" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease;">
+        
+        <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+            
+            {# COLUNA 1: FORMULÁRIO DE CADASTRO #}
+            <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+                <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <i class="fas fa-sliders-h" style="color: #2980B9; margin-right: 10px;"></i> Parâmetros da Operadora
+                    </div>
+                    <span id="badge-status-form" style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">PENDENTE</span>
+                </div>
+                <div class="op-card-body" style="padding: 25px;">
+                    <form id="form-operadora-financeira">
+                        <input type="hidden" name="id" id="op_id">
+                        <input type="hidden" name="taxas_parcelamento" id="op_taxas_json">
+                        
+                        <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                            <div class="op-group" style="flex: 2;">
+                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">IDENTIFICAÇÃO OPERADORA</label>
+                                <input class="op-input" type="text" name="nome" id="op_nome" placeholder="NOME DA ADQUIRENTE" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;" oninput="atualizarPrefixosParcelas(this.value)">
+                            </div>
+                            <div class="op-group" style="flex: 1;">
+                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">IDENTIDADE</label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="color" name="cor" id="op_cor" value="#2980B9" style="width: 45px; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px; background: #fff; cursor: pointer;">
+                                    <input class="op-input" type="text" id="op_cor_hex" placeholder="#HEX" style="flex: 1; font-family: 'Courier New', Courier, monospace; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;" oninput="document.getElementById('op_cor').value = this.value">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px;">
+                            <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 14px; display: flex; justify-content: space-between;">
+                                <span>Taxas MDR e Liquidação</span>
+                            </div>
+                            <div class="op-row" style="gap: 15px; display: flex; flex-wrap: wrap;">
+                                <div class="op-group" style="flex: 1; min-width: 100px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DÉBITO (%)</label>
+                                    <input class="op-input" type="text" name="taxa_debito" id="op_taxa_debito" value="0,00" oninput="this.value = arioneMaskMoney(this.value)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1; min-width: 100px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">PIX (%)</label>
+                                    <input class="op-input" type="text" name="taxa_pix" id="op_taxa_pix" value="0,00" oninput="this.value = arioneMaskMoney(this.value)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1; min-width: 100px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CRÉ. VISTA (%)</label>
+                                    <input class="op-input" type="text" name="taxa_credito_vista" id="op_taxa_credito_vista" value="0,00" oninput="this.value = arioneMaskMoney(this.value)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1; min-width: 100px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">ANTECIP. (%)</label>
+                                    <input class="op-input" type="text" name="taxa_antecipacao" id="op_taxa_antecipacao" value="0,00" oninput="this.value = arioneMaskMoney(this.value)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {# ACORDEÃO DA MATRIZ LUXURY #}
+                        <div class="matriz-acordeaun" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                            <div onclick="toggleMatriz()" class="matriz-header" style="padding: 15px 20px; background: #fcfdfe; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div id="indicador-circulo" style="width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; transition: 0.4s; border: 2px solid #fff; box-shadow: 0 0 0 2px #f1f5f9;"></div>
+                                    <span style="font-size: 12px; font-weight: 900; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">Estratégia de Parcelamento</span>
+                                    <span id="hint-matriz" style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-left: 10px; opacity: 0.8;">(Toque para expandir)</span>
+                                    <span id="badge-matriz" style="background: #2980B9; color: #fff; font-size: 9px; padding: 3px 12px; border-radius: 12px; font-weight: 900; display: none; text-transform: uppercase;">Ativa</span>
+                                </div>
+                                <i id="chevron-matriz" class="fas fa-chevron-down" style="color: #2980B9; transition: transform 0.4s ease; font-size: 16px;"></i>
+                            </div>
+                            
+                            <div id="container-matriz" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; background: #fff;">
+                                <div style="max-height: 450px; overflow-y: auto;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead style="position: sticky; top: 0; background: #fcfdfe; z-index: 10; border-bottom: 1px solid #f1f5f9;">
+                                            <tr>
+                                                <th style="padding: 15px 12px; text-align: left; font-size: 9px; color: #94a3b8; font-weight: 900; width: 200px; text-transform: uppercase;">NOME DA PARCELA</th>
+                                                <th style="padding: 15px 5px; text-align: center; font-size: 9px; color: #94a3b8; font-weight: 900; text-transform: uppercase;">JUROS (%)</th>
+                                                <th style="padding: 15px 5px; text-align: center; font-size: 9px; color: #94a3b8; font-weight: 900; text-transform: uppercase;">Vendedor paga</th>
+                                                <th style="padding: 15px 5px; text-align: center; font-size: 9px; color: #94a3b8; font-weight: 900; text-transform: uppercase;">Cliente paga</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="lista-parcelas-config">
+                                            {% for i in range(1, 13) %}
+                                            <tr data-parc="{{ i }}" style="border-bottom: 1px solid #f8fafc; transition: 0.2s;">
+                                                <td style="padding: 10px 12px;">
+                                                    <input type="text" class="parc-nome" placeholder="{{ i }}X" style="width: 100%; border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 800; color: #1e293b; text-transform: uppercase; outline: none; background: #fcfdfe;">
+                                                </td>
+                                                <td style="padding: 10px 5px; text-align: center;">
+                                                    <input type="text" class="parc-taxa" oninput="this.value = arioneMaskMoney(this.value)" value="0,00" style="width: 80px; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px; font-size: 13px; text-align: center; font-weight: 800; color: #475569; outline: none;">
+                                                </td>
+                                                <td style="padding: 10px 5px; text-align: center;">
+                                                    <input type="checkbox" class="parc-vendedor" style="width: 22px; height: 22px; cursor: pointer; accent-color: #ef4444;">
+                                                </td>
+                                                <td style="padding: 10px 5px; text-align: center;">
+                                                    <input type="checkbox" class="parc-cliente" style="width: 22px; height: 22px; cursor: pointer; accent-color: #27ae60;">
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {# COLUNA 2: LISTA DE OPERADORAS #}
+            <div class="op-card" style="flex: 1.5; min-width: 600px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #cbd5e1; background: #fff; overflow: hidden;">
+                <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                    <span style="font-weight: 600; color: #334155; font-size: 13px;">
+                        <i class="fas fa-layer-group" style="color: #2980B9; margin-right: 8px;"></i>
+                        Entidades Homologadas ({{ operadoras|length }})
+                    </span>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="configurarPadroesOperadoras()" class="op-btn" style="height: 28px; padding: 0 15px; font-size: 10px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s;">
+                            <i class="fas fa-magic" style="color: #2980B9;"></i> PADRÕES
+                        </button>
+                    </div>
+                </div>
+                <div class="op-card-body" style="padding: 0;">
+                    <table class="arione-table-hcm">
+                        <thead>
+                            <tr style="background: #fcfdfe;">
+                                <th style="padding: 20px 25px;">GATEWAY / ADQUIRENTE</th>
+                                <th style="text-align: center;">RESUMO TAXAS</th>
+                                <th style="width: 120px; text-align: center;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for op in operadoras %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.3s;">
+                                <td style="padding: 15px 25px;">
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <div style="width: 40px; height: 40px; background: {{ op.cor }}15; color: {{ op.cor }}; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid {{ op.cor }}20;">
+                                            <i class="{{ op.icone or 'fas fa-landmark' }}"></i>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 900; color: #1e293b; font-size: 13px;">{{ op.nome }}</div>
+                                            <div style="font-size: 9px; font-weight: 800; color: {{ op.cor }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ 'Matriz Personalizada' if op.taxas_parcelamento else 'MDR Padrão' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <div style="display: flex; gap: 10px; justify-content: center; font-size: 11px; font-weight: 900;">
+                                        <span style="color: #27ae60; background: #27ae6008; padding: 4px 8px; border-radius: 6px;">D: {{ op.taxa_debito }}%</span>
+                                        <span style="color: #2980B9; background: #2980B908; padding: 4px 8px; border-radius: 6px;">C: {{ op.taxa_credito_vista }}%</span>
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <div style="display: flex; gap: 15px; justify-content: center;">
+                                        <button onclick='editarOperadora({{ op.to_dict()|tojson }})' style="background:none; border:none; color:#2980B9; cursor:pointer; font-size: 16px; transition: 0.2s;" title="Editar"><i class="fas fa-edit"></i></button>
+                                        <button onclick="excluirOperadora({{ op.id }})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 16px; transition: 0.2s;" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" style="text-align: center; padding: 60px; color: #94a3b8; font-weight: 800; letter-spacing: 1px;">SEM OPERADORAS HOMOLOGADAS</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function toggleMatriz(forceExpand = false) {
+            const container = document.getElementById('container-matriz');
+            const chevron = document.getElementById('chevron-matriz');
+            const circle = document.getElementById('indicador-circulo');
+            const hint = document.getElementById('hint-matriz');
+            
+            if (forceExpand || container.style.maxHeight === '0px' || !container.style.maxHeight) {
+                container.style.maxHeight = '1500px';
+                chevron.style.transform = 'rotate(180deg)';
+                circle.style.background = '#2980B9';
+                circle.style.boxShadow = '0 0 0 4px rgba(41, 128, 185, 0.15)';
+                hint.innerText = '(Configurando estratégia)';
+            } else {
+                container.style.maxHeight = '0px';
+                chevron.style.transform = 'rotate(0deg)';
+                circle.style.background = '#e2e8f0';
+                circle.style.boxShadow = 'none';
+                hint.innerText = '(Toque para expandir)';
+            }
+        }
+
+        function arioneMaskMoney(val) {
+            if (!val) return '0,00';
+            let v = val.toString().replace(/\D/g, '');
+            v = (v / 100).toFixed(2) + '';
+            v = v.replace(".", ",");
+            v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return v;
+        }
+
+        function atualizarPrefixosParcelas(nomeOp) {
+            const prefixo = nomeOp.trim().toUpperCase();
+            if (!prefixo) return;
+            
+            document.querySelectorAll('#lista-parcelas-config tr').forEach(tr => {
+                const inputNome = tr.querySelector('.parc-nome');
+                inputNome.value = `${prefixo}-${tr.dataset.parc}X`;
+            });
+            
+            const isNovo = !document.getElementById('op_id').value;
+            if (isNovo) {
+                const container = document.getElementById('container-matriz');
+                if (container.style.maxHeight === '0px' || !container.style.maxHeight) {
+                    toggleMatriz(true);
+                }
+            }
+        }
+
+        function resetFormOp() {
+            document.getElementById('form-operadora-financeira').reset();
+            document.getElementById('op_id').value = '';
+            document.getElementById('op_cor').value = '#2980B9';
+            document.getElementById('op_cor_hex').value = '#2980B9';
+            document.getElementById('badge-matriz').style.display = 'none';
+            document.querySelectorAll('#lista-parcelas-config tr').forEach(tr => {
+                tr.querySelector('.parc-nome').value = '';
+                tr.querySelector('.parc-taxa').value = '0,00';
+                tr.querySelector('.parc-vendedor').checked = false;
+                tr.querySelector('.parc-cliente').checked = false;
+            });
+            toggleMatriz(false);
+            arioneToast('Iniciando novo registro', 'info');
+        }
+
+        function editarOperadora(data) {
+            document.getElementById('op_id').value = data.id;
+            document.getElementById('op_nome').value = data.nome;
+            document.getElementById('op_taxa_debito').value = arioneMaskMoney(data.taxa_debito * 100);
+            document.getElementById('op_taxa_pix').value = arioneMaskMoney(data.taxa_pix * 100);
+            document.getElementById('op_taxa_credito_vista').value = arioneMaskMoney(data.taxa_credito_vista * 100);
+            document.getElementById('op_taxa_antecipacao').value = arioneMaskMoney(data.taxa_antecipacao * 100);
+            document.getElementById('op_cor').value = data.cor;
+            document.getElementById('op_cor_hex').value = data.cor;
+
+            document.querySelectorAll('#lista-parcelas-config tr').forEach(tr => {
+                tr.querySelector('.parc-nome').value = '';
+                tr.querySelector('.parc-taxa').value = '0,00';
+                tr.querySelector('.parc-vendedor').checked = false;
+                tr.querySelector('.parc-cliente').checked = false;
+            });
+
+            if (data.taxas_parcelamento) {
+                document.getElementById('badge-matriz').style.display = 'inline-block';
+                try {
+                    const taxas = JSON.parse(data.taxas_parcelamento);
+                    Object.keys(taxas).forEach(nParc => {
+                        const tr = document.querySelector(`#lista-parcelas-config tr[data-parc="${nParc}"]`);
+                        if (tr) {
+                            const config = taxas[nParc];
+                            tr.querySelector('.parc-nome').value = config.nome || `${data.nome}-${nParc}X`;
+                            tr.querySelector('.parc-taxa').value = arioneMaskMoney(config.taxa * 100);
+                            tr.querySelector('.parc-vendedor').checked = config.vendedor_paga;
+                            tr.querySelector('.parc-cliente').checked = config.cliente_paga;
+                        }
+                    });
+                    toggleMatriz(true);
+                } catch(e) {}
+            } else {
+                document.getElementById('badge-matriz').style.display = 'none';
+                toggleMatriz(false);
+            }
+
+            document.getElementById('form-operadora-financeira').scrollIntoView({ behavior: 'smooth' });
+            arioneToast('Modo de edição: ' + data.nome, 'info');
+        }
+
+        function salvarOperadora() {
+            const form = document.getElementById('form-operadora-financeira');
+            if (!document.getElementById('op_nome').value) {
+                arioneToast('⚠️ Nome da Adquirente obrigatório', 'warning');
+                return;
+            }
+
+            const configParcelas = {};
+            let hasMatrix = false;
+            document.querySelectorAll('#lista-parcelas-config tr').forEach(tr => {
+                const nParc = tr.dataset.parc;
+                const nomeInput = tr.querySelector('.parc-nome').value;
+                const taxa = parseFloat(tr.querySelector('.parc-taxa').value.replace('.', '').replace(',', '.'));
+                const vend = tr.querySelector('.parc-vendedor').checked;
+                const cli = tr.querySelector('.parc-cliente').checked;
+
+                if (nomeInput.trim() !== "" || taxa > 0 || vend || cli) {
+                    hasMatrix = true;
+                    configParcelas[nParc] = {
+                        nome: nomeInput || `${nParc}X`,
+                        taxa: taxa,
+                        vendedor_paga: vend,
+                        cliente_paga: cli
+                    };
+                }
+            });
+            document.getElementById('op_taxas_json').value = hasMatrix ? JSON.stringify(configParcelas) : '';
+
+            const data = new FormData(form);
+            fetch("{{ url_for('financeiro.salvar_operadora') }}", { method: 'POST', body: data })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_operadoras') }}", 'Operadoras Financeiras');
+                } else {
+                    arioneToast('Erro: ' + res.error, 'danger');
+                }
+            });
+        }
+
+        function excluirOperadora(id) {
+            if (!confirm('Deseja excluir esta operadora permanentemente?')) return;
+            fetch(`/financeiro/card/operadoras/excluir/${id}`, { method: 'POST' })
+            .then(res => res.json()).then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_operadoras') }}", 'Operadoras Financeiras');
+                }
+            });
+        }
+
+        function configurarPadroesOperadoras() {
+            if (!confirm('Restaurar operadoras padrão do sistema?')) return;
+            fetch("{{ url_for('financeiro.seed_operadoras') }}", { method: 'POST' })
+            .then(res => res.json()).then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_operadoras') }}", 'Operadoras Financeiras');
+                }
+            });
+        }
+
+        document.getElementById('op_cor').addEventListener('input', function() {
+            document.getElementById('op_cor_hex').value = this.value.toUpperCase();
+        });
+
+        function voltarParaGridGerencial() {
+            if (typeof fecharModalGlobal === 'function') fecharModalGlobal();
+            if (!window.location.search.includes('aba=gerencial')) {
+                window.location.href = "{{ url_for('financeiro.abas', aba='gerencial') }}";
+            }
+        }
+    </script>
+
+    <style>
+        .arione-canvas-luxury { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 15px; text-align: left; color: #94a3b8; font-weight: 900; text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+        .arione-table-hcm td { padding: 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+        .arione-table-hcm tr:hover { background: #fcfdfe; }
+        
+        .matriz-header:hover { background: #f1f5f9 !important; }
+        .matriz-header:hover i#chevron-matriz { transform: translateY(3px) scale(1.1); }
+        
+        .op-input:focus, .parc-nome:focus, .parc-taxa:focus { border-color: #2980B9 !important; box-shadow: 0 0 0 4px rgba(41,128,185,0.08); background: #fff !important; }
+        
+        .op-btn:hover { background: #2980B9 !important; color: #fff !important; transform: translateY(-1px); }
+    </style>
+</div>
+{% endblock %}

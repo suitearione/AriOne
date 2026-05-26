@@ -1,0 +1,116 @@
+{# =============================================================================
+   Arquivo  : form_vendasservicos.html
+   Caminho  : templates/operacoes/cards/vendas/form_vendasservicos.html
+   Função   : Gestão de Projetos e Serviços Técnicos.
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+
+{% block content %}
+<div class="ctx-venda-wrap">
+    <style>
+        :root { --venda-pri: #8E44AD; --venda-acc: #9B59B6; }
+        .ctx-venda-header { background: linear-gradient(135deg, #8E44AD, #6C3483); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-venda-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        .venda-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+
+        /* Toolbar CRUD */
+        .venda-toolbar { background: #f8fafc; border-bottom: 1.5px solid #edf2f7; padding: 10px 22px; display: flex; gap: 10px; }
+        .btn-crud { background: #fff; border: 1.5px solid #e2e8f0; padding: 6px 15px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; }
+        .btn-crud:hover { border-color: var(--venda-pri); color: var(--venda-pri); }
+        .btn-crud.active { background: var(--venda-pri); color: #fff; border-color: var(--venda-pri); }
+    </style>
+
+    <div class="ctx-venda-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-tools"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Ordem de Serviço (OS)</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Agendamento & Execução de Projetos</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);" onclick="fecharModalOpe()">Sair</button>
+            <button class="ge-btn-salvar" style="background:#fff; color:var(--venda-pri); border:none; padding:8px 24px; border-radius:6px; font-weight:700; cursor:pointer;"><i class="fas fa-calendar-check"></i> Agendar Execução</button>
+        </div>
+    </div>
+
+    <!-- Toolbar de Ações -->
+    <div class="venda-toolbar">
+        <button class="btn-crud active"><i class="fas fa-plus"></i> Novo</button>
+        <button class="btn-crud"><i class="fas fa-edit"></i> Editar</button>
+        <button class="btn-crud"><i class="fas fa-search"></i> Consultar</button>
+        <button class="btn-crud"><i class="fas fa-print"></i> Imprimir</button>
+        <button class="btn-crud" style="margin-left:auto; color:#cc3333;"><i class="fas fa-trash"></i> Excluir</button>
+    </div>
+
+    <div class="ctx-venda-body">
+        <form>
+            <div class="venda-section">
+                <div class="venda-row">
+                    <div class="venda-group" style="flex:2;"><label class="venda-label">Cliente / Tomador</label><select class="venda-input"><option>Selecione...</option></select></div>
+                    <div class="venda-group"><label class="venda-label">Técnico/Executante</label><select class="venda-input"><option>Roberto Mendes</option><option>Ana Paula</option></select></div>
+                    <div class="venda-group"><label class="venda-label">Agendamento</label><input type="datetime-local" class="venda-input"></div>
+                </div>
+            </div>
+
+            <div class="venda-section">
+                <div style="font-size:11px; font-weight:800; color:var(--venda-pri); text-transform:uppercase; margin-bottom:10px;">Checklist de Execução</div>
+                <div class="checklist-item"><input type="checkbox"> Visita Técnica Realizada</div>
+                <div class="checklist-item"><input type="checkbox"> Material de Apoio Entregue</div>
+                <div class="checklist-item"><input type="checkbox"> Teste de Fumaça / Inicialização</div>
+                <div class="checklist-item"><input type="checkbox"> Coleta de Assinatura Digital</div>
+            </div>
+
+            {% include "operacoes/cards/vendas/_sub_tabs_vendas.html" ignore missing %}
+        </form>
+
+        {# ── LISTA DE LANÇAMENTOS RECENTES (PADRÃO ARIONE) ── #}
+        <div class="venda-section" style="margin-top:25px; padding:0; overflow:hidden; border-color:var(--venda-pri);">
+            <div style="background:var(--venda-pri); color:#fff; padding:10px 18px; font-size:11px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fas fa-list"></i> HISTÓRICO DE ORDENS DE SERVIÇO</span>
+                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px;">OS em Aberto/Concluídas</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="venda-table-list">
+                    <thead>
+                        <tr>
+                            <th>Nº OS</th>
+                            <th>Cliente</th>
+                            <th>Técnico</th>
+                            <th>Data/Hora</th>
+                            <th>Local</th>
+                            <th>Status</th>
+                            <th style="width:50px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="venda-badge-id">#OS-859</span></td>
+                            <td><strong>Apartamento 402 - Ed. Life</strong></td>
+                            <td>Roberto Mendes</td>
+                            <td>12/04/2026 09:00</td>
+                            <td>Externo</td>
+                            <td><span class="venda-status-badge">Agendado</span></td>
+                            <td><button class="venda-btn-acao"><i class="fas fa-eye"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .venda-table-list { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .venda-table-list th { background: #f8fafc; padding: 12px 15px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; border-bottom: 2px solid #edf2f7; }
+    .venda-table-list td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+    .venda-table-list tbody tr:hover { background: #f5f0f7; }
+    
+    .venda-badge-id { background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 10px; }
+    .venda-status-badge { background: #f3e5f5; color: #7b1fa2; padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 10px; display: inline-flex; align-items: center; gap: 5px; }
+    
+    .venda-btn-acao { background: #f1f5f9; border: none; width: 28px; height: 28px; border-radius: 6px; color: var(--venda-pri); cursor: pointer; transition: 0.2s; }
+    .venda-btn-acao:hover { background: var(--venda-pri); color: #fff; }
+</style>
+{% endblock %}

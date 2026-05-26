@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap cc-wrap" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ BLINDAGEM PAA §12-E: O cabeçalho deve 'beijar' o topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        .fp-card-title { font-size: 13px !important; font-weight: 800 !important; letter-spacing: -0.2px; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE (PAA §12-B) #} 
+    {{ comp.cabecalho_mestre_arione(
+        titulo=('Editar' if cc else 'Novo') + " Centro de Custo",
+        subtitulo="Financeiro > Gerencial > Centros de Custo",
+        icone="fa-layer-group",
+        cor_tema="#00E676",
+        func_fechar="window.location.href='" + url_for('financeiro.abas', aba='gerencial') + "'",
+        form_id="cc-form-area",
+        list_id="cc-list-area",
+        onclick_novo="arioneResetForm('cc-form')",
+        onclick_save="forceSubmitCC()",
+        onclick_search="focarBuscaCC()",
+        onclick_filter="filter-bar-cc",
+        status="Audit Ready (PAAv1.0)"
+    ) }}
+
+    <div class="cc-container" style="padding: 0 24px 24px 24px; max-width: 1400px; margin: 0 auto;">
+
+        {# ── PAINEL DE FILTROS AVANÇADOS ── #}
+        <div id="filter-bar-cc" style="display:none; background:#f0fff4; border:2px solid #c6f6d5; padding:18px 22px; border-radius:12px; margin-bottom:15px; box-shadow:0 10px 25px rgba(0,230,118,0.12); animation: feFadeDown 0.35s ease-out;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; color:#2e7d32; border-bottom:1px solid rgba(0,230,118,0.15); padding-bottom:8px; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-sliders-h" style="font-size:13px;"></i>
+                    <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px;">Painel de Filtros — Gestão de Rateio</span>
+                </div>
+                <button type="button" onclick="limparFiltrosCC()" style="background:rgba(46,125,50,0.1); border:1px solid rgba(46,125,50,0.3); color:#2e7d32; padding:3px 12px; border-radius:6px; font-size:10px; font-weight:800; cursor:pointer; letter-spacing:0.5px;">LIMPAR</button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px;">
+                <div><label class="fp-label">Nome / Descrição</label><input type="text" id="f-cc-nome" oninput="executarFiltroCC()" placeholder="Pesquisar..." class="fp-input" style="width:100%;"></div>
+                <div><label class="fp-label">Tipo / Natureza</label><select id="f-cc-tipo" onchange="executarFiltroCC()" class="fp-input" style="width:100%; background:#fff;"><option value="">-- Todos --</option><option value="OPERACIONAL">OPERACIONAL</option><option value="ADMINISTRATIVO">ADMINISTRATIVO</option><option value="COMERCIAL">COMERCIAL</option></select></div>
+                <div><label class="fp-label">Status</label><select id="f-cc-status" onchange="executarFiltroCC()" class="fp-input" style="width:100%; background:#fff;"><option value="">-- Todos --</option><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option></select></div>
+                <div><label class="fp-label">Código</label><input type="text" id="f-cc-cod" oninput="executarFiltroCC()" placeholder="Filtrar..." class="fp-input" style="width:100%;"></div>
+            </div>
+        </div>
+
+        <div class="fp-row" style="display: flex; gap: 12px; align-items: flex-start;">
+            
+            {# FORMULÁRIO (PADRÃO MESTRE) #}
+            <div id="cc-form-area" style="flex: 1; min-width: 450px;">
+                <form id="cc-form" method="POST" action="{{ url_for('financeiro.form_centro_custo', id=cc.id if cc else None) }}">
+                    <div class="fp-card" style="border-left: 5px solid #00E676; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                        <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: rgba(0,230,118,0.02);">
+                            <span style="color: #1e293b;"><i class="fas fa-edit" style="color:#00E676; margin-right: 8px;"></i> {{ 'EDITANDO REGISTRO' if cc else 'NOVO CADASTRO' }}</span>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div class="fp-row" style="display: grid; grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div class="fp-group">
+                                    <label class="fp-label">Cód. Estrutural</label>
+                                    <input type="text" name="codigo" id="cc_codigo" class="fp-input" value="{{ cc.codigo if cc else '' }}" readonly style="width: 100%; font-weight: 900; background: #f8fafc; font-family: 'Roboto Mono', monospace; color: #00E676;">
+                                </div>
+                                <div class="fp-group">
+                                    <label class="fp-label">Nome do Centro de Custo <span style="color:#ef4444;">*</span></label>
+                                    <input type="text" name="nome" id="cc-nome-input" class="fp-input" value="{{ cc.nome if cc else '' }}" placeholder="EX: FINANCEIRO MATRIZ" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                                </div>
+                            </div>
+
+                            <div class="fp-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div class="fp-group">
+                                    <label class="fp-label">Vínculo Pai {{ comp.info_icon("Define a hierarquia para geração do código.") }}</label>
+                                    <select name="pai_id" id="cc_pai_id" class="fp-input" onchange="gerarCodigoAutomatico()" style="width: 100%; font-weight: 700; background: #fff;">
+                                        <option value="">— CENTRO MESTRE —</option>
+                                        {% for p in pais %}
+                                            <option value="{{ p.id }}" {{ 'selected' if cc and cc.pai_id == p.id else '' }}>{{ p.codigo }} - {{ p.nome }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="fp-group">
+                                    <label class="fp-label">Tipo / Natureza</label>
+                                    <select name="tipo" id="cc-tipo-input" class="fp-input" style="width: 100%; font-weight: 700; background: #fff;">
+                                        <option value="Operacional" {{ 'selected' if cc and cc.tipo=='Operacional' else '' }}>OPERACIONAL</option>
+                                        <option value="Administrativo" {{ 'selected' if cc and cc.tipo=='Administrativo' else '' }}>ADMINISTRATIVO</option>
+                                        <option value="Comercial" {{ 'selected' if cc and cc.tipo=='Comercial' else '' }}>COMERCIAL</option>
+                                        <option value="Logístico" {{ 'selected' if cc and cc.tipo=='Logístico' else '' }}>LOGÍSTICO</option>
+                                        <option value="Industrial" {{ 'selected' if cc and cc.tipo=='Industrial' else '' }}>INDUSTRIAL</option>
+                                        <option value="Investimento" {{ 'selected' if cc and cc.tipo=='Investimento' else '' }}>INVESTIMENTO</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="fp-row" style="display: grid; grid-template-columns: 1fr 140px; gap: 12px; align-items: end;">
+                                <div class="fp-group">
+                                    <label class="fp-label">Orçamento Mensal (Teto)</label>
+                                    <div style="position: relative;">
+                                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 800; color: #94a3b8;">R$</span>
+                                        <input type="text" name="orcamento_mensal" class="fp-input money" value="{{ cc.orcamento_mensal if cc else '0,00' }}" style="width: 100%; padding-left: 35px !important; font-size: 16px !important; font-weight: 900; color: #1e293b;">
+                                    </div>
+                                </div>
+                                <div class="fp-group" style="padding-bottom: 5px;">
+                                    <label class="fp-toggle-switch" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                        <input type="checkbox" name="ativo" {{ 'checked' if not cc or cc.ativo else '' }} style="display: none;">
+                                        <div class="switch-slider" style="width: 38px; height: 18px; background: #cbd5e1; border-radius: 20px; position: relative; transition: 0.3s;">
+                                            <div class="switch-knob" style="width: 12px; height: 12px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s;"></div>
+                                        </div>
+                                        <span style="font-size: 10px; font-weight: 800; color: #64748b;">ATIVO</span>
+                                    </label>
+                                </div>
+                            <div class="fp-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+                                <div class="fp-group">
+                                    <label class="fp-label">Vínculo Plano de Contas {{ comp.info_icon("Conecta este centro a uma conta contábil para automação de lançamentos.") }}</label>
+                                    <input type="text" name="contabil_cod" class="fp-input" list="lista-plano-contas" value="{{ cc.contabil_cod if cc else '' }}" placeholder="Pesquisar conta..." style="width: 100%; font-weight: 700; color: #7A255F;">
+                                    <datalist id="lista-plano-contas">
+                                        {% for p in plano_contas %}
+                                            <option value="{{ p.codigo }}">{{ p.codigo }} - {{ p.descricao }}</option>
+                                        {% endfor %}
+                                    </datalist>
+                                </div>
+                                <div class="fp-group">
+                                    <label class="fp-label">ID PIX (Para Rateio Automático)</label>
+                                    <input type="text" name="pix" class="fp-input" value="{{ cc.pix if cc else '' }}" placeholder="Chave PIX se houver" style="width: 100%; font-weight: 700;">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9; border-radius: 0 0 12px 12px;">
+                            <button type="button" class="fp-btn-salvar" id="btn-salvar-cc" onclick="forceSubmitCC()" style="background: #00E676; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(0,230,118,0.2); transition: 0.2s;">
+                                <i class="fas fa-save"></i> CONFIRMAR E SALVAR
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            {# LISTAGEM (O DETALHE) #}
+            <div id="cc-list-area" style="flex: 1.5; min-width: 600px;">
+                <div class="fp-card" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+                    <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                        <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-list-ul" style="color: #00E676; margin-right: 8px;"></i> ESTRUTURA CADASTRADA</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="position: relative;">
+                                <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #00E676; font-size: 11px;"></i>
+                                <input type="text" id="cc-search-input" oninput="executarFiltroCC()" placeholder="Busca rápida..." 
+                                       style="padding: 6px 12px 6px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 180px; outline: none; font-weight: 700;">
+                            </div>
+                            <span id="cc-total-badge" style="background:#00E676; color:#fff; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:900;">{{ centros_lista|length }} TOTAL</span>
+                        </div>
+                    </div>
+                    <div style="max-height: calc(100vh - 250px); overflow-y: auto;">
+                        <table class="arione-table-hcm">
+                            <thead style="position: sticky; top: 0; background: #fff; z-index: 10;">
+                                <tr>
+                                    <th style="padding: 12px 18px;">CÓDIGO</th>
+                                    <th>NOME DO CENTRO DE CUSTO / NATUREZA</th>
+                                    <th>VÍNCULO PAI</th>
+                                    <th style="text-align: right;">ORÇAMENTO</th>
+                                    <th style="text-align: center;">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-cc">
+                                {% for c in centros_lista %}
+                                <tr class="cc-row cc-{{ c.tipo|lower }}" 
+                                    data-nome="{{ c.nome|upper }}" 
+                                    data-tipo="{{ c.tipo|upper }}" 
+                                    data-status="{{ 'ATIVO' if c.ativo else 'INATIVO' }}" 
+                                    data-cod="{{ c.codigo }}"
+                                    onclick='editarCC("{{ c.id }}", {{ c.to_dict()|tojson|safe }})'
+                                    style="border-bottom: 1px solid #f1f5f9; transition: 0.1s; cursor: pointer;">
+                                    <td style="padding: 10px 18px; font-weight: 900; color: #00E676; font-family: 'Roboto Mono', monospace; font-size: 12px;">{{ c.codigo }}</td>
+                                    <td>
+                                        <div class="cc-name">{{ c.nome }}</div>
+                                        <div style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">{{ c.tipo }}</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 700; color: #64748b; font-size: 11px;">
+                                            — {{ c.pai.nome if c.pai else 'GERENCIAL MESTRE' }} —
+                                        </div>
+                                        <div style="font-size: 9px; color: #94a3b8; font-weight: 600;">
+                                            {{ 'ESTRUTURA PAI' if not c.pai else 'SUB-CENTRO' }}
+                                        </div>
+                                    </td>
+                                    <td style="text-align: right; font-weight: 800; color: #1e293b;">R$ {{ "{:,.2f}".format(c.orcamento_mensal).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+                                    <td style="text-align: center;">
+                                        <div style="display: flex; gap: 12px; justify-content: center;">
+                                            <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                            <button type="button" onclick="event.stopPropagation(); excluirCC('{{ c.id }}', this)" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── MOTOR DE SUBMISSÃO SMART (PAA §1.C / §4.B) ──
+        async function forceSubmitCC() {
+            const form = document.getElementById('cc-form');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+
+            const btn = document.getElementById('btn-salvar-cc');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+
+            const formData = new FormData(form);
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const res = await response.json();
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    setTimeout(() => window.location.reload(), 600);
+                } else {
+                    arioneToast('Erro: ' + (res.error || 'Falha ao salvar'), 'danger');
+                }
+            } catch (e) {
+                arioneToast('Falha crítica de comunicação.', 'danger');
+            } finally {
+                btn.disabled = false; btn.innerHTML = originalText;
+            }
+        }
+
+
+        function editarCC(id, data) {
+            const form = document.getElementById('cc-form');
+            form.action = `{{ url_for('financeiro.form_centro_custo') }}?id=${id}`;
+            document.getElementById('cc_codigo').value = data.codigo;
+            document.getElementById('cc-nome-input').value = data.nome;
+            document.getElementById('cc-tipo-input').value = data.tipo;
+            document.getElementById('cc_pai_id').value = data.pai_id || '';
+            form.querySelector('input[name="orcamento_mensal"]').value = data.orcamento_mensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            form.querySelector('input[name="ativo"]').checked = data.ativo;
+            
+            document.getElementById('cc-nome-input').focus();
+            document.getElementById('cc-form-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            arioneToast('✏️ Editando: ' + data.nome, 'info');
+        }
+
+        async function excluirCC(id, btn) {
+            if (!confirm('🛡️ AriOne: Confirmar exclusão definitiva?')) return;
+            try {
+                const res = await fetch(`/financeiro/api/centro-custo/excluir/${id}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    arioneToast(data.message, 'success');
+                    setTimeout(() => window.location.reload(), 500);
+                }
+            } catch (e) { arioneToast("Erro na exclusão.", 'danger'); }
+        }
+
+
+        function executarFiltroCC() {
+            const fNome = document.getElementById('f-cc-nome').value.toUpperCase();
+            const fTipo = document.getElementById('f-cc-tipo').value.toUpperCase();
+            const fStatus = document.getElementById('f-cc-status').value;
+            const fGlobal = document.getElementById('cc-search-input').value.toUpperCase();
+            const rows = document.querySelectorAll('#tbody-cc .cc-row');
+            let visiveis = 0;
+
+            rows.forEach(row => {
+                const dNome = row.getAttribute('data-nome');
+                const dTipo = row.getAttribute('data-tipo');
+                const dStatus = row.getAttribute('data-status');
+                const dCod = row.getAttribute('data-cod');
+                const matches = (!fNome || dNome.includes(fNome)) && (!fTipo || dTipo.includes(fTipo)) && (!fStatus || dStatus === fStatus) && (!fGlobal || dNome.includes(fGlobal) || dCod.includes(fGlobal));
+                row.style.display = matches ? '' : 'none';
+                if (matches) visiveis++;
+            });
+            document.getElementById('cc-total-badge').textContent = visiveis + ' RESULTADO(S)';
+        }
+
+        function limparFiltrosCC() {
+            document.querySelectorAll('#filter-bar-cc input, #filter-bar-cc select, #cc-search-input').forEach(el => el.value = '');
+            executarFiltroCC();
+        }
+
+        function focarBuscaCC() {
+            document.getElementById('cc-search-input').focus();
+        }
+
+        function gerarCodigoAutomatico() {
+            const cc_id = "{{ cc.id if cc else '' }}";
+            if (cc_id && cc_id !== 'None') return;
+            const pai_id = document.getElementById('cc_pai_id').value;
+            fetch(`{{ url_for('financeiro.proximo_codigo_cc') }}?pai_id=${pai_id}`).then(res => res.json()).then(data => {
+                if (data.codigo) document.getElementById('cc_codigo').value = data.codigo;
+            });
+        }
+
+        function initCC() {
+            if (typeof $ !== 'undefined' && $.fn.mask) {
+                $('.money').mask('#.##0,00', {reverse: true});
+            }
+            gerarCodigoAutomatico();
+        }
+
+        initCC();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #00E676 !important; box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.1); outline: none; }
+        .fp-toggle-switch input:checked + .switch-slider { background: #00E676 !important; }
+        .fp-toggle-switch input:checked + .switch-slider .switch-knob { left: 23px !important; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 10px; vertical-align: middle; }
+        
+        /* 💎 Hierarquia de Fontes (Quiet Luxury) */
+        .cc-sintetico .cc-name { font-weight: 700; color: #475569; font-size: 13px; }
+        .cc-analitico .cc-name { font-weight: 400; color: #64748b; font-size: 12px; }
+        
+        .cc-row:hover { background: #f0fff4 !important; transition: 0.1s; }
+        .fp-btn-icon { background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.6; transition: 0.2s; }
+        .fp-btn-icon:hover { opacity: 1; transform: scale(1.1); }
+    </style>
+</div>
+{% endblock %}

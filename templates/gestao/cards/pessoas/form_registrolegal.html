@@ -1,0 +1,133 @@
+{# =============================================================================
+Caminho : templates/gestao/cards/pessoas/form_registrolegal.html
+Arquivo : form_registrolegal.html
+Função  : Gestão de Contratos, eSocial, CBO e Compliance Trabalhista
+============================================================================= #}
+
+    <!-- ── BARRA DE OPÇÕES ── -->
+    <div style="background: #f8fafc; border-bottom: 2px solid #edf2f7; padding: 12px 18px; display: flex; gap: 8px; margin-bottom:20px; border-radius: 8px;">
+        <button type="button" class="gf-btn" style="background:#7A255F; color:#fff; border:none; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-plus"></i> Novo</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-edit"></i> Editar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-search"></i> Consultar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-print"></i> Imprimir</button>
+    </div>
+
+<form class="ge-form" id="form-registro-legal" method="POST" action="#">
+    
+    {# ✍️ BLOCO 1: VÍNCULO E ADMISSÃO #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-file-contract"></i> Contrato de Trabalho
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+        
+        <div class="gf-row">
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Tipo de Vínculo</label>
+                <select name="vinculo" class="gf-input">
+                    <option value="clt">CLT (Efetivo)</option>
+                    <option value="pj">PJ (Contratado)</option>
+                    <option value="estagio">Estágio</option>
+                    <option value="cooperado">Cooperado</option>
+                    <option value="intermitente">Intermitente</option>
+                </select>
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Matrícula eSocial</label>
+                <input type="text" name="matricula" class="gf-input" placeholder="ID Integração">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Data de Admissão</label>
+                <input type="date" name="data_admissao" class="gf-input" id="inp-admissao">
+            </div>
+        </div>
+
+        <div class="gf-row">
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">CBO (Cargo Oficial)</label>
+                <input type="text" name="cbo" class="gf-input" placeholder="Cód/Nome CBO">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Vencimento Experiência</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="date" class="gf-input" style="background:#fffaf0; border-color:#fbd38d;" title="45 dias">
+                    <input type="date" class="gf-input" style="background:#fff5f7; border-color:#feb2b2;" title="90 dias">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ⏰ BLOCO 2: JORNADA E ESCALA #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-clock"></i> Jornada de Trabalho
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+        
+        <div class="gf-row">
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Horas Mensais</label>
+                <select class="gf-input">
+                    <option value="220">220 Horas (Padrão)</option>
+                    <option value="180">180 Horas</option>
+                    <option value="120">120 Horas</option>
+                    <option value="outros">Outros</option>
+                </select>
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Escala</label>
+                <select class="gf-input">
+                    <option value="5x2">5x2 (Seg a Sex)</option>
+                    <option value="6x1">6x1</option>
+                    <option value="12x36">12x36</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="gf-actions">
+        <button type="submit" class="gf-btn gf-btn-consultar">
+            <i class="fas fa-save"></i> Efetivar Registro
+        </button>
+    </div>
+</form>
+
+    <!-- ── ÚLTIMOS LANÇAMENTOS ── -->
+    <div style="margin-top:25px; padding:0; overflow:hidden; border: 1.5px solid #edf2f7; border-radius: 10px;">
+        <div style="background:#7A255F; color:#fff; padding:10px 18px; font-size:11px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fas fa-list"></i> ÚLTIMOS REGISTROS GADOS</span>
+            <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px;">Gestão de Pessoas</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                    <tr>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Referência / ID</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Descrição</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Data de Lançamento</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-weight:800; font-size:10px;">#RGL-001</span></td>
+                        <td style="padding:12px 15px; color:#1e293b;"><strong>Aditivo Contratual</strong></td>
+                        <td style="padding:12px 15px; color:#1e293b;">Hoje</td>
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:20px; font-weight:700; font-size:10px;">Ativo</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<style>
+.ge-form{display:flex;flex-direction:column;gap:0;}
+.gf-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.gf-group{display:flex;flex-direction:column;gap:4px;min-width:120px;}
+.gf-flex-1{flex:1;}
+.gf-label{font-size:10.5px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.4px;}
+.gf-input{padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#2d3748;background:#fff;transition:all .17s;width:100%;box-sizing:border-box;}
+.gf-input:focus{outline:none;border-color:#7A255F;}
+.gf-actions{display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;}
+.gf-btn-consultar{background:linear-gradient(135deg,#7A255F,#a8357f);color:#fff; border:none; padding:9px 18px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer;}
+</style>

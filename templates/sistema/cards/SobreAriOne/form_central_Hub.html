@@ -1,0 +1,164 @@
+{# =============================================================================
+   Caminho do arquivo: templates/sistema/cards/SobreAriOne/form_central_Hub.html
+   Nome do Arquivo   : form_central_Hub.html
+   Função do Arquivo : Central de Gestão de Parceiros e Licenciamento AriOne.
+   Estética          : Quiet Luxury (Padrão Ouro AriOne)
+============================================================================= #}
+
+<div class="arione-premium-card-container" 
+     style="overflow: visible !important;">
+
+    <!-- CABEÇALHO DA CENTRAL -->
+    <div class="fe-header" 
+         style="margin-bottom: 30px; 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center;">
+        
+        <div style="display: flex; 
+                    align-items: center; 
+                    gap: 15px;">
+            <div class="fe-header-icon-wrap" 
+                 style="background: rgba(94, 25, 62, 0.1); 
+                        color: #5E193E;">
+                <i class="fas fa-handshake fe-header-icon"></i>
+            </div>
+            
+            <div class="fe-header-text">
+                <h2 class="fe-header-title">
+                    Hub de Licenciamento
+                </h2>
+                <p class="fe-header-subtitle">
+                    Gestão Enterprise e Soberania Digital
+                </p>
+            </div>
+        </div>
+
+        <button type="button" 
+                onclick="window.abrirNovoParceiro()" 
+                style="background: #5E193E; 
+                       color: #fff; 
+                       border: none; 
+                       padding: 10px 20px; 
+                       border-radius: 8px; 
+                       font-weight: 700; 
+                       font-size: 0.85rem; 
+                       display: flex; 
+                       align-items: center; 
+                       gap: 10px; 
+                       cursor: pointer; 
+                       transition: all 0.3s ease;
+                       box-shadow: 0 4px 15px rgba(94, 25, 62, 0.2);">
+            <i class="fas fa-plus"></i>
+            Nova Licença
+        </button>
+    </div>
+
+    <!-- ÁREA DE CONTEÚDO DINÂMICO -->
+    <div id="arione-modal-content">
+        
+        {% if not licencas %}
+        <!-- ESTADO VAZIO -->
+        <div style="text-align: center; padding: 60px 20px; background: #f8fafc; border-radius: 20px; border: 2px dashed #e2e8f0;">
+            <div style="font-size: 50px; color: #cbd5e1; margin-bottom: 20px;"><i class="fas fa-globe-americas"></i></div>
+            <h3 style="margin: 0; color: #1e293b; font-size: 1.1rem; font-weight: 700;">Nenhuma licença ativa encontrada</h3>
+            <p style="color: #64748b; font-size: 0.9rem; margin-top: 10px; max-width: 350px; margin-left: auto; margin-right: auto;">
+                Sua jornada de expansão enterprise começa aqui. Emita sua primeira licença para habilitar o sistema em novos parceiros.
+            </p>
+        </div>
+        {% else %}
+        <!-- LISTAGEM REAL -->
+        <div class="lic-matrix-container" style="margin-top:0; border:none; box-shadow:none;">
+            <table class="fp-table" style="width: 100%;">
+                <thead>
+                    <tr style="text-align: left; background: #f8fafc; font-size: 10px; color: #64748b; text-transform: uppercase;">
+                        <th style="padding: 15px 20px;">Parceiro / Tenant</th>
+                        <th style="padding: 15px;">Localidade</th>
+                        <th style="padding: 15px;">Gestor Master</th>
+                        <th style="padding: 15px;">Status</th>
+                        <th style="padding: 15px; text-align:right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lic in licencas %}
+                    <tr class="tela-row-lic" style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 15px 20px;">
+                            <div style="font-weight: 800; color: #1e293b;">{{ lic.nome_parceiro }}</div>
+                            <div style="font-size: 10px; color: #94a3b8;">{{ lic.cnpj_cpf or 'Sem documento' }}</div>
+                        </td>
+                        <td style="padding: 15px; color: #475569; font-weight: 600;">
+                            {{ lic.cidade or '-' }} / {{ lic.uf or '-' }}
+                        </td>
+                        <td style="padding: 15px; color: #475569;">
+                            {{ lic.contato_master or '-' }}
+                        </td>
+                        <td style="padding: 15px;">
+                            <span class="status-badge-dev" style="background: rgba(39, 174, 96, 0.1); color: #27AE60;">{{ lic.status }}</span>
+                        </td>
+                        <td style="padding: 15px; text-align:right;">
+                            <button class="btn-icon-table" title="Configurar Licença"><i class="fas fa-key"></i></button>
+                            <button class="btn-icon-table" style="color:#7A255F;" title="Painel de Controle"><i class="fas fa-external-link-alt"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- RODAPÉ E AÇÕES -->
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: right;">
+            <button type="button" onclick="window.fecharModalGlobal()" class="ge-btn-voltar" style="padding: 10px 25px;">Fechar</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /**
+     * Navegação interna da Central de Parceiros
+     */
+    window.abrirNovoParceiro = function() {
+        const content = document.getElementById('arione-modal-content');
+        if (!content) return;
+
+        // Efeito de transição suave
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(10px)';
+        content.style.transition = 'all 0.3s ease';
+
+        setTimeout(() => {
+            // Aqui chamaremos a rota do formulário de registro
+            // Por enquanto, mostraremos um loading
+            content.innerHTML = `
+                <div style="padding:100px; text-align:center;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:40px; color:#5E193E;"></i>
+                    <p style="margin-top:20px; font-weight:700; color:#1e293b; text-transform:uppercase; letter-spacing:1px;">Preparando Ambiente de Registro...</p>
+                </div>`;
+            
+            content.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+
+            // Carregamento real da rota com execução de scripts
+            fetch("{{ url_for('sistema.hub_licenc') }}")
+                .then(r => r.text())
+                .then(html => {
+                    // Injeta o HTML
+                    content.innerHTML = html;
+                    
+                    // Extrai e executa scripts manualmente
+                    const scripts = content.querySelectorAll('script');
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar Hub de Licenciamento:", err);
+                    content.innerHTML = '<p style="color:red; text-align:center; padding:50px;">Erro ao carregar Hub.</p>';
+                });
+        }, 300);
+    };
+</script>

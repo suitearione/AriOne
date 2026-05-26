@@ -1,0 +1,7 @@
+/* Importação dos Módulos Blindados */
+@import "layout.css";
+@import "sidebar.css";
+@import "navbar.css";
+@import "componentes.css";
+
+/* Estilos específicos que ainda não foram modularizados podem ficar aqui temporariamente */

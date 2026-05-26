@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-acessorios" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .ace-foto-upload-premium {
+            width: 100px; height: 100px; border: 2.5px dashed #e2e8f0; border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+            overflow: hidden; background: #fff; transition: 0.3s; position: relative;
+        }
+        .ace-foto-upload-premium:hover { border-color: #E67E22; background: #fffcf0; }
+        
+        .ace-row:hover { background: #fffcf0 !important; cursor: pointer; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Acessórios & Complementos',
+            subtitulo='Catálogos > Gestão de Itens e Componentes Adicionais',
+            icone='fa-puzzle-piece',
+            cor_tema='#7A255F',
+            tamanho='medio',
+            aba_retorno='catalogos',
+            form_id='ace-form-area',
+            list_id='ace-list-area',
+            onclick_novo="novoRegistroAce()",
+            onclick_save="forceSubmitAcessorio()",
+            onclick_search="focarBuscaAce()",
+            onclick_filter="abrirModalFiltrosAvancados()",
+            onclick_clonar="arioneClonarRegistro('ace-form-area')",
+            onclick_export="exportarAcessorios()",
+            onclick_import="arioneToast('Importação em desenvolvimento para Acessórios.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Acessórios')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Acessórios')",
+            status="Standard PAAv1.0"
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="ace-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="ace-form" method="POST" action="{{ url_for('cadastros.card_acessorios') }}" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="ace-id-hidden" value="">
+                
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px;">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="ace-form-titulo">CADASTRO DE ACESSÓRIO</span></span>
+                        <button type="button" onclick="novoRegistroAce()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: flex; gap: 30px; align-items: flex-start;">
+                            {# FOTO #}
+                            <div style="text-align: center;">
+                                <label class="fp-label">Foto / Detalhe</label>
+                                <div class="ace-foto-upload-premium" onclick="document.getElementById('ace-foto-input').click()">
+                                    <div id="ace-foto-preview" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-puzzle-piece" style="font-size: 30px; color: #cbd5e1;"></i>
+                                    </div>
+                                    <div style="position: absolute; bottom: 0; background: rgba(230,126,34,0.9); width: 100%; color: #fff; font-size: 8px; padding: 4px 0; font-weight: 900;">ALTERAR</div>
+                                </div>
+                                <input type="file" id="ace-foto-input" name="foto_acessorio" accept="image/*" style="display: none;" onchange="previewAceFoto(this)">
+                            </div>
+
+                            <div style="flex: 1;">
+                                <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Nome do Acessório <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" class="fp-input" name="nome" id="ace-nome-input" placeholder="EX: BOTÃO 12MM MADREPÉROLA" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Geração de Código</label>
+                                        <select class="fp-input" id="ace-sku-mode" onchange="toggleSKUMode()" style="width: 100%; background: #fff;">
+                                            <option value="AUTOMATICO">AUTOMÁTICO</option>
+                                            <option value="LIVRE">LIVRE (MANUAL)</option>
+                                            <option value="FORNECEDOR">CÓD. FORNECEDOR</option>
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Referência / SKU</label>
+                                        <input type="text" class="fp-input" name="sku" id="ace-sku-input" placeholder="GERANDO..." readonly style="width: 100%; font-weight: 900; background: #f8fafc; color: #E67E22; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <div class="fp-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Classificação</label>
+                                        <select class="fp-input" name="classificacao_id" id="ace-classificacao-select" style="width: 100%; background: #fff;">
+                                            <option value="">Selecione...</option>
+                                            {% for c in classificacoes_list|default([]) %}
+                                            <option value="{{ c.id }}">{{ c.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Unidade Compra</label>
+                                        <select class="fp-input" name="unidade_id" id="ace-unidade-select" style="width: 100%; background: #fff;">
+                                            <option value="">Selecione...</option>
+                                            {% for un in unidades_list|default([]) %}
+                                            <option value="{{ un.id }}">{{ un.sigla }} - {{ un.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Custo Unit. (R$)</label>
+                                        <input type="text" class="fp-input fp-mask-money" name="preco_custo" id="ace-preco-custo" placeholder="0,00" style="width: 100%; font-weight: 900; text-align: right; color: #E67E22;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Peso Bruto (g)</label>
+                                        <input type="number" step="0.01" class="fp-input" name="peso_g" id="ace-peso" value="0.00" style="width: 100%; font-weight: 900; text-align: center;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# MATRIZ DE FORNECEDORES #}
+                <div class="fp-card" style="border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 10px 18px; border-bottom: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 800; color: #64748b; font-size: 11px;"><i class="fas fa-truck-loading" style="margin-right: 8px;"></i> MATRIZ DE FORNECEDORES ALTERNATIVOS</span>
+                        <button type="button" class="fp-btn-novo" onclick="addFornecedorRowAce()" style="background: #E67E22; border:none; color:#fff; padding: 5px 15px; border-radius: 20px; font-size: 10px; font-weight: 800; cursor:pointer;">
+                            <i class="fas fa-plus"></i> ADICIONAR FORNECEDOR
+                        </button>
+                    </div>
+                    <div style="padding: 0;">
+                        <table class="arione-table-hcm" id="forn-table-ace">
+                            <thead style="background: rgba(230,126,34,0.02);">
+                                <tr>
+                                    <th style="padding-left: 20px;">FORNECEDOR</th>
+                                    <th style="width: 200px;">MODALIDADE</th>
+                                    <th style="width: 150px; text-align: center;">PRAZO ENTREGA (DIAS)</th>
+                                    <th style="width: 80px; text-align: center;">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forn-tbody-ace"></tbody>
+                        </table>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-ace" onclick="forceSubmitAcessorio()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR ACESSÓRIO
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="ace-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-puzzle-piece" style="color: #E67E22; margin-right: 8px;"></i> Acessórios e Itens Complementares Ativos</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="ace-search-input" oninput="filtrarTabelaAcessorios()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="ace-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ acessorios|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center; padding-left: 20px;">FOTO</th>
+                            <th>DESCRIÇÃO DO ACESSÓRIO</th>
+                            <th>REFERÊNCIA</th>
+                            <th>CLASSIFICAÇÃO</th>
+                            <th style="text-align: right; padding-right: 20px;">CUSTO UNIT.</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-ace">
+                        {% for ace in acessorios %}
+                        <tr class="ace-row" data-id="{{ ace.id }}" data-nome="{{ ace.nome|upper }}" data-sku="{{ ace.referencia }}" data-classificacao="{{ ace.classificacao_id or '' }}" data-unidade="{{ ace.unidade_id or '' }}" data-custo="{{ '%.2f'|format(ace.custo_unitario|default(0))|replace('.', ',') }}" data-peso="{{ ace.peso_g }}" data-foto="{{ ace.foto or '' }}" onclick="editarAce_ByRow(this)">
+                            <td style="text-align: center; padding-left: 20px;">
+                                <div style="width: 38px; height: 38px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #f1f5f9; margin: 0 auto;">
+                                    {% if ace.foto %}
+                                    <img src="{{ url_for('static', filename='uploads/acessorios/'~ace.foto) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-puzzle-piece" style="color: #cbd5e1; font-size: 14px;"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td><div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ ace.nome }}</div></td>
+                            <td style="font-family: monospace; font-weight: 800; color: #E67E22;">{{ ace.referencia }}</td>
+                            <td><span style="font-size: 9px; font-weight: 900; background: #f1f5f9; color: #64748b; padding: 3px 8px; border-radius: 4px;">{{ ace.classificacao.nome if ace.classificacao else 'N/D' }}</span></td>
+                            <td style="text-align: right; font-weight: 900; color: #E67E22; padding-right: 20px;">R$ {{ '%.2f'|format(ace.custo_unitario|default(0))|replace('.', ',') }}</td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirAcessorio('{{ ace.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroAce = function() {
+                document.getElementById('ace-form-titulo').textContent = 'NOVO ACESSÓRIO';
+                document.getElementById('ace-id-hidden').value = '';
+                document.getElementById('ace-form').reset();
+                document.getElementById('ace-foto-preview').innerHTML = '<i class="fas fa-gem" style="font-size: 30px; color: #cbd5e1;"></i>';
+                document.getElementById('ace-nome-input').focus();
+            };
+
+            window.fecharFormAce = function() { novoRegistroAce(); };
+
+            window.editarAce_ByRow = async function(r) {
+                const id = r.dataset.id;
+                document.getElementById('ace-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('ace-id-hidden').value = id;
+                document.getElementById('ace-nome-input').value = r.dataset.nome;
+                document.getElementById('ace-sku-input').value = r.dataset.sku;
+                document.getElementById('ace-classificacao-select').value = r.dataset.classificacao;
+                document.getElementById('ace-unidade-select').value = r.dataset.unidade;
+                document.getElementById('ace-preco-custo').value = r.dataset.custo;
+                document.getElementById('ace-peso').value = r.dataset.peso;
+                
+                if(r.dataset.foto) {
+                    document.getElementById('ace-foto-preview').innerHTML = `<img src="/static/uploads/acessorios/${r.dataset.foto}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else {
+                    document.getElementById('ace-foto-preview').innerHTML = '<i class="fas fa-puzzle-piece" style="font-size: 30px; color: #cbd5e1;"></i>';
+                }
+                
+                try {
+                    const resp = await fetch(`/cadastros/cards/acessorios/fornecedores/${id}`);
+                    const data = await resp.json();
+                    const tbody = document.getElementById('forn-tbody-ace');
+                    tbody.innerHTML = '';
+                    data.forEach(f => addFornecedorRowAce(f));
+                } catch(e) {}
+
+                document.getElementById('ace-form').action = `/cadastros/cards/acessorios/${id}`;
+                $('#ace-form-area').slideDown();
+                window.scrollTo({top:0, behavior:'smooth'});
+            };
+
+            window.toggleSKUMode = async function() {
+                const mode = document.getElementById('ace-sku-mode').value;
+                const input = document.getElementById('ace-sku-input');
+                if(mode === 'AUTOMATICO') {
+                    input.readOnly = true; input.style.background = '#f8fafc';
+                    const res = await fetch('/cadastros/cards/acessorios/proximo-sku');
+                    const data = await res.json(); input.value = data.sku;
+                } else {
+                    input.readOnly = false; input.style.background = '#fff'; input.focus();
+                }
+            };
+
+            window.addFornecedorRowAce = function (data = null) {
+                const tbody = document.getElementById('forn-tbody-ace');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding-left:20px;">
+                        <select class="fp-input" name="forn_id[]" required style="width:100%; background:#fff;">
+                            <option value="">Selecione...</option>
+                            {% for prov in fornecedores_lista|default([]) %}<option value="{{ prov.id }}">{{ prov.razao_social }}</option>{% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="fp-input" name="forn_modalidade[]" style="width:100%; background:#fff;">
+                            <option value="PRESENCIAL">PRESENCIAL</option><option value="INTERNET">VIA INTERNET</option>
+                        </select>
+                    </td>
+                    <td style="text-align:center;"><input type="number" class="fp-input" name="forn_prazo[]" value="7" style="width:80px; text-align:center; font-weight:800;"></td>
+                    <td style="text-align: center;">
+                        <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="this.closest('tr').remove()"><i class="fas fa-times-circle"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                if (data) {
+                    tr.querySelector('[name="forn_id[]"]').value = data.fornecedor_id;
+                    tr.querySelector('[name="forn_modalidade[]"]').value = data.modalidade;
+                    tr.querySelector('[name="forn_prazo[]"]').value = data.prazo_entrega;
+                }
+            };
+
+            window.forceSubmitAcessorio = async function() {
+                const form = document.getElementById('ace-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-ace');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Acessório salvo!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarTabelaAcessorios = function() {
+                const f = document.getElementById('ace-search-input').value.toUpperCase();
+                document.querySelectorAll('.ace-row').forEach(r => {
+                    const txt = r.dataset.nome + r.dataset.sku;
+                    r.style.display = txt.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.previewAceFoto = function(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        document.getElementById('ace-foto-preview').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
+
+            window.excluirAcessorio = async function(id, btn) {
+                if(!confirm('Excluir acessório?')) return;
+                const r = await fetch(`/cadastros/acessorios/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+
+            window.focarBuscaAce = function() { document.getElementById('ace-search-input').focus(); };
+            window.exportarAcessorios = function() { arioneExportar({url:'/cadastros/cards/acessorios/dados-json', modulo:'Acessórios'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

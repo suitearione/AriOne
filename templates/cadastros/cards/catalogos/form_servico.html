@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-servicos" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .srv-row:hover { background: #fffcf0 !important; cursor: pointer; }
+        
+        .margem-badge {
+            font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 4px; margin-top: 5px; display: inline-block;
+        }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    {# ── CABEÇALHO MESTRE (PADRÃO UNIVERSAL ARIONE) ── #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo='Gestão de Serviços',
+        subtitulo='Catálogos > Prestação de Serviços & Terceirização Industrial',
+        icone='fa-hands-helping',
+        cor_tema='#7A255F',
+        tamanho='grande',
+        aba_retorno='catalogos',
+        form_id='srv-form-area',
+        list_id='srv-list-area',
+        onclick_novo="novoRegistroSer()",
+        onclick_save="forceSubmitServico()",
+        onclick_search="focarBuscaSrv()",
+        onclick_filter="abrirModalFiltrosAvancados()",
+        onclick_clonar="arioneClonarRegistro('srv-form-area')",
+        onclick_export="exportarServicos()",
+        onclick_import="arioneToast('Importação em desenvolvimento para Serviços.','info')",
+        onclick_print="window.print()",
+        onclick_email="arioneEnviarEmailGenerico('Serviços')",
+        onclick_whatsapp="arioneEnviarWhatsAppGenerico('Serviços')",
+        status="Standard PAAv1.0"
+    ) }}
+
+    <div id="area-formulario-servico" style="padding: 12px 24px; background: #f4f7fa;">
+        <div class="fe-form-stage" style="margin: 0; padding: 0;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="srv-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="srv-form" method="POST" action="{{ url_for('cadastros.form_servico') }}" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="ser-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="ser-form-titulo">CADASTRO DE SERVIÇO</span></span>
+                        <button type="button" onclick="novoRegistroSer()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Descrição do Serviço <span style="color:#ef4444;">*</span></label>
+                                <input type="text" class="fp-input" name="descricao" id="srv-descricao-input" placeholder="EX: MANUTENÇÃO PREVENTIVA DE MAQUINÁRIO" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Categoria</label>
+                                <select class="fp-input" name="categoria" id="srv-categoria-select" style="width: 100%; background: #fff;">
+                                    <option value="">— GERAL —</option>
+                                    <option value="Manutenção">MANUTENÇÃO</option>
+                                    <option value="Instalação">INSTALAÇÃO</option>
+                                    <option value="Consultoria">CONSULTORIA</option>
+                                    <option value="Terceirização">TERCEIRIZAÇÃO</option>
+                                </select>
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Modo Código</label>
+                                <select class="fp-input" id="srv-sku-mode" onchange="toggleSKUMode()" style="width: 100%; background: #fff;">
+                                    <option value="AUTOMATICO">AUTOMÁTICO</option>
+                                    <option value="LIVRE">LIVRE</option>
+                                </select>
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">SKU / Código</label>
+                                <input type="text" class="fp-input" name="sku" id="srv-sku-input" readonly style="width: 100%; font-weight: 900; background: #f8fafc; color: #E67E22; text-align: center;">
+                            </div>
+                        </div>
+
+                        <div class="fp-row" style="display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Unidade de Cobrança <span style="color:#ef4444;">*</span></label>
+                                <select class="fp-input" name="unidade_medida" id="srv-unidade-select" required style="width: 100%; background: #fff;">
+                                    <option value="UN">UNIDADE (UN)</option>
+                                    <option value="HORA">HORA (H)</option>
+                                    <option value="DIA">DIA</option>
+                                    <option value="SERVICO">POR SERVIÇO</option>
+                                    <option value="PROJETO">POR PROJETO</option>
+                                </select>
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Custo Execução (R$)</label>
+                                <input type="text" class="fp-input fp-mask-money" name="preco_custo" id="srv-preco-custo" placeholder="0,00" oninput="calcularMargem()" style="width: 100%; text-align: right; font-weight: 800;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Preço de Venda (R$) <span style="color:#ef4444;">*</span></label>
+                                <input type="text" class="fp-input fp-mask-money" name="preco_venda" id="srv-preco-venda" placeholder="0,00" required oninput="calcularMargem()" style="width: 100%; text-align: right; font-weight: 900; color: #E67E22;">
+                                <div id="srv-margem-label" class="margem-badge">Margem: —</div>
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Comissão (%)</label>
+                                <input type="number" step="0.01" class="fp-input" name="comissao" id="srv-comissao-input" value="0" style="width: 100%; text-align: center; font-weight: 800;">
+                            </div>
+                        </div>
+
+                        <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Observações Detalhadas</label>
+                                <input type="text" class="fp-input" name="observacoes" id="srv-obs-input" placeholder="Detalhes técnicos ou operacionais..." style="width: 100%;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Tempo Médio Estimado</label>
+                                <input type="text" class="fp-input" name="tempo_execucao" id="srv-tempo-input" placeholder="Ex: 2h, 1 dia" style="width: 100%; text-align: center;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Código LC 116 (Fiscal)</label>
+                                <input type="text" class="fp-input" name="codigo_servico" id="srv-lc116-input" placeholder="Ex: 14.05" style="width: 100%; text-align: center;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-srv" onclick="forceSubmitServico()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR SERVIÇO
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="srv-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-list-ul" style="color: #E67E22; margin-right: 8px;"></i> Catálogo de Serviços Ativos</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="srv-list-search" oninput="filtrarTabelaServicos()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="srv-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ servicos|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px; text-align: center; padding-left: 20px;">ID</th>
+                            <th>DESCRIÇÃO DO SERVIÇO</th>
+                            <th>CATEGORIA</th>
+                            <th style="text-align: center;">UNIDADE</th>
+                            <th style="text-align: right;">CUSTO</th>
+                            <th style="text-align: right; padding-right: 20px;">VALOR VENDA</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-servicos">
+                        {% for srv in servicos %}
+                        <tr class="srv-row" data-id="{{ srv.id }}" data-nome="{{ srv.descricao|upper }}" data-sku="{{ srv.codigo }}" data-categoria="{{ srv.categoria or '' }}" data-unidade="{{ srv.unidade_medida }}" data-custo="{{ '%.2f'|format(srv.preco_custo|default(0))|replace('.', ',') }}" data-venda="{{ '%.2f'|format(srv.preco_venda|default(0))|replace('.', ',') }}" data-comissao="{{ srv.comissao or 0 }}" data-obs="{{ srv.observacoes or '' }}" data-tempo="{{ srv.tempo_execucao or '' }}" data-lc116="{{ srv.codigo_servico or '' }}" onclick="editarSrv_ByRow(this)">
+                            <td style="text-align: center; padding-left: 20px; font-weight: 900; color: #64748b; font-size: 11px;">#{{ srv.id }}</td>
+                            <td><div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ srv.descricao }}</div></td>
+                            <td><span style="font-size: 9px; font-weight: 900; background: #f1f5f9; color: #64748b; padding: 3px 8px; border-radius: 4px;">{{ srv.categoria|upper or 'GERAL' }}</span></td>
+                            <td style="text-align: center;"><span style="font-weight: 900; color: #64748b; font-size: 11px;">{{ srv.unidade_medida }}</span></td>
+                            <td style="text-align: right; font-weight: 800; color: #64748b;">R$ {{ '%.2f'|format(srv.preco_custo|default(0))|replace('.', ',') }}</td>
+                            <td style="text-align: right; font-weight: 900; color: #E67E22; padding-right: 20px;">R$ {{ '%.2f'|format(srv.preco_venda|default(0))|replace('.', ',') }}</td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirServico('{{ srv.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroSer = function() {
+                document.getElementById('ser-form-titulo').textContent = 'NOVO SERVIÇO';
+                document.getElementById('ser-id-hidden').value = '';
+                document.getElementById('srv-form').reset();
+                document.getElementById('srv-margem-label').textContent = 'Margem: —';
+                document.getElementById('srv-descricao-input').focus();
+            };
+
+            window.fecharFormSer = function() { novoRegistroSer(); };
+
+            window.editarSer_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('ser-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('ser-id-hidden').value = id;
+                document.getElementById('srv-descricao-input').value = r.dataset.nome;
+                document.getElementById('srv-categoria-select').value = r.dataset.categoria;
+                document.getElementById('srv-sku-input').value = r.dataset.sku;
+                document.getElementById('srv-unidade-select').value = r.dataset.unidade;
+                document.getElementById('srv-preco-custo').value = r.dataset.custo;
+                document.getElementById('srv-preco-venda').value = r.dataset.venda;
+                document.getElementById('srv-comissao-input').value = r.dataset.comissao;
+                document.getElementById('srv-obs-input').value = r.dataset.obs;
+                document.getElementById('srv-tempo-input').value = r.dataset.tempo;
+                document.getElementById('srv-lc116-input').value = r.dataset.lc116;
+                
+                calcularMargem();
+                document.getElementById('srv-form').action = `/servicos/cards/form/${id}`;
+                $('#srv-form-area').slideDown();
+                window.scrollTo({top:0, behavior:'smooth'});
+            };
+
+            window.calcularMargem = function () {
+                const custo = parseFloat(document.getElementById('srv-preco-custo').value.replace('.', '').replace(',', '.')) || 0;
+                const venda = parseFloat(document.getElementById('srv-preco-venda').value.replace('.', '').replace(',', '.')) || 0;
+                const label = document.getElementById('srv-margem-label');
+                if (custo > 0 && venda > 0) {
+                    const m = ((venda - custo) / custo * 100).toFixed(1);
+                    label.textContent = `LUCRO: ${m}%`;
+                    label.style.background = m > 0 ? '#e6f9ef' : '#ffebee';
+                    label.style.color = m > 0 ? '#27AE60' : '#c62828';
+                } else { label.textContent = 'Margem: —'; label.style.background = '#f1f5f9'; label.style.color = '#64748b'; }
+            };
+
+            window.toggleSKUMode = async function() {
+                const mode = document.getElementById('srv-sku-mode').value;
+                const input = document.getElementById('srv-sku-input');
+                if(mode === 'AUTOMATICO') {
+                    input.readOnly = true; input.style.background = '#f8fafc';
+                    const res = await fetch('/cadastros/cards/servicos/proximo-sku');
+                    const data = await res.json(); input.value = data.sku;
+                } else {
+                    input.readOnly = false; input.style.background = '#fff'; input.focus();
+                }
+            };
+
+            window.forceSubmitServico = async function() {
+                const form = document.getElementById('srv-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-srv');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Serviço salvo!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarTabelaServicos = function() {
+                const f = document.getElementById('srv-list-search').value.toUpperCase();
+                document.querySelectorAll('.srv-row').forEach(r => {
+                    const txt = r.dataset.nome + r.dataset.sku;
+                    r.style.display = txt.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.excluirServico = async function(id, btn) {
+                if(!confirm('Inativar serviço?')) return;
+                const r = await fetch(`/servicos/inativar/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Inativado.', 'info'); }
+            };
+
+            window.focarBuscaSrv = function() { document.getElementById('srv-list-search').focus(); };
+            window.exportarServicos = function() { arioneExportar({url:'/servicos/dados-json', modulo:'Serviços'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

@@ -1,0 +1,426 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/cards/parametros/form_status_workflow.html
+   Função   : Gestão Centralizada de Status do Sistema (Quiet Luxury)
+   ============================================================================= #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap" style="background: #f8fafc;">
+    
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Status de Workflow",
+        subtitulo="Cadastros > Parâmetros > Status",
+        icone="fa-tasks",
+        cor_tema="#2980B9",
+        func_fechar="fecharModalGlobal()",
+        form_id="form-status-workflow",
+        onclick_novo="resetFormStatus()",
+        onclick_save="salvarStatusWorkflow()",
+        status="Configurando Fluxo de Estados",
+        ajuda="Centralize aqui todos os status utilizados nos documentos do sistema (Vendas, Compras, Produção, etc).",
+        tamanho="grande"
+    ) }}
+
+    <div class="fp-container" style="padding: 0 24px;">
+        
+        <div class="fp-row" style="gap: 20px; align-items: flex-start;">
+            
+            {# COLUNA 1: FORMULÁRIO DE CADASTRO #}
+            <div class="fp-card" style="flex: 1; min-width: 350px;">
+                <div class="fp-card-title">
+                    <i class="fas fa-plus-circle"></i> Novo / Editar Status
+                </div>
+                <div class="fp-card-body">
+                    <form id="form-status-workflow">
+                        <input type="hidden" name="id" id="status_id">
+                        
+                        <div class="fp-group">
+                            <label class="fp-label">TIPO DE DOCUMENTO</label>
+                            <select class="fp-input" name="tipo" id="status_tipo" required style="font-weight: 700; color: #2980B9;">
+                                <option value="ORÇAMENTO DE VENDA">ORÇAMENTO DE VENDA</option>
+                                <option value="PEDIDO DE VENDA">PEDIDO DE VENDA</option>
+                                <option value="ORÇAMENTO DE COMPRA">ORÇAMENTO DE COMPRA</option>
+                                <option value="PEDIDO DE COMPRA">PEDIDO DE COMPRA</option>
+                                <option value="ORDEM DE PRODUÇÃO">ORDEM DE PRODUÇÃO</option>
+                                <option value="ORDEM DE SERVIÇO">ORDEM DE SERVIÇO</option>
+                            </select>
+                        </div>
+
+                        <div class="fp-group">
+                            <label class="fp-label">NOME DO STATUS</label>
+                            <input class="fp-input" type="text" name="nome" id="status_nome" placeholder="Ex: EM ANÁLISE, APROVADO..." required style="text-transform: uppercase; font-weight: 800;">
+                        </div>
+
+                        <div class="fp-row" style="gap: 10px;">
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">COR DO BADGE</label>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="color" name="cor" id="status_cor" value="#2980B9" style="width: 40px; height: 34px; border: none; padding: 0; background: transparent; cursor: pointer;">
+                                    <input class="fp-input" type="text" id="status_cor_hex" placeholder="#000000" style="flex: 1; font-family: 'Roboto Mono', monospace;" oninput="document.getElementById('status_cor').value = this.value">
+                                </div>
+                            </div>
+                            <div class="fp-group" style="width: 100px;">
+                                <label class="fp-label">ORDEM</label>
+                                <input class="fp-input" type="number" name="ordem" id="status_ordem" value="0" style="text-align: center;">
+                            </div>
+                        </div>
+
+                        <div class="fp-group">
+                            <label class="fp-label">ÍCONE (FONT AWESOME)</label>
+                            <input class="fp-input" type="text" name="icone" id="status_icone" value="fas fa-circle" placeholder="fas fa-check" oninput="atualizarPreviewStatus()">
+                        </div>
+
+                        <div class="fp-group" style="margin-top: 15px; padding: 15px; background: #f1f5f9; border-radius: 10px; border: 1px dashed #cbd5e1;">
+                            <label class="fp-label" style="margin-bottom: 10px; display: block;">PREVISUALIZAÇÃO</label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div id="status-preview-badge">
+                                    <span class="fe-badge-primary" style="background: #2980B9; border-radius: 6px; padding: 6px 12px; font-size: 11px; display: inline-flex; align-items: center; gap: 8px; color: #fff; font-weight: 800;">
+                                        <i class="fas fa-circle"></i> <span id="preview-nome-text">NOME DO STATUS</span>
+                                    </span>
+                                </div>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px; font-weight: 800; color: #64748b;">
+                                    <input type="checkbox" name="ativa" id="status_ativa" checked style="width: 16px; height: 16px; accent-color: #27AE60;">
+                                    ATIVO NO FLUXO
+                                </label>
+                            </div>
+                        </div>
+
+                        {# 📊 CLASSIFICAÇÃO DASHBOARD #}
+                        <div class="fp-group" style="margin-top: 15px; padding: 15px; background: #ebf5fb; border-radius: 10px; border: 1.5px solid #d4e6f1;">
+                            <label class="fp-label" style="color: #2980B9; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-chart-line"></i> EXIBIR NO DASHBOARD?
+                            </label>
+                            
+                            <div style="margin-top: 10px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px; font-weight: 800; margin-bottom: 12px;">
+                                    <input type="checkbox" name="dashboard_conta" id="status_dashboard_conta" style="width: 18px; height: 18px; accent-color: #2980B9;" onchange="toggleDashboardSelects()">
+                                    SOMAR NO DASHBOARD
+                                </label>
+                                
+                                <div id="dashboard_selectors" style="display: none; flex-direction: column; gap: 10px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label" style="font-size: 9px;">MÓDULO DO DASHBOARD</label>
+                                        <select class="fp-input" name="dashboard_modulo" id="status_dashboard_modulo" style="height: 34px !important; font-size: 11px; font-weight: 800;" onchange="updateDashboardIndicators()">
+                                            <option value="">SELECIONE MÓDULO...</option>
+                                            <option value="ORCAMENTOS">ORÇAMENTOS DO MÊS</option>
+                                            <option value="VENDAS">VENDAS DO MÊS</option>
+                                            <option value="COMPRAS">COMPRAS DO MÊS</option>
+                                            <option value="PRODUCAO">PRODUÇÃO DO MÊS</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="fp-group">
+                                        <label class="fp-label" style="font-size: 9px;">INDICADOR ESPECÍFICO</label>
+                                        <select class="fp-input" name="dashboard_indicador" id="status_dashboard_indicador" style="height: 34px !important; font-size: 11px; font-weight: 800;">
+                                            <option value="">SELECIONE INDICADOR...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <small style="display: block; margin-top: 8px; font-size: 9px; color: #5dade2; font-weight: 600;">* Define onde este status será contabilizado nos cards de gestão.</small>
+                        </div>
+
+                        {# BOTÕES REMOVIDOS DO CARD E MOVIDOS PARA O CABEÇALHO MESTRE PARA PADRONIZAÇÃO #}
+                    </form>
+                </div>
+            </div>
+
+            {# COLUNA 2: LISTA DE STATUS #}
+            <div class="fp-card" style="flex: 2; min-width: 500px;">
+                <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span><i class="fas fa-list-ul"></i> Status Cadastrados</span>
+                        <button type="button" class="fp-btn" onclick="restaurarPadroesLuxury()" style="height: 24px; padding: 0 8px; font-size: 9px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; border-radius: 4px; font-weight: 800; cursor: pointer;">
+                            <i class="fas fa-magic" style="color: #2980B9;"></i> PADRÕES LUXURY
+                        </button>
+                    </div>
+                    <span style="font-size: 10px; opacity: 0.7; font-weight: 500;">{{ status_lista|length }} REGISTROS</span>
+                </div>
+                <div class="fp-card-body" style="padding: 0;">
+                    <table class="ope-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo / Nome</th>
+                                <th style="width: 120px; text-align: center;">Visualização</th>
+                                <th style="width: 60px; text-align: center;">Ordem</th>
+                                <th style="width: 120px; text-align: center;">Dashboard</th>
+                                <th style="width: 80px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in status_lista %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 8px; height: 8px; border-radius: 50%; background: {{ '#27AE60' if s.ativa else '#cbd5e1' }};" title="{{ 'Ativo' if s.ativa else 'Inativo' }}"></div>
+                                        <div>
+                                            <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">{{ s.tipo }}</div>
+                                            <div style="font-weight: 800; color: {{ '#2d3748' if s.ativa else '#94a3b8' }};">{{ s.nome }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="fe-badge-primary" style="background: {{ s.cor }}; border-radius: 6px; padding: 4px 10px; font-size: 10px; display: inline-flex; align-items: center; gap: 6px; opacity: {{ '1' if s.ativa else '0.5' }};">
+                                        <i class="{{ s.icone }}"></i> {{ s.nome }}
+                                    </span>
+                                </td>
+                                <td style="text-align: center; font-weight: 700;">{{ s.ordem }}</td>
+                                <td style="text-align: center;">
+                                    {% if s.dashboard_conta %}
+                                        <div style="display: flex; flex-direction: column; gap: 2px; align-items: center;">
+                                            <span style="font-size: 8px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">{{ s.dashboard_modulo }}</span>
+                                            <div style="font-size: 9px; font-weight: 800; color: #2980B9; background: #ebf5fb; padding: 2px 8px; border-radius: 4px; border: 1px solid #d4e6f1;">
+                                                {{ s.dashboard_indicador }}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span style="font-size: 9px; font-weight: 700; color: #cbd5e1;">NÃO EXIBE</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: center;">
+                                    <div style="display: flex; gap: 10px; justify-content: center;">
+                                        <button onclick='editarStatus({{ s.to_dict()|tojson }})' style="background:none; border:none; color:#2980B9; cursor:pointer;"><i class="fas fa-edit"></i></button>
+                                        <button onclick="excluirStatus({{ s.id }})" style="background:none; border:none; color:#E74C3C; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8; font-style: italic;">
+                                    Nenhum status cadastrado. Comece criando um ao lado!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function resetFormStatus() {
+            document.getElementById('form-status-workflow').reset();
+            document.getElementById('status_id').value = '';
+            document.getElementById('status_cor_hex').value = '#2980B9';
+            document.getElementById('status_cor').value = '#2980B9';
+            document.getElementById('status_ativa').checked = true;
+            document.getElementById('status_dashboard_conta').checked = false;
+            document.getElementById('status_dashboard_modulo').value = '';
+            document.getElementById('status_dashboard_indicador').value = '';
+            toggleDashboardSelects();
+            atualizarPreviewStatus();
+        }
+
+        function editarStatus(data) {
+            document.getElementById('status_id').value = data.id;
+            document.getElementById('status_nome').value = data.nome;
+            document.getElementById('status_tipo').value = data.tipo;
+            document.getElementById('status_cor').value = data.cor;
+            document.getElementById('status_cor_hex').value = data.cor;
+            document.getElementById('status_icone').value = data.icone;
+            document.getElementById('status_ordem').value = data.ordem;
+            document.getElementById('status_ativa').checked = data.ativa;
+            document.getElementById('status_dashboard_conta').checked = data.dashboard_conta;
+            document.getElementById('status_dashboard_modulo').value = data.dashboard_modulo || '';
+            
+            toggleDashboardSelects();
+            updateDashboardIndicators(data.dashboard_indicador);
+            
+            atualizarPreviewStatus();
+            
+            // Scroll suave para o form
+            document.getElementById('form-status-workflow').scrollIntoView({ behavior: 'smooth' });
+            arioneToast('Editando status: ' + data.nome, 'info');
+        }
+
+        function salvarStatusWorkflow() {
+            const form = document.getElementById('form-status-workflow');
+            
+            if (!document.getElementById('status_nome').value) {
+                arioneToast('⚠️ O nome do status é obrigatório', 'warning');
+                document.getElementById('status_nome').focus();
+                return;
+            }
+
+            const btnSave = document.querySelector('.fe-btn-save-master') || document.querySelector('.btn-salvar-status');
+            const originalHtml = btnSave ? btnSave.innerHTML : '';
+            if(btnSave) {
+                btnSave.disabled = true;
+                btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+            }
+
+            const data = new FormData(form);
+
+            fetch("{{ url_for('cadastros.salvar_status_workflow') }}", {
+                method: 'POST',
+                body: data
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    // Recarrega o conteúdo do modal
+                    if (typeof abrirModalGlobal === 'function') {
+                        abrirModalGlobal("{{ url_for('cadastros.card_status_workflow') }}", 'Status de Workflow');
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    arioneToast('Erro: ' + res.message, 'danger');
+                }
+            })
+            .finally(() => {
+                if(btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = originalHtml;
+                }
+            });
+        }
+
+        function excluirStatus(id) {
+            if (!confirm('Deseja realmente excluir este status?')) return;
+
+            fetch(`/cadastros/card/parametros/status/excluir/${id}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    if (typeof abrirModalGlobal === 'function') {
+                        abrirModalGlobal("{{ url_for('cadastros.card_status_workflow') }}", 'Status de Workflow');
+                    } else {
+                        location.reload();
+                    }
+                }
+            });
+        }
+
+        function restaurarPadroesLuxury() {
+            if (!confirm('Deseja restaurar os padrões "Quiet Luxury"?\n\nIsso irá criar ou atualizar os status sugeridos para Vendas, Compras e Produção.')) return;
+            
+            arioneToast('Processando padrões...', 'info');
+            fetch("{{ url_for('cadastros.seed_status_workflow') }}", { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        arioneToast(data.message, 'success');
+                        setTimeout(() => {
+                            if (typeof abrirModalGlobal === 'function') {
+                                abrirModalGlobal("{{ url_for('cadastros.card_status_workflow') }}", 'Status de Workflow');
+                            } else {
+                                location.reload();
+                            }
+                        }, 1000);
+                    } else {
+                        arioneToast('Erro: ' + data.message, 'danger');
+                    }
+                })
+                .catch(err => arioneToast('Erro de conexão', 'danger'));
+        }
+
+        function atualizarPreviewStatus() {
+            const nome = document.getElementById('status_nome').value || 'NOME DO STATUS';
+            const cor = document.getElementById('status_cor').value;
+            const icone = document.getElementById('status_icone').value || 'fas fa-circle';
+            
+            const preview = document.getElementById('status-preview-badge').querySelector('.fe-badge-primary');
+            preview.style.background = cor;
+            preview.querySelector('i').className = icone;
+            document.getElementById('preview-nome-text').innerText = nome.toUpperCase();
+        }
+
+        // --- LÓGICA DASHBOARD DINÂMICO ---
+        const dashboardOptions = {
+            'ORCAMENTOS': ['Ag. Aprovação', 'Aprovados', 'Reprovados'],
+            'VENDAS': ['Aguardando', 'Em Produção', 'Finalizados', 'Atrasados', 'Cancelados'],
+            'COMPRAS': ['Ag. Autorização', 'Ag. Entrega', 'Recebidos', 'Atrasados', 'Cancelados'],
+            'PRODUCAO': ['Em Corte', 'Prensa/Pintura', 'Costura', 'Acabamento', 'Cancelados']
+        };
+
+        function toggleDashboardSelects() {
+            const isChecked = document.getElementById('status_dashboard_conta').checked;
+            document.getElementById('dashboard_selectors').style.display = isChecked ? 'flex' : 'none';
+        }
+
+        function updateDashboardIndicators(selectedValue = '') {
+            const modulo = document.getElementById('status_dashboard_modulo').value;
+            const indicatorSelect = document.getElementById('status_dashboard_indicador');
+            
+            // Limpa opções
+            indicatorSelect.innerHTML = '<option value="">SELECIONE INDICADOR...</option>';
+            
+            if (modulo && dashboardOptions[modulo]) {
+                dashboardOptions[modulo].forEach(opt => {
+                    const el = document.createElement('option');
+                    el.value = opt;
+                    el.textContent = opt;
+                    if (opt === selectedValue) el.selected = true;
+                    indicatorSelect.appendChild(el);
+                });
+            }
+        }
+
+        document.getElementById('status_nome').addEventListener('input', atualizarPreviewStatus);
+        document.getElementById('status_cor').addEventListener('input', function() {
+            document.getElementById('status_cor_hex').value = this.value.toUpperCase();
+            atualizarPreviewStatus();
+        });
+        document.getElementById('status_cor_hex').addEventListener('input', function() {
+            document.getElementById('status_cor').value = this.value;
+            atualizarPreviewStatus();
+        });
+
+        // Lógica de Próxima Ordem Automática
+        const statusListaJS = [
+            {% for s in status_lista %}
+                {{ s.to_dict()|tojson }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        function atualizarSugestaoOrdem() {
+            const tipoSelecionado = document.getElementById('status_tipo').value;
+            const idAtual = document.getElementById('status_id').value;
+            
+            // Só sugerimos se for um NOVO registro
+            if (!idAtual) {
+                let maxOrdem = 0;
+                statusListaJS.forEach(s => {
+                    if (s.tipo === tipoSelecionado && s.ordem > maxOrdem) {
+                        maxOrdem = s.ordem;
+                    }
+                });
+                document.getElementById('status_ordem').value = maxOrdem + 1;
+            }
+        }
+
+        document.getElementById('status_tipo').addEventListener('change', atualizarSugestaoOrdem);
+        
+        // Execução Imediata (Crucial para Modais AJAX)
+        (function() {
+            console.log("AriOne Genesis: Inicializando lógica de ordem...");
+            atualizarSugestaoOrdem();
+        })();
+    </script>
+
+    <style>
+        .fp-container { max-width: 1200px; margin: 0 auto; }
+        .ope-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .ope-table th { background: #f1f5f9; padding: 12px; text-align: left; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 11px; }
+        .ope-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .ope-table tr:hover { background: #f8fafc; }
+
+        .btn-salvar-status:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 6px 20px rgba(52,152,219,0.5);
+        }
+        .btn-salvar-status:active {
+            transform: translateY(0);
+        }
+    </style>
+</div>
+{% endblock %}

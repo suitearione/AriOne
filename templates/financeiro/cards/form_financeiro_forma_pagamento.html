@@ -1,0 +1,277 @@
+{# =============================================================================
+   Caminho  : templates/financeiro/cards/form_financeiro_forma_pagamento.html
+   Função   : Gestão de Formas de Pagamento (Gold Standard Luxury)
+   ============================================================================= #}
+
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE (PAA §12-B) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Formas de Pagamento",
+        subtitulo="Financeiro > Configurações > Fluxo de Caixa",
+        icone="fa-money-bill-transfer",
+        cor_tema="#00E676",
+        func_fechar="voltarParaGridGerencial()",
+        form_id="form-forma-pagamento",
+        onclick_novo="resetFormFP()",
+        onclick_save="salvarFormaPagamento()",
+        onclick_clonar="",
+        onclick_search="",
+        onclick_filter="",
+        onclick_export="",
+        onclick_import="",
+        onclick_print="window.print()",
+        onclick_email="",
+        onclick_whatsapp="",
+        onclick_list="",
+        status="Gestão de Recebíveis Gold Standard",
+        ajuda="Defina como sua empresa recebe e automatize as baixas operacionais.",
+        tamanho="medio"
+    ) }}
+
+<style>
+    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+</style>
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; min-height: 100vh; width: 100%;">
+
+    <div class="op-container-fluid" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease;">
+        
+        <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+            
+            {# COLUNA 1: FORMULÁRIO DE CADASTRO #}
+            <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+                <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <i class="fas fa-plus-circle" style="color: #27ae60; margin-right: 10px;"></i> Detalhes da Forma
+                    </div>
+                    <span id="badge-status-form" style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">PENDENTE</span>
+                </div>
+                <div class="op-card-body" style="padding: 25px;">
+                    <form id="form-forma-pagamento">
+                        <input type="hidden" name="id" id="fp_id">
+                        
+                        <div class="op-group" style="margin-bottom: 20px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">NOME DA FORMA (EXIBIÇÃO)</label>
+                            <input class="op-input" type="text" name="nome" id="fp_nome" placeholder="EX: CARTÃO DE CRÉDITO, PIX..." required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;">
+                        </div>
+
+                        <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                            <div class="op-group" style="flex: 1;">
+                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">AGRUPADOR OPERACIONAL</label>
+                                <select class="op-input" name="agrupador_operacional" id="fp_agrupador" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                    <option value="Á VISTA">Á VISTA</option>
+                                    <option value="CARTÃO">CARTÃO</option>
+                                    <option value="A PRAZO">A PRAZO</option>
+                                    <option value="CRÉDITO">CRÉDITO</option>
+                                    <option value="BANCÁRIOS">BANCÁRIOS</option>
+                                    <option value="DIGITAL">DIGITAL</option>
+                                    <option value="OUTROS">OUTROS</option>
+                                </select>
+                            </div>
+                            <div class="op-group" style="flex: 1;">
+                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">BAIXA AUTOMÁTICA?</label>
+                                <select class="op-input" name="baixa_automatica" id="fp_baixa" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                    <option value="false">NÃO</option>
+                                    <option value="true">SIM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="op-group" style="margin-bottom: 20px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">OPERADORA FINANCEIRA VINCULADA</label>
+                            <select class="op-input" name="operadora_id" id="fp_operadora" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                <option value="">NENHUMA (FINANCEIRO PRÓPRIO)</option>
+                                {% for op in operadoras %}
+                                <option value="{{ op.id }}">{{ op.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 10px; margin-top: 20px;">
+                            <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 14px; display: flex; justify-content: space-between;">
+                                <span>Regras de Parcelamento</span>
+                            </div>
+                            <div class="op-row" style="gap: 15px; display: flex;">
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">MÁX. PARCELAS</label>
+                                    <input class="op-input" type="number" name="max_parcelas" id="fp_max_parcelas" value="1" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">INTERVALO (DIAS)</label>
+                                    <input class="op-input" type="number" name="intervalo_dias" id="fp_intervalo" value="0" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">PARCELA MÍN.</label>
+                                    <input class="op-input" type="text" name="parcela_minima" id="fp_parcela_min" value="0,00" oninput="this.value = arioneMaskMoney(this.value)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-align: center; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+            {# COLUNA 2: LISTAGEM #}
+            <div class="op-card" style="flex: 1.5; min-width: 600px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #cbd5e1; background: #fff; overflow: hidden;">
+                <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                    <span style="font-weight: 600; color: #334155; font-size: 13px;">
+                        <i class="fas fa-list-ul" style="color: #27ae60; margin-right: 8px;"></i>
+                        Formas Ativas ({{ formas|length }})
+                    </span>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="gerarPadroesLuxury()" class="op-btn" style="height: 28px; padding: 0 15px; font-size: 10px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s;">
+                            <i class="fas fa-gem" style="color: #f1c40f;"></i> PADRÕES LUXURY
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                <div class="fp-card-body" style="padding: 0;">
+                    <table class="arione-table-hcm">
+                        <thead>
+                            <tr style="background: #fcfdfe;">
+                                <th style="padding: 20px 25px;">IDENTIFICAÇÃO DA FORMA</th>
+                                <th style="text-align: center;">AGRUPADOR</th>
+                                <th style="text-align: center;">STATUS</th>
+                                <th style="width: 120px; text-align: center;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fp in formas %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.3s;">
+                                <td style="padding: 15px 25px;">
+                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                        <div style="width: 38px; height: 38px; background: #27ae6015; color: #27ae60; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #27ae6020;">
+                                            <i class="{{ fp.icone or 'fas fa-money-bill-wave' }}"></i>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 900; color: #1e293b; font-size: 13px;">{{ fp.nome }}</div>
+                                            <div style="font-size: 9px; font-weight: 800; color: #27ae60; text-transform: uppercase; letter-spacing: 0.5px;">{{ fp.operadora.nome if fp.operadora else 'PROCESSAMENTO PRÓPRIO' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span style="font-size: 10px; font-weight: 900; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 12px; letter-spacing: 0.5px;">{{ fp.agrupador_operacional }}</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    {% if fp.baixa_automatica %}
+                                        <span style="color: #27ae60; font-size: 11px; font-weight: 900; background: #27ae6010; padding: 4px 10px; border-radius: 8px;"><i class="fas fa-bolt" style="margin-right: 4px;"></i> AUTO</span>
+                                    {% else %}
+                                        <span style="color: #94a3b8; font-size: 11px; font-weight: 900; background: #f1f5f9; padding: 4px 10px; border-radius: 8px;">MANUAL</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: center;">
+                                    <div style="display: flex; gap: 15px; justify-content: center;">
+                                        <button onclick='editarFormaPagamento({{ fp.to_dict()|tojson }})' style="background:none; border:none; color:#2980B9; cursor:pointer; font-size: 16px; transition: 0.2s;"><i class="fas fa-edit"></i></button>
+                                        <button onclick="excluirFormaPagamento({{ fp.id }})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 16px; transition: 0.2s;"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" style="text-align: center; padding: 60px; color: #94a3b8; font-weight: 800;">SEM FORMAS CADASTRADAS</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function arioneMaskMoney(val) {
+            if (!val) return '0,00';
+            let v = val.toString().replace(/\D/g, '');
+            v = (v / 100).toFixed(2) + '';
+            v = v.replace(".", ",");
+            v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return v;
+        }
+
+        function resetFormFP() {
+            document.getElementById('form-forma-pagamento').reset();
+            document.getElementById('fp_id').value = '';
+            arioneToast('Iniciando novo registro', 'info');
+        }
+
+        function editarFormaPagamento(data) {
+            document.getElementById('fp_id').value = data.id;
+            document.getElementById('fp_nome').value = data.nome;
+            document.getElementById('fp_agrupador').value = data.agrupador_operacional;
+            document.getElementById('fp_baixa').value = data.baixa_automatica.toString();
+            document.getElementById('fp_operadora').value = data.operadora_id || '';
+            document.getElementById('fp_max_parcelas').value = data.max_parcelas;
+            document.getElementById('fp_intervalo').value = data.intervalo_dias;
+            document.getElementById('fp_parcela_min').value = arioneMaskMoney(data.parcela_minima * 100);
+            
+            document.getElementById('fp_nome').focus();
+            arioneToast('Modo de edição: ' + data.nome, 'info');
+        }
+
+        function salvarFormaPagamento() {
+            const form = document.getElementById('form-forma-pagamento');
+            if (!document.getElementById('fp_nome').value) {
+                arioneToast('⚠️ Nome da forma obrigatório', 'warning');
+                return;
+            }
+
+            const data = new FormData(form);
+            fetch("{{ url_for('financeiro.salvar_forma_pagamento') }}", { method: 'POST', body: data })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_formas_pagamento') }}", 'Formas de Pagamento');
+                } else {
+                    arioneToast('Erro: ' + res.error, 'danger');
+                }
+            });
+        }
+
+        function excluirFormaPagamento(id) {
+            if (!confirm('Deseja excluir esta forma de pagamento?')) return;
+            fetch(`/financeiro/card/formas_pagamento/excluir/${id}`, { method: 'POST' })
+            .then(res => res.json()).then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_formas_pagamento') }}", 'Formas de Pagamento');
+                }
+            });
+        }
+
+        function gerarPadroesLuxury() {
+            if (!confirm('Gerar Padrões Luxury de pagamento?')) return;
+            fetch("{{ url_for('financeiro.seed_formas_pagamento') }}", { method: 'POST' })
+            .then(res => res.json()).then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_formas_pagamento') }}", 'Formas de Pagamento');
+                }
+            });
+        }
+
+        function voltarParaGridGerencial() {
+            if (typeof fecharModalGlobal === 'function') fecharModalGlobal();
+            if (!window.location.search.includes('aba=gerencial')) {
+                window.location.href = "{{ url_for('financeiro.abas', aba='gerencial') }}";
+            }
+        }
+    </script>
+
+    <style>
+        .arione-canvas-luxury { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 15px; text-align: left; color: #94a3b8; font-weight: 900; text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }
+        .arione-table-hcm td { padding: 12px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+        .arione-table-hcm tr:hover { background: #fcfdfe; }
+        
+        .op-input:focus { border-color: #27ae60 !important; box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.08); background: #fff !important; }
+        .op-btn:hover { background: #27ae60 !important; color: #fff !important; transform: translateY(-1px); }
+    </style>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% macro gerar_filtros_arione(contexto='', mostrar_unidade=True, mostrar_data=True, mostrar_visao=True, empresas_lista=[]) %}
+<div class="fe-rel-filters-card">
+    <form method="GET" class="fe-rel-form" id="form-filtros-relatorio">
+        <div class="fe-rel-filters-grid">
+            
+            {% if mostrar_unidade %}
+            <div class="fe-rel-group">
+                <label class="fe-rel-label"><i class="fas fa-building"></i> Unidade / Empresa</label>
+                <select name="empresa_id" class="fe-rel-input">
+                    <option value="">Todas as Unidades (Consolidado)</option>
+                    {% for emp in empresas_lista %}
+                        <option value="{{ emp.id }}" {% if request.args.get('empresa_id')|int == emp.id %}selected{% endif %}>{{ emp.razao_social }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% if mostrar_data %}
+            <div class="fe-rel-group">
+                <label class="fe-rel-label"><i class="fas fa-calendar-alt"></i> Data de Corte</label>
+                <input type="date" name="data_corte" class="fe-rel-input" 
+                       value="{{ request.args.get('data_corte', now().strftime('%Y-%m-%d') if now else '') }}">
+            </div>
+            {% endif %}
+
+            {% if mostrar_visao %}
+            <div class="fe-rel-group">
+                <label class="fe-rel-label"><i class="fas fa-layer-group"></i> Visão do Relatório</label>
+                <div class="fe-rel-toggle-group">
+                    <label class="fe-rel-toggle">
+                        <input type="radio" name="visao" value="sintetica" {% if request.args.get('visao', 'sintetica') == 'sintetica' %}checked{% endif %}>
+                        <span>Sintética</span>
+                    </label>
+                    <label class="fe-rel-toggle">
+                        <input type="radio" name="visao" value="analitica" {% if request.args.get('visao') == 'analitica' %}checked{% endif %}>
+                        <span>Analítica</span>
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="fe-rel-actions">
+                <button type="submit" class="fe-rel-btn-apply">
+                    <i class="fas fa-sync-alt"></i> Atualizar Relatório
+                </button>
+                <button type="button" class="fe-rel-btn-print" onclick="window.print()">
+                    <i class="fas fa-print"></i> Gerar PDF
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.fe-rel-filters-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+    border: 1px solid #eef2f7;
+}
+.fe-rel-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    align-items: flex-end;
+}
+.fe-rel-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+.fe-rel-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1.5px solid #edf2f7;
+    border-radius: 8px;
+    font-size: 13.5px;
+    color: #2d3748;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+.fe-rel-input:focus {
+    border-color: #7A255F;
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(122, 37, 95, 0.1);
+}
+.fe-rel-toggle-group {
+    display: flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 8px;
+    gap: 4px;
+}
+.fe-rel-toggle {
+    flex: 1;
+    cursor: pointer;
+}
+.fe-rel-toggle input { display: none; }
+.fe-rel-toggle span {
+    display: block;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #718096;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+.fe-rel-toggle input:checked + span {
+    background: #fff;
+    color: #7A255F;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.fe-rel-actions {
+    display: flex;
+    gap: 10px;
+}
+.fe-rel-btn-apply {
+    background: #7A255F;
+    color: #fff;
+    border: none;
+    height: 40px;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fe-rel-btn-apply:hover { background: #631e4d; transform: translateY(-1px); }
+.fe-rel-btn-print {
+    background: #f1f5f9;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.fe-rel-btn-print:hover { background: #e2e8f0; }
+
+@media print {
+    .fe-rel-filters-card { display: none; }
+}
+</style>
+{% endmacro %}

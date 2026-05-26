@@ -1,0 +1,297 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/cards/parametros/form_par_produtos.html
+   Função   : Parâmetros do Módulo de Produtos (GOLDEN STANDARD)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-sistema" id="wrap-param-produtos" style="background: #f8fafc; padding: 20px;">
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros de Produtos",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-boxes",
+        form_id="form-par-produtos",
+        onclick_save="forceSubmitParamProdutos(this)",
+        cor_tema="#7A255F",
+        func_fechar="fecharModalGlobal()",
+        tamanho="grande"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px;">
+        <form id="form-par-produtos" method="POST" action="{{ url_for('cadastros.salvar_parametros') }}" novalidate>
+            <input type="hidden" name="grupo_config" value="produtos">
+        
+        {# CARD 1: REGRAS DE PRECIFICAÇÃO #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-hand-holding-usd"></i> Inteligência de Precificação e Lucratividade
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Margem de Lucro Sugerida (%) {{ comp.info_icon("Usada para pré-calcular o preço de venda sugerido") }}</label>
+                        <input class="fp-input" type="number" name="PRODUTO_MARGEM_PADRAO" value="100" style="font-weight: 800;">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Política de Arredondamento</label>
+                        <select class="fp-input" name="PRODUTO_ARREDONDAMENTO">
+                            <option value="none">SEM ARREDONDAMENTO</option>
+                            <option value="90">TERMINAR EM ,90</option>
+                            <option value="99" selected>TERMINAR EM ,99</option>
+                            <option value="00">TERMINAR EM ,00 (INTEIRO)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 2: REGRAS DE IDENTIFICAÇÃO E CODIFICAÇÃO (SKU/EAN) #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-barcode"></i> Regras de Identificação e Codificação (SKU/EAN)
+            </div>
+            <div class="fp-card-body">
+                
+                <div style="font-size: 11px; font-weight: 800; color: #7A255F; margin-bottom: 15px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 5px;">
+                    <i class="fas fa-fingerprint"></i> SKU PAI (CÓDIGO DE REFERÊNCIA)
+                </div>
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Geração de SKU Pai</label>
+                        <select class="fp-input" name="PRODUTO_SKUPAI_REGRA">
+                            <option value="livre">DIGITAÇÃO LIVRE</option>
+                            <option value="auto" selected>AUTOMÁTICA (POR REGRAS)</option>
+                        </select>
+                    </div>
+                    <div class="fp-group fp-flex-2">
+                        <label class="fp-label">Composição do Prefixo</label>
+                        <select class="fp-input" name="PRODUTO_SKUPAI_FORMATO">
+                            <option value="ORI-MAT-CAT">ORIGEM - MATÉRIA - CATEGORIA</option>
+                            <option value="CAT-MAT">CATEGORIA - MATÉRIA</option>
+                            <option value="SIGLA">APENAS SIGLA DO PRODUTO</option>
+                        </select>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Separador</label>
+                        <input class="fp-input" type="text" name="PRODUTO_SKUPAI_SEP" value="-" maxlength="1" style="text-align: center; font-weight: 800;">
+                    </div>
+                </div>
+
+                <div style="font-size: 11px; font-weight: 800; color: #7A255F; margin-top: 25px; margin-bottom: 15px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 5px;">
+                    <i class="fas fa-sitemap"></i> SKU FILHO (VARIAÇÕES)
+                </div>
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-2">
+                        <label class="fp-label">Estrutura do SKU Filho</label>
+                        <select class="fp-input" name="PRODUTO_SKU_FORMAT">
+                            <option value="REF-TAM">SKU PAI + TAMANHO</option>
+                            <option value="REF-COR-TAM" selected>SKU PAI + COR + TAMANHO (RECOMENDADO)</option>
+                            <option value="REF-ID">SKU PAI + ID_INTERNO</option>
+                        </select>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Separador</label>
+                        <input class="fp-input" type="text" name="PRODUTO_SKU_SEP" value="-" maxlength="1" style="text-align: center; font-weight: 800;">
+                    </div>
+                </div>
+
+                <div style="font-size: 11px; font-weight: 800; color: #7A255F; margin-top: 25px; margin-bottom: 15px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 5px;">
+                    <i class="fas fa-qrcode"></i> CÓDIGO DE BARRAS (EAN)
+                </div>
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Prefixo do País (EAN-13)</label>
+                        <input class="fp-input" type="text" name="PRODUTO_EAN_PREFIXO" value="789" maxlength="3" style="font-weight: 800; color: #1e293b;">
+                    </div>
+                    <div class="fp-group fp-flex-2" style="justify-content: flex-end;">
+                        <label class="fp-checkbox-wrap" style="width: 100%;">
+                            <input type="checkbox" name="PRODUTO_EAN_AUTO" value="1" checked>
+                            <span class="fp-checkbox-label">Gerar EAN automaticamente ao criar novo produto</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="font-size: 11px; font-weight: 800; color: #7A255F; margin-top: 25px; margin-bottom: 15px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 5px;">
+                    <i class="fas fa-id-card"></i> CÓDIGO INTERNO
+                </div>
+                <div class="fp-row">
+                    <label class="fp-checkbox-wrap" style="flex: 1;">
+                        <input type="checkbox" name="PRODUTO_CODINT_SYNC_SKU" value="1" checked>
+                        <span class="fp-checkbox-label">Sincronizar Código Interno com SKU Pai</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 3: LOGÍSTICA E DIMENSÕES PADRÃO #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-truck-loading"></i> Logística e Dimensões Padrão (Sugestão)
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Peso Padrão (kg)</label>
+                        <input class="fp-input" type="number" step="0.001" name="PRODUTO_PESO_PADRAO" value="0.185">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Comprimento (cm)</label>
+                        <input class="fp-input" type="number" name="PRODUTO_COMPRIMENTO_PADRAO" value="20">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Largura (cm)</label>
+                        <input class="fp-input" type="number" name="PRODUTO_LARGURA_PADRAO" value="22">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Altura (cm)</label>
+                        <input class="fp-input" type="number" name="PRODUTO_ALTURA_PADRAO" value="5">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 4: REGRAS DE ESTOQUE #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-boxes"></i> Comportamento e Alertas de Estoque
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row" style="gap: 20px;">
+                    <label class="fp-checkbox-wrap" style="flex: 1;">
+                        <input type="checkbox" name="PRODUTO_ESTOQUE_NEGATIVO" value="1" checked>
+                        <span class="fp-checkbox-label">Permitir Estoque Negativo</span>
+                    </label>
+                    <label class="fp-checkbox-wrap" style="flex: 1;">
+                        <input type="checkbox" name="PRODUTO_AVISO_MINIMO" value="1" checked>
+                        <span class="fp-checkbox-label">Alerta de Estoque Mínimo Ativo</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        {# FOOTER #}
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="button" class="fp-btn fp-btn-salvar-footer" style="background: #7A255F;" onclick="forceSubmitParamProdutos(this)">
+                <i class="fas fa-save"></i> SALVAR CONFIGURAÇÕES
+            </button>
+        </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    /**
+     * Motor de Salvamento AJAX AriOne (Sincronização sem recarregar tela)
+     */
+    async function forceSubmitParamProdutos(btn) {
+        if(!await arioneConfirm("🛡️ Deseja aplicar estas configurações como padrão para o módulo de produtos?", btn)) return;
+        
+        const form = document.getElementById('form-par-produtos');
+        const formData = new FormData(form);
+        const originalHtml = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SINCRONIZANDO...';
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            
+            if (response.ok) {
+                arioneToast("✅ Configurações salvas e aplicadas com sucesso!", "success");
+                btn.style.background = "#27AE60";
+                btn.innerHTML = '<i class="fas fa-check"></i> CONFIGURAÇÃO ATIVA';
+                setTimeout(() => {
+                    btn.style.background = "#7A255F";
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }, 3000);
+            } else {
+                throw new Error("Falha na gravação");
+            }
+        } catch (e) {
+            arioneToast("❌ Erro ao salvar configurações. Tente novamente.", "danger");
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
+    /**
+     * Carga Inicial de Dados (Imediata)
+     */
+    function initParamProdutos() {
+        console.log("🚀 AriOne: Inicializando painel de parâmetros de produtos...");
+        
+        // Esconde botões de CRUD que vazam do macro global
+        const header = document.querySelector('.fe-header-mestre');
+        if (header) {
+            const tools = header.querySelectorAll('.fe-tool-btn, .fe-action-novo-arione, .fe-extra-actions-dropdown');
+            tools.forEach(t => t.style.display = 'none');
+            
+            const statusEl = document.getElementById('header-action-status');
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> CONFIGURAÇÃO DO SISTEMA';
+                statusEl.style.background = 'rgba(255,255,255,0.15)';
+            }
+        }
+
+        fetch('/cadastros/parametros/get?grupo=produtos')
+            .then(res => res.json())
+            .then(data => {
+                for (const [chave, valor] of Object.entries(data)) {
+                    const el = document.querySelector(`[name="${chave}"]`);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = (valor === '1' || valor === 'on');
+                        else el.value = valor;
+                    }
+                }
+            });
+    }
+
+    // Executa imediatamente (para carga via AJAX/Modal)
+    initParamProdutos();
+
+    // Também registra no DOMContentLoaded por segurança (para carga direta via URL)
+    document.addEventListener('DOMContentLoaded', initParamProdutos);
+</script>
+
+<style>
+    .fp-checkbox-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fff;
+        padding: 12px 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .fp-checkbox-wrap:hover {
+        border-color: #7A255F;
+        background: rgba(122,37,95,0.02);
+    }
+    .fp-checkbox-wrap input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    .fp-checkbox-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+    }
+</style>
+{% endblock %}

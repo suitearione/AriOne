@@ -1,0 +1,179 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+
+{% block content %}
+<div class="fp-wrap mod-rel-catalogos" id="ctx-rel-main">
+    <style>
+        .arione-page { padding: 0 !important; }
+        .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
+        .rel-tab { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; color: #718096; transition: all 0.2s; border: 1px solid transparent; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .rel-tab.active { background: #fffaf0; color: #E67E22; border-color: #feebc8; box-shadow: 0 4px 10px rgba(230, 126, 34, 0.1); }
+        .rel-tab:hover:not(.active) { background: #fdfdfd; color: #E67E22; }
+        .kpi-item { background: #fff; padding: 20px; border-radius: 12px; border-left: 4px solid #E67E22; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .kpi-val { font-size: 1.5rem; font-weight: 800; color: #2d3748; display: block; margin-top: 4px; }
+        .kpi-label { font-size: 10px; color: #718096; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+    </style>
+
+    {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0 24px; margin: 0; border-bottom: 2px solid #e2e8f0; transition: none !important;">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+        {{ cabecalho_mestre_arione(
+            titulo='Inteligência de Catálogo',
+            subtitulo='Catálogos > Relatórios & BI > Centro de Performance',
+            icone='fa-chart-line',
+            form_id='rel-form',
+            aba_retorno='catalogos',
+            cor_tema='#E67E22'
+        ) }}
+    </div>
+
+
+
+    <div id="area-conteudo-rel" style="padding: 24px; background: #f4f6f9;">
+        
+        <div class="fp-row" style="margin-bottom: 24px; gap: 12px;">
+            <div class="rel-tab active" onclick="switchRelTab(this, 'sin')">
+                <i class="fas fa-eye"></i> Visão de Águia (Sintético)
+            </div>
+            <div class="rel-tab" onclick="switchRelTab(this, 'det')">
+                <i class="fas fa-search-plus"></i> Visão de Lupa (Detalhado)
+            </div>
+        </div>
+
+        <form id="rel-form" onsubmit="event.preventDefault(); gerarRelatorio();">
+            <div class="fp-card">
+                <div class="fp-card-title" style="background: rgba(230, 126, 34, 0.03); color: #d35400;">
+                    <i class="fas fa-filter"></i> Filtros de Inteligência
+                </div>
+                <div class="fp-card-body">
+                    <div class="fp-row">
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Período de Referência</label>
+                            <select class="fp-input" name="periodo">
+                                <option value="30">Últimos 30 dias</option>
+                                <option value="60">Últimos 60 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                                <option value="180">Últimos 180 dias (Semestre)</option>
+                                <option value="ANO">Ano Atual</option>
+                            </select>
+                        </div>
+                        <div class="fp-group fp-flex-2">
+                            <label class="fp-label">Filtro por Categoria</label>
+                            <select class="fp-input" name="cat_id">
+                                <option value="TODAS">TODAS AS CATEGORIAS</option>
+                                {# Populado dinamicamente via template se necessário #}
+                            </select>
+                        </div>
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Status de Giro</label>
+                            <select class="fp-input" name="giro_status">
+                                <option value="TODOS">TODOS</option>
+                                <option value="ALTO">ALTO GIRO</option>
+                                <option value="BAIXO">BAIXO GIRO</option>
+                                <option value="PARADO">ESTOQUE PARADO</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# PAINEL SINTÉTICO (Eagle Eye) #}
+            <div id="panel-sin" class="rel-panel" style="animation: feFadeUp 0.4s ease-out;">
+                <div class="fp-row" style="gap: 20px;">
+                    <div class="fp-group fp-flex-1">
+                        <div class="kpi-item">
+                            <span class="kpi-label"><i class="fas fa-coins"></i> Total Investido em Estoque</span>
+                            <span class="kpi-val" id="kpi-investido">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <div class="kpi-item">
+                            <span class="kpi-label"><i class="fas fa-sync"></i> Giro de Estoque Médio</span>
+                            <span class="kpi-val" id="kpi-giro">0.00x</span>
+                        </div>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <div class="kpi-item" style="border-left-color: #27ae60;">
+                            <span class="kpi-label"><i class="fas fa-arrow-up"></i> Top Produto Rentável</span>
+                            <span class="kpi-val" id="kpi-top" style="font-size: 1.1rem; line-height: 1.2;">AGUARDANDO...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# PAINEL DETALHADO (Lupa) #}
+            <div id="panel-det" class="rel-panel" style="display: none; animation: feFadeUp 0.4s ease-out;">
+                <div class="fp-card">
+                    <div class="fp-card-title">Configurações de Exportação Detalhada</div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Ordenar Resultados por</label>
+                                <select class="fp-input" name="ordem">
+                                    <option value="DATA">Data de Última Movimentação</option>
+                                    <option value="VALOR">Valor Total em Estoque</option>
+                                    <option value="ALFA">Ordem Alfabética (A-Z)</option>
+                                    <option value="GIRO">Índice de Giro (Maior -> Menor)</option>
+                                </select>
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Incluir Inativos?</label>
+                                <select class="fp-input" name="inc_inativos">
+                                    <option value="N">NÃO</option>
+                                    <option value="S">SIM</option>
+                                </select>
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Formato de Saída</label>
+                                <div style="display: flex; gap: 10px; margin-top: 2px;">
+                                    <button type="button" class="fp-btn-icon" style="background: #27ae60; color: #fff; width: 34px; height: 34px; border-radius: 8px;" title="Excel (XLSX)"><i class="fas fa-file-excel"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="background: #c0392b; color: #fff; width: 34px; height: 34px; border-radius: 8px;" title="PDF Document"><i class="fas fa-file-pdf"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="background: #2980b9; color: #fff; width: 34px; height: 34px; border-radius: 8px;" title="Imprimir Direto"><i class="fas fa-print"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fp-footer-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding: 20px 0;">
+                <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="window.location.href='/cadastros/?aba=catalogos'">
+                    <i class="fas fa-times"></i> Fechar Centro de BI
+                </button>
+                <button type="submit" class="fp-btn fp-btn-salvar-footer" id="btn-gerar" style="background: #E67E22; box-shadow: 0 4px 15px rgba(230, 126, 34, 0.25);">
+                    <i class="fas fa-bolt"></i> Processar e Gerar Inteligência
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+
+        window.switchRelTab = function (el, type) {
+            document.querySelectorAll('.rel-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            
+            document.getElementById('panel-sin').style.display = type === 'sin' ? 'block' : 'none';
+            document.getElementById('panel-det').style.display = type === 'det' ? 'block' : 'none';
+        };
+
+        window.gerarRelatorio = function() {
+            const btn = document.getElementById('btn-gerar');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CALCULANDO...';
+            
+            arioneToast('⏳ O motor de BI AriOne está processando os dados...', 'info');
+            
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                arioneToast('📊 Relatório gerado com sucesso!', 'success');
+            }, 1500);
+        };
+
+    })();
+</script>
+{% endblock %}

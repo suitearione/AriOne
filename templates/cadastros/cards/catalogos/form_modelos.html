@@ -1,0 +1,237 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+
+{% block content %}
+<div class="fp-wrap mod-modelos" id="ctx-mod-main">
+    <style>
+        .arione-page { padding: 0 !important; }
+        .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .status-ativo { background: #e8f5e9; color: #2e7d32; }
+        .status-inativo { background: #ffebee; color: #c62828; }
+    </style>
+
+    {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0 24px; margin: 0; border-bottom: 2px solid #e2e8f0; transition: none !important;">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+        {{ cabecalho_mestre_arione(
+            titulo='Catálogo de Modelos',
+            subtitulo='Engenharia > Padronização de Modelos e Cortes',
+            icone='fa-stencil',
+            form_id='mod-form-area',
+            list_id='mod-list-area',
+            onclick_novo="novoRegistroModelo()",
+            onclick_save="forceSubmitModelo()",
+            onclick_search="document.getElementById('mod-search-input').focus()",
+            aba_retorno='catalogos',
+            cor_tema='#F39C12'
+        ) }}
+    </div>
+
+
+
+    <div id="area-conteudo-mod" style="padding: 12px 24px; background: #f4f6f9;">
+        
+        {# ── FORMULÁRIO ── #}
+        <div id="mod-form-area" style="display:none; margin-bottom:16px; animation: feFadeUp 0.5s ease-out;">
+            <form id="mod-form" method="POST" action="{{ url_for('cadastros.catalogo_modelos_save') }}" novalidate>
+                <input type="hidden" name="id" id="mod-id-hidden" value="">
+
+                <div class="fp-card" style="border-left: 4px solid #F39C12;">
+                    <div class="fp-card-title" style="background: rgba(243, 156, 18, 0.03); color: #d35400;">
+                        <i class="fas fa-stencil"></i>
+                        <span id="mod-form-titulo">Novo Modelo de Corte</span>
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-3">
+                                <label class="fp-label">Nome do Modelo <span class="fp-req">*</span></label>
+                                <input type="text" class="fp-input fp-mask-upper" name="nome" id="mod-nome-input" placeholder="Ex: BABY LOOK SLIM, OVERSIZED MASCULINA..." required>
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Sigla Interna</label>
+                                <input type="text" class="fp-input fp-mask-upper" name="sigla" id="mod-sigla-input" placeholder="Ex: BLS">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Status</label>
+                                <select class="fp-input" name="ativa" id="mod-status-select">
+                                    <option value="1">ATIVO</option>
+                                    <option value="0">INATIVO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fp-footer-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding: 20px 0;">
+                    <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="fecharFormMod()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-mod" onclick="forceSubmitModelo()">
+                        <i class="fas fa-save"></i> Confirmar e Salvar Modelo
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="mod-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div class="fp-card-title" style="justify-content:space-between; background: #f8fafc; padding: 15px 20px;">
+                <span><i class="fas fa-table"></i> Modelos Cadastrados
+                    <span id="mod-count" style="background: #F39C12; color: #fff; padding: 2px 10px; border-radius: 20px; font-size: 11px; margin-left: 8px;">{{ modelos|length }} registros</span>
+                </span>
+                <div style="position:relative;">
+                    <i class="fas fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#F39C12; font-size:12px;"></i>
+                    <input type="text" id="mod-search-input" oninput="filtrarTabelaModelos()"
+                        placeholder="Pesquisar modelos..."
+                        style="padding:8px 15px 8px 35px; border:1.5px solid #ddd; border-radius:20px; font-size:12px; width:240px; outline:none; transition:0.2s;"
+                        onfocus="this.style.borderColor='#F39C12'" onblur="this.style.borderColor='#ddd'">
+                </div>
+            </div>
+
+            <div class="fp-card-body" style="padding: 0;">
+                <table class="fp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center; padding-left: 24px;">ID</th>
+                            <th>Descrição do Modelo</th>
+                            <th>Sigla</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="width: 100px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-modelos">
+                        {% for m in modelos %}
+                        <tr class="mod-row" data-id="{{ m.id }}" data-nome="{{ m.nome|upper }}" data-sigla="{{ m.sigla or '' }}" data-ativo="{{ '1' if m.ativa else '0' }}">
+                            <td style="text-align: center; padding-left: 24px; font-weight: 800; color: #F39C12;">{{ m.id }}</td>
+                            <td><div style="font-weight: 800; color: #2d3748; font-size: 13px;">{{ m.nome }}</div></td>
+                            <td><span style="font-family: 'JetBrains Mono'; font-weight: 700; color: #64748b;">{{ m.sigla if m.sigla else '—' }}</span></td>
+                            <td style="text-align: center;">
+                                <span class="status-pill {{ 'status-ativo' if m.ativa else 'status-inativo' }}">
+                                    {{ 'Ativo' if m.ativa else 'Inativo' }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:8px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" onclick="editarModelo(this)" title="Editar"><i class="fas fa-pen"></i></button>
+                                    {# Add delete if route exists, else keep just edit #}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+
+        window.novoRegistroModelo = function () {
+            limparFormMod();
+            document.getElementById('mod-form-titulo').textContent = 'Novo Modelo de Corte';
+            document.getElementById('mod-form-area').style.display = 'block';
+            document.getElementById('mod-form-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => document.getElementById('mod-nome-input').focus(), 300);
+        };
+
+        window.fecharFormMod = function () {
+            document.getElementById('mod-form-area').style.display = 'none';
+            limparFormMod();
+        };
+
+        function limparFormMod() {
+            const f = document.getElementById('mod-form');
+            if (f) f.reset();
+            document.getElementById('mod-id-hidden').value = '';
+            document.getElementById('mod-form').action = "{{ url_for('cadastros.catalogo_modelos_save') }}";
+        }
+
+        window.editarModelo = function (btn) {
+            const row = btn.closest('tr');
+            const id = row.dataset.id;
+            const form = document.getElementById('mod-form');
+            form.action = "{{ url_for('cadastros.catalogo_modelos_save') }}";
+            document.getElementById('mod-id-hidden').value = id;
+            document.getElementById('mod-form-titulo').textContent = 'Editar: ' + row.dataset.nome;
+
+            document.getElementById('mod-nome-input').value = row.dataset.nome;
+            document.getElementById('mod-sigla-input').value = row.dataset.sigla;
+            document.getElementById('mod-status-select').value = row.dataset.ativo;
+
+            document.getElementById('mod-form-area').style.display = 'block';
+            document.getElementById('mod-form-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+                const inp = document.getElementById('mod-nome-input');
+                if (inp) { inp.focus(); inp.select(); }
+            }, 300);
+        };
+
+        window.forceSubmitModelo = async function () {
+            const form = document.getElementById('mod-form');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            
+            const btn = document.getElementById('btn-salvar-mod');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+            try {
+                const resp = await fetch(form.action, {
+                    method: 'POST', body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (resp.ok) {
+                    arioneToast('Modelo salvo com sucesso!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    arioneToast('Erro ao salvar registro.', 'danger');
+                }
+            } catch (e) {
+                arioneToast('Erro de comunicação.', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        };
+
+        window.filtrarTabelaModelos = function () {
+            const filter = document.getElementById('mod-search-input').value.toUpperCase();
+            document.querySelectorAll('.mod-row').forEach(row => {
+                const nome = row.dataset.nome || '';
+                const sigla = row.dataset.sigla || '';
+                row.style.display = (nome.includes(filter) || sigla.includes(filter)) ? '' : 'none';
+            });
+        };
+
+        document.querySelectorAll('.fp-mask-upper').forEach(el => {
+            el.addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+        });
+
+        async function validarDuplicidadeModelo(input) {
+            const valor = input.value.trim();
+            if (!valor) return;
+            const id = document.getElementById('mod-id-hidden').value || 'new';
+            const fd = new FormData();
+            fd.append('model', 'ModeloCatalogo');
+            fd.append('field', 'nome');
+            fd.append('value', valor);
+            fd.append('exclude_id', id);
+            try {
+                const res = await fetch('{{ url_for("cadastros.check_duplicate") }}', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await res.json();
+                if (data.duplicate) {
+                    input.style.borderColor = '#e53e3e';
+                    arioneToast(`O modelo "${valor}" já existe!`, "warning");
+                } else {
+                    input.style.borderColor = '';
+                }
+            } catch(e){}
+        }
+
+        document.getElementById('mod-nome-input').addEventListener('blur', function() { validarDuplicidadeModelo(this); });
+
+    })();
+</script>
+{% endblock %}

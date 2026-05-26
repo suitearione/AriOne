@@ -1,0 +1,254 @@
+<!-- templates/cadastros/grids/grid_catalogos.html -->
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title">
+        <i class="fas fa-book-open"></i>
+        <span>Catálogos</span>
+    </div>
+
+    <div class="ge-cards-container">
+
+        {# Produtos → redireciona para formulário completo #}
+        
+        <div class="ge-card" id="card-produtos" onclick="window.location='{{ url_for('cadastros.form_produto') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-box ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-box ge-card-icon"></i></div>
+            <span class="ge-card-label">Produtos</span>
+            <span class="ge-card-desc">Cadastro de produtos</span>
+        </div>
+
+        {# Marcas #}
+        <div class="ge-card" id="card-marcas" onclick="window.location='{{ url_for('cadastros.card_marcas') }}'" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-trademark ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-trademark ge-card-icon"></i></div>
+            <span class="ge-card-label">Marcas</span>
+            <span class="ge-card-desc">Marcas dos produtos</span>
+        </div>
+
+        <div class="ge-card" id="card-categorias" onclick="window.location='{{ url_for('cadastros.card_categorias') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-tags ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-tags ge-card-icon"></i></div>
+            <span class="ge-card-label">Categorias</span>
+            <span class="ge-card-desc">Grupos e categorias</span>
+        </div>
+
+        <div class="ge-card" id="card-unidades" onclick="window.location='{{ url_for('cadastros.card_unidades') }}'" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-ruler ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-ruler ge-card-icon"></i></div>
+            <span class="ge-card-label">Unidades & Medidas</span>
+            <span class="ge-card-desc">UN, KG, L, M...</span>
+        </div>
+
+        <div class="ge-card" id="card-grades" onclick="window.location='{{ url_for('cadastros.card_grades') }}'" style="--card-cor:#6366f1;--card-cor-bg:rgba(99,102,241,0.10);">
+            <i class="fas fa-th-large ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-th-large ge-card-icon"></i></div>
+            <span class="ge-card-label">Grades de Variação</span>
+            <span class="ge-card-desc">Tamanhos e Modelos</span>
+        </div>
+
+        <div class="ge-card" id="card-tamanhos" onclick="window.location='{{ url_for('cadastros.card_tamanhos') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-ruler-combined ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-ruler-combined ge-card-icon"></i></div>
+            <span class="ge-card-label">Tamanhos</span>
+            <span class="ge-card-desc">Siglas e Numerações</span>
+        </div>
+        <div class="ge-card" id="card-depositos" onclick="window.location='{{ url_for('cadastros.card_depositos') }}'" style="--card-cor:#16A34A;--card-cor-bg:rgba(22,163,74,0.10);">
+            <i class="fas fa-warehouse ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-warehouse ge-card-icon"></i></div>
+            <span class="ge-card-label">Depósitos</span>
+            <span class="ge-card-desc">Gestão de Almoxarifados</span>
+        </div>
+
+        <div class="ge-card" id="card-cores" onclick="window.location='{{ url_for('cadastros.card_cores') }}'" style="--card-cor:#9B59B6;--card-cor-bg:rgba(155,89,182,0.10);">
+            <i class="fas fa-palette ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-palette ge-card-icon"></i></div>
+            <span class="ge-card-label">Cores de Catálogo</span>
+            <span class="ge-card-desc">Paletas e Variações</span>
+        </div>
+
+        <div class="ge-card" id="card-atributos" onclick="window.location='{{ url_for('cadastros.card_atributos') }}'" style="--card-cor:#F39C12;--card-cor-bg:rgba(243,156,18,0.10);">
+            <i class="fas fa-tags ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-tags ge-card-icon"></i></div>
+            <span class="ge-card-label">Atributos</span>
+            <span class="ge-card-desc">Detalhes e Acabamentos</span>
+        </div>
+
+        <div class="ge-card" id="card-etiquetas" onclick="window.location='{{ url_for('cadastros.card_etiquetas') }}'" style="--card-cor:#F1C40F;--card-cor-bg:rgba(241,196,15,0.10);">
+            <i class="fas fa-tag ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-tag ge-card-icon"></i></div>
+            <span class="ge-card-label">Etiquetas</span>
+            <span class="ge-card-desc">Tags e etiquetas</span>
+        </div>
+
+        {# Matéria-Prima #}
+        <div class="ge-card" id="card-materia-prima" onclick="window.location='{{ url_for('cadastros.card_materiaprima') }}'" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-seedling ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-seedling ge-card-icon"></i></div>
+            <span class="ge-card-label">Matéria-Prima</span>
+            <span class="ge-card-desc">Materiais base</span>
+        </div>
+
+        {# Acessórios #}
+        <div class="ge-card" id="card-acessorios" onclick="window.location='{{ url_for('cadastros.card_acessorios') }}'" style="--card-cor:#7F8C8D;--card-cor-bg:rgba(127,140,141,0.10);">
+            <i class="fas fa-puzzle-piece ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-puzzle-piece ge-card-icon"></i></div>
+            <span class="ge-card-label">Acessórios</span>
+            <span class="ge-card-desc">Itens complementares</span>
+        </div>
+
+        {# Serviços → redireciona para formulário completo #}
+        <div class="ge-card" id="card-servicos" onclick="window.location='{{ url_for('cadastros.form_servico') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-concierge-bell ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-concierge-bell ge-card-icon"></i></div>
+            <span class="ge-card-label">Serviços</span>
+            <span class="ge-card-desc">Cadastro de serviços</span>
+        </div>
+
+        {# Insumos #}
+        <div class="ge-card" id="card-insumos" onclick="window.location='{{ url_for('cadastros.card_insumos') }}'" style="--card-cor:#16A085;--card-cor-bg:rgba(22,160,133,0.10);">
+            <i class="fas fa-flask ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-flask ge-card-icon"></i></div>
+            <span class="ge-card-label">Insumos</span>
+            <span class="ge-card-desc">Insumos produtivos</span>
+        </div>
+
+        {# Embalagens #}
+        <div class="ge-card" id="card-embalagens" onclick="window.location='{{ url_for('cadastros.card_embalagens') }}'" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,0.10);">
+            <i class="fas fa-box-open ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-box-open ge-card-icon"></i></div>
+            <span class="ge-card-label">Embalagens</span>
+            <span class="ge-card-desc">Tipos de embalagem</span>
+        </div>
+
+        {# Perfis de Venda #}
+        <div class="ge-card" id="card-perfis-venda" onclick="window.location='{{ url_for('cadastros.form_perfil_venda') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-user-gear ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-user-gear ge-card-icon"></i></div>
+            <span class="ge-card-label">Perfis de Venda</span>
+            <span class="ge-card-desc">Categorias comerciais</span>
+        </div>
+
+    </div>
+</div>
+
+<style>
+/* Badge de Conclusão AriOne (Vela no Bolo) */
+.ge-card-done-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #7A255F;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 10;
+    border: 1.5px solid #fff;
+    animation: badgeShine 3s infinite;
+}
+@keyframes badgeShine {
+    0% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.1); filter: brightness(1.3); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+</style>
+
+<script>
+// PAA v1 Section 12: Navegação Direta (Full-Page)
+// Removida lógica de modal centralizado.
+const endpointsCat = {
+    marcas:        '{{ url_for("cadastros.card_marcas") }}',
+    categorias:    '{{ url_for("cadastros.card_categorias") }}',
+    unidades:      '{{ url_for("cadastros.card_unidades") }}',
+    depositos:     '{{ url_for("cadastros.card_depositos") }}',
+    etiquetas:     '{{ url_for("cadastros.card_etiquetas") }}',
+    materia_prima: '{{ url_for("cadastros.card_materiaprima") }}',
+    insumos:       '{{ url_for("cadastros.card_insumos") }}',
+    acessorios:    '{{ url_for("cadastros.card_acessorios") }}',
+    embalagens:    '{{ url_for("cadastros.card_embalagens") }}',
+    grades:        '{{ url_for("cadastros.card_grades") }}',
+    cores:         '{{ url_for("cadastros.card_cores") }}',
+    atributos:     '{{ url_for("cadastros.card_atributos") }}',
+    tamanhos:      '{{ url_for("cadastros.card_tamanhos") }}',
+    perfis_venda:  '{{ url_for("cadastros.form_perfil_venda") }}'
+};
+
+function abrirModalCat(tipo) {
+    const url = endpointsCat[tipo];
+    if (url) window.location.href = url;
+}
+
+
+{% if is_ari_dev %}
+// ── CARD SEAL DETECTOR (ROTINA DEV) ──
+function updateGridSealsCat() {
+    const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    
+    const mappings = {
+        'card-produtos':      { sub: "CADASTROS — Catálogos", tela: "Produtos" },
+        'card-servicos':      { sub: "CADASTROS — Catálogos", tela: "Serviços" },
+        'card-marcas':        { sub: "CADASTROS — Catálogos", tela: "Marcas" },
+        'card-categorias':    { sub: "CADASTROS — Catálogos", tela: "Categorias" },
+        'card-unidades':      { sub: "CADASTROS — Catálogos", tela: "Unidades & Medidas" },
+        'card-depositos':     { sub: "CADASTROS — Catálogos", tela: "Depósitos" },
+        'card-etiquetas':     { sub: "CADASTROS — Catálogos", tela: "Etiquetas" },
+        'card-materia-prima': { sub: "CADASTROS — Catálogos", tela: "Matéria-Prima" },
+        'card-insumos':       { sub: "CADASTROS — Catálogos", tela: "Insumos" },
+        'card-acessorios':    { sub: "CADASTROS — Catálogos", tela: "Acessórios" },
+        'card-embalagens':    { sub: "CADASTROS — Catálogos", tela: "Embalagens" },
+        'card-atributos':     { sub: "CADASTROS — Catálogos", tela: "Atributos" },
+        'card-cores':         { sub: "CADASTROS — Catálogos", tela: "Cores de Catálogo" },
+        'card-grades':        { sub: "CADASTROS — Catálogos", tela: "Grades de Variação" },
+        'card-tamanhos':      { sub: "CADASTROS — Catálogos", tela: "Tamanhos" }
+    };
+
+    Object.entries(mappings).forEach(([cardId, info]) => {
+        const sId = getSafeId(info.sub + "_" + info.tela);
+        const isPronto = localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+        const card = document.getElementById(cardId);
+        
+        if (card) {
+            let badge = card.querySelector('.ge-card-done-badge');
+            if (isPronto) {
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'ge-card-done-badge';
+                    badge.innerHTML = '<i class="fas fa-award"></i>';
+                    badge.title = "AriOne Golden Standard";
+                    card.appendChild(badge);
+                    card.style.borderColor = "#FFD700";
+                }
+            } else if (badge) {
+                badge.remove();
+                card.style.borderColor = "";
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateGridSealsCat();
+    setInterval(updateGridSealsCat, 2000);
+    
+    // 🏆 AriOne: Ativação Automática do Selo de Ouro para novos módulos entregues
+    const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    const sIdDep = getSafeId("CADASTROS — Catálogos_Depósitos");
+    localStorage.setItem('arione_dev_p2_' + sIdDep, 'true');
+    const sIdAtrib = getSafeId("CADASTROS — Catálogos_Atributos");
+    localStorage.setItem('arione_dev_p2_' + sIdAtrib, 'true');
+    const sIdCores = getSafeId("CADASTROS — Catálogos_Cores de Catálogo");
+    localStorage.setItem('arione_dev_p2_' + sIdCores, 'true');
+    const sIdGrades = getSafeId("CADASTROS — Catálogos_Grades de Variação");
+    localStorage.setItem('arione_dev_p2_' + sIdGrades, 'true');
+    const sIdTamanhos = getSafeId("CADASTROS — Catálogos_Tamanhos");
+    localStorage.setItem('arione_dev_p2_' + sIdTamanhos, 'true');
+    const sIdPerfis = getSafeId("CADASTROS — Catálogos_Perfis de Venda");
+    localStorage.setItem('arione_dev_p2_' + sIdPerfis, 'true');
+});
+{% endif %}
+</script>

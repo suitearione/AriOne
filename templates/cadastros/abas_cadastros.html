@@ -1,0 +1,365 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/abas_cadastros.html
+   Arquivo  : abas_cadastros.html
+   Função   : Template principal do módulo de Cadastros.
+   Descrição: Renderiza as abas de navegação (Empresa, Catálogos, Pessoas,
+              Parâmetros) via macro gerar_abas_arione, passando o blueprint
+              'cadastros' para geração correta das URLs via url_for.
+              A aba ativa é recebida via query string ?aba=<id>.
+============================================================================= #}
+{% extends "base.html" %}
+{% import "macros/abas_cadastro.html" as nav %}
+
+{% block content %}
+<div class="arione-page-wrapper">
+    <style>
+        /* ESTILOS MODO ESCURO (CADASTROS) - REFINAMENTO SUAVE */
+        .arione-page-wrapper.dark-mode {
+            background: #334155 !important; /* Slate 700 - Um 'Preto' muito mais suave e cinzento */
+            transition: all 0.4s ease;
+            margin: -20px;
+            padding: 20px;
+        }
+        .dark-mode .arione-content-box, 
+        .dark-mode .arione-tabs-box {
+            background: #1e293b !important; /* Slate 800 para os containers */
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+        }
+        .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode p, .dark-mode span, .dark-mode label {
+            color: #f8fafc !important;
+        }
+        /* Realce das ABAS no Dark Mode (Seletores Corrigidos) */
+        .dark-mode .arione-aba {
+            color: #cbd5e1 !important; /* Cinza claro para abas inativas */
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid #334155 !important;
+        }
+        .dark-mode .arione-aba.active {
+            color: #ffffff !important;
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        }
+        .dark-mode .arione-aba-label, .dark-mode .arione-aba-icon {
+            color: inherit !important;
+        }
+        .dark-mode .arione-aba:hover:not(.active) {
+            background: rgba(255,255,255,0.08) !important;
+            color: #f8fafc !important;
+        }
+
+        /* Realce dos CARDS DO GRID (Empresa, etc) no Dark Mode */
+        .dark-mode .ge-card {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .dark-mode .ge-card-label {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+        }
+        .dark-mode .ge-card-desc {
+            color: #94a3b8 !important;
+        }
+        .dark-mode .ge-card-bg-icon {
+            opacity: 0.05 !important;
+        }
+
+        /* Títulos de Seção Interna */
+        .dark-mode .ge-grid-wrapper div[style*="color:#7A255F"] {
+            color: #f8fafc !important;
+            border-bottom-color: #f8fafc !important;
+        }
+
+        /* Realce dos NOMES DOS CARDS (GRID MESTRE) no Dark Mode */
+        .dark-mode .gateway-label-mestre {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        }
+        .dark-mode .gateway-desc-mestre {
+            color: #cbd5e1 !important;
+        }
+        /* Ajuste do Título da Central de Relatórios */
+        .dark-mode .gateway-title {
+            color: #fff !important;
+        }
+        .dark-toggle-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* ARI-SWITCH (Toggle) */
+        .arione-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+        .arione-switch input { opacity: 0; width: 0; height: 0; }
+        .arione-slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s; border-radius: 20px;
+        }
+        .arione-slider:before {
+            position: absolute; content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .arione-slider { background-color: #7A255F; }
+        input:checked + .arione-slider:before { transform: translateX(16px); }
+    </style>
+    {% set sidebar_color = '#7A255F' %} {# Cor Dominante Sidebar #}
+    {% set center_color  = '#a63282' %} {# Iluminação Central #}
+    {% set icon_color    = '#BDBDBD' %} {# Cor Oficial do Ícone (Identidade) #}
+
+    {% set current_gradient = 'linear-gradient(90deg, ' + sidebar_color + ' 0%, ' + center_color + ' 50%, ' + sidebar_color + ' 100%)' %}
+
+    <div class="fe-header" style="background: {{ current_gradient }}; margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: {{ icon_color }}; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: {{ icon_color }}; border: 1px solid rgba(255,255,255,0.05);">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <div>
+                <h2 style="margin: 0; font-size: 18px; font-weight: 800; font-family: 'Outfit', sans-serif; letter-spacing: 0.8px; text-transform: uppercase; line-height: 1; color: {{ icon_color }};">GERENCIAMENTO DE CADASTROS</h2>
+                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-top: 5px; color: #ffffff; opacity: 1;">ESTRUTURA ORGANIZACIONAL & REGISTROS CORE</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button type="button" onclick="abrirModalRelatoriosMestre()" style="background: transparent; color: {{ icon_color }}; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: 700; font-size: 9.5px; display: flex; align-items: center; gap: 6px; border: none; transition: all 0.3s ease; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;" onmouseover="this.style.opacity='1'; this.style.background='rgba(0,0,0,0.1)';" onmouseout="this.style.opacity='0.8'; this.style.background='transparent';">
+                Central de Relatórios <i class="fas fa-folder-open" style="font-size: 8px;"></i>
+            </button>
+            <a href="{{ url_for('gestao.abas') }}" style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; cursor: pointer; text-decoration: none;" onmouseover="this.style.background='rgba(0,0,0,0.25)';" onmouseout="this.style.background='rgba(0,0,0,0.15)';" title="Voltar ao Dashboard">
+                <img src="{{ url_for('static', filename='img/dashboard/dashboard.png') }}" style="height: 20px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+            </a>
+        </div>
+    </div>
+
+    <div class="arione-tabs-box">
+        {{ nav.gerar_abas_arione(abas, aba_ativa, 'cadastros') }}
+    </div>
+
+    <div id="arione-grid-area" class="arione-content-box">
+        {% if aba_ativa == 'empresa' %}
+            {% include 'cadastros/grids/grid_empresa.html' %}
+        {% elif aba_ativa == 'catalogos' %}
+            {% include 'cadastros/grids/grid_catalogos.html' %}
+        {% elif aba_ativa == 'comercial' %}
+            {% include 'cadastros/grids/grid_comercial.html' %}
+        {% elif aba_ativa == 'pessoas' %}
+            {% include 'cadastros/grids/grid_pessoas.html' %}
+        {% elif aba_ativa == 'parametros' %}
+            {% include 'cadastros/grids/grid_parametros.html' %}
+        {% endif %}
+    </div>
+
+    {# Área inline para Central de Relatórios (substitui o grid temporariamente) #}
+    <div id="arione-central-inline" class="arione-content-box" style="display: none;"></div>
+
+    <script>
+    function abrirModalRelatoriosMestre() {
+        const url = "{{ url_for('cadastros.gateway_modulos_cadastro') }}";
+        const gridArea = document.getElementById('arione-grid-area');
+        const inlineArea = document.getElementById('arione-central-inline');
+
+        if (!gridArea || !inlineArea) return;
+
+        inlineArea.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                gridArea.style.display = 'none';
+                inlineArea.innerHTML = html;
+                inlineArea.style.display = 'block';
+                inlineArea.style.opacity = '1';
+                
+                // RE-INJEÇÃO DE SCRIPTS (CRÍTICO)
+                inlineArea.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar Central de Relatórios:", err);
+                inlineArea.style.opacity = '1';
+            });
+    }
+
+    // Função para fechar o modal
+    function fecharModalCat() {
+        const modal = document.getElementById('modal-overlay-cat');
+        if (modal) modal.classList.remove('ativo');
+        document.body.style.overflow = '';
+    }
+
+    // 🛡️ AriOne: Recepção de Navegação Contextual
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const abrir = params.get('abrir');
+        const abaAtiva = params.get('aba');
+
+        if (abrir) {
+            console.log(`🛡️ AriOne: Auto-executando abertura de ${abrir} na aba ${abaAtiva}`);
+            setTimeout(() => {
+                if (abaAtiva === 'catalogos' && typeof abrirModalCat === 'function') abrirModalCat(abrir);
+                if (abaAtiva === 'pessoas' && typeof abrirModalPess === 'function') abrirModalPess(abrir);
+                if (abaAtiva === 'parametros' && typeof abrirModalPar === 'function') abrirModalPar(abrir);
+            }, 500); // Delay para garantir que o grid carregou
+        }
+    });
+    </script>
+
+    {% if is_ari_dev %}
+    <script>
+    // ── AUDITORIA GLOBAL DE SELOS DE OURO (ARI-AUDIT) ──
+    // Esta rotina monitora o progresso de todos os setores e estampa o Selo de Ouro 
+    // nas abas do menu superior em tempo real, independente da aba ativa.
+    
+    function verificarSelosAbasGlobal() {
+        const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+
+        const configuracao = [
+            { 
+                label: 'PESSOAS', 
+                modulos: [
+                    { sub: "CADASTROS — Pessoas", tela: "Funcionários" },
+                    { sub: "CADASTROS — Pessoas", tela: "Clientes" },
+                    { sub: "CADASTROS — Pessoas", tela: "Fornecedores" },
+                    { sub: "CADASTROS — Pessoas", tela: "Motoristas" },
+                    { sub: "CADASTROS — Pessoas", tela: "Revendedores" },
+                    { sub: "CADASTROS — Pessoas", tela: "Influenciadores" },
+                    { sub: "CADASTROS — Pessoas", tela: "Estilistas" }
+                ]
+            },
+            {
+                label: 'CATALOGOS',
+                modulos: [
+                    { sub: "CADASTROS — Catálogos", tela: "Produtos" },
+                    { sub: "CADASTROS — Catálogos", tela: "Serviços" },
+                    { sub: "CADASTROS — Catálogos", tela: "Marcas" },
+                    { sub: "CADASTROS — Catálogos", tela: "Categorias" },
+                    { sub: "CADASTROS — Catálogos", tela: "Unidades & Medidas" },
+                    { sub: "CADASTROS — Catálogos", tela: "Depósitos" },
+                    { sub: "CADASTROS — Catálogos", tela: "Etiquetas" },
+                    { sub: "CADASTROS — Catálogos", tela: "Matéria-Prima" },
+                    { sub: "CADASTROS — Catálogos", tela: "Insumos" },
+                    { sub: "CADASTROS — Catálogos", tela: "Acessórios" },
+                    { sub: "CADASTROS — Catálogos", tela: "Embalagens" },
+                    { sub: "CADASTROS — Catálogos", tela: "Perfis de Venda" }
+                ]
+            },
+            {
+                label: 'COMERCIAL',
+                modulos: [
+                    { sub: "CADASTROS — Comercial", tela: "Ministérios" },
+                    { sub: "CADASTROS — Comercial", tela: "Parcerias" }
+                ]
+            },
+            {
+                label: 'PARAMETROS',
+                modulos: [
+                    { sub: "CADASTROS — Parâmetros", tela: "Compras" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Vendas" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Produção" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Fiscal" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Financeiro" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Comercial" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Produtos" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Identidade Visual" },
+                    { sub: "CADASTROS — Parâmetros", tela: "Status / Workflow" }
+                ]
+            }
+        ];
+
+        const abaLinks = document.querySelectorAll('.arione-aba');
+        
+        configuracao.forEach(setor => {
+            const todosCertificados = setor.modulos.every(m => {
+                const sId = getSafeId(m.sub + "_" + m.tela);
+                return localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+            });
+
+            abaLinks.forEach(link => {
+                const label = link.querySelector('.arione-aba-label');
+                if (!label || !label.textContent.trim().toUpperCase().includes(setor.label)) return;
+
+                const existingSeal = link.querySelector('.arione-aba-golden-seal');
+
+                if (todosCertificados) {
+                    if (!existingSeal) {
+                        const seal = document.createElement('span');
+                        seal.className = 'arione-aba-golden-seal';
+                        seal.title = `Padrão Ouro: Setor ${setor.label} 100% certificado!`;
+                        seal.innerHTML = '<i class="fas fa-award"></i>';
+                        seal.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:linear-gradient(135deg,#FFD700 0%,#FFA500 100%);border-radius:50%;font-size:9px;color:#7A255F;margin-left:8px;box-shadow:0 3px 8px rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.6);animation:sealPulse 2s ease-in-out infinite;flex-shrink:0;';
+                        link.appendChild(seal);
+                        
+                        if (!document.getElementById('aba-seal-keyframes')) {
+                            const style = document.createElement('style');
+                            style.id = 'aba-seal-keyframes';
+                            style.textContent = '@keyframes sealPulse { 0%,100%{transform:scale(1);filter:brightness(1)} 50%{transform:scale(1.15);filter:brightness(1.3)} }';
+                            document.head.appendChild(style);
+                        }
+                    }
+                } else if (existingSeal) {
+                    existingSeal.remove();
+                }
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        verificarSelosAbasGlobal();
+        setInterval(verificarSelosAbasGlobal, 2000);
+    });
+    </script>
+    {% endif %}
+    <script>
+    // ── NAVEGAÇÃO DE PRECISÃO (Deep Linking AriOne) ──
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const cardParaAbrir = urlParams.get('card');
+        const abaAtiva = urlParams.get('aba');
+
+        if (cardParaAbrir) {
+            console.log("Detectado parâmetro card: " + cardParaAbrir + " na aba: " + abaAtiva);
+            // Delay de 1s para garantir que o grid e suas funções foram injetados no DOM
+            setTimeout(() => {
+                if (abaAtiva === 'catalogos') {
+                    if (typeof abrirModalCat === 'function') {
+                        console.log("Deep Link: Abrindo modal de catálogos para -> " + cardParaAbrir);
+                        abrirModalCat(cardParaAbrir);
+                    } else {
+                        console.warn("Deep Link Falhou: abrirModalCat não encontrada!");
+                    }
+                } else if (abaAtiva === 'pessoas') {
+                    if (typeof abrirModalPess === 'function') {
+                        console.log("Deep Link: Abrindo modal de pessoas para -> " + cardParaAbrir);
+                        abrirModalPess(cardParaAbrir);
+                    } else {
+                        console.warn("Deep Link Falhou: abrirModalPess não encontrada!");
+                    }
+                }
+            }, 1000);
+        }
+    });
+    </script>
+
+</div>
+{% endblock %}

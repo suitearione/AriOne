@@ -1,0 +1,162 @@
+<!-- templates/cadastros/grids/grid_comercial.html -->
+<div id="modal-overlay-com" class="ge-modal-overlay" onclick="fecharModalCom()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" id="modal-header-com">
+            <div class="ge-modal-title"><i id="modal-icon-com" class="ge-modal-icon"></i><span id="modal-titulo-com">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalCom()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-com"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+
+    <!-- CABEÇALHO -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #E67E22;">
+        <div style="display:flex; align-items:center; gap:10px; font-size:18px; font-weight:700; color:#E67E22;">
+            <i class="fas fa-briefcase"></i><span>Comercial</span>
+        </div>
+    </div>
+
+    <!-- CARDS DE ACESSO RÁPIDO -->
+    <div class="ge-cards-container" style="margin-bottom:24px;">
+        {% if ParametroSistema.get_valor('ativar_ministerio', '1') == '1' %}
+        <div class="ge-card" id="card-com-ministerios" onclick="window.location.href='{{ url_for('cadastros.card_ministerios') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-church ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-church ge-card-icon"></i></div>
+            <span class="ge-card-label">Ministérios</span><span class="ge-card-desc">Parcerias ministeriais</span>
+        </div>
+        {% endif %}
+
+        <div class="ge-card" id="card-com-parcerias" onclick="window.location.href='{{ url_for('cadastros.card_parcerias') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-handshake ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-handshake ge-card-icon"></i></div>
+            <span class="ge-card-label">Contratos & Parcerias</span><span class="ge-card-desc">Acordos comerciais</span>
+        </div>
+
+        <div class="ge-card" id="card-com-vendedores" onclick="window.location.href='{{ url_for('cadastros.form_vendedor') }}'" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-user-tie ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-user-tie ge-card-icon"></i></div>
+            <span class="ge-card-label">Consultores</span><span class="ge-card-desc">Gestão da equipe</span>
+        </div>
+
+        {# REMOVIDO POR ARISVAN - USAR O MÓDULO OPERACIONAL > VENDAS #}
+        {# 
+        <div class="ge-card" id="card-com-tabelas" onclick="abrirModalCom('tabelas')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-tags ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-tags ge-card-icon"></i></div>
+            <span class="ge-card-label">Tabelas de Preços</span><span class="ge-card-desc">Políticas e Margens</span>
+        </div>
+        #}
+    </div>
+</div>
+
+<style>
+@keyframes modalEntrar { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+
+.ge-card {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* Badge de Conclusão AriOne (Selo de Ouro) */
+.ge-card-done-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #7A255F;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 10;
+    border: 1.5px solid #fff;
+    animation: badgeShine 3s infinite;
+}
+
+@keyframes badgeShine {
+    0% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.1); filter: brightness(1.3); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+</style>
+ 
+<script>
+const _configCom = {
+    ministerios:     { titulo: 'Parcerias Ministeriais',   icone: 'fas fa-church',      cor: '#7A255F', corL: '#a8357f' },
+    parcerias:       { titulo: 'Contratos & Parcerias',    icone: 'fas fa-handshake',   cor: '#27AE60', corL: '#2ecc71' },
+    vendedores:      { titulo: 'Equipe de Consultores',    icone: 'fas fa-user-tie',    cor: '#2980B9', corL: '#3498db' },
+    tabelas:         { titulo: 'Tabelas de Preços',        icone: 'fas fa-tags',        cor: '#E67E22', corL: '#f39c12', desativado: true },
+};
+ 
+const _rotasCom = {
+    ministerios:     "{{ url_for('cadastros.card_ministerios') }}",
+    parcerias:       "{{ url_for('cadastros.card_parcerias') }}",
+    vendedores:      "{{ url_for('cadastros.form_vendedor') }}",
+    tabelas:         "{{ url_for('operacoes.card_tabelas_precos') }}",
+};
+
+function abrirModalCom(tipo) {
+    const rota = _rotasCom[tipo];
+    if (!rota) return;
+    window.location.href = rota;
+}
+ 
+function fecharModalCom() {
+    document.getElementById('modal-overlay-com').style.display = 'none';
+    document.body.style.overflow = '';
+}
+ 
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') fecharModalCom();
+});
+
+{% if is_ari_dev %}
+// ── CARD SEAL DETECTOR (COMERCIAL) ──
+function updateComSeals() {
+    const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    
+    const mappings = {
+        'card-com-ministerios': { sub: "CADASTROS — Comercial", tela: "Ministérios" },
+        'card-com-parcerias':   { sub: "CADASTROS — Comercial", tela: "Parcerias" },
+        'card-com-vendedores':  { sub: "CADASTROS — Comercial", tela: "Consultores" },
+        // 'card-com-tabelas':     { sub: "CADASTROS — Comercial", tela: "Tabelas de Preços" }
+    };
+
+    Object.entries(mappings).forEach(([cardId, info]) => {
+        const sId = getSafeId(info.sub + "_" + info.tela);
+        const isPronto = localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+        const card = document.getElementById(cardId);
+        
+        if (card) {
+            let badge = card.querySelector('.ge-card-done-badge');
+            if (isPronto) {
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'ge-card-done-badge';
+                    badge.innerHTML = '<i class="fas fa-award"></i>';
+                    badge.title = "AriOne Golden Standard";
+                    card.appendChild(badge);
+                    card.style.borderColor = "#FFD700";
+                    card.style.boxShadow = "0 0 15px rgba(255, 215, 0, 0.2)";
+                }
+            } else if (badge) {
+                badge.remove();
+                card.style.borderColor = "";
+                card.style.boxShadow = "";
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateComSeals();
+    setInterval(updateComSeals, 2000);
+});
+{% endif %}
+</script>

@@ -1,0 +1,105 @@
+{# =============================================================================
+   Arquivo  : form_vendas_comissoes.html
+   Caminho  : templates/operacoes/cards/vendas/form_vendas_comissoes.html
+   Função   : Gestão de Comissões, Metas e Alçadas de Consultores AriOne.
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+
+{% block content %}
+<div class="ctx-comissao-wrap">
+    <style>
+        :root { --comis-pri: #E67E22; --comis-acc: #D35400; }
+        .ctx-comis-header { background: linear-gradient(135deg, #E67E22, #D35400); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-comis-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        .comis-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .comis-title { font-size: 11px; font-weight: 800; color: #D35400; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .comis-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .comis-label { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; display: block; }
+        .comis-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; width: 100%; box-sizing: border-box; }
+
+        /* Toolbar CRUD */
+        .comis-toolbar { background: #f8fafc; border-bottom: 1.5px solid #edf2f7; padding: 10px 22px; display: flex; gap: 10px; }
+        .btn-crud { background: #fff; border: 1.5px solid #e2e8f0; padding: 6px 15px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; }
+        .btn-crud:hover { border-color: var(--comis-pri); color: var(--comis-pri); }
+        .btn-crud.active { background: var(--comis-pri); color: #fff; border-color: var(--comis-pri); }
+    </style>
+
+    <div class="ctx-comis-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.2); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-percentage"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Controle de Comissões</div>
+                <div style="font-size: 0.75rem; opacity: 0.9;">Gestão de Remuneração Variável & Metas</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);" onclick="fecharModalOpe()">Sair</button>
+            <button class="ge-btn-salvar" style="background:#fff; color:#D35400; border:none; padding:8px 24px; border-radius:6px; font-weight:700; cursor:pointer;"><i class="fas fa-save"></i> Salvar Regra</button>
+        </div>
+    </div>
+
+    <div class="comis-toolbar">
+        <button class="btn-crud active"><i class="fas fa-plus"></i> Novo Acordo</button>
+        <button class="btn-crud"><i class="fas fa-edit"></i> Editar</button>
+        <button class="btn-crud"><i class="fas fa-history"></i> Histórico</button>
+        <button class="btn-crud" style="margin-left:auto; color:#cc3333;"><i class="fas fa-trash"></i> Excluir</button>
+    </div>
+
+    <div class="ctx-comis-body">
+        <form>
+            <div class="comis-section">
+                <div class="comis-title"><i class="fas fa-user-tie"></i> Identificação do Consultor</div>
+                <div class="comis-row">
+                    <div class="comis-group" style="grid-column: span 2;">
+                        <label class="comis-label">Consultor / Representante</label>
+                        <select class="comis-input">
+                            <option>Selecione um Consultor...</option>
+                            <option>João Silva - Executivo</option>
+                            <option>Maria Oliveira - Regional</option>
+                        </select>
+                    </div>
+                    <div class="comis-group">
+                        <label class="comis-label">Vigência Início</label>
+                        <input type="date" class="comis-input">
+                    </div>
+                    <div class="comis-group">
+                        <label class="comis-label">Vigência Fim</label>
+                        <input type="date" class="comis-input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="comis-section">
+                <div class="comis-title"><i class="fas fa-coins"></i> Regras de Cálculo</div>
+                <div class="comis-row">
+                    <div class="comis-group" style="grid-column: span 2;">
+                        <label class="comis-label">Base de Incidência</label>
+                        <select class="comis-input">
+                            <option>Faturamento Bruto (Valor da NF)</option>
+                            <option>Recebimento Efetivo (Baixa do Título)</option>
+                            <option>Lucro Bruto (Margem de Contribuição)</option>
+                        </select>
+                    </div>
+                    <div class="comis-group">
+                        <label class="comis-label">Alíquota Base (%)</label>
+                        <input type="number" class="comis-input" value="1.00" step="0.01">
+                    </div>
+                    <div class="comis-group">
+                        <label class="comis-label">Meta Mensal (R$)</label>
+                        <input type="text" class="comis-input" placeholder="0,00">
+                    </div>
+                </div>
+            </div>
+
+            <div class="comis-section">
+                <div class="comis-title"><i class="fas fa-stairs"></i> Escalonamento por Meta (Aceleradores)</div>
+                <div class="comis-row">
+                    <div class="comis-group"><label class="comis-label">Até 80% da Meta</label><input type="text" class="comis-input" value="1.00%" disabled></div>
+                    <div class="comis-group"><label class="comis-label">80% a 100%</label><input type="text" class="comis-input" value="1.50%"></div>
+                    <div class="comis-group"><label class="comis-label">Acima de 100%</label><input type="text" class="comis-input" value="2.00%"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

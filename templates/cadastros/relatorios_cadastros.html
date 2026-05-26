@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% from "macros/filtros_relatorio.html" import gerar_filtros_arione %}
+
+{# 
+=============================================================================
+Caminho : templates/cadastros/relatorios_cadastros.html
+Arquivo : relatorios_cadastros.html
+Função  : Central de BI e Relatórios Estratégicos AriOne.
+Padrão  : Premium AriOne (High-Fidelity Dashboard)
+============================================================================= 
+#}
+
+{% block content %}
+<div class="arione-page-wrapper">
+    <div class="fe-rel-container" style="max-width: 100%; overflow-x: hidden;">
+    
+    {# ── CABEÇALHO EXECUTIVO (MODERNO) ── #}
+    <div class="fe-header" style="background: linear-gradient(90deg, #7A255F 0%, #2980B9 20%, #7F8C8D 40%, #E67E22 60%, #0072CE 80%, #27AE60 100%); margin-bottom: 25px; border-radius: 12px; height: 100px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+        <div class="fe-header-left">
+            <div class="fe-header-icon" style="background: rgba(255,255,255,0.2); width: 60px; height: 60px; font-size: 24px;">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div>
+                <h2 class="fe-header-title" style="font-size: 22px; font-weight: 800;">Gerenciamento de Cadastros</h2>
+                <p style="color: rgba(255,255,255,0.85); font-size: 13px; margin: 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Estrutura Organizacional</p>
+            </div>
+        </div>
+        <div class="fe-header-actions">
+            <a href="{{ url_for('cadastros.abas') }}" class="fe-btn-arione-ghost">
+                <i class="fas fa-arrow-left"></i> Voltar ao Painel
+            </a>
+        </div>
+    </div>
+
+    {# ── NAVEGAÇÃO DE ALTO NÍVEL (ABAS) ── #}
+    <div class="fe-rel-nav-tabs">
+        <a href="{{ url_for('cadastros.relatorios_cadastros', tipo='organograma') }}" class="fe-rel-tab {{ 'active' if tipo_relatorio in ['organograma', 'ocupacao', 'densidade'] }}">
+            <i class="fas fa-sitemap"></i> Estrutura Organizacional
+        </a>
+        <a href="{{ url_for('cadastros.relatorios_cadastros', tipo='matriz') }}" class="fe-rel-tab {{ 'active' if tipo_relatorio in ['matriz', 'headcount', 'turnover'] }}">
+            <i class="fas fa-users-gear"></i> Micro Estrutura (HCM)
+        </a>
+        <a href="{{ url_for('cadastros.relatorios_cadastros', tipo='cap_table') }}" class="fe-rel-tab {{ 'active' if tipo_relatorio in ['cap_table', 'aportes'] }}">
+            <i class="fas fa-gem"></i> Societário e Capital
+        </a>
+    </div>
+
+    {# ── PAINEL DE COMANDO INTELIGENTE (FORMULÁRIO E DASHBOARD) ── #}
+    <div class="fe-rel-smart-dashboard">
+        
+        <!-- COLUNA 1: SELEÇÃO EXECUTIVA (FORMULÁRIO) -->
+        <div class="fe-rel-control-panel">
+            <div class="fe-rel-card-glass">
+                <h3><i class="fas fa-filter"></i> Seleção de Inteligência</h3>
+                <p>Escolha o domínio que deseja analisar:</p>
+                
+                <form action="{{ url_for('cadastros.relatorios_cadastros') }}" method="GET" class="fe-rel-form-select">
+                    <div class="fe-rel-select-wrapper">
+                        <select name="tipo" onchange="this.form.submit()">
+                            <option value="" {{ 'selected' if not tipo_relatorio }}>— Selecionar Relatório —</option>
+                            <option value="dados" {{ 'selected' if tipo_relatorio == 'dados' }}>Relatório: Dados Mestres (Ficha)</option>
+                            <option value="setores" {{ 'selected' if tipo_relatorio == 'setores' }}>Relatório: Estrutura de Setores</option>
+                            <option value="departamentos" {{ 'selected' if tipo_relatorio == 'departamentos' }}>Relatório: Departamentos e HCM</option>
+                            <option value="cargos" {{ 'selected' if tipo_relatorio == 'cargos' }}>Relatório: Matriz de Cargos</option>
+                            <option value="socios" {{ 'selected' if tipo_relatorio == 'socios' }}>Relatório: Quadro Societário</option>
+                            <option value="investidores" {{ 'selected' if tipo_relatorio == 'investidores' }}>Relatório: Capital e Investimento</option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </form>
+                
+                <div class="fe-rel-quick-stats">
+                    <span><i class="fas fa-clock"></i> Última atualização: <b>Agora</b></span>
+                    <span><i class="fas fa-shield-halved"></i> Dados Auditados</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUNA 2: DIAGNÓSTICO DE SAÚDE (INDICADORES GATILHO) -->
+        <div class="fe-rel-health-diagnostics">
+            <div class="diag-item" onclick="location.href='?tipo=setores&v=alertas'">
+                <div class="diag-icon critico"><i class="fas fa-triangle-exclamation"></i></div>
+                <div class="diag-info">
+                    <span class="diag-val">{{ info.setores_vazios }}</span>
+                    <span class="diag-lbl">Setores s/ Responsáveis</span>
+                </div>
+            </div>
+            <div class="diag-item" onclick="location.href='?tipo=dados&v=pendencias'">
+                <div class="diag-icon atencao"><i class="fas fa-file-circle-exclamation"></i></div>
+                <div class="diag-info">
+                    <span class="diag-val">3</span>
+                    <span class="diag-lbl">CNAEs Desatualizados</span>
+                </div>
+            </div>
+            <div class="diag-item ok" onclick="location.href='?tipo=socios'">
+                <div class="diag-icon success"><i class="fas fa-check-double"></i></div>
+                <div class="diag-info">
+                    <span class="diag-val">100%</span>
+                    <span class="diag-lbl">Docs. Sócios OK</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {# ── ÁREA DE RELATÓRIO DINÂMICO ── #}
+    {% if tipo_relatorio and tipo_relatorio != 'dashboard' %}
+    <div class="fe-rel-report-container-dynamic animate-fade-in">
+        <div class="fe-card fe-rel-view-card">
+            <div class="fe-card-title fe-rel-view-header">
+                <div class="header-main-info">
+                    <div class="header-icon-box">
+                        <i class="fas {% if tipo_relatorio == 'setores' %}fa-sitemap{% elif tipo_relatorio == 'socios' %}fa-users-line{% else %}fa-file-lines{% endif %}"></i>
+                    </div>
+                    <div class="header-texts">
+                        <h4>Análise Detalhada: {{ tipo_relatorio|title }}</h4>
+                        <small>Unidade: {{ session.get('nome_empresa', 'Geral') }}</small>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-rel-export"><i class="fas fa-download"></i> Exportar</button>
+                    <button class="btn-rel-print"><i class="fas fa-print"></i></button>
+                </div>
+            </div>
+
+            <div class="fe-card-body">
+                {% if tipo_relatorio == 'setores' %}
+                   {% include "cadastros/partials/_rel_organograma.html" ignore missing %}
+                {% elif tipo_relatorio == 'socios' %}
+                   {% include "cadastros/partials/_rel_cap_table.html" ignore missing %}
+                {% else %}
+                   <div class="fe-rel-empty-state">
+                        <img src="{{ url_for('static', filename='img/empty_report.svg') }}" onerror="this.src='https://illustrations.popsy.co/amber/finance-and-audit.svg'" alt="Vazio">
+                        <h5>Aguardando Configuração de Dados</h5>
+                        <p>O módulo de processamento para este relatório está em fase de integração.</p>
+                        <a href="{{ url_for('cadastros.relatorios_cadastros') }}" class="btn-re-voltar">Limpar Seleção</a>
+                   </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="fe-rel-intro-state">
+        <i class="fas fa-chart-pie"></i>
+        <h3>Bem-vindo à Central de BI Cadastral</h3>
+        <p>Utilize o painel acima para selecionar um domínio e gerar o diagnóstico estratégico.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+</div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ── SMART DASHBOARD / COMMAND CENTER ── */
+.fe-rel-smart-dashboard {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 30px;
+    margin-bottom: 35px;
+}
+
+/* PAINEL DE SELEÇÃO (GLASS) */
+.fe-rel-card-glass {
+    background: #fff;
+    border: 1.5px solid #edf2f7;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
+.fe-rel-card-glass h3 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #2d3748;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fe-rel-card-glass h3 i { color: #7A255F; }
+
+.fe-rel-card-glass p {
+    font-size: 13px;
+    color: #718096;
+    margin-bottom: 25px;
+}
+
+.fe-rel-form-select {
+    margin-bottom: 25px;
+}
+
+.fe-rel-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.fe-rel-select-wrapper select {
+    width: 100%;
+    padding: 14px 20px;
+    border: 2px solid #f1f5f9;
+    border-radius: 12px;
+    background: #f8fafc;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2d3748;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fe-rel-select-wrapper select:focus {
+    border-color: #7A255F;
+    background: #fff;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(122, 37, 95, 0.1);
+}
+
+.fe-rel-select-wrapper i {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    pointer-events: none;
+}
+
+.fe-rel-quick-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1.5px solid #f1f5f9;
+    padding-top: 20px;
+}
+
+.fe-rel-quick-stats span {
+    font-size: 11px;
+    color: #a0aec0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* DIAGNÓSTICO DE SAÚDE */
+.fe-rel-health-diagnostics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.diag-item {
+    background: #fff;
+    border: 1.5px solid #edf2f7;
+    border-radius: 20px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.diag-item:hover {
+    transform: translateY(-5px);
+    border-color: #cbd5e0;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+}
+
+.diag-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.diag-icon.critico { background: #fff5f5; color: #e74c3c; }
+.diag-icon.atencao { background: #fffaf0; color: #f6ad55; }
+.diag-icon.success { background: #f0fff4; color: #38a169; }
+
+.diag-val {
+    display: block;
+    font-size: 22px;
+    font-weight: 900;
+    color: #2d3748;
+}
+
+.diag-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    color: #a0aec0;
+    text-transform: uppercase;
+}
+
+/* ÁREA DE RELATÓRIO DINÂMICO */
+.fe-rel-report-container-dynamic {
+    margin-top: 20px;
+}
+
+.fe-rel-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 35px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.header-main-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-icon-box {
+    width: 45px;
+    height: 45px;
+    background: #fdf5fa;
+    color: #7A255F;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.header-texts h4 { margin: 0; font-size: 17px; font-weight: 800; color: #2d3748; }
+.header-texts small { color: #a0aec0; font-weight: 600; }
+
+.header-actions { display: flex; gap: 10px; }
+
+.btn-rel-export, .btn-rel-print {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-rel-export { background: #2d3748; color: #fff; }
+.btn-rel-print { background: #f1f5f9; color: #4a5568; }
+
+.fe-rel-empty-state {
+    text-align: center;
+    padding: 80px 40px;
+}
+
+.fe-rel-empty-state img { width: 140px; margin-bottom: 25px; opacity: 0.8; }
+.fe-rel-empty-state h5 { font-size: 18px; font-weight: 800; color: #2d3748; margin-bottom: 10px; }
+.fe-rel-empty-state p { color: #a0aec0; font-size: 14px; margin-bottom: 25px; }
+
+.btn-re-voltar {
+    display: inline-block;
+    padding: 12px 25px;
+    background: #f1f5f9;
+    color: #4a5568;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.fe-rel-intro-state {
+    text-align: center;
+    padding: 100px 50px;
+    color: #cbd5e0;
+}
+
+.fe-rel-intro-state i { font-size: 60px; margin-bottom: 20px; }
+.fe-rel-intro-state h3 { color: #718096; font-size: 20px; font-weight: 800; }
+
+/* ── ARIONE PREMIUM DASHBOARD STYLES ── */
+.fe-rel-container, .fe-rel-container * { box-sizing: border-box; }
+
+.fe-rel-nav-tabs { display: flex; gap: 40px; border-bottom: 2px solid #f1f5f9; margin-bottom: 30px; padding: 0 10px; }
+.fe-rel-tab {
+    padding: 15px 5px; font-size: 15px; font-weight: 700; color: #718096; text-decoration: none;
+    border-bottom: 4px solid transparent; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+}
+.fe-rel-tab:hover { color: var(--pri); }
+.fe-rel-tab.active { color: var(--pri); border-bottom-color: var(--pri); }
+
+.fe-rel-badge-status { font-size: 10px; font-weight: 800; color: #718096; background: #f1f5f9; padding: 6px 15px; border-radius: 30px; letter-spacing: 1px; }
+
+.fe-rel-placeholder-v2 { text-align: center; padding: 100px 50px; }
+.fe-rel-icon-bg { font-size: 48px; color: #e2e8f0; margin-bottom: 20px; }
+
+/* ── CONTAINMENT FIXES ── */
+.fe-rel-container { 
+    max-width: 100%; 
+    overflow-x: hidden; 
+    position: relative; 
+}
+</style>
+{% endblock %}

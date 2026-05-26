@@ -1,0 +1,146 @@
+{# =============================================================================
+   Arquivo  : rel_consultores.html
+   Caminho  : templates/operacoes/cards/vendas/rel_consultores.html
+   Função   : Listagem Executiva de Consultores/Vendedores (Nível 3).
+   Cor Tema : #8E44AD (Consultores)
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap" style="animation: feFadeUp 0.3s ease;">
+    <style>
+        .rel-header-cons {
+            padding: 22px 25px;
+            background: linear-gradient(90deg, #8E44AD, #9B59B6); 
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .rel-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .rel-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        .rel-search-box { display: flex; gap: 15px; margin-bottom: 25px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .rel-search-input { flex: 1; padding: 12px 18px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; color: #1e293b; outline: none; transition: 0.2s; }
+        .rel-search-input:focus { border-color: #8E44AD; box-shadow: 0 0 0 3px rgba(142,68,173,0.15); background: #fff; }
+
+        .rel-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .rel-table th { background: #f1f5f9; color: #475569; font-weight: 800; font-size: 11px; text-transform: uppercase; padding: 14px 16px; text-align: left; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.5px; }
+        .rel-table th:first-child { border-top-left-radius: 10px; }
+        .rel-table th:last-child { border-top-right-radius: 10px; }
+        .rel-table td { padding: 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        .rel-table tr:hover td { background: #f8fafc; }
+        .rel-table tr:last-child td { border-bottom: none; }
+
+        .pos-badge { width: 28px; height: 28px; border-radius: 8px; background: #f1f5f9; color: #475569; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 12px; }
+        .pos-top1 { background: #FEF3C7; color: #D97706; }
+        .pos-top2 { background: #F1F5F9; color: #64748B; }
+        .pos-top3 { background: #FFEDD5; color: #C2410C; }
+    </style>
+
+    <div class="rel-header-cons">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button type="button" onclick="voltarParaPIV()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; transition:0.2s;"><i class="fas fa-arrow-left"></i></button>
+            <div class="rel-title"><i class="fas fa-user-tie"></i> Performance de Consultores</div>
+        </div>
+        <button type="button" class="ge-modal-fechar" onclick="voltarParaPIV()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center; transition:0.2s;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="rel-body">
+        <div class="rel-search-box">
+            <div style="display:flex; align-items:center; color:#94a3b8; font-size:18px; padding-left:5px;"><i class="fas fa-search"></i></div>
+            <input type="text" id="filtro-cons" class="rel-search-input" placeholder="Filtrar por nome do consultor..." onkeyup="filtrarTabelaCons()">
+            <div style="display:flex; align-items:center; color:#64748b; font-size:12px; font-weight:700; padding-right:10px;">
+                <span id="contador-cons">{{ consultores|length }} consultores listados</span>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="rel-table" id="tabela-cons">
+                <thead>
+                    <tr>
+                        <th style="width: 10%; text-align: center;">Posição</th>
+                        <th style="width: 35%;">Consultor</th>
+                        <th style="width: 15%; text-align: center;">Qtd Pedidos</th>
+                        <th style="width: 20%; text-align: right;">Total Vendido</th>
+                        <th style="width: 20%; text-align: right;">Comissão Estimada (5%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in consultores %}
+                    <tr class="linha-cons">
+                        <td style="text-align: center;">
+                            <div class="pos-badge {{ 'pos-top1' if c.posicao == 1 else ('pos-top2' if c.posicao == 2 else ('pos-top3' if c.posicao == 3 else '')) }}">
+                                {{ c.posicao }}º
+                            </div>
+                        </td>
+                        <td style="font-weight: 800; color: #1e293b;">{{ c.nome }}</td>
+                        <td style="text-align: center; font-weight: 700; color: #64748b;">{{ c.qtd_pedidos }}</td>
+                        <td style="text-align: right; font-weight: 900; color: #8E44AD;">R$ {{ "{:,.2f}".format(c.total_vendido or 0).replace(',','v').replace('.',',').replace('v','.') }}</td>
+                        <td style="text-align: right; font-weight: 800; color: #27AE60;">R$ {{ "{:,.2f}".format(c.comissao or 0).replace(',','v').replace('.',',').replace('v','.') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #94a3b8; font-weight: 700;">
+                            <i class="fas fa-user-slash" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                            Nenhum consultor com vendas confirmadas registrado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function filtrarTabelaCons() {
+    const input = document.getElementById('filtro-cons').value.toLowerCase();
+    const rows = document.querySelectorAll('#tabela-cons tbody tr.linha-cons');
+    let count = 0;
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(input)) {
+            row.style.display = '';
+            count++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const contador = document.getElementById('contador-cons');
+    if (contador) {
+        contador.textContent = count + " consultores listados";
+    }
+}
+
+function voltarParaPIV() {
+    const url = "/operacoes/cards/relatorios?modulo=vendas&modal=1";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao voltar para PIV:", err);
+                content.style.opacity = '1';
+                window.location.href = url;
+            });
+    } else {
+        window.location.href = url;
+    }
+}
+</script>

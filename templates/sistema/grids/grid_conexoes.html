@@ -1,0 +1,34 @@
+{# =============================================================================
+   Caminho  : templates/sistema/grids/grid_conexoes.html
+   Arquivo  : grid_conexoes.html
+   Função   : Painel de gerenciamento de conexões.
+   Descrição: Cards para configuração de APIs e logs de sincronização.
+============================================================================= #}
+<div class="ge-grid-wrapper" style="padding: 10px 20px;">
+    <div class="ge-section-title">
+        <i class="fas fa-plug"></i>
+        <span>Gerenciamento de Integrações & APIs</span>
+    </div>
+
+    <div class="ge-cards-container">
+        <!-- API SETTINGS -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('sistema.form_api_config') }}'" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10); cursor:pointer;">
+            <i class="fas fa-project-diagram ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-key ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">API Config</span>
+            <span class="ge-card-desc">Chaves e Tokens</span>
+        </div>
+
+        <!-- SYNC LOGS -->
+        <div class="ge-card" onclick="abrirModalGlobal('{{ url_for('sistema.card_sync_logs') }}')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10); cursor:pointer;">
+            <i class="fas fa-sync ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-history ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Sync Logs</span>
+            <span class="ge-card-desc">Histórico de Eventos</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,134 @@
+<div id="modal-overlay-prd" class="ge-modal-overlay" onclick="fecharModalPrd()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" style="display:none;"></div> <!-- Header vem de dentro do formulário premium -->
+        <div class="ge-modal-body" id="modal-body-prd" style="padding:0;"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-industry"></i><span>Produção</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalPrd('parametros')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-sliders-h ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-sliders-h ge-card-icon"></i></div>
+            <span class="ge-card-label">Parâmetros</span><span class="ge-card-desc">Config. de produção</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('ops')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-cogs ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-cogs ge-card-icon"></i></div>
+            <span class="ge-card-label">Ordens de Produção</span><span class="ge-card-desc">OPs abertas</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('pca')" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-calendar-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-calendar-alt ge-card-icon"></i></div>
+            <span class="ge-card-label">Plano PCA</span><span class="ge-card-desc">Planejamento de capacidade</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('plm')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-project-diagram ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-project-diagram ge-card-icon"></i></div>
+            <span class="ge-card-label">Plano PLM</span><span class="ge-card-desc">Ciclo de vida do produto</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('vmc')" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-eye ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-eye ge-card-icon"></i></div>
+            <span class="ge-card-label">Visual VMC</span><span class="ge-card-desc">Controle visual</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('envio_oficinas')" style="--card-cor:#16A085;--card-cor-bg:rgba(22,160,133,0.10);">
+            <i class="fas fa-paper-plane ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-paper-plane ge-card-icon"></i></div>
+            <span class="ge-card-label">Envio Oficinas</span><span class="ge-card-desc">Envio para produção</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('retorno_oficinas')" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,0.10);">
+            <i class="fas fa-reply ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-reply ge-card-icon"></i></div>
+            <span class="ge-card-label">Retorno Oficinas</span><span class="ge-card-desc">Retorno de produção</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('insumos')" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-flask ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-flask ge-card-icon"></i></div>
+            <span class="ge-card-label">Controle de Insumos</span><span class="ge-card-desc">Insumos consumidos</span>
+        </div>
+
+    </div>
+</div>
+
+<style>
+/* Modal Overlay Standard AriOne */
+.ge-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px); display: none; z-index: 9999;
+    align-items: center; justify-content: center;
+}
+.ge-modal-overlay.ativo { display: flex; }
+.ge-modal {
+    width: 95%; max-width: 1100px; max-height: 95vh;
+    border-radius: 12px; overflow-y: auto; background: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlide 0.25s ease-out;
+}
+@keyframes modalSlide { from {opacity:0; transform:translateY(30px);} to {opacity:1; transform:translateY(0);} }
+
+/* Componentes de Grid Interno */
+.ge-grid-wrapper { padding: 25px; }
+.ge-section-title { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+.ge-cards-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+</style>
+
+<script>
+const endpointsPrd = {
+    ops:              '{{ url_for("operacoes.card_producao_op", modal=1) }}',
+    pca:              '{{ url_for("operacoes.card_producao_op", aba="pca", modal=1) }}',
+    plm:              '{{ url_for("operacoes.card_producao_plm", modal=1) }}',
+    vmc:              '{{ url_for("operacoes.card_producao_vmc", modal=1) }}',
+    envio_oficinas:   '{{ url_for("operacoes.card_producao_oficinas", tipo="envio", modal=1) }}',
+    retorno_oficinas: '{{ url_for("operacoes.card_producao_oficinas", tipo="retorno", modal=1) }}',
+    insumos:          '{{ url_for("operacoes.card_producao_insumos", modal=1) }}',
+    relatorios:       '{{ url_for("operacoes.card_producao_relatorios", modal=1) }}',
+    parametros:       '{{ url_for("operacoes.card_producao_parametros", modal=1) }}'
+};
+
+async function abrirModalPrd(tipo) {
+    const url = endpointsPrd[tipo];
+    if (!url) {
+        alert("Módulo em desenvolvimento...");
+        return;
+    }
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        const body = document.getElementById('modal-body-prd');
+        
+        body.innerHTML = html;
+
+        // Injeção segura de scripts para modais AJAX
+        body.querySelectorAll('script').forEach(script => {
+            const novo = document.createElement('script');
+            [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+            novo.appendChild(document.createTextNode(script.innerHTML));
+            script.parentNode.replaceChild(novo, script);
+        });
+
+        document.getElementById('modal-overlay-prd').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+
+    } catch (e) {
+        console.error("Erro ao carregar operações de produção:", e);
+    }
+}
+
+function fecharModalPrd() {
+    document.getElementById('modal-overlay-prd').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModalPrd(); });
+</script>

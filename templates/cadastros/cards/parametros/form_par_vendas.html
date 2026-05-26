@@ -1,0 +1,205 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/cards/parametros/form_par_vendas.html
+   Função   : Parâmetros do Módulo de Vendas (GOLDEN STANDARD)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-sistema">
+
+    {# CABEÇALHO PADRÃO (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros de Venda",
+        subtitulo="Sistema > Cadastros > Parâmetros Operacionais",
+        icone="fa-cogs",
+        form_id="form-par-vendas",
+        onclick_save="arioneSalvarDocumento('parametros_venda', this, 'form-par-vendas')",
+        cor_tema="#7A255F",
+        func_fechar="fecharModalGlobal()",
+        tamanho="grande"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px;">
+        <form id="form-par-vendas" method="POST" action="{{ url_for('cadastros.salvar_parametros') }}" novalidate>
+            <input type="hidden" name="grupo_config" value="vendas">
+            
+            <div class="fp-row">
+            {# COLUNA 1: CONFIGURAÇÕES DE DOCUMENTOS #}
+            <div class="fp-flex-2">
+                {# CARD 1: NUMERAÇÃO E SEQUÊNCIA #}
+                <div class="fp-card">
+                    <div class="fp-card-title">
+                        <i class="fas fa-sort-numeric-up"></i> Numeração e Sequência de Documentos
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Último Orçamento {{ comp.info_icon("O sistema utilizará o próximo número para novos orçamentos") }}</label>
+                                <input class="fp-input" type="number" name="ult_orcamento" value="5348" style="font-weight: 800; border-left: 3px solid #7A255F;">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Último Pedido {{ comp.info_icon("O sistema utilizará o próximo número para novos pedidos") }}</label>
+                                <input class="fp-input" type="number" name="ult_pedido" value="8210" style="font-weight: 800; color: #27AE60; border-left: 3px solid #27AE60;">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Incremento</label>
+                                <input class="fp-input" type="number" name="incremento" value="1">
+                            </div>
+                        </div>
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Prefixo Orçamentos</label>
+                                <input class="fp-input" type="text" name="pref_orc" value="ORV-">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Prefixo Pedidos</label>
+                                <input class="fp-input" type="text" name="pref_ped" value="PV-">
+                            </div>
+                        </div>
+                        <div class="fp-row" style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #eef2f6;">
+                            <div class="fp-group" style="flex-direction: row; gap: 20px; flex-wrap: wrap;">
+                                <label class="fp-toggle-switch">
+                                    <input type="checkbox" name="usar_sequencia_automatica_orc" checked style="display:none;">
+                                    <div class="fp-switch-slider"></div>
+                                    <span style="font-size: 11px; font-weight: 800; color: #7A255F;">AUTO NUMERAÇÃO ORÇAMENTOS</span>
+                                </label>
+                                <label class="fp-toggle-switch">
+                                    <input type="checkbox" name="usar_sequencia_automatica_ped" checked style="display:none;">
+                                    <div class="fp-switch-slider"></div>
+                                    <span style="font-size: 11px; font-weight: 800; color: #27AE60;">AUTO NUMERAÇÃO PEDIDOS</span>
+                                </label>
+                                <label class="fp-toggle-switch">
+                                    <input type="checkbox" name="reiniciar_anual" style="display:none;">
+                                    <div class="fp-switch-slider"></div>
+                                    <span style="font-size: 11px; font-weight: 700; color: #64748b;">REINICIAR ANUALMENTE</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# CARD 2: CONFIGURAÇÕES DE LOGÍSTICA #}
+                <div class="fp-card">
+                    <div class="fp-card-title">
+                        <i class="fas fa-shipping-fast"></i> Configurações de Logística e Frete
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">CEP de Origem Padrão {{ comp.info_icon("CEP do local de expedição. Se vazio, o sistema usará o CEP do cadastro da Empresa.") }}</label>
+                                <input class="fp-input" type="text" name="cep_origem_vendas" placeholder="00000-000" maxlength="9" style="background: #fff !important; cursor: text !important;">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Modalidade Padrão</label>
+                                <select class="fp-input" name="modalidade_logistica_padrao">
+                                    <option value="CIF">CIF (Frete por conta do Remetente)</option>
+                                    <option value="FOB">FOB (Frete por conta do Destinatário)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# CARD 3: REGRAS DE NEGÓCIO #}
+                <div class="fp-card">
+                    <div class="fp-card-title">
+                        <i class="fas fa-shield-alt"></i> Regras de Negócio e Bloqueios Operacionais
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Venda sem Orçamento?</label>
+                                <select class="fp-input" name="permitir_venda_sem_orcamento">
+                                    <option value="1">Sim, permitir pedido direto</option>
+                                    <option value="0">Não, exigir orçamento prévio</option>
+                                </select>
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Bloquear Venda s/ Estoque?</label>
+                                <select class="fp-input" name="bloquear_venda_sem_estoque">
+                                    <option value="1">Sim, bloquear</option>
+                                    <option value="0">Não, permitir negativo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Desconto Máximo (%)</label>
+                                <input class="fp-input" type="number" name="desconto_maximo_venda" value="15">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Validade Orçamento (Dias)</label>
+                                <input class="fp-input" type="number" name="validade_padrao" value="7">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Prazo Entrega (Dias)</label>
+                                <input class="fp-input" type="number" name="prazo_entrega_padrao" value="15">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# COLUNA 2: PRECIFICAÇÃO E TAREFAS #}
+            <div class="fp-flex-1">
+                <div class="fp-card">
+                    <div class="fp-card-title">
+                        <i class="fas fa-tag"></i> Prática de Preços
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-group">
+                            <label class="fp-label">Tabela de Preço Padrão {{ comp.info_icon("Política de preços sugerida nos novos documentos") }}</label>
+                            <div class="fp-input-wrapper" style="display:flex; align-items:center; gap:8px;">
+                                <select class="fp-input" name="pratica_preco_padrao" style="flex:1; font-weight: 800; color: #7A255F;">
+                                    <option value="consumidor">Consumidor (Padrão)</option>
+                                    <option value="revenda">Revenda / Atacado</option>
+                                    <option value="especifica">Tabela Específica</option>
+                                </select>
+                                {{ comp.plus_icon("tabelas_precos", "Cadastrar Nova Tabela de Preço", "abrirModalMaster('tabelas_precos')") }}
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 25px; padding: 20px; border-radius: 12px; background: linear-gradient(135deg, #7A255F 0%, #4A1539 100%); color: #fff; text-align: center; box-shadow: 0 10px 25px rgba(122,37,95,0.25);">
+                            <i class="fas fa-lock" style="font-size: 24px; margin-bottom: 15px; opacity: 0.5;"></i>
+                            <h4 style="font-size: 14px; font-weight: 800; margin-bottom: 5px;">SEGURANÇA DE DADOS</h4>
+                            <p style="font-size: 11px; opacity: 0.8; line-height: 1.4;">As alterações nestes parâmetros impactam imediatamente todas as novas operações do módulo de vendas.</p>
+                            <button type="button" class="fp-btn" style="width: 100%; margin-top: 20px; background: #fff; color: #7A255F; justify-content: center;" onclick="arioneSalvarDocumento('parametros_venda', this, 'form-par-vendas')">
+                                <i class="fas fa-save"></i> SALVAR CONFIGURAÇÕES
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# FOOTER (Oculto em Abas, visível se necessário) #}
+        <div class="fp-footer-actions" style="margin-top:10px; padding:15px; background:#fff; border-radius:12px; border:1px solid #e2e8f0; display:none;">
+            <button type="button" class="fp-btn fp-btn-salvar-footer" style="width: 100%; justify-content: center;" onclick="arioneSalvarDocumento('parametros_venda', this)">
+                <i class="fas fa-save"></i> SALVAR ALTERAÇÕES
+            </button>
+        </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/cadastros/parametros/get?grupo=vendas')
+            .then(res => res.json())
+            .then(data => {
+                for (const [chave, valor] of Object.entries(data)) {
+                    const el = document.querySelector(`[name="${chave}"]`);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = valor === '1';
+                        else el.value = valor;
+                    }
+                }
+            });
+    });
+    console.log('⚙️ Parâmetros de Venda HCM Ativado');
+</script>
+{% endblock %}

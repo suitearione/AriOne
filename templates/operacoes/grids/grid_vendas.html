@@ -1,0 +1,153 @@
+{# =============================================================================
+   Caminho  : templates/operacoes/grids/grid_vendas.html
+   Arquivo  : grid_vendas.html
+   Função   : Grid do módulo de Vendas com Modais AJAX Premium.
+   Padrão   : Testes_de_Integridades.md (Seção 2, 7, 9)
+============================================================================= #}
+
+<!-- Estrutura do Modal Unificado para Operações de Venda -->
+<div id="modal-overlay-vnd" class="ge-modal-overlay" onclick="fecharModalVnd()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" style="display:none;"></div>
+        <div class="ge-modal-body" id="modal-body-vnd" style="padding:0;"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title">
+        <i class="fas fa-hand-holding-dollar"></i>
+        <span>Operações de Venda</span>
+    </div>
+
+    <div class="ge-cards-container">
+        
+        <!-- CENTRAL DE VENDAS (NOVO) -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('operacoes.central_vendas') }}'" style="--card-cor:#00B8D4;--card-cor-bg:rgba(0,184,212,0.15); border: 2px solid #00B8D4;">
+            <i class="fas fa-desktop ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-desktop ge-card-icon" style="color:#00B8D4;"></i></div>
+            <span class="ge-card-label" style="color:#00838F;">Central de Vendas</span>
+            <span class="ge-card-desc" style="font-weight:700;">Monitor de Conversão</span>
+        </div>
+
+        <!-- Orçamentos -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('operacoes.card_vendas_orcamento') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-file-invoice-dollar ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-file-invoice-dollar ge-card-icon"></i></div>
+            <span class="ge-card-label">Orçamentos</span>
+            <span class="ge-card-desc">Cotações & Propostas</span>
+        </div>
+
+        <!-- Pedidos de Venda -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('operacoes.card_vendas_pedido') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-shopping-cart ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-shopping-cart ge-card-icon"></i></div>
+            <span class="ge-card-label">Pedidos</span>
+            <span class="ge-card-desc">Pedidos Confirmados</span>
+        </div>
+
+        <!-- Devoluções -->
+        <div class="ge-card" onclick="abrirModalVnd('devolucoes')" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-rotate-left ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-rotate-left ge-card-icon"></i></div>
+            <span class="ge-card-label">Devoluções</span>
+            <span class="ge-card-desc">Estornos & Trocas</span>
+        </div>
+
+        <!-- Tabelas de Preços -->
+        <div class="ge-card" onclick="abrirModalVnd('precos')" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,0.10);">
+            <i class="fas fa-tags ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-tags ge-card-icon"></i></div>
+            <span class="ge-card-label">Tabelas de Preço</span>
+            <span class="ge-card-desc">Markup & Políticas</span>
+        </div>
+
+        <!-- Metas & Comissões -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('operacoes.metas_vendas') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-chart-line ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-chart-line ge-card-icon"></i></div>
+            <span class="ge-card-label">Metas & Comissões</span>
+            <span class="ge-card-desc">Performance Comercial</span>
+        </div>
+
+        <!-- Em Aberto -->
+        <div class="ge-card" onclick="abrirModalVnd('em_aberto')" style="--card-cor:#455A64;--card-cor-bg:rgba(69,90,100,0.10);">
+            <i class="fas fa-clock ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-clock ge-card-icon"></i></div>
+            <span class="ge-card-label">Em Aberto</span>
+            <span class="ge-card-desc">Monitor de Pendências</span>
+        </div>
+
+        <!-- Relatórios de Venda -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('operacoes.card_operacoes_relatorios', modulo='vendas') }}'" style="--card-cor:#34495E;--card-cor-bg:rgba(52,73,94,0.10);">
+            <i class="fas fa-chart-bar ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-chart-bar ge-card-icon"></i></div>
+            <span class="ge-card-label">Relatórios</span>
+            <span class="ge-card-desc">Análises & B.I. Comercial</span>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.ge-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px); display: none; z-index: 9999;
+    align-items: center; justify-content: center;
+}
+.ge-modal-overlay.ativo { display: flex; }
+.ge-modal {
+    width: 98%; max-width: 1500px; max-height: 96vh;
+    border-radius: 12px; overflow-y: auto; background: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlide 0.25s ease-out;
+}
+@keyframes modalSlide { from {opacity:0; transform:translateY(30px);} to {opacity:1; transform:translateY(0);} }
+</style>
+
+<script>
+const endpointsVnd = {
+    central:    '{{ url_for("operacoes.central_vendas") }}',
+    orcamentos: '{{ url_for("operacoes.card_vendas_orcamento", modal=1) }}',
+    pedidos:    '{{ url_for("operacoes.card_vendas_pedido", modal=1) }}',
+    prevenda:   '{{ url_for("operacoes.card_vendas_orcamento", modal=1) }}',
+    devolucoes: '{{ url_for("operacoes.card_vendas_orcamento", modal=1) }}',
+    precos:     '{{ url_for("operacoes.card_tabelas_precos", modal=1) }}',
+    metas:      '{{ url_for("operacoes.metas_vendas") }}',
+    em_aberto:  '{{ url_for("operacoes.card_vendas_pedido", modal=1) }}',
+    relatorios: '{{ url_for("operacoes.card_operacoes_relatorios", modulo="vendas") }}'
+};
+
+async function abrirModalVnd(tipo) {
+    const url = endpointsVnd[tipo];
+    if (!url) return;
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        const body = document.getElementById('modal-body-vnd');
+        
+        body.innerHTML = html;
+
+        // Injeção segura de scripts
+        body.querySelectorAll('script').forEach(script => {
+            const novo = document.createElement('script');
+            [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+            novo.appendChild(document.createTextNode(script.innerHTML));
+            script.parentNode.replaceChild(novo, script);
+        });
+
+        document.getElementById('modal-overlay-vnd').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+
+    } catch (e) {
+        console.error("Erro ao carregar operações de venda:", e);
+    }
+}
+
+function fecharModalVnd() {
+    document.getElementById('modal-overlay-vnd').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModalVnd(); });
+</script>

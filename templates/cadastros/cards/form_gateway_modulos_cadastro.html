@@ -1,0 +1,224 @@
+{# =============================================================================
+   Arquivo  : form_gateway_modulos_cadastro.html
+   Caminho  : templates/cadastros/cards/form_gateway_modulos_cadastro.html
+   Função   : Menu Mestre (Camada 1) de Relatórios de Cadastros.
+   Lógica   : Apresenta as categorias [Empresa, Catálogos, Comercial, Pessoas, Parâmetros]
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-mestre {
+            padding: 25px;
+            /* Gradiente mesclando as 5 abas: Roxo (Emp), Chumbo (Cat), Laranja (Com), Azure (Pess), Cinza (Par) */
+            background: linear-gradient(90deg, #7A255F 0%, #2C3E50 25%, #F39C12 50%, #0072CE 75%, #7F8C8D 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 15px; }
+        .gateway-body { padding: 35px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid-mestre {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item-mestre {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 15px;
+            background: #fff;
+            border: 2px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .gateway-item-mestre:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border-color: var(--c);
+            background: #fff;
+        }
+
+        .gateway-icon-mestre {
+            width: 55px;
+            height: 55px;
+            background: var(--c-bg, rgba(0,0,0,0.05));
+            color: var(--c, #7A255F);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .gateway-item-mestre:hover .gateway-icon-mestre {
+            background: var(--c);
+            color: #fff;
+            transform: rotate(5deg) scale(1.1);
+        }
+
+        .gateway-label-mestre { font-size: 16px; font-weight: 800; color: #2d3748; }
+        .gateway-desc-mestre { font-size: 11px; color: #a0aec0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        
+        /* SKELETON LOADERS */
+        @keyframes shimmer {
+            0% { background-position: -468px 0; }
+            100% { background-position: 468px 0; }
+        }
+        .skeleton {
+            background: #f6f7f8;
+            background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+            background-repeat: no-repeat;
+            background-size: 800px 400px;
+            animation: shimmer 1.2s linear infinite forwards;
+        }
+    </style>
+
+    <div class="gateway-header-mestre">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fas fa-folder-open" style="font-size: 1.4rem; color: #BDBDBD;"></i>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <div class="gateway-title" style="gap:0; color: #BDBDBD;">Central de Relatórios: Módulo Cadastros</div>
+                <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Estrutura Organizacional & Registros Core</span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">GRIDs</span>
+            <button type="button" class="ge-modal-fechar" onclick="fecharCentralRelatorios()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid-mestre">
+            
+            <!-- Empresa -->
+            <div class="gateway-item-mestre" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarParaSubGateway('empresa')">
+                <div class="gateway-icon-mestre"><i class="fas fa-building"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Empresa</span>
+                <span class="gateway-desc-mestre">Estrutura e Capital</span>
+            </div>
+
+            <!-- Catálogos -->
+            <div class="gateway-item-mestre" style="--c:#2C3E50; --c-bg:rgba(44,62,80,0.08);" onclick="navegarParaSubGateway('catalogos')">
+                <div class="gateway-icon-mestre"><i class="fas fa-book"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Catálogos</span>
+                <span class="gateway-desc-mestre">Itens e Serviços</span>
+            </div>
+
+            <!-- Comercial -->
+            <div class="gateway-item-mestre" style="--c:#F39C12; --c-bg:rgba(243,156,18,0.08);" onclick="navegarParaSubGateway('comercial')">
+                <div class="gateway-icon-mestre"><i class="fas fa-handshake"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Comercial</span>
+                <span class="gateway-desc-mestre">Parceiros e Vendas</span>
+            </div>
+
+            <!-- Pessoas -->
+            <div class="gateway-item-mestre" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarParaSubGateway('pessoas')">
+                <div class="gateway-icon-mestre"><i class="fas fa-users"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Pessoas</span>
+                <span class="gateway-desc-mestre">Recursos Humanos</span>
+            </div>
+
+            <!-- Parâmetros -->
+            <div class="gateway-item-mestre" style="--c:#7F8C8D; --c-bg:rgba(127,140,141,0.08);" onclick="navegarParaSubGateway('parametros')">
+                <div class="gateway-icon-mestre"><i class="fas fa-sliders"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Parâmetros</span>
+                <span class="gateway-desc-mestre">Configurações Base</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Navega de forma fluida para o próximo nível de seleção sem fechar o modal.
+ */
+function navegarParaSubGateway(modulo) {
+    let url = "";
+    if (modulo === 'empresa') {
+        url = "{{ url_for('cadastros.gateway_relatorios') }}";
+    } else if (modulo === 'catalogos') {
+        url = "{{ url_for('cadastros.gateway_rel_catalogos') }}";
+    } else if (modulo === 'comercial') {
+        url = "{{ url_for('cadastros.gateway_rel_comercial') }}";
+    } else if (modulo === 'pessoas') {
+        url = "{{ url_for('cadastros.gateway_rel_pessoas') }}";
+    } else if (modulo === 'parametros') {
+        url = "{{ url_for('cadastros.gateway_rel_parametros') }}";
+    } else {
+        alert("O gateway de relatórios para " + modulo.toUpperCase() + " será implementado em breve.");
+        return;
+    }
+
+    // Usa área inline (mesmo container que a Central foi carregada)
+    const content = document.getElementById('arione-central-inline') || document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        content.innerHTML = `
+            <div style="padding:0; border-radius:14px; overflow:hidden;">
+                <div class="skeleton" style="height:88px; width:100%; border-radius:14px 14px 0 0;"></div>
+                <div style="padding:35px; background:#fff;">
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                        <div class="skeleton" style="height:140px; border-radius:16px;"></div>
+                    </div>
+                </div>
+            </div>`;
+
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
+                return res.text();
+            })
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                content.querySelectorAll('script').forEach(script => {
+                    const novo = document.createElement('script');
+                    [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+                    novo.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novo, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar sub-gateway:", err);
+                content.style.opacity = '1';
+                content.innerHTML = `
+                    <div style="text-align:center; padding:50px; color:#e74c3c;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:40px; margin-bottom:20px;"></i>
+                        <h4 style="margin-bottom:10px;">Falha ao Carregar</h4>
+                        <p style="font-size:13px; color:#718096; margin-bottom:20px;">Não conseguimos processar a requisição para ${modulo}.</p>
+                        <button onclick="location.reload()" style="background:#f1f5f9; border:none; padding:10px 20px; border-radius:8px; font-weight:700; color:#4a5568; cursor:pointer;">Tentar Recarregar Página</button>
+                    </div>`;
+            });
+    }
+}
+
+function fecharCentralRelatorios() {
+    const gridArea = document.getElementById('arione-grid-area');
+    const inlineArea = document.getElementById('arione-central-inline');
+    if (gridArea && inlineArea) {
+        inlineArea.style.display = 'none';
+        inlineArea.innerHTML = '';
+        gridArea.style.display = '';
+        return;
+    }
+    const modal = document.getElementById('arione-modal-global');
+    if (modal) modal.style.display = 'none';
+}
+</script>

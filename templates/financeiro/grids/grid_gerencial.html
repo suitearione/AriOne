@@ -1,0 +1,148 @@
+<!-- templates/financeiro/grids/grid_gerencial.html -->
+<div id="modal-overlay-ger" class="ge-modal-overlay" onclick="fecharModalGer(event)">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-ger" class="ge-modal-icon"></i><span id="modal-titulo-ger">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalGer()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-ger"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-chart-pie"></i><span>Gerencial</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="window.location='{{ url_for('financeiro.card_plano_contas') }}'" style="--card-cor:#6C5CE7;--card-cor-bg:rgba(108, 92, 231, 0.10);">
+            <i class="fas fa-sitemap ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-sitemap ge-card-icon"></i></div>
+            <span class="ge-card-label">Plano de Contas</span><span class="ge-card-desc">Estrutura mestre</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location='{{ url_for('financeiro.card_patrimonio') }}'" style="--card-cor:#E67E22;--card-cor-bg:rgba(230, 126, 34, 0.10);">
+            <i class="fas fa-boxes ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-boxes ge-card-icon"></i></div>
+            <span class="ge-card-label">Patrimônio</span><span class="ge-card-desc">Ativos e Depreciação</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location='{{ url_for('financeiro.form_centro_custo') }}'" style="--card-cor:#00E676;--card-cor-bg:rgba(0,230,118,0.10);">
+            <i class="fas fa-layer-group ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-layer-group ge-card-icon"></i></div>
+            <span class="ge-card-label">Centros de Custos</span><span class="ge-card-desc">Rateio de custos</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalGer('operadoras')" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-landmark ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-landmark ge-card-icon"></i></div>
+            <span class="ge-card-label">Operadoras</span><span class="ge-card-desc">Gateways de cartões</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalGer('formapagamentos')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-credit-card ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-credit-card ge-card-icon"></i></div>
+            <span class="ge-card-label">Formas de Pagamento</span><span class="ge-card-desc">Formas e Regras</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const modaisGer = {};
+
+async function abrirModalGer(tipo) {
+    let url = '';
+    let titulo = '';
+    let icone = '';
+
+    if (tipo === 'operadoras') {
+        url = '{{ url_for("financeiro.card_operadoras") }}';
+        titulo = 'Operadoras Financeiras';
+        icone = 'fas fa-landmark';
+    } else if (tipo === 'formapagamentos') {
+        url = '{{ url_for("financeiro.card_formas_pagamento") }}';
+        titulo = 'Formas de Pagamento';
+        icone = 'fas fa-credit-card';
+    }
+
+    if (url) {
+        try {
+            const response = await fetch(url);
+            const html = await response.text();
+            
+            document.getElementById('modal-titulo-ger').textContent = titulo;
+            document.getElementById('modal-icon-ger').className = icone + ' ge-modal-icon';
+            const body = document.getElementById('modal-body-ger');
+            body.innerHTML = html;
+
+            // Blindagem de Scripts para o conteúdo carregado via AJAX
+            body.querySelectorAll('script').forEach(script => {
+                const novo = document.createElement('script');
+                [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+                novo.appendChild(document.createTextNode(script.innerHTML));
+                script.parentNode.replaceChild(novo, script);
+            });
+
+            document.getElementById('modal-overlay-ger').classList.add('ativo');
+            document.body.style.overflow = 'hidden';
+            return;
+        } catch (e) {
+            console.error("Erro ao carregar card:", e);
+        }
+        return;
+    }
+
+    const m = modaisGer[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-ger').textContent = m.titulo;
+    document.getElementById('modal-icon-ger').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-ger').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalGer()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-ger').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalGer(e) { 
+    if (e && e.target !== document.getElementById('modal-overlay-ger')) return;
+    document.getElementById('modal-overlay-ger').classList.remove('ativo'); 
+    document.body.style.overflow = ''; 
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalGer(); });
+</script>
+
+<style>
+    .ge-cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: flex-start !important;
+        padding: 10px 0;
+    }
+    .ge-card {
+        width: 180px; /* Largura fixa para manter simetria */
+        margin: 0 !important;
+    }
+</style>
+
+<style>
+/* Badge de Conclusão AriOne */
+.ge-card-done-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #27AE60;
+    color: #fff;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 2px 5px rgba(39, 174, 96, 0.4);
+    z-index: 5;
+    animation: badgePulse 2s infinite;
+}
+@keyframes badgePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+</style>

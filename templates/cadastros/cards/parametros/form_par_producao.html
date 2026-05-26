@@ -1,0 +1,92 @@
+{# =============================================================================
+   Arquivo  : form_par_producao.html
+   Caminho  : templates/cadastros/cards/parametros/form_par_producao.html
+   Cor Tema : #E67E22 (Laranja Produção)
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% block content %}
+{% import "macros/componentes.html" as comp %}
+<div class="fe-wrap fp-wrap mod-producao" style="background: #f4f6f9; min-height: 100vh;">
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros de Produção",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-industry",
+        form_id="form-par-producao",
+        onclick_save="arioneSalvarDocumento('parametros_producao', this, 'form-par-producao')",
+        cor_tema="#D35400",
+        func_fechar="fecharModalGlobal()",
+        tamanho="grande"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px;">
+        <form id="form-par-producao" method="POST" action="{{ url_for('cadastros.salvar_parametros') }}" novalidate>
+            <input type="hidden" name="grupo_config" value="producao">
+        
+        <div class="fp-card">
+            <div class="fp-card-title"><i class="fas fa-recycle"></i> Rendimento & Desperdício</div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Percentual de Perda Padrão (%)</label>
+                        <input type="number" step="0.01" class="fp-input" name="perda_padrao" placeholder="Ex: 5.00">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Tipo de Baixa de Estoque</label>
+                        <select class="fp-input" name="tipo_baixa">
+                            <option>Explosão no Início da OP</option>
+                            <option>Baixa na Conclusão da OP</option>
+                            <option>Baixa Manual por Etapa</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fp-card">
+            <div class="fp-card-title"><i class="fas fa-users-cog"></i> Planejamento</div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Horas/Homem Disponíveis (Turno)</label>
+                        <input type="number" class="fp-input" name="horas_capacidade" placeholder="8">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Status Inicial de OP</label>
+                        <select class="fp-input" name="status_inicial_op">
+                            <option>Planejada</option>
+                            <option>Aguardando Matéria-Prima</option>
+                            <option>Liberada</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="submit" class="fp-btn fp-btn-salvar-footer" style="background: #E67E22; color: #fff;">
+                <i class="fas fa-save"></i> SALVAR PRODUÇÃO
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/cadastros/parametros/get?grupo=producao')
+            .then(res => res.json())
+            .then(data => {
+                for (const [chave, valor] of Object.entries(data)) {
+                    const el = document.querySelector(`[name="${chave}"]`);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = valor === '1';
+                        else el.value = valor;
+                    }
+                }
+            });
+    });
+</script>
+{% endblock %}

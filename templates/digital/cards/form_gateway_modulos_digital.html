@@ -1,0 +1,177 @@
+{# =============================================================================
+   Arquivo  : form_gateway_modulos_digital.html
+   Caminho  : templates/digital/cards/form_gateway_modulos_digital.html
+   Função   : Menu Mestre (Nível 1) do Ecossistema One (Digital).
+   Padrão   : DNA Cadastros (Quiet Luxury).
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-mestre {
+            padding: 25px;
+            /* Gradiente Camaleão Digital: Blues, Teals e Purples de Alta Performance */
+            background: linear-gradient(90deg, #2980B9 0%, #3498DB 25%, #1ABC9C 50%, #8E44AD 75%, #2C3E50 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 15px; }
+        .gateway-body { padding: 35px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid-mestre {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item-mestre {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 15px;
+            background: #fff;
+            border: 2px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .gateway-item-mestre:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border-color: var(--c);
+            background: #fff;
+        }
+
+        .gateway-icon-mestre {
+            width: 55px;
+            height: 55px;
+            background: var(--c-bg, rgba(0,0,0,0.05));
+            color: var(--c, #2980B9);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .gateway-item-mestre:hover .gateway-icon-mestre {
+            background: var(--c);
+            color: #fff;
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        .gateway-label-mestre { font-size: 16px; font-weight: 800; color: #2d3748; }
+        .gateway-desc-mestre { font-size: 11px; color: #a0aec0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    </style>
+
+    <div class="gateway-header-mestre">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fas fa-network-wired" style="font-size: 1.4rem; color: #42A5F5;"></i>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <div class="gateway-title" style="gap:0; color: #42A5F5;">Central de Relatórios: Módulo Digital</div>
+                <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Presença On-line & Conversão Estratégica</span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">GRIDs</span>
+            <button type="button" class="ge-modal-fechar" onclick="fecharModalGlobal()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid-mestre">
+            
+            <!-- LinkOne -->
+            <div class="gateway-item-mestre" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarDigital('linkone')">
+                <div class="gateway-icon-mestre"><i class="fas fa-link"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> LinkOne</span>
+                <span class="gateway-desc-mestre">Cliques & Conversão</span>
+            </div>
+
+            <!-- LeadOne -->
+            <div class="gateway-item-mestre" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarDigital('leadone')">
+                <div class="gateway-icon-mestre"><i class="fas fa-filter"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> LeadOne</span>
+                <span class="gateway-desc-mestre">Pipeline Digital</span>
+            </div>
+
+            <!-- SiteOne -->
+            <div class="gateway-item-mestre" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarDigital('siteone')">
+                <div class="gateway-icon-mestre"><i class="fas fa-globe"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> SiteOne</span>
+                <span class="gateway-desc-mestre">Audiência Web</span>
+            </div>
+
+            <!-- ChatOne -->
+            <div class="gateway-item-mestre" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarDigital('chatone')">
+                <div class="gateway-icon-mestre"><i class="fas fa-comments"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> ChatOne</span>
+                <span class="gateway-desc-mestre">Engagement Log</span>
+            </div>
+
+            <!-- ShopOne -->
+            <div class="gateway-item-mestre" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarDigital('shopone')">
+                <div class="gateway-icon-mestre"><i class="fas fa-shopping-cart"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> ShopOne</span>
+                <span class="gateway-desc-mestre">Digital Store B.I.</span>
+            </div>
+
+            <!-- MetricsOne -->
+            <div class="gateway-item-mestre" style="--c:#F39C12; --c-bg:rgba(243,156,18,0.08);" onclick="navegarDigital('metricsone')">
+                <div class="gateway-icon-mestre"><i class="fas fa-chart-pie"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> MetricsOne</span>
+                <span class="gateway-desc-mestre">Analytics Top-Tier</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Navega para o sub-gateway digital (Padrão Ouro).
+ */
+function navegarDigital(modulo) {
+    const url = "{{ url_for('digital.card_digital_relatorios') }}?modulo=" + modulo;
+    const content = document.getElementById('arione-modal-content');
+    
+    if (content && url) {
+        content.style.opacity = '0.4';
+        
+        // Loader Dinâmico
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; gap:20px; color:#2980B9;">
+                <i class="fas fa-spinner fa-spin" style="font-size:40px;"></i>
+                <span style="font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Escaneando Canais One...</span>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar sub-gateway digital:", err);
+                content.style.opacity = '1';
+            });
+    }
+}
+</script>

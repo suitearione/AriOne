@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-atributos" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .atrib-row:hover { background: #fffcf0 !important; cursor: pointer; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Catálogo de Atributos',
+            subtitulo='Catálogos > Gestão de Atributos, Detalhes e Acabamentos',
+            icone='fa-tags',
+            cor_tema='#7A255F',
+            tamanho='medio',
+            aba_retorno='catalogos',
+            form_id='atributo-form-area',
+            list_id='atributo-list-area',
+            onclick_novo="novoRegistroAtr()",
+            onclick_save="forceSubmitAtributo()",
+            onclick_search="focarBuscaAtrib()",
+            onclick_filter="abrirModalFiltrosAvancados()",
+            onclick_clonar="arioneClonarRegistro('atributo-form-area')",
+            onclick_export="exportarAtributos()",
+            onclick_import="arioneToast('Importação em desenvolvimento para Atributos.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Atributos')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Atributos')",
+            status="Standard PAAv1.0"
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="atr-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="atr-form" method="POST" action="{{ url_for('cadastros.card_atributos') }}">
+                <input type="hidden" name="id" id="atr-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="atr-form-titulo">CADASTRO DE ATRIBUTO</span></span>
+                        <button type="button" onclick="novoRegistroAtr()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="fp-row" style="display: grid; grid-template-columns: 1.5fr 2fr 100px; gap: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Nome do Atributo <span style="color:#ef4444;">*</span></label>
+                                <input type="text" class="fp-input" name="nome_atributo" id="atr-nome-input" placeholder="EX: MANGA PAETÉ OURO" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Descrição / Observação</label>
+                                <input type="text" class="fp-input" name="descricao" id="atr-desc-input" placeholder="Ex: Acabamento lateral premium..." style="width: 100%;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Status</label>
+                                <select class="fp-input" name="status_atributo" id="atr-status-input" style="width: 100%; background: #fff;">
+                                    <option value="ATIVO">ATIVO</option>
+                                    <option value="INATIVO">INATIVO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-atrib" onclick="forceSubmitAtributo()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR ATRIBUTO
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="atributo-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-tags" style="color: #E67E22; margin-right: 8px;"></i> Atributos Registrados</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="atrib-search-input" oninput="filtrarAtributos()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="atrib-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ atributos|length if atributos else 0 }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 20px;">NOME DO ATRIBUTO</th>
+                            <th>DESCRIÇÃO DO DETALHE</th>
+                            <th style="width: 120px; text-align: center;">STATUS</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-atributos">
+                        {% for a in atributos %}
+                        <tr class="atrib-row" data-id="{{ a.id }}" data-nome="{{ a.nome|upper }}" onclick='editarAtr_ByRow(this)'>
+                            <td style="padding: 12px 20px;">
+                                <div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ a.nome }}</div>
+                            </td>
+                            <td>
+                                <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">{{ a.descricao or '---' }}</div>
+                            </td>
+                            <td style="text-align: center;">
+                                <span style="font-size: 9px; font-weight: 900; background: {{ '#e6f9ef' if a.ativa else '#f1f5f9' }}; color: {{ '#27AE60' if a.ativa else '#94a3b8' }}; padding: 3px 12px; border-radius: 20px;">
+                                    {{ 'ATIVO' if a.ativa else 'INATIVO' }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirAtributo('{{ a.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroAtr = function() {
+                document.getElementById('atr-form-titulo').textContent = 'NOVO ATRIBUTO';
+                document.getElementById('atr-id-hidden').value = '';
+                document.getElementById('atr-form').reset();
+                document.getElementById('atr-nome-input').focus();
+            };
+
+            window.fecharFormAtr = function() { novoRegistroAtr(); };
+
+            window.editarAtr_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('atr-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('atr-id-hidden').value = id;
+                document.getElementById('atr-nome-input').value = r.dataset.nome;
+                document.getElementById('atr-form').action = `/cadastros/cards/atributos/${id}`;
+                window.scrollTo({top:0, behavior:'smooth'});
+                setTimeout(() => document.getElementById('atr-nome-input').focus(), 300);
+            };
+
+            window.forceSubmitAtributo = async function() {
+                const form = document.getElementById('atr-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-atrib');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Atributo salvo!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarAtributos = function() {
+                const f = document.getElementById('atrib-search-input').value.toUpperCase();
+                document.querySelectorAll('.atrib-row').forEach(r => {
+                    r.style.display = r.dataset.nome.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.excluirAtributo = async function(id, btn) {
+                if(!confirm('Excluir atributo?')) return;
+                const r = await fetch(`/cadastros/cards/atributos/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+            
+            window.focarBuscaAtrib = function() { document.getElementById('atrib-search-input').focus(); };
+            window.exportarAtributos = function() { arioneExportar({url:'/cadastros/cards/atributos/dados-json', modulo:'Atributos'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

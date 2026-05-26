@@ -1,0 +1,105 @@
+{# =============================================================================
+   Arquivo  : form_producao_plm.html
+   Caminho  : templates/operacoes/cards/producao/form_producao_plm.html
+   Função   : Gestão do Ciclo de Vida do Produto (PLM) e Revisões.
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% block content %}
+<div class="ctx-prd-wrap">
+    <style>
+        :root { --prd-pri: #27AE60; --prd-acc: #2ECC71; }
+        .ctx-prd-header { background: linear-gradient(135deg, var(--prd-pri), #1B4F72); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-prd-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        /* Ocultar elementos base caso vazem por erro de renderização */
+        .arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
+        .arione-main-wrapper { margin-left: 0 !important; }
+
+        /* Toolbar CRUD */
+        .prd-toolbar { background: #f8fafc; border-bottom: 1.5px solid #edf2f7; padding: 10px 22px; display: flex; gap: 10px; }
+        .btn-crud { background: #fff; border: 1.5px solid #e2e8f0; padding: 6px 15px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; }
+        .btn-crud:hover { border-color: var(--prd-acc); color: var(--prd-acc); }
+        .btn-crud.active { background: var(--prd-acc); color: #fff; border-color: var(--prd-acc); }
+        .prd-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .prd-title { font-size: 11px; font-weight: 800; color: var(--prd-pri); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .prd-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .prd-group { display: flex; flex-direction: column; gap: 5px; }
+        .prd-label { font-size: 11px; font-weight: 700; color: #64748b; }
+        .prd-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
+
+        /* Revisões */
+        .rev-card { background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid var(--prd-pri); margin-bottom: 10px; font-size: 12px; }
+    </style>
+
+    <div class="ctx-prd-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-project-diagram"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Plano PLM (Engenharia de Produto)</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Ciclo de Vida, Amostragem e Modificações Tecnicas</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.15) !important; color:#fff !important; border:1px solid rgba(255,255,255,0.2) !important; padding:8px 20px !important;" onclick="fecharModalPrd()">Sair</button>
+        </div>
+    </div>
+
+    <!-- Barra CRUD -->
+    <div class="prd-toolbar">
+        <button class="btn-crud active"><i class="fas fa-plus"></i> Novo Registro</button>
+        <button class="btn-crud"><i class="fas fa-edit"></i> Alterar</button>
+        <button class="btn-crud"><i class="fas fa-search"></i> Consultar</button>
+        <button class="btn-crud"><i class="fas fa-print"></i> Imprimir Ficha</button>
+    </div>
+
+    <div class="ctx-prd-body">
+        <form>
+            <div class="prd-section">
+                <div class="prd-row">
+                    <div class="prd-group" style="flex:1.5;"><label class="prd-label">Produto / Referência</label><select class="prd-input"><option>VESTIDO VERÃO - REF: VST-80</option></select></div>
+                    <div class="prd-group"><label class="prd-label">Versão Atual</label><input type="text" class="prd-input" value="v2.1" readonly style="font-weight:800; text-align:center; color:var(--prd-pri);"></div>
+                    <div class="prd-group">
+                        <label class="prd-label">Fase do Ciclo</label>
+                        <select class="prd-input" style="font-weight:800;">
+                            <option>DESENVOLVIMENTO</option>
+                            <option selected>PRODUTO ATIVO</option>
+                            <option>DECLÍNIO / OUTLET</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <!-- Amostragem -->
+                <div class="prd-section">
+                    <div class="prd-title"><i class="fas fa-microscope"></i> Amostragem & Peça Piloto</div>
+                    <div class="prd-group" style="margin-bottom:15px;">
+                        <label class="prd-label">Data da Peça Piloto</label>
+                        <input type="date" class="prd-input" value="{{ today }}">
+                    </div>
+                    <div class="prd-group">
+                        <label class="prd-label">Aprovação Designer/Estilista</label>
+                        <div style="display:flex; gap:10px;">
+                            <button type="button" style="flex:1; background:#dcfce7; color:#166534; border:none; padding:10px; border-radius:8px; font-weight:800; font-size:11px;">APROVADA</button>
+                            <button type="button" style="flex:1; background:#f1f5f9; color:#64748b; border:none; padding:10px; border-radius:8px; font-weight:800; font-size:11px;">PENDENTE</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Revisões -->
+                <div class="prd-section">
+                    <div class="prd-title"><i class="fas fa-history"></i> Log de Alterações (BOM/Processo)</div>
+                    <div class="rev-card">
+                        <strong>v2.1 (10/04/2026)</strong> - Por: André<br>
+                        Alterada linha de poliéster para fio de nylon (mais resistência).
+                    </div>
+                    <div class="rev-card">
+                        <strong>v2.0 (01/03/2026)</strong> - Por: Carlos<br>
+                        Novo encaixe de modelagem (redução de 5% de quebra).
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

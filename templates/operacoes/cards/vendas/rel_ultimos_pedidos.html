@@ -1,0 +1,220 @@
+{# =============================================================================
+   Arquivo  : rel_ultimos_pedidos.html
+   Caminho  : templates/operacoes/cards/vendas/rel_ultimos_pedidos.html
+   Função   : Listagem Executiva dos Últimos Pedidos Realizados (Nível 3).
+   Cor Tema : #E74C3C (Vendas)
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap" style="animation: feFadeUp 0.3s ease;">
+    <style>
+        .rel-header-vendas {
+            padding: 22px 25px;
+            background: linear-gradient(90deg, #E74C3C, #C0392B); 
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .rel-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .rel-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        .rel-search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .rel-search-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .rel-search-input:focus {
+            border-color: #E74C3C;
+            box-shadow: 0 0 0 3px rgba(231,76,60,0.15);
+            background: #fff;
+        }
+
+        .rel-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .rel-table th {
+            background: #f1f5f9;
+            color: #475569;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            letter-spacing: 0.5px;
+        }
+
+        .rel-table th:first-child { border-top-left-radius: 10px; }
+        .rel-table th:last-child { border-top-right-radius: 10px; }
+
+        .rel-table td {
+            padding: 16px;
+            font-size: 13px;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+            transition: background 0.2s;
+        }
+
+        .rel-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .rel-table tr:last-child td { border-bottom: none; }
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+
+        .status-finalizado { background: rgba(39,174,96,0.15); color: #27AE60; }
+        .status-aguardando { background: rgba(41,128,185,0.15); color: #2980B9; }
+        .status-cancelado { background: rgba(148,163,184,0.15); color: #64748b; }
+        .status-atrasado { background: rgba(192,57,43,0.15); color: #C0392B; }
+        .status-outro { background: rgba(243,156,18,0.15); color: #F39C12; }
+    </style>
+
+    <div class="rel-header-vendas">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button type="button" onclick="voltarParaPIV()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; transition:0.2s;"><i class="fas fa-arrow-left"></i></button>
+            <div class="rel-title"><i class="fas fa-list-alt"></i> VGM - VENDAS GERAL DO MÊS</div>
+        </div>
+        <button type="button" class="ge-modal-fechar" onclick="voltarParaPIV()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center; transition:0.2s;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="rel-body">
+        <div class="rel-search-box">
+            <div style="display:flex; align-items:center; color:#94a3b8; font-size:18px; padding-left:5px;"><i class="fas fa-search"></i></div>
+            <input type="text" id="filtro-pedidos" class="rel-search-input" placeholder="Filtrar por nome do cliente ou número do pedido..." onkeyup="filtrarTabelaPedidos()">
+            <div style="display:flex; align-items:center; color:#64748b; font-size:12px; font-weight:700; padding-right:10px;">
+                <span id="contador-pedidos">{{ pedidos|length }} registros listados</span>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="rel-table" id="tabela-ultimos-pedidos">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">Pedido #</th>
+                        <th style="width: 30%;">Cliente</th>
+                        <th style="width: 18%;">Data / Hora</th>
+                        <th style="width: 20%;">Consultor</th>
+                        <th style="width: 15%; text-align: right;">Total Líquido</th>
+                        <th style="width: 15%; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pedidos %}
+                    <tr class="linha-pedido">
+                        <td><strong>{{ p.numero or ('#{:04d}'.format(p.id)) }}</strong></td>
+                        <td class="nome-cliente" style="font-weight: 700; color: #1e293b;">{{ p.cliente.nome if p.cliente else 'Cliente não informado' }}</td>
+                        <td>{{ p.data_pedido.strftime('%d/%m/%Y %H:%M') if p.data_pedido else '--/--/----' }}</td>
+                        <td><span style="color: #64748b; font-weight: 600;"><i class="fas fa-user-tie" style="margin-right: 4px;"></i> {{ p.vendedor.nome if p.vendedor else 'Geral / Empresa' }}</span></td>
+                        <td style="text-align: right; font-weight: 900; color: #E74C3C;">R$ {{ "{:,.2f}".format(p.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}</td>
+                        <td style="text-align: center;">
+                            {% set st = (p.status or 'ABERTO')|upper %}
+                            {% if st in ['FINALIZADO', 'ENTREGUE', 'FATURADO'] %}
+                                <span class="badge-status status-finalizado">{{ st }}</span>
+                            {% elif st in ['AGUARDANDO', 'ABERTO'] %}
+                                <span class="badge-status status-aguardando">{{ st }}</span>
+                            {% elif st == 'CANCELADO' %}
+                                <span class="badge-status status-cancelado">{{ st }}</span>
+                            {% elif st == 'ATRASADO' %}
+                                <span class="badge-status status-atrasado">{{ st }}</span>
+                            {% else %}
+                                <span class="badge-status status-outro">{{ st }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8; font-weight: 700;">
+                            <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                            Nenhum pedido de venda registrado no sistema ainda.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function filtrarTabelaPedidos() {
+    const input = document.getElementById('filtro-pedidos').value.toLowerCase();
+    const rows = document.querySelectorAll('#tabela-ultimos-pedidos tbody tr.linha-pedido');
+    let count = 0;
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(input)) {
+            row.style.display = '';
+            count++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    const contador = document.getElementById('contador-pedidos');
+    if (contador) {
+        contador.textContent = count + " registros listados";
+    }
+}
+
+function voltarParaPIV() {
+    const url = "/operacoes/cards/relatorios?modulo=vendas&modal=1";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao voltar para PIV:", err);
+                content.style.opacity = '1';
+                window.location.href = url;
+            });
+    } else {
+        window.location.href = url;
+    }
+}
+</script>

@@ -1,0 +1,221 @@
+{# =============================================================================
+   Arquivo  : form_vendas_relatorios.html
+   Caminho  : templates/operacoes/cards/vendas/form_vendas_relatorios.html
+   Função   : Gateway de Seleção de Relatórios de Vendas (Nível 2).
+   Cor Tema : #E74C3C (Vendas)
+   ============================================================================= #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% block content %}
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-vendas {
+            padding: 22px 25px;
+            background: linear-gradient(90deg, #E74C3C, #C0392B); 
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .gateway-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px;
+            background: #fff;
+            border: 1.8px solid var(--c, #edf2f7);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            gap: 8px;
+        }
+
+        .gateway-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+            background: color-mix(in srgb, var(--c), white 96%);
+        }
+
+        .gateway-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--c-bg, rgba(231, 76, 60, 0.08));
+            color: var(--c, #E74C3C);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .gateway-label { font-size: 14px; font-weight: 800; color: #2d3748; }
+        .gateway-desc { font-size: 10px; color: #a0aec0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    </style>
+
+    <div class="gateway-header-vendas">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button type="button" onclick="{{ 'voltarGatewayMestreOpe()' if is_modal else 'window.location.href=\'/operacoes/vendas/central\'' }}" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+            <div class="gateway-title"><i class="fas fa-chart-pie"></i> PIV - PAINEL DE INTELIGÊNCIA DE VENDAS</div>
+        </div>
+        <button type="button" class="ge-modal-fechar" onclick="{{ 'voltarGatewayMestreOpe()' if is_modal else 'window.location.href=\'/operacoes/vendas/central\'' }}" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            <!-- Vendas por Período -->
+            <div class="gateway-item" style="--c:#E74C3C; --c-bg:rgba(231,76,60,0.08);" onclick="navegarParaCardVendas('geral')">
+                <div class="gateway-icon"><i class="fas fa-chart-line"></i></div>
+                <span class="gateway-label">Vendas Geral</span>
+                <span class="gateway-desc">Evolução Mensal</span>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #edf2f7; width: 100%;">
+                    <div style="font-size: 16px; font-weight: 900; color: #E74C3C;">R$ {{ "{:,.2f}".format(kpi.vendas_mes or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                    <div style="font-size: 10px; color: {{ '#27AE60' if kpi.crescimento_vendas >= 0 else '#E74C3C' }}; font-weight: 800; margin-top: 2px;">
+                        <i class="fas fa-arrow-{{ 'up' if kpi.crescimento_vendas >= 0 else 'down' }}"></i> {{ "{:+.1f}%".format(kpi.crescimento_vendas or 0).replace('.', ',') }} vs Mês Anterior
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABC de Clientes -->
+            <div class="gateway-item" style="--c:#3498DB; --c-bg:rgba(52,152,219,0.08);" onclick="navegarParaCardVendas('abc_clientes')">
+                <div class="gateway-icon"><i class="fas fa-users"></i></div>
+                <span class="gateway-label">ABC Clientes</span>
+                <span class="gateway-desc">Concentração</span>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #edf2f7; width: 100%;">
+                    <div style="font-size: 12px; font-weight: 800; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; margin: 0 auto;">{{ kpi.top_cliente_nome or 'NENHUM REGISTRO' }}</div>
+                    <div style="font-size: 11px; color: #3498DB; font-weight: 900; margin-top: 2px;">R$ {{ "{:,.2f}".format(kpi.top_cliente_valor or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                </div>
+            </div>
+
+            <!-- Ticket Médio -->
+            <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarParaCardVendas('ticket')">
+                <div class="gateway-icon"><i class="fas fa-tags"></i></div>
+                <span class="gateway-label">Ticket Médio</span>
+                <span class="gateway-desc">Valor por Venda</span>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #edf2f7; width: 100%;">
+                    <div style="font-size: 16px; font-weight: 900; color: #27AE60;">R$ {{ "{:,.2f}".format(kpi.ticket_medio or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                    <div style="font-size: 10px; color: #a0aec0; font-weight: 700; margin-top: 2px;">
+                        Mês Anterior: R$ {{ "{:,.2f}".format(kpi.ticket_medio_ant or 0).replace(',','v').replace('.',',').replace('v','.') }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consultores -->
+            <div class="gateway-item" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarParaCardVendas('vendedores')">
+                <div class="gateway-icon"><i class="fas fa-user-tie"></i></div>
+                <span class="gateway-label">Consultores</span>
+                <span class="gateway-desc">Performance / Comissão</span>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #edf2f7; width: 100%;">
+                    <div style="font-size: 12px; font-weight: 800; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; margin: 0 auto;">{{ kpi.top_vendedor_nome or 'NENHUM REGISTRO' }}</div>
+                    <div style="font-size: 11px; color: #8E44AD; font-weight: 900; margin-top: 2px;">R$ {{ "{:,.2f}".format(kpi.top_vendedor_valor or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                </div>
+            </div>
+
+            <!-- ABC de Produtos -->
+            <div class="gateway-item" style="--c:#F39C12; --c-bg:rgba(243,156,18,0.08);" onclick="navegarParaCardVendas('abc_produtos')">
+                <div class="gateway-icon"><i class="fas fa-box-open"></i></div>
+                <span class="gateway-label">ABC Produtos</span>
+                <span class="gateway-desc">Rank de Itens</span>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #edf2f7; width: 100%;">
+                    <div style="font-size: 12px; font-weight: 800; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; margin: 0 auto;">{{ kpi.top_produto_nome or 'NENHUM REGISTRO' }}</div>
+                    <div style="font-size: 11px; color: #F39C12; font-weight: 900; margin-top: 2px;">{{ "{:,.0f}".format(kpi.top_produto_qtd or 0).replace(',','.') }} UN vendidas</div>
+                </div>
+            </div>
+
+            <!-- Devoluções -->
+            <div class="gateway-item" style="--c:#7F8C8D; --c-bg:rgba(127,140,141,0.08);" onclick="navegarParaCardVendas('devolucoes')">
+                <div class="gateway-icon"><i class="fas fa-undo"></i></div>
+                <span class="gateway-label">Devoluções</span>
+                <span class="gateway-desc">Analítico Clientes</span>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #edf2f7; width: 100%;">
+                    <div style="font-size: 16px; font-weight: 900; color: #7F8C8D;">{{ kpi.qtd_devolucoes or 0 }} reg.</div>
+                    <div style="font-size: 10px; color: #e53e3e; font-weight: 800; margin-top: 2px;">R$ {{ "{:,.2f}".format(kpi.valor_devolucoes or 0).replace(',','v').replace('.',',').replace('v','.') }} devolvidos</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function navegarParaCardVendas(tipo) {
+    console.log("Navegando para relatório de vendas:", tipo);
+    const rotas = {
+        'geral': '/operacoes/vendas/relatorios/ultimos-pedidos?modal=1',
+        'abc_clientes': '/operacoes/vendas/relatorios/abc-clientes?modal=1',
+        'ticket': '/operacoes/vendas/relatorios/painel-ticket?modal=1',
+        'vendedores': '/operacoes/vendas/relatorios/consultores?modal=1',
+        'abc_produtos': '/operacoes/vendas/relatorios/abc-produtos?modal=1',
+        'devolucoes': '/operacoes/cards/compras/devolucoes?modal=1'
+    };
+
+    const url = rotas[tipo];
+    if (!url) return;
+
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar relatório:", err);
+                content.style.opacity = '1';
+                window.location.href = url;
+            });
+    } else {
+        window.location.href = url;
+    }
+}
+
+function voltarGatewayMestreOpe() {
+    const url = "{{ url_for('operacoes.gateway_modulos_operacoes') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url).then(res => res.text()).then(html => {
+            content.innerHTML = html;
+            content.style.opacity = '1';
+            content.querySelectorAll('script').forEach(script => {
+                const novoScript = document.createElement('script');
+                Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                novoScript.appendChild(document.createTextNode(script.innerHTML));
+                script.parentNode.replaceChild(novoScript, script);
+            });
+        });
+    }
+}
+</script>
+</div>
+{% endblock %}

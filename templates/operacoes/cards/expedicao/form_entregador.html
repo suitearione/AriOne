@@ -1,0 +1,128 @@
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-expedicao" style="padding: 0 24px 40px 24px;">
+    <style>
+        .arione-page { padding-top: 0 !important; }
+    </style>
+
+    {# ── CONTEÚDO FIXO NO TOPO (Cabeçalho Mestre) ── #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0; margin: 0 0 20px 0; border-bottom: 2px solid #e2e8f0;">
+        {{ comp.cabecalho_mestre_arione(
+        titulo="Entregador" if entregador else "Novo Entregador",
+        subtitulo="Operacional > Expedição > Entregador",
+        icone="fa-motorcycle",
+        form_id="form-entregador",
+        onclick_save="document.getElementById('form-entregador').submit()",
+        onclick_clonar="",
+        onclick_novo="",
+        onclick_search="",
+        onclick_filter="",
+        cor_tema="#0072CE",
+        func_fechar="fecharModalGlobal()",
+        aba_retorno="expedicao",
+        blueprint_retorno="operacoes",
+        status="INATIVO" if entregador and not entregador.ativo else "ATIVO",
+        ajuda="Cadastro de entregadores de ponta final para controle logístico."
+        ) }}
+    </div>
+
+    <form method="POST" action="{{ url_for('cadastros.form_entregador', id=entregador.id if entregador else 0, modal=request.args.get('modal', 0)) }}" id="form-entregador" novalidate style="display: flex; flex-direction: column; gap: 20px;">
+        {{ comp.feedback_status_arione() }}
+        <div class="fp-card" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff;">
+            <div class="fp-card-body" style="padding: 20px;">
+                <div class="fp-row" style="gap: 12px; margin-bottom: 15px;">
+                    <div class="fp-group" style="flex: 2;">
+                        <label class="fp-label">Nome Completo <span class="fp-req">*</span></label>
+                        <input class="fp-input" type="text" name="nome" value="{{ entregador.nome if entregador else '' }}" placeholder="Nome do entregador" required>
+                    </div>
+                    <div class="fp-group" style="flex: 1;">
+                        <label class="fp-label">Cel./WhatsApp</label>
+                        <input class="fp-input mask-phone" type="text" name="whatsapp" value="{{ entregador.whatsapp if entregador else '' }}" placeholder="(00) 00000-0000">
+                    </div>
+                </div>
+
+                <div class="fp-row" style="gap: 12px; margin-bottom: 15px;">
+                    <div class="fp-group" style="flex: 1;">
+                        <label class="fp-label">Tipo Veículo</label>
+                        <select class="fp-input" name="tipo_veiculo">
+                            <option value="MOTO" {% if entregador and entregador.tipo_veiculo == 'MOTO' %}selected{% endif %}>Moto</option>
+                            <option value="CARRO" {% if entregador and entregador.tipo_veiculo == 'CARRO' %}selected{% endif %}>Carro</option>
+                        </select>
+                    </div>
+                    <div class="fp-group" style="flex: 1;">
+                        <label class="fp-label">Placa</label>
+                        <input class="fp-input" type="text" name="placa" value="{{ entregador.placa if entregador else '' }}" placeholder="ABC-1234" style="text-transform: uppercase;">
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                    <button type="submit" class="fp-btn" style="background: #28a745; color: white; padding: 10px 24px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">
+                        <i class="fas fa-save"></i> Salvar Entregador
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        {# LISTAGEM #}
+        <div class="fp-card" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff;">
+            <div class="fp-card-body" style="padding: 0;">
+                <table class="arione-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 12px 20px; text-align: left; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Nome do Entregador</th>
+                            <th style="padding: 12px 20px; text-align: left; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">WhatsApp</th>
+                            <th style="padding: 12px 20px; text-align: center; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Veículo</th>
+                            <th style="padding: 12px 20px; text-align: center; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Placa</th>
+                            <th style="padding: 12px 20px; text-align: center; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 13px; color: #475569;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ent in entregadores_lista %}
+                        <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 12px 20px; font-weight: 600; color: #1e293b;">{{ ent.nome }}</td>
+                            <td style="padding: 12px 20px; color: #475569;">{{ ent.whatsapp or '—' }}</td>
+                            <td style="padding: 12px 20px; text-align: center; color: #475569;">
+                                {% if ent.tipo_veiculo == 'MOTO' %}<i class="fas fa-motorcycle" style="color:#0072CE;"></i> MOTO
+                                {% else %}<i class="fas fa-car" style="color:#27AE60;"></i> CARRO{% endif %}
+                            </td>
+                            <td style="padding: 12px 20px; text-align: center;">
+                                <span style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; font-size: 14px; color: #334155;">{{ ent.placa or '---' }}</span>
+                            </td>
+                            <td style="padding: 12px 20px; text-align: center;">
+                                <a href="{{ url_for('cadastros.form_entregador', id=ent.id, modal=1 if request.args.get('modal') else 0) }}" class="fp-btn" style="padding: 4px 12px; font-size: 12px; background: #0072CE; color: white; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;"><i class="fas fa-edit"></i> Editar</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding: 30px; text-align: center; color: #64748b;"><i class="fas fa-info-circle"></i> Nenhum entregador cadastrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Máscara simplificada de placa padrão / mercosul
+    const inpPlaca = document.querySelector('input[name="placa"]');
+    if(inpPlaca) {
+        inpPlaca.addEventListener('input', function(e) {
+            let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if(val.length > 3) {
+                val = val.substring(0, 3) + '-' + val.substring(3, 7);
+            }
+            e.target.value = val;
+        });
+    }
+
+    // Aplica máscara de telefone caso o jQuery Mask Plugin esteja disponível na base
+    if(typeof jQuery !== 'undefined' && typeof jQuery.fn.mask !== 'undefined') {
+        $('.mask-phone').mask('(00) 00000-0000');
+    }
+});
+</script>
+{% endblock %}

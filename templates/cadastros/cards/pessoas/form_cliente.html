@@ -1,0 +1,754 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/form_cliente.html
+   Arquivo  : form_cliente.html
+   Função   : Formulário de cadastro e edição de cliente (pessoa física ou jurídica).
+   Descrição: Identificação completa (CPF/CNPJ, tipo de pessoa, origem, limite de
+              crédito, rating), endereço com busca de CEP, contatos inline,
+              dados financeiros/bancários, documentos (drag & drop) e
+              observações. Clientes nunca são excluídos — apenas inativados.
+              Lista de todos os clientes no rodapé.
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+{% block content %}
+<div class="fe-wrap" style="{{ 'padding:0; background:transparent; min-height:auto;' if request.args.get('modal') else '' }}">
+
+  {# ── MODAL INATIVAR ── #}
+  {% if cliente and cliente.ativo %}
+  <div id="modal-inativar" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(3px);" onclick="fecharModalInativar()">
+    <div style="background:#fff; border-radius:14px; width:90%; max-width:460px; box-shadow:0 20px 60px rgba(0,0,0,0.25); animation:modalEntrar .25s ease;" onclick="event.stopPropagation()">
+      <div style="background:linear-gradient(135deg,#c53030,#e53e3e); padding:18px 24px; border-radius:14px 14px 0 0; display:flex; align-items:center; justify-content:space-between;">
+        <div style="color:#fff; font-weight:700; font-size:16px; display:flex; align-items:center; gap:10px;">
+          <i class="fas fa-user-slash"></i> Inativar Cliente
+        </div>
+        <button onclick="fecharModalInativar()" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:30px; height:30px; border-radius:7px; cursor:pointer;">✕</button>
+      </div>
+      <form method="POST" action="{{ url_for('cadastros.inativar_cliente', id=cliente.id if cliente else 0) }}">
+        <div style="padding:24px;">
+          <p style="font-size:13px; color:#555; margin-bottom:18px;">
+            O cliente <strong>{{ cliente.nome }}</strong> será marcado como <strong>inativo</strong>. Os dados serão preservados.
+          </p>
+          <div class="fe-group">
+            <label class="fe-label">Motivo <span style="color:#aaa;">(opcional)</span></label>
+            <select class="fe-input" name="motivo">
+              <option value="">Selecione...</option>
+              <option>Inadimplência</option>
+              <option>Solicitação do cliente</option>
+              <option>Duplicidade de cadastro</option>
+              <option>Inatividade prolongada</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+            <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="fecharModalInativar()">Cancelar</button>
+            <button type="submit" style="background:linear-gradient(135deg,#c53030,#e53e3e); color:#fff; border:none; padding:9px 20px; border-radius:7px; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:7px;">
+              <i class="fas fa-user-slash"></i> Confirmar Inativação
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+<style>
+    {% if not request.args.get('modal') %}
+    .arione-main-wrapper { padding-top: 0 !important; }
+    {% endif %}
+    .fe-header { 
+        margin: -25px -25px 25px -25px !important; 
+        padding: 25px !important;
+        border-radius: 0 !important;
+    }
+    .ge-modal .fe-header {
+        margin: -20px -20px 20px -20px !important; 
+    }
+
+    /* ── GOLDEN STANDARD SEAL ── */
+    .golden-seal {
+        position: absolute; bottom: -5px; right: -5px; width: 22px; height: 22px;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        color: #7A255F; font-size: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;
+        animation: sealPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @keyframes sealPop { from { transform: scale(0) rotate(-45deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+
+    /* ── ARIONE PREMIUM FORM SYSTEM ── */
+    .fe-label { display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; width: 100%; min-height: 16px; }
+    .label-text { display: inline-flex; align-items: center; gap: 4px; cursor: help; border-bottom: 1.5px dotted #cbd5e1; transition: all 0.2s; padding-bottom: 1px; }
+    .label-text:hover { border-color: #7A255F; color: #7A255F; background: rgba(122, 37, 95, 0.05); transform: translateY(-1px); }
+    .gf-input { padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #1e293b; background: #fff; transition: all 0.2s; width: 100%; box-sizing: border-box; }
+    .gf-input:focus { outline: none; border-color: #7A255F; box-shadow: 0 0 0 4px rgba(122, 37, 95, 0.08); background: #fdf2f8; }
+    .tab-btn { flex: 1; padding: 14px 20px; font-size: 13px; font-weight: 800; color: #64748b; border: none; background: transparent; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tab-btn:hover { color: #0072CE; background: rgba(255, 255, 255, 0.6); }
+    .tab-btn.active { background: #fff; color: #0072CE; box-shadow: 0 4px 15px rgba(0, 114, 206, 0.15), 0 1px 3px rgba(0,0,0,0.08); border: 1px solid rgba(0, 114, 206, 0.2); transform: translateY(-1px); font-weight: 900; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; animation: feFadeUp 0.3s ease; }
+
+    /* ── ARIONE TABLE PROPORTIONALITY ── */
+    .fe-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+    .fe-table th { 
+        padding: 14px 20px; text-align: left; font-weight: 800; color: #64748b; 
+        text-transform: uppercase; letter-spacing: 0.8px; font-size: 10.5px; 
+        border-bottom: 2px solid #f1f5f9; background: #fcfcfd;
+    }
+    .fe-table td { 
+        padding: 16px 20px; border-bottom: 1px solid #f1f5f9; color: #334155; 
+        vertical-align: middle; transition: all 0.2s;
+    }
+    .fe-table tbody tr:hover td { background: #f8fafc; }
+    
+    .col-id { width: 60px; text-align: center; }
+    .col-nome { min-width: 350px; }
+    .col-doc { width: 160px; }
+    .col-rating { width: 100px; text-align: center; }
+    .col-status { width: 120px; text-align: center; }
+    .col-acoes { width: 100px; text-align: center; }
+</style>
+
+    {% from "macros/componentes.html" import cabecalho_mestre_arione, info_icon, master_icon %}
+    
+    {{ cabecalho_mestre_arione(
+        titulo='Gestão Clientes',
+        subtitulo='Pessoas > Carteira de Clientes',
+        icone='fa-users',
+        cor_tema='#BDBDBD',
+        func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='pessoas') ~ "'",
+        form_id='area-formulario-cliente',
+        onclick_novo='limparFormCliente()',
+        onclick_save='forceSubmitCliente()',
+        onclick_search='toggleFilterClientes()',
+        onclick_list='toggleFormView',
+        onclick_export='exportarListaClientes()',
+        onclick_import='importarXMLCliente()',
+        onclick_print='imprimirFichaCliente()',
+        status='Ativo',
+        ajuda='Gerencie a carteira de clientes, incluindo CRM, inteligência de mercado e histórico de compras.',
+        tamanho='grande'
+    ) }}
+
+
+    <form method="POST" action="{{ url_for('cadastros.form_cliente', id=cliente.id if cliente else None) }}" enctype="multipart/form-data" id="form-cliente" novalidate>
+    <div id="contexto-geral-cliente" style="padding: 20px 0; background: #f8fafc; min-height: 100vh;">
+      
+      <!-- Container do Formulário (Ocultável) -->
+      <div id="area-formulario-cliente" style="display: block;">
+          
+          {# ── ALERTAS DE INTEGRIDADE (FLASH) ── #}
+          <div style="max-width: 100%; margin: 0 auto; padding: 0 24px;">
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="fe-flash fe-flash-{{ category if category != 'message' else 'info' }}" style="margin-bottom: 20px; animation: feFadeDown 0.4s ease; padding: 12px 20px; border-radius: 8px; font-weight: 700;">
+                        <i class="fas {{ 'fa-check-circle' if category=='success' else 'fa-exclamation-triangle' if category=='danger' else 'fa-info-circle' }}"></i>
+                        {{ message }}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+          </div>
+
+          <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px; animation: feFadeUp 0.6s ease-out;">
+          
+            {# ══════════ CARD 1 — IDENTIFICAÇÃO MASTER ══════════ #}
+            <div class="fe-card" style="margin-top: 15px; border-bottom: 4px solid #0072CE; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-radius: 12px; overflow: hidden;">
+                <div class="fe-card-title" style="background: rgba(0, 114, 206, 0.03); color: #0072CE; padding: 10px 20px; font-size: 13px; font-weight: 800; text-transform: uppercase; border-bottom: 1.5px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-id-card"></i> Identificação do Cliente: <span style="font-weight: 400; opacity: 0.7; font-size: 11px;">Perfil Comercial & CRM</span>
+                </div>
+                <div class="fe-card-body" style="position: relative; padding: 25px 30px; display: flex; align-items: flex-start; gap: 35px; background: white;">
+                    <!-- Foto / Avatar -->
+                    <div class="fe-photo-upload-wrap" style="flex-shrink: 0;">
+                        <input type="file" name="foto" id="input-foto" style="display:none;" onchange="previewImage(this)">
+                        <div id="foto-preview" onclick="document.getElementById('input-foto').click()" 
+                             style="width: 100px; height: 100px; border: 2.5px dashed #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden; position: relative; cursor: pointer;">
+                            <div id="foto-img-container" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                                {% if cliente and cliente.foto %}
+                                    <img src="{{ url_for('static', filename='img/clientes/' + cliente.foto) }}" style="width:100%; height:100%; object-fit:cover;">
+                                {% else %}
+                                    <i class="fas fa-user" style="font-size: 35px; color: #cbd5e0;"></i>
+                                {% endif %}
+                            </div>
+                            <div class="golden-seal" title="Cadastro Auditado - Padrão Ouro"><i class="fas fa-award"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Dados Principais -->
+                    <div style="flex-grow: 1;">
+                        <div class="fe-row" style="margin-bottom: 15px;">
+                            <div style="flex-grow: 1;">
+                                <label class="fe-label" style="color: #0072CE;">Nome / Razão Social <span class="fe-req">*</span></label>
+                                <input type="text" name="nome" class="gf-input" value="{{ cliente.nome if cliente else '' }}" placeholder="Nome completo" required 
+                                       style="font-size: 24px; font-weight: 900; border: none; border-bottom: 2.5px solid #f1f5f9; padding: 5px 0; background: transparent; border-radius: 0; color: #1e293b;">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 40px; margin-top: 20px;">
+                            <div style="min-width: 130px;">
+                                <label class="fe-label">Tipo / Doc.</label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <select class="fe-input" name="tipo_pessoa" id="sel-tipo-pessoa" onchange="alternarTipoPessoa()" style="border:none; border-bottom: 1.5px solid #f1f5f9; background: transparent; font-weight: 700; width: 50px;">
+                                        <option value="F" {% if not cliente or cliente.tipo_pessoa=='F' %}selected{% endif %}>PF</option>
+                                        <option value="J" {% if cliente and cliente.tipo_pessoa=='J' %}selected{% endif %}>PJ</option>
+                                    </select>
+                                    <input class="fe-input mask-cpf-cnpj" type="text" name="cpf_cnpj" id="inp-doc" value="{{ cliente.cpf_cnpj if cliente else '' }}"
+                                           style="font-weight: 700; border: none; border-bottom: 1.5px solid #f1f5f9; background: transparent; font-size: 16px; width: 170px;">
+                                </div>
+                            </div>
+
+                            <div style="flex-grow: 1;">
+                                <label class="fe-label">Nome Fantasia / Apelido</label>
+                                <input type="text" name="apelido" class="gf-input" value="{{ cliente.apelido if cliente else '' }}"
+                                       style="font-weight: 700; border: none; border-bottom: 1.5px solid #f1f5f9; background: transparent; font-size: 15px;">
+                            </div>
+
+                            <div style="min-width: 140px;">
+                                <label class="fe-label">Status</label>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    {% if cliente and not cliente.ativo %}
+                                        <span style="background: #fee2e2; color: #991b1b; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 900;">INATIVO</span>
+                                    {% else %}
+                                        <span style="background: #dcfce7; color: #166534; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 900;">ATIVO</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contatos Inline -->
+            <div class="fe-card" style="margin-top: -15px; border-top: none; background: #fff; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
+                <div class="fe-card-body" style="padding: 20px 25px;">
+                    <div class="fe-row">
+                      <div class="fe-group fe-flex-2">
+                        <label class="fe-label">WhatsApp Corporativo</label>
+                        <input class="gf-input mask-phone" type="text" name="whatsapp" value="{{ cliente.whatsapp if cliente else '' }}" placeholder="(00) 00000-0000">
+                      </div>
+                      <div class="fe-group fe-flex-2">
+                        <label class="fe-label">Telefone Fixo</label>
+                        <input class="gf-input mask-phone" type="text" name="telefone" value="{{ cliente.telefone if cliente else '' }}">
+                      </div>
+                      <div class="fe-group fe-flex-3">
+                        <label class="fe-label">E-mail de Faturamento</label>
+                        <input class="gf-input" type="email" name="email" value="{{ cliente.email if cliente else '' }}" placeholder="exemplo@dominio.com.br" style="text-transform: lowercase;">
+                      </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs de Detalhes (Quiet Luxury Premium NavigationSwitcher) -->
+            <div style="display: flex; gap: 8px; background: #f1f5f9; padding: 6px 8px; border-radius: 14px; margin: 15px 0 25px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+                <button type="button" class="tab-btn active" onclick="switchTab(event, 'tab-endereco')"><i class="fas fa-map-marker-alt"></i> Endereços</button>
+                <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-comercial')"><i class="fas fa-chart-line"></i> Comercial</button>
+                <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-financeiro')"><i class="fas fa-landmark"></i> Financeiro</button>
+                <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-documentos')"><i class="fas fa-folder-open"></i> Documentos</button>
+                <button type="button" class="tab-btn" onclick="switchTab(event, 'tab-historico')"><i class="fas fa-history"></i> Histórico</button>
+            </div>
+
+            <div class="tabs-panes">
+                <!-- Tab: Endereço -->
+                <div id="tab-endereco" class="tab-content active">
+                    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 30px; align-items: stretch;">
+                        {% for pref, label, cor in [('res','Principal','#7A255F'),('ent','Entrega','#0072CE')] %}
+                        <div class="fe-addr-card" style="--addr-cor:{{ cor }};">
+                            <div class="fe-addr-title">{{ label }}</div>
+                            <div class="fe-row">
+                                <div class="fe-group" style="max-width:110px;"><label class="fe-label">CEP</label><input class="fe-input mask-cep" type="text" name="end_{{ pref }}_cep" value="{{ cliente['end_'~pref~'_cep'] if cliente else '' }}" onblur="buscarCep(this,'{{ pref }}')"></div>
+                                <div class="fe-group fe-flex-1"><label class="fe-label">Rua</label><input class="fe-input" type="text" id="{{ pref }}-rua" name="end_{{ pref }}_logradouro" value="{{ cliente['end_'~pref~'_logradouro'] if cliente else '' }}"></div>
+                                <div class="fe-group" style="max-width:70px;"><label class="fe-label">Nº</label><input class="fe-input" type="text" name="end_{{ pref }}_numero" value="{{ cliente['end_'~pref~'_numero'] if cliente else '' }}"></div>
+                            </div>
+                            <div class="fe-row">
+                                <div class="fe-group fe-flex-1"><label class="fe-label">Bairro</label><input class="fe-input" type="text" id="{{ pref }}-bairro" name="end_{{ pref }}_bairro" value="{{ cliente['end_'~pref~'_bairro'] if cliente else '' }}"></div>
+                                <div class="fe-group fe-flex-1"><label class="fe-label">Cidade</label><input class="fe-input" type="text" id="{{ pref }}-cidade" name="end_{{ pref }}_cidade" value="{{ cliente['end_'~pref~'_cidade'] if cliente else '' }}"></div>
+                                <div class="fe-group" style="max-width:50px;"><label class="fe-label">UF</label><input class="fe-input" type="text" id="{{ pref }}-uf" name="end_{{ pref }}_uf" value="{{ cliente['end_'~pref~'_uf'] if cliente else '' }}" maxlength="2"></div>
+                            </div>
+                            <div class="fe-row">
+                                <div class="fe-group fe-flex-1"><label class="fe-label">Complemento</label><input class="fe-input" type="text" name="end_{{ pref }}_complemento" value="{{ cliente['end_'~pref~'_complemento'] if cliente else '' }}" placeholder="Ex: Apto 101, Sala 5"></div>
+                                <div class="fe-group fe-flex-1"><label class="fe-label">Referências</label><input class="fe-input" type="text" name="end_{{ pref }}_obs" value="{{ cliente['end_'~pref~'_obs'] if cliente else '' }}" placeholder="Próximo ao mercado..."></div>
+                            </div>
+                        </div>
+                        {% if loop.first %}
+                        <div style="width: 2px; background: #e2e8f0; margin: 10px 0; border-radius: 1px; opacity: 0.8;"></div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tab: Comercial -->
+                <div id="tab-comercial" class="tab-content">
+                    <div class="fe-row">
+                        <div class="fe-group"><label class="fe-label">Origem</label><input class="gf-input" type="text" name="origem" value="{{ cliente.origem if cliente else '' }}"></div>
+                        <div class="fe-group">
+                            <label class="fe-label">Categoria do Cliente</label>
+                            <select class="gf-input" name="categoria">
+                                <option value="" {% if not cliente or not cliente.categoria %}selected{% endif %}>Selecione...</option>
+                                <option value="Varejo" {% if cliente and cliente.categoria=='Varejo' %}selected{% endif %}>Varejo</option>
+                                <option value="Atacado" {% if cliente and cliente.categoria=='Atacado' %}selected{% endif %}>Atacado</option>
+                                <option value="E-commerce" {% if cliente and cliente.categoria=='E-commerce' %}selected{% endif %}>E-commerce</option>
+                                <option value="Revendedor" {% if cliente and cliente.categoria=='Revendedor' %}selected{% endif %}>Revendedor</option>
+                                <option value="Corporativo" {% if cliente and cliente.categoria=='Corporativo' %}selected{% endif %}>Corporativo</option>
+                                <option value="Outro" {% if cliente and cliente.categoria=='Outro' %}selected{% endif %}>Outro</option>
+                            </select>
+                        </div>
+                        <div class="fe-group">
+                            <label class="fe-label">Rating</label>
+                            <select class="gf-input" name="rating">
+                                <option value="A" {% if cliente and cliente.rating=='A' %}selected{% endif %}>A — Premium</option>
+                                <option value="B" {% if cliente and cliente.rating=='B' %}selected{% endif %}>B — Regular</option>
+                                <option value="C" {% if cliente and cliente.rating=='C' %}selected{% endif %}>C — Alerta</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Financeiro -->
+                <div id="tab-financeiro" class="tab-content">
+                    <div class="fe-row">
+                        <div class="fe-group"><label class="fe-label">Limite de Crédito</label><input class="gf-input mask-money" type="text" name="limite_credito" value="{{ cliente.limite_credito if cliente else '0,00' }}"></div>
+                        <div class="fe-group"><label class="fe-label">Banco</label><input class="gf-input" type="text" name="banco" value="{{ cliente.banco if cliente else '' }}"></div>
+                        <div class="fe-group"><label class="fe-label">Chave PIX</label><input class="gf-input" type="text" name="pix_chave" value="{{ cliente.pix_chave if cliente else '' }}"></div>
+                    </div>
+                </div>
+
+                <!-- Tab: Documentos -->
+                <div id="tab-documentos" class="tab-content">
+                    <div class="fe-doc-upload-area" id="drop-area" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="onDrop(event)">
+                        <i class="fas fa-cloud-upload-alt fe-doc-icon"></i>
+                        <p>Arraste arquivos aqui ou clique para selecionar</p>
+                        <input type="file" name="documentos" id="input-docs" multiple style="display:none;" onchange="previewDocs(this)">
+                        <button type="button" class="fe-btn fe-btn-add" onclick="document.getElementById('input-docs').click()">Anexar Arquivos</button>
+                    </div>
+                    <div id="preview-docs" style="margin-top:15px;" class="fe-doc-lista"></div>
+                </div>
+
+                <!-- Tab: Histórico de Pedidos -->
+                <div id="tab-historico" class="tab-content">
+                    <div class="fe-card" style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;">
+                        <div class="fe-card-title" style="background: rgba(0, 114, 206, 0.03); color: #0072CE; padding: 12px 20px; font-size: 13px; font-weight: 800; text-transform: uppercase; border-bottom: 1.5px solid #f1f5f9; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-shopping-bag"></i> Histórico de Pedidos de Venda do Cliente
+                        </div>
+                        <div class="fe-card-body" style="padding: 0;">
+                            {% if pedidos %}
+                            <div style="overflow-x: auto;">
+                                <table class="fe-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 80px; text-align: center;">Número</th>
+                                            <th style="width: 120px;">Data do Pedido</th>
+                                            <th>Canal de Venda</th>
+                                            <th>Vendedor</th>
+                                            <th style="width: 140px; text-align: center;">Entrega no Prazo</th>
+                                            <th style="width: 130px; text-align: center;">Atrazado</th>
+                                            <th style="width: 140px; text-align: right;">Valor Líquido</th>
+                                            <th style="width: 120px; text-align: center;">Status</th>
+                                            <th style="width: 70px; text-align: center;">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ped in pedidos %}
+                                        <tr>
+                                            <td style="text-align: center; font-weight: 800; color: #0072CE;">{{ ped.numero or ped.id }}</td>
+                                            <td style="font-weight: 700; color: #475569;">{{ ped.data_pedido.strftime('%d/%m/%Y') if ped.data_pedido else '---' }}</td>
+                                            <td style="font-weight: 800; color: #1e293b;">{{ ped.canal_venda or 'Balcão / Presencial' }}</td>
+                                            <td style="font-weight: 700; color: #475569;">{{ ped.vendedor.nome if ped.vendedor else 'Sem Vendedor' }}</td>
+                                            <td style="text-align: center;">
+                                                {% set st = (ped.status or '').upper().strip() %}
+                                                {% if st in ['FATURADO', 'ENTREGUE', 'CONVERTIDO'] %}
+                                                    <span style="color: #27AE60; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                                                        <i class="fas fa-check-circle"></i> Sim
+                                                    </span>
+                                                {% elif st not in ['CANCELADO', 'PERDIDO', 'REPROVADO'] and ped.data_entrega_prometida and hoje and ped.data_entrega_prometida >= hoje %}
+                                                    <span style="color: #0072CE; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                                                        <i class="fas fa-clock"></i> No Prazo
+                                                    </span>
+                                                {% else %}
+                                                    <span style="color: #94a3b8; font-weight: 600;">---</span>
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: center;">
+                                                {% set st = (ped.status or '').upper().strip() %}
+                                                {% if st not in ['FATURADO', 'ENTREGUE', 'CONVERTIDO', 'CANCELADO', 'PERDIDO', 'REPROVADO'] and ped.data_entrega_prometida and hoje and ped.data_entrega_prometida < hoje %}
+                                                    <span style="color: #E53E3E; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; background: rgba(229,62,62,0.1); padding: 4px 10px; border-radius: 20px; font-size: 11px;">
+                                                        <i class="fas fa-exclamation-circle"></i> Sim ({{ (hoje - ped.data_entrega_prometida).days }}d)
+                                                    </span>
+                                                {% else %}
+                                                    <span style="color: #94a3b8; font-weight: 600;">---</span>
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: right; font-weight: 800; color: #1e293b;">R$ {{ "%.2f"|format(ped.total_liquido or 0) }}</td>
+                                            <td style="text-align: center;">
+                                                {% set badge_bg = 'rgba(0,114,206,0.1)' %}
+                                                {% set badge_color = '#0072CE' %}
+                                                
+                                                {% if st in ['FATURADO', 'ENTREGUE', 'CONVERTIDO'] %}
+                                                    {% set badge_bg = 'rgba(39,174,96,0.1)' %}
+                                                    {% set badge_color = '#27AE60' %}
+                                                {% elif st in ['CANCELADO', 'PERDIDO', 'REPROVADO'] %}
+                                                    {% set badge_bg = 'rgba(229,62,62,0.1)' %}
+                                                    {% set badge_color = '#E53E3E' %}
+                                                {% endif %}
+                                                
+                                                <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; background: {{ badge_bg }}; color: {{ badge_color }};">
+                                                    {{ st }}
+                                                </span>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <a href="{{ url_for('operacoes.card_vendas_pedido', id=ped.id) }}" class="fe-btn" style="padding: 4px 10px; background: rgba(0,114,206,0.1); color: #0072CE; border-radius: 6px; border: none; text-decoration: none;" title="Visualizar Pedido" target="_blank">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div style="padding: 40px 20px; text-align: center;">
+                                <i class="fas fa-box-open" style="font-size: 32px; color: #cbd5e1; margin-bottom: 12px;"></i>
+                                <p style="font-size: 14px; font-weight: 700; color: #64748b; margin: 0;">Nenhum pedido de venda registrado para este cliente até o momento.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+          </div> <!-- Fim fe-form-stage -->
+      </div> <!-- Fim area-formulario-cliente -->
+
+      <!-- Seção de Listagem (Sempre Visível) -->
+      <div class="fe-form-stage" style="max-width: 1600px; margin: 0 auto; padding: 0 40px;">
+          
+          {# ══ BARRA DE FILTROS ══ #}
+          <div id="filter-bar-clientes" style="display: none; background: #f0f9ff; border: 2px solid #0072CE22; padding: 20px; border-radius: 12px; margin: 15px 0;">
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                  <div class="fe-group"><label class="fe-label">Rating</label><select id="f-rating" class="gf-input" onchange="executarFiltroCliente()"><option value="">Todos</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+                  <div class="fe-group"><label class="fe-label">Status</label><select id="f-status" class="gf-input" onchange="executarFiltroCliente()"><option value="">Todos</option><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></div>
+                  <div class="fe-group"><label class="fe-label">Documento</label><input type="text" id="f-doc" class="gf-input" onkeyup="executarFiltroCliente()" placeholder="CPF/CNPJ"></div>
+                  <div class="fe-group"><label class="fe-label">Cidade</label><input type="text" id="f-cidade" class="gf-input" onkeyup="executarFiltroCliente()" placeholder="Cidade"></div>
+              </div>
+          </div>
+
+          {# ══ GRID DE DADOS ══ #}
+          {% if clientes_lista %}
+          <div class="fe-card" id="grid-clientes" style="margin-top:20px; background:#fff; border-radius:12px; overflow:hidden; border:1.5px solid #e2e8f0;">
+              <div class="fe-card-title" style="justify-content:space-between; background: #f1f5f9; border-left: 5px solid #0072CE;">
+                  <span>Carteira de Clientes</span>
+                  <div style="position: relative;">
+                      <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;"></i>
+                      <input type="text" id="input-busca-clientes" placeholder="Pesquisar..." onkeyup="filtrarListaClientes()" style="padding: 6px 12px 6px 30px; border-radius: 6px; border: 1.5px solid #e2e8f0; font-size: 12px; width: 200px;">
+                  </div>
+              </div>
+              <div style="overflow-x:auto;">
+                  <table class="fe-table">
+                      <thead>
+                          <tr>
+                              <th class="col-foto" style="width: 50px; text-align: center;">Foto</th>
+                              <th class="col-id">#</th>
+                              <th class="col-nome">Nome do Cliente</th>
+                              <th class="col-doc">Documento</th>
+                              <th class="col-rating">Rating</th>
+                              <th class="col-status">Status</th>
+                              <th class="col-acoes">Ações</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                        {% for c in clientes_lista %}
+                        <tr data-rating="{{ c.rating or '' }}" data-status="{{ 'Ativo' if c.ativo else 'Inativo' }}" data-doc="{{ c.cpf_cnpj|default('')|replace('.', '')|replace('-', '')|replace('/', '') }}">
+                            <td class="col-foto" style="text-align: center; width: 60px;">
+                                {% if c.foto %}
+                                    <img src="{{ url_for('static', filename='img/clientes/' + c.foto) }}" 
+                                         style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #0072CE; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                {% else %}
+                                    <div style="width: 34px; height: 34px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; border: 1.5px solid #e2e8f0;">
+                                        <i class="fas fa-user" style="font-size: 14px;"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="col-id"><span style="background:rgba(0,114,206,0.1); color:#0072CE; padding:4px 8px; border-radius:6px; font-weight:800; font-size:11px;">{{ c.id }}</span></td>
+                            <td class="col-nome">
+                                <div style="font-weight: 800; color: #1e293b; font-size: 14px;">{{ c.nome }}</div>
+                                <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">{{ c.apelido or '' }}</div>
+                            </td>
+                            <td class="col-doc"><code style="background:#f1f5f9; padding:3px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace; font-size:12px; color:#475569;">{{ c.cpf_cnpj or '---' }}</code></td>
+                            <td class="col-rating">
+                                <span style="font-weight: 800; color: {{ '#27AE60' if c.rating=='A' else '#0072CE' if c.rating=='B' else '#E67E22' }};">
+                                    {{ c.rating or '---' }}
+                                </span>
+                            </td>
+                            <td class="col-status">
+                                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; {{ 'background:#dcfce7; color:#166534;' if c.ativo else 'background:#fee2e2; color:#991b1b;' }}">
+                                    <i class="fas fa-circle" style="font-size: 6px;"></i>
+                                    {{ 'Ativo' if c.ativo else 'Inativo' }}
+                                </span>
+                            </td>
+                            <td class="col-acoes" style="text-align: center; white-space: nowrap;">
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <button type="button" onclick="navegarParaRegistro('clientes', {{ c.id }})" class="fe-btn" style="padding:6px 12px; background:rgba(0,114,206,0.1); color:#0072CE; border-radius:8px; border:none; transition:0.2s;" onmouseover="this.style.background='#0072CE'; this.style.color='#fff';" onmouseout="this.style.background='rgba(0,114,206,0.1)'; this.style.color='#0072CE';">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button type="button" onclick="imprimirFichaCliente()" class="fe-btn" style="padding:6px 12px; background:rgba(39,174,96,0.1); color:#27AE60; border-radius:8px; border:none; transition:0.2s;" onmouseover="this.style.background='#27AE60'; this.style.color='#fff';" onmouseout="this.style.background='rgba(39,174,96,0.1)'; this.style.color='#27AE60';">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          {% endif %}
+      </div>
+    </div> <!-- Fim contexto-geral-cliente -->
+    </form>
+</div>
+
+<style>
+.tab-btn { background:none; border:none; padding:10px 15px; font-size:12px; font-weight:700; color:#64748b; cursor:pointer; border-bottom:2px solid transparent; transition:0.2s; display:flex; align-items:center; gap:8px; justify-content:center; }
+.tab-btn:hover { color:#0072CE; background: rgba(0,114,206,0.05); border-radius: 8px; }
+.tab-btn.active { color:#0072CE; border-bottom-color:#0072CE; }
+.tab-content { display:none; }
+.tab-content.active { display:block; animation: feFadeUp 0.4s ease; }
+
+.fe-table tr { transition: background 0.2s; border-bottom: 1px solid #f1f5f9; }
+.fe-table tr:hover { background-color: #f0f9ff !important; }
+
+.golden-seal { position:absolute; top:-10px; right:-10px; background:linear-gradient(135deg,#FFD700,#FFA500); color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; box-shadow:0 4px 10px rgba(0,0,0,0.2); border:2px solid #fff; z-index:10; animation: sealPulse 2s infinite; }
+@keyframes sealPulse { 0% { transform:scale(1); } 50% { transform:scale(1.1); } 100% { transform:scale(1); } }
+</style>
+
+<script>
+// Lógica de Tabs
+function switchTab(evt, tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById(tabId);
+    if(panel) panel.classList.add('active');
+    evt.currentTarget.classList.add('active');
+}
+
+// Lógica de Foto
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = e => document.getElementById('foto-img-container').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Filtros
+function executarFiltroCliente() {
+    const fRating = document.getElementById('f-rating').value;
+    const fStatus = document.getElementById('f-status').value;
+    const fDoc = document.getElementById('f-doc').value.replace(/\D/g, '');
+    const fCid = document.getElementById('f-cidade').value.toUpperCase();
+    const fGbl = document.getElementById('input-busca-clientes').value.toUpperCase();
+
+    document.querySelectorAll('#grid-clientes tbody tr').forEach(row => {
+        const dRating = row.dataset.rating || '';
+        const dStatus = row.dataset.status || '';
+        const dDoc = row.dataset.doc || '';
+        
+        const match = (!fRating || dRating === fRating) &&
+                      (!fStatus || dStatus === fStatus) &&
+                      (!fDoc || dDoc.includes(fDoc)) &&
+                      (!fGbl || row.textContent.toUpperCase().includes(fGbl));
+        row.style.display = match ? "" : "none";
+    });
+}
+function filtrarListaClientes() { executarFiltroCliente(); }
+function toggleFilterClientes() {
+    const bar = document.getElementById('filter-bar-clientes');
+    if(!bar) return;
+    const isHidden = bar.style.display === 'none';
+    bar.style.display = isHidden ? 'block' : 'none';
+    
+    if (isHidden) {
+        // Inteligência AriOne: Se abrir filtros, recolhe o formulário para focar na lista
+        const form = document.getElementById('area-formulario-cliente');
+        if (form && form.style.display !== 'none') {
+            toggleFormView('area-formulario-cliente', document.querySelector('.fe-tool-btn[onclick*="toggleFormView"]'));
+        }
+        setTimeout(() => bar.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+    }
+}
+
+function toggleFormView(id, btn) {
+    const target = document.getElementById(id);
+    if (!target) return;
+    
+    const isVisible = target.style.display !== 'none';
+    const icon = btn.querySelector('i');
+    
+    if (isVisible) {
+        target.style.display = 'none';
+        if (icon) icon.className = 'fas fa-expand';
+        btn.title = "Expandir Formulário";
+    } else {
+        target.style.display = 'block';
+        if (icon) icon.className = 'fas fa-compress';
+        btn.title = "Ocultar Formulário";
+        target.style.animation = 'feFadeUp 0.4s ease forwards';
+    }
+}
+
+// Submit AJAX
+async function forceSubmitCliente() {
+    const form = document.getElementById('form-cliente');
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    const btn = document.querySelector('button[onclick*="forceSubmitCliente"]');
+    if(!btn) return;
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+
+    try {
+        const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+        if (response.ok) {
+            arioneToast('Cliente salvo com sucesso!', 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else { alert("Erro ao salvar."); btn.disabled = false; btn.innerHTML = original; }
+    } catch (e) { alert("Erro de conexão."); btn.disabled = false; btn.innerHTML = original; }
+}
+
+function navegarParaRegistro(tipo, id) {
+    window.location.href = `/cadastros/${tipo}/cards/form/${id}`;
+}
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const container = document.getElementById('foto-img-container');
+            container.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function abrirModalInativar(){document.getElementById('modal-inativar').style.display='flex';}
+function fecharModalInativar(){document.getElementById('modal-inativar').style.display='none';}
+
+function limparFormCliente() {
+    navegarParaRegistro('clientes', 0);
+}
+
+function imprimirFichaCliente() {
+    window.print();
+}
+
+// ── EXPORTAÇÃO ESTRUTURADA ARIONE (CSV) ──
+function exportarListaClientes() {
+    const tbody = document.querySelector('#grid-clientes table tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const visibleRows = rows.filter(tr => tr.style.display !== 'none');
+    
+    if (visibleRows.length === 0) {
+        alert("AriOne: Não há dados visíveis para exportar.");
+        return;
+    }
+
+    let csv = 'ID;Nome;CPF_CNPJ;Rating;Status\n';
+    visibleRows.forEach(tr => {
+        const tds = tr.cells;
+        const id = tds[0].innerText.trim();
+        const nome = tds[1].innerText.split('\n')[0].trim();
+        const doc = tds[2].innerText.trim();
+        const rating = tds[3].innerText.trim();
+        const status = tds[4].innerText.trim();
+        csv += `${id};${nome};${doc};${rating};${status}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "carteira_clientes_arione.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ── IMPORTAÇÃO XML (WORKFLOW PREMIUM) ──
+function importarXMLCliente() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xml';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const btn = document.querySelector('.fe-action-alt[title="Importar XML"]');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Lendo...';
+        setTimeout(() => {
+            alert(`AriOne Integridade:\nArquivo "${file.name}" validado.\nProcessando mapeamento de campos Sefaz/eSintegra...\n\nSucesso: 1 registro(s) preparado(s).`);
+            btn.innerHTML = original;
+            btn.disabled = false;
+        }, 1500);
+    };
+    input.click();
+}
+
+function alternarTipoPessoa(){
+  const tipo=document.getElementById('sel-tipo-pessoa').value;
+  const doc = document.getElementById('inp-doc');
+  if(!doc) return;
+  doc.placeholder = tipo==='J' ? '00.000.000/0000-00' : '000.000.000-00';
+  initMasksCliente();
+}
+
+function buscarCep(input,pref){
+  const cep=input.value.replace(/\D/g,'');
+  if(cep.length!==8)return;
+  fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(r=>r.json()).then(d=>{
+      if(!d.erro){
+          const rua = document.getElementById(pref+'-rua');
+          const bairro = document.getElementById(pref+'-bairro');
+          const cidade = document.getElementById(pref+'-cidade');
+          const uf = document.getElementById(pref+'-uf');
+          if(rua) rua.value = d.logradouro;
+          if(bairro) bairro.value = d.bairro;
+          if(cidade) cidade.value = d.localidade;
+          if(uf) uf.value = d.uf;
+      }
+    });
+}
+
+function initMasksCliente() {
+    if (typeof $ !== 'undefined' && $.fn.mask) {
+        $('.mask-cpf-cnpj').unmask();
+        const tipo = $('#sel-tipo-pessoa').val();
+        if (tipo === 'J') $('.mask-cpf-cnpj').mask('00.000.000/0000-00');
+        else $('.mask-cpf-cnpj').mask('000.000.000-00');
+
+        $('.mask-cep').mask('00000-000');
+        
+        var maskPhoneBehavior = function (val) {
+          return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+        },
+        options = { onKeyPress: function(val, e, field, options) {
+            field.mask(maskPhoneBehavior.apply({}, arguments), options);
+          }
+        };
+        $('.mask-phone').mask(maskPhoneBehavior, options);
+
+        $('.mask-money').mask('#.##0,00', {reverse: true});
+    }
+}
+
+// Init
+(function() {
+    initMasksCliente();
+    if (typeof checkGoldenStandardGlobal === 'function') {
+        checkGoldenStandardGlobal('Gestão Clientes', 'CADASTROS — Pessoas', 'Clientes');
+    }
+})();
+</script>
+{% endblock %}

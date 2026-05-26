@@ -1,0 +1,519 @@
+/* =============================================================================
+   Caminho  : static/css/arione-premium-forms.css
+   Função   : Estilos padronizados para formulários e listagens CRUD AriOne.
+   ============================================================================= */
+
+:root {
+  --pri: #7A255F; 
+  --pri-l: #9b3177; 
+  --pri-d: #5e193e;
+  --pri-bg: #fdf2f8;
+  --bg: #f4f6f9; 
+  --card: #fff; 
+  --border: #e2e8f0; 
+  --text: #2d3748; 
+  --muted: #718096;
+  --radius: 10px; 
+  --shadow: 0 4px 16px rgba(142, 68, 173, 0.15); 
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --tr: 0.2s ease;
+}
+
+/* 🌙 DARK MODE OVERRIDES */
+body.dark-mode {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --border: #334155;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --pri-bg: rgba(142, 68, 173, 0.1);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .fe-input {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode .fe-input:focus {
+  border-color: var(--pri) !important;
+}
+
+body.dark-mode .fe-btn-ghost-dark {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode .fe-table-listing th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+body.dark-mode .fe-table-listing td {
+  color: #f8fafc !important;
+  border-bottom-color: #334155 !important;
+}
+
+body.dark-mode .fe-table-listing tbody tr:hover {
+  background-color: rgba(255,255,255,0.02) !important;
+}
+
+/* ── CONTAINER PRINCIPAL ── */
+.fe-wrap {
+  padding: 20px 24px;
+  background: var(--bg);
+}
+
+/* ── CABEÇALHO (PURPLE GRADIENT) — STICKY ── */
+.fe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, var(--pri), var(--pri-l));
+  padding: 16px 22px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  box-shadow: 0 6px 20px rgba(142, 68, 173, 0.25);
+  position: sticky;
+  top: 10px; /* Alinhado logo abaixo da barra degradê do AriOne */
+  z-index: 1000;
+}
+
+.fe-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #fff;
+}
+
+.fe-header-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.fe-header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.fe-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 3px;
+}
+
+.fe-breadcrumb a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+}
+
+.fe-breadcrumb i { font-size: 8px; }
+
+.fe-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── BOTÕES ── */
+.fe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all var(--tr);
+  white-space: nowrap;
+}
+
+.fe-btn-salvar-footer {
+  background: linear-gradient(135deg, var(--pri), var(--pri-l));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(142, 68, 173, 0.2);
+}
+
+.fe-btn-salvar-footer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(142, 68, 173, 0.3);
+}
+
+.fe-btn-ghost-dark {
+  background: #fff;
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
+
+.fe-btn-ghost-dark:hover {
+  border-color: var(--pri);
+  color: var(--pri);
+  background: var(--pri-bg);
+}
+
+.fe-btn-salvar {
+  background: #fff;
+  color: var(--pri);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.fe-btn-salvar:hover {
+  background: var(--pri-bg);
+  transform: translateY(-2px);
+}
+
+.fe-btn-ghost {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.fe-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* ── CARDS ── */
+.fe-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fe-card-title {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pri);
+  border-bottom: 1px solid var(--border);
+  background: var(--pri-bg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fe-card-body {
+  padding: 15px 18px;
+}
+
+/* ── FORMULÁRIOS ── */
+.fe-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.fe-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 150px;
+}
+
+.fe-flex-1 { flex: 1; }
+
+.fe-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.fe-req { color: #e53e3e; margin-left: 2px; }
+
+.fe-input {
+  padding: 7px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text);
+  background: #fff;
+  transition: all var(--tr);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fe-input:focus {
+  outline: none;
+  border-color: var(--pri);
+  box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.1);
+}
+
+textarea.fe-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.fe-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 15px 0 30px;
+}
+
+/* ── TABELAS (LISTAGEM E MATRIZ) ── */
+.fe-table-matrix, .fe-table-listing {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Listagem */
+.fe-table-listing th {
+  background: #f8fafc;
+  padding: 14px 15px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 2px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fe-table-listing td {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 13.5px;
+}
+
+.fe-table-listing tbody tr:hover {
+  background-color: #fcfaff;
+}
+
+/* Matriz */
+.fe-table-matrix th {
+  background: var(--bg);
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--pri);
+  border-bottom: 2px solid var(--pri);
+  text-transform: uppercase;
+}
+
+.fe-table-matrix td {
+  padding: 14px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.matrix-label {
+  text-align: left !important;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+  padding-left: 20px !important;
+}
+
+.matrix-check {
+  width: 19px;
+  height: 19px;
+  cursor: pointer;
+  accent-color: var(--pri);
+}
+
+/* ── COMPONENTES EXTRAS ── */
+.action-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all var(--tr);
+  background: #f1f5f9;
+  color: #64748b;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.action-icon.edit:hover { background: var(--pri-bg); color: var(--pri); }
+.action-icon.delete:hover { background: #fee2e2; color: #ef4444; }
+.action-icon.print:hover { background: #f0fdf4; color: #15803d; }
+
+.fe-print-menu-item {
+  width: 100%;
+  padding: 11px 16px;
+  text-align: left;
+  border: none;
+  background: #fff;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.fe-print-menu-item:hover {
+  background: var(--pri-bg);
+  color: var(--pri);
+}
+
+/* ── OPÇÕES DE EXPORTAÇÃO (RÁDIOS ESTILIZADOS) ── */
+.export-options { display: flex; gap: 12px; margin-top: 10px; }
+.export-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--text); background: var(--bg); cursor: pointer; transition: all var(--tr); flex: 1; justify-content: center; opacity: 0.7; }
+.export-btn input { display: none; }
+.export-btn:hover { border-color: var(--pri); opacity: 1; background: #fff; transform: translateY(-2px); }
+.export-btn:has(input:checked) { opacity: 1; border-width: 2.5px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: #fff; }
+
+.export-btn.export-pdf:has(input:checked) { border-color: #E53E3E; color: #E53E3E; background: #fff5f5; }
+.export-btn.export-excel:has(input:checked) { border-color: #27AE60; color: #27AE60; background: #f0fff4; }
+.export-btn.export-csv:has(input:checked) { border-color: #E67E22; color: #E67E22; background: #fffbeb; }
+.export-btn.export-view:has(input:checked) { border-color: var(--pri); color: var(--pri); background: var(--pri-bg); }
+
+/* ── RESPONSIVIDADE ── */
+@media (max-width: 768px) {
+  .fe-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+  .fe-header-actions { width: 100%; justify-content: space-between; }
+  .fe-row { flex-direction: column; }
+}
+
+/* ── IMPRESSÃO ── */
+@media print {
+  .fe-wrap > *:not(.print-visible) { display: none !important; }
+  .fe-btn, .fe-header-actions, .action-icon, .fe-footer-actions, .arione-sidebar, header { display: none !important; }
+  .fe-card-title { background: #eee !important; color: #000 !important; }
+  .fe-wrap { padding: 0; background: #fff; }
+  .fe-card { border: 1px solid #ccc !important; box-shadow: none !important; }
+}
+
+/* ── MENSAGENS DE NOTIFICAÇÃO (FLASH) ── */
+.fe-flash {
+  padding: 12px 18px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideDown 0.2s ease-out;
+}
+
+.fe-flash i { font-size: 16px; }
+
+.fe-flash-success {
+  background: #f0fff4;
+  color: #276749;
+  border: 1px solid #c6f6d5;
+}
+
+.fe-flash-danger {
+  background: #fff5f5;
+  color: #c53030;
+  border: 1px solid #fed7d7;
+}
+
+.fe-flash-info {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #bee3f8;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fe-flash-close {
+  margin-left: auto;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.fe-flash-close:hover {
+  opacity: 1;
+}
+
+/* ── SISTEMA DE ABAS (TABS) ── */
+.fe-tabs-wrap {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.fe-tabs-nav {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px 0;
+  background: var(--pri-bg);
+  border-bottom: 2px solid var(--border);
+  overflow-x: auto;
+}
+
+.fe-tab {
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  border-radius: 8px 8px 0 0;
+  transition: all var(--tr);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.fe-tab:hover {
+  color: var(--pri);
+  background: rgba(122, 37, 95, 0.05);
+}
+
+.fe-tab.active {
+  color: var(--pri);
+  border-bottom-color: var(--pri);
+  background: #fff;
+}
+
+.fe-tab-panel {
+  display: none;
+  padding: 20px;
+  animation: feFadeUp 0.3s ease-out;
+}
+
+.fe-tab-panel.active {
+  display: block;
+}
+
+@keyframes feFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

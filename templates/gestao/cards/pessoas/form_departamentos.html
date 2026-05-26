@@ -1,0 +1,129 @@
+{# =============================================================================
+Caminho : templates/gestao/cards/pessoas/form_departamentos.html
+Arquivo : form_departamentos.html
+Função  : Cadastro de Departamentos (Padrão Sócios)
+============================================================================= #}
+
+<div class="fe-wrap" style="padding:0; min-height:auto; background:transparent;">
+    <form id="form-novo-depto" method="POST">
+        {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+        {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+        {{ cabecalho_mestre_arione(
+            titulo='Gestão de Departamentos',
+            subtitulo='Micro Estrutura / Escritórios',
+            icone='fa-network-wired',
+            form_id='form-novo-depto',
+            onclick_save='submeterNovoDepto()',
+            cor_tema='#7F8C8D',
+            tamanho='medio'
+        ) }}
+
+        <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ══════════ CARD PRINCIPAL ══════════ #}
+        <div class="fe-card" style="border-left: 4px solid #7F8C8D;">
+            <div class="fe-card-title" style="color:#7F8C8D; background:rgba(127,140,141,0.05);">
+                <i class="fas fa-link"></i> Vínculo e Identificação
+            </div>
+            <div class="fe-card-body">
+                <div class="fe-row">
+                    <div class="fe-group fe-flex-1">
+                        <label class="fe-label">Setor Pai (Macro) <span class="fe-req">*</span></label>
+                        <select name="parent_id" class="fe-input" required>
+                            <option value="">-- Selecione o Setor --</option>
+                            {% for s in setores_pais %}
+                            <option value="{{ s.id }}">{{ s.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="fe-row">
+                    <div class="fe-group" style="max-width:150px;">
+                        <label class="fe-label">Código</label>
+                        <input class="fe-input" type="text" name="codigo" readonly placeholder="(Automático)" style="background:#f8fafc; cursor:not-allowed;">
+                    </div>
+                    <div class="fe-group fe-flex-3">
+                        <label class="fe-label">Nome do Departamento <span class="fe-req">*</span></label>
+                        <input class="fe-input" type="text" name="nome" required placeholder="Ex: Escritório, RH, Marketing...">
+                    </div>
+                    <div class="fe-group fe-flex-1" style="max-width:120px;">
+                        <label class="fe-label">Sigla</label>
+                        <input class="fe-input" type="text" name="sigla" placeholder="Ex: ESC">
+                    </div>
+                </div>
+                
+                <div class="fe-row" style="justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="document.getElementById('form-novo-depto').reset()">Limpar</button>
+                    <button type="button" class="fe-btn fe-btn-salvar-footer" style="background: #7F8C8D; color: #fff;" onclick="submeterNovoDepto()">
+                        <i class="fas fa-save"></i> Gravar Departamento
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# ══════════ LISTAGEM ══════════ #}
+        <div class="fe-card" style="margin-top:12px; border-left: 4px solid #3399ee;">
+            <div class="fe-card-title" style="color:#3399ee; background:rgba(51,153,238,0.05);">
+                <i class="fas fa-list-ul"></i> Departamentos Cadastrados
+            </div>
+            <div class="fe-card-body" style="padding:0;">
+                <table class="fe-table-listing">
+                    <thead>
+                        <tr>
+                            <th style="width:100px;">Código</th>
+                            <th>Departamento</th>
+                            <th>Setor Vinculado</th>
+                            <th style="width:120px; text-align:center;">Equipe</th>
+                            <th style="width:60px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in departamentos %}
+                        <tr>
+                            <td><span style="font-weight: 700; color: #7F8C8D;">#{{ d.codigo }}</span></td>
+                            <td><strong style="font-size: 13px;">{{ d.nome }}</strong></td>
+                            <td>
+                                <span style="font-size:11px; color:#64748b; text-transform: uppercase; font-weight: 700;">
+                                    <i class="fas fa-sitemap" style="font-size:9px; margin-right:4px;"></i> {{ d.pai.nome if d.pai else '--' }}
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="fe-badge-count" style="background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:10px; font-size:10px; font-weight: 700;">{{ d.funcionarios_lista|length }}</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px;" title="Editar"><i class="fas fa-pen"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding:30px; text-align:center; color:#94a3b8; font-style:italic;">Nenhum departamento cadastrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        </div>{# /fe-form-stage-medio #}
+    </form>
+</div>
+
+<script>
+async function submeterNovoDepto() {
+    const form = document.getElementById('form-novo-depto');
+    const formData = new FormData(form);
+    if (!formData.get('nome') || !formData.get('parent_id')) { 
+        if(!formData.get('nome')) form.querySelector('[name="nome"]').classList.add('error');
+        if(!formData.get('parent_id')) form.querySelector('[name="parent_id"]').classList.add('error');
+        return; 
+    }
+    try {
+        const response = await fetch('/cadastros/funcionarios/org/setor/add', {
+            method: 'POST', body: new URLSearchParams(formData)
+        });
+        if(response.ok) { abrirModalEmp('departamentos'); }
+    } catch(e) { console.error(e); }
+}
+</script>

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "macros/abas_cadastro.html" as nav %}
+
+{% block content %}
+<div class="arione-page-wrapper">
+    <div class="fe-header" style="background: linear-gradient(90deg, #7A255F 0%, #a63282 50%, #7A255F 100%); margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: #BDBDBD; box-shadow: 0 4px 15px rgba(0,0,0,0.25);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                <i class="fas fa-storefront"></i>
+            </div>
+            <div>
+                <h2 style="margin: 0; font-size: 16px; font-weight: 800; text-transform: uppercase;">Módulo Comercial</h2>
+                <div style="font-size: 10px; font-weight: 600; opacity: 0.6;">Dashboard & Gestão de Canais</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="arione-tabs-box">
+        {{ nav.gerar_abas_arione(abas, aba_ativa, 'comercial') }}
+    </div>
+
+    <div class="arione-content-box">
+        {% include 'cadastros/grids/grid_comercial.html' %}
+    </div>
+</div>
+{% endblock %}

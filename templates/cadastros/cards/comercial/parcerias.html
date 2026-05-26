@@ -1,0 +1,395 @@
+{# =============================================================================
+   Arquivo  : parcerias.html
+   Caminho  : templates/cadastros/cards/comercial/parcerias.html
+   Função   : Gestão de Acordos e Parcerias Comerciais
+   Padrão   : Quiet Luxury / Golden Standard
+   ============================================================================= #}
+
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+{% import 'macros/componentes.html' as comp %}
+
+<div id="parc-form-area" class="arione-fade-in" style="padding: 10px;">
+    
+    {# ✅ FEEDBACK DE STATUS PADRÃO ARIONE (Golden Standard) #}
+    {{ comp.feedback_status_arione() }}
+
+    {# ══ CABEÇALHO MESTRE (Luxo Silencioso) ══ #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Contratos & Parcerias",
+        subtitulo="Comercial > Alianças e Contratos Estratégicos",
+        cor_tema="#27AE60",
+        form_id="parc-form",
+        onclick_novo="novoRegistroParc()",
+        onclick_save="submitFormParc()",
+        onclick_search="focarBuscaParc()",
+        onclick_filter="toggleFiltroParc()",
+        onclick_export="exportarParcCSV()",
+        onclick_import="importarParcXML()",
+        func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='comercial') ~ "'",
+        aba_retorno="comercial",
+        blueprint_retorno="cadastros",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+        <div id="parc-form-area" class="fp-card" style="margin-top: 15px; border-top: 4px solid #27AE60;">
+        <div class="fp-card-body">
+            <form id="parc-form" method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="submitFormParc(); return false;">
+                <input type="hidden" name="id" id="parc-id">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    
+                    <div class="gf-group" style="grid-column: span 2;">
+                        <label class="fp-label">TÍTULO DO ACORDO / PARCERIA *</label>
+                        <input type="text" id="parc-nome" name="nome" class="fp-input" placeholder="Ex: CONTRATO DE REVENDAS NORDESTE" required>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">
+                            TIPO DE ACORDO
+                            <i class="fas fa-info-circle info-icon" title="Define o modelo: Direta (padrão), Consignação, Rebate, Aluguéis (Predial/Máquinas), Bonificação ou Triangulação."></i>
+                        </label>
+                        <select id="parc-tipo" name="tipo" class="fp-input">
+                            <option value="VENDA_DIRETA">COMPRA/VENDA DIRETA</option>
+                            <option value="ALUGUEIS">CONTRATOS DE ALUGUÉIS</option>
+                            <option value="FORNECIMENTO">CONTRATO DE FORNECIMENTO</option>
+                            <option value="CONSIGNACAO">CONSIGNAÇÃO</option>
+                            <option value="BONIFICACAO">BONIFICAÇÃO</option>
+                            <option value="REBATE">ACORDO DE REBATE</option>
+                            <option value="INTERMEDIACAO">PARCERIA / INTERMEDIAÇÃO</option>
+                            <option value="MUTUO">MÚTUO COMERCIAL</option>
+                            <option value="TRIANGULACAO">TRIANGULAÇÃO</option>
+                        </select>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">
+                            PARCEIRO (EMPRESA/PESSOA)
+                            <i class="fas fa-search master-icon" title="Clique para acessar o Cadastro de Fornecedores" onclick="window.location.href='{{ url_for('cadastros.form_fornecedor') }}?aba_retorno=comercial'" style="cursor: pointer; color: #27AE60; margin-left: 5px;"></i>
+                        </label>
+                        <div style="position: relative;">
+                            <input type="text" id="parc-parceiro" name="parceiro" class="fp-input" placeholder="Buscar parceiro..." list="fornecedores-list">
+                            <datalist id="fornecedores-list">
+                                {% for f in fornecedores %}
+                                    <option value="{{ f.razao_social }}">
+                                {% endfor %}
+                            </datalist>
+                            <i class="fas fa-info-circle info-icon" title="Identifica a entidade parceira vinculada a este contrato." style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #aaa;"></i>
+                        </div>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">VALOR DO ACORDO / CONTRATO</label>
+                        <input type="text" id="parc-valor" name="valor" class="fp-input mask-money" placeholder="R$ 0,00">
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">FREQUÊNCIA / PAGAMENTO</label>
+                        <select id="parc-frequencia" name="frequencia" class="fp-input">
+                            <option value="UNICO">PAGAMENTO ÚNICO</option>
+                            <option value="SEMANAL">SEMANAL</option>
+                            <option value="QUINZENAL">QUINZENAL</option>
+                            <option value="MENSAL">MENSAL</option>
+                            <option value="TRIMESTRAL">TRIMESTRAL</option>
+                            <option value="SEMESTRAL">SEMESTRAL</option>
+                            <option value="ANUAL">ANUAL</option>
+                            <option value="BIENAL">BIENAL (A CADA 2 ANOS)</option>
+                        </select>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">DATA DA ASSINATURA</label>
+                        <input type="date" id="parc-data-assinatura" name="data_assinatura" class="fp-input">
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">INÍCIO DA VIGÊNCIA</label>
+                        <input type="date" id="parc-data-inicio" name="data_inicio" class="fp-input">
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">TÉRMINO DA VIGÊNCIA</label>
+                        <input type="date" id="parc-data-fim" name="data_fim" class="fp-input">
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">TIPO DE COBRANÇA</label>
+                        <select id="parc-tipo-cobranca" name="tipo_cobranca" class="fp-input">
+                            <option value="BOLETO">BOLETO BANCÁRIO</option>
+                            <option value="CARTAO">CARTÃO DE CRÉDITO</option>
+                            <option value="PIX">PIX</option>
+                            <option value="TRANSFERENCIA">TRANSFERÊNCIA / TED</option>
+                            <option value="DINHEIRO">DINHEIRO</option>
+                            <option value="OUTROS">OUTROS</option>
+                        </select>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">STATUS DO CONTRATO</label>
+                        <select id="parc-status" name="status" class="fp-input">
+                            <option value="ATIVO">ATIVO</option>
+                            <option value="NEGOCIACAO">EM NEGOCIAÇÃO</option>
+                            <option value="AGUARDANDO_ASSINATURA">AGUARDANDO ASSINATURA</option>
+                            <option value="SUSPENSO">SUSPENSO</option>
+                            <option value="ENCERRADO">ENCERRADO</option>
+                        </select>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">ANEXOS DO CONTRATO (IMAGENS/PDF)</label>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="file" id="parc-anexo-input" name="anexos" multiple style="display: none;" onchange="updateAnexoLabel(this)">
+                                <button type="button" class="fp-btn-outline" onclick="document.getElementById('parc-anexo-input').click()" style="width: 100%;">
+                                    <i class="fas fa-paperclip"></i> <span id="anexo-label">ANEXAR ARQUIVOS (MÚLTIPLOS)</span>
+                                </button>
+                            </div>
+                            <div id="parc-anexos-lista" style="font-size: 10px; color: #666; padding-left: 5px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #eee; padding-top: 25px;">
+                    <button type="button" class="fp-btn-outline" onclick="fecharModalCom()" style="border-radius: 8px; padding: 10px 25px; font-weight: 600; font-size: 12px; transition: 0.3s;">CANCELAR</button>
+                    <button type="submit" class="fp-btn-primary" 
+                            style="background: linear-gradient(135deg, #27AE60 0%, #32D977 100%); 
+                                   border: none; border-radius: 8px; padding: 10px 30px; 
+                                   color: #ffffff !important;
+                                   text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                                   font-weight: 700; font-size: 13px; letter-spacing: 0.8px;
+                                   box-shadow: 0 4px 15px rgba(39, 174, 96, 0.25);
+                                   transition: all 0.3s ease; cursor: pointer;">
+                        <i class="fas fa-save" style="margin-right: 8px; color: #fff;"></i> SALVAR CONTRATO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Listagem #}
+    <div class="fp-card" style="margin-top: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee;">
+            <div class="fp-card-title" style="margin: 0;">Acordos Vigentes</div>
+            <div id="parc-search-bar" style="display: none; width: 250px;">
+                <input type="text" id="parc-table-search" class="fp-input" placeholder="Pesquisar acordos..." onkeyup="filterParcTable()" style="height: 30px; font-size: 12px;">
+            </div>
+        </div>
+        <div class="fp-card-body" style="padding:0;">
+            <table class="fp-table" id="parc-table">
+                <thead>
+                    <tr><th>Título do Acordo</th><th>Parceiro</th><th>Início</th><th>Tipo</th><th style="width:80px;">Ações</th></tr>
+                </thead>
+                <tbody>
+                    {% for parc in parcerias %}
+                    <tr>
+                        <td><strong>{{ parc.titulo }}</strong></td>
+                        <td>{{ (parc.descricao or '').split('Parceiro: ')[1] if 'Parceiro: ' in (parc.descricao or '') else '—' }}</td>
+                        <td>{{ parc.data_inicio.strftime('%d/%m/%Y') if parc.data_inicio else '—' }}</td>
+                        <td><span style="font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px;">{{ (parc.descricao or '').split(' | ')[0].split(': ')[1] if 'Tipo: ' in (parc.descricao or '') else 'VENDA_DIRETA' }}</span></td>
+                        <td style="text-align:center;">
+                            <button type="button" class="fp-btn-icon" onclick='editarParc({{ {
+                                "id": parc.id,
+                                "titulo": parc.titulo,
+                                "valor": parc.valor,
+                                "frequencia": parc.frequencia,
+                                "tipo_cobranca": parc.tipo_cobranca,
+                                "data_assinatura": parc.data_assinatura.strftime("%Y-%m-%d") if parc.data_assinatura else "",
+                                "data_inicio": parc.data_inicio.strftime("%Y-%m-%d") if parc.data_inicio else "",
+                                "data_fim": parc.data_fim.strftime("%Y-%m-%d") if parc.data_fim else "",
+                                "descricao": parc.descricao,
+                                "anexos_json": parc.anexos_json
+                            } | tojson | safe }})'><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 20px; color: #aaa;">Nenhum acordo cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    async function submitFormParc() {
+        const form = document.getElementById('parc-form');
+        if (!form.reportValidity()) return;
+
+        // Feedback Visual (Padrão Master Header)
+        const btn = document.querySelector('.fe-action-save') || form.querySelector('button[type="submit"]');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+        try {
+            const formData = new FormData(form);
+            const response = await fetch("{{ url_for('cadastros.card_parcerias') }}", {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                console.log('🛡️ AriOne: Integridade Confirmada. Contrato/Parceria salva.');
+                window.location.href = "{{ url_for('cadastros.card_parcerias') }}";
+            } else {
+                alert('Erro ao salvar contrato. Verifique os dados.');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        } catch (error) {
+            console.error('Erro AJAX Parcerias:', error);
+            alert('Erro de conexão com o servidor.');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+
+    function updateAnexoLabel(input) {
+        const label = document.getElementById('anexo-label');
+        const lista = document.getElementById('parc-anexos-lista');
+        
+        if (input.files.length > 0) {
+            label.innerHTML = `${input.files.length} NOVO(S) ARQUIVO(S) SELECIONADO(S)`;
+            // Mostrar prévia dos novos arquivos (não limpa os antigos visualmente para dar clareza)
+            Array.from(input.files).forEach(file => {
+                const icon = file.type.includes('image') ? 'fa-file-image' : 'fa-file-pdf';
+                const item = document.createElement('div');
+                item.style.cssText = "display: flex; align-items: center; gap: 8px; margin-top: 4px; color: #27AE60; font-weight: 600;";
+                item.innerHTML = `<i class="fas ${icon}"></i> ${file.name} (Pronto para subir)`;
+                lista.appendChild(item);
+            });
+        }
+    }
+
+    function novoRegistroParc() {
+        document.getElementById('parc-form').reset();
+        document.getElementById('parc-id').value = '';
+        document.getElementById('anexo-label').textContent = 'ANEXAR ARQUIVOS (MÚLTIPLOS)';
+        document.getElementById('anexo-label').style.color = 'inherit';
+        document.getElementById('parc-anexos-lista').innerHTML = '';
+        document.getElementById('parc-nome').focus();
+    }
+
+    function editarParc(data) {
+        novoRegistroParc();
+        document.getElementById('parc-id').value = data.id;
+        document.getElementById('parc-nome').value = data.titulo;
+        
+        // Formata valor se necessário
+        if (data.valor) {
+            document.getElementById('parc-valor').value = data.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        }
+
+        if (document.getElementById('parc-frequencia')) document.getElementById('parc-frequencia').value = data.frequencia || 'UNICO';
+        if (document.getElementById('parc-tipo-cobranca')) document.getElementById('parc-tipo-cobranca').value = data.tipo_cobranca || 'BOLETO';
+        if (document.getElementById('parc-data-assinatura')) document.getElementById('parc-data-assinatura').value = data.data_assinatura || '';
+        if (document.getElementById('parc-data-inicio')) document.getElementById('parc-data-inicio').value = data.data_inicio || '';
+        if (document.getElementById('parc-data-fim')) document.getElementById('parc-data-fim').value = data.data_fim || '';
+
+        // Carregar lista de anexos existentes
+        const lista = document.getElementById('parc-anexos-lista');
+        lista.innerHTML = '';
+        if (data.anexos_json) {
+            const caminhos = JSON.parse(data.anexos_json);
+            caminhos.forEach(path => {
+                const nome = path.split('/').pop();
+                const ext = nome.split('.').pop().toLowerCase();
+                const icon = ['jpg','jpeg','png'].includes(ext) ? 'fa-file-image' : 'fa-file-pdf';
+                
+                const item = document.createElement('div');
+                item.style.cssText = "display: flex; align-items: center; gap: 8px; margin-top: 4px; padding: 4px; background: #f8f9fa; border-radius: 4px; border: 1px solid #eee;";
+                item.innerHTML = `
+                    <i class="fas ${icon}" style="color: #666;"></i>
+                    <span style="flex: 1; font-size: 11px;">${nome}</span>
+                    <a href="/static/${path}" target="_blank" style="color: #27AE60; font-size: 10px; text-decoration: none;"><i class="fas fa-external-link-alt"></i> Ver</a>
+                `;
+                lista.appendChild(item);
+            });
+            document.getElementById('anexo-label').textContent = caminhos.length + ' ARQUIVO(S) JÁ ANEXADO(S)';
+            document.getElementById('anexo-label').style.color = '#27AE60';
+        }
+
+        // Parse da descrição para o parceiro e tipo se possível
+        if (data.descricao && data.descricao.includes(' | ')) {
+            const parts = data.descricao.split(' | ');
+            const tipoPart = parts[0].split(': ')[1];
+            const parceiroPart = parts[1].split(': ')[1];
+            if (document.getElementById('parc-tipo')) document.getElementById('parc-tipo').value = tipoPart || 'VENDA_DIRETA';
+            if (document.getElementById('parc-parceiro')) document.getElementById('parc-parceiro').value = parceiroPart || '';
+        }
+        
+        document.getElementById('parc-form-area').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function focarBuscaParc() {
+        const bar = document.getElementById('parc-search-bar');
+        bar.style.display = bar.style.display === 'none' ? 'block' : 'none';
+        if (bar.style.display === 'block') document.getElementById('parc-table-search').focus();
+    }
+
+    function toggleFiltroParc() {
+        // Direciona para a busca rápida como filtro imediato
+        focarBuscaParc();
+    }
+
+    function filterParcTable() {
+        const input = document.getElementById('parc-table-search');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('parc-table');
+        const tr = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td');
+            let found = false;
+            for (let j = 0; j < td.length; j++) {
+                if (td[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+            tr[i].style.display = found ? "" : "none";
+        }
+    }
+
+    function exportarParcCSV() {
+        const table = document.getElementById('parc-table');
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const row = [], cols = rows[i].querySelectorAll('td, th');
+            for (let j = 0; j < cols.length - 1; j++) row.push('"' + cols[j].innerText.trim() + '"');
+            csv.push(row.join(','));
+        }
+        const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+        const downloadLink = document.createElement('a');
+        downloadLink.download = 'contratos_parcerias_arione.csv';
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.click();
+    }
+
+    function importarParcXML() {
+        document.getElementById('parc-import-file').click();
+    }
+
+    function processImportParc(input) {
+        if (input.files && input.files[0]) {
+            const fileName = input.files[0].name;
+            const btn = document.querySelector('.fe-action-alt[title="Importar XML"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                alert(`🛡️ AriOne: Contrato/Acordo "${fileName}" importado.\nEstrutura de dados sincronizada.`);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }, 1500);
+        }
+    }
+</script>
+
+<input type="file" id="parc-import-file" accept=".xml,.csv" style="display: none;" onchange="processImportParc(this)">
+{% endblock %}

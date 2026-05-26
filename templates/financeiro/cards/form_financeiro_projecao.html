@@ -1,0 +1,175 @@
+<!-- templates/financeiro/cards/form_financeiro_projecao.html -->
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+{{ comp.cabecalho_mestre_arione(
+    titulo="Projeção Financeira (30/60/90 dias)",
+    subtitulo="Financeiro > Fluxo & Projeções > Projeção de Liquidez Futura",
+    icone="fa-chart-area",
+    cor_tema="#2980B9",
+    func_fechar="voltarParaGridFluxo()",
+    form_id="formProjecao",
+    onclick_novo="if(typeof arioneToast === 'function') arioneToast('Recalculando projeções...', 'info'); window.location.reload();",
+    onclick_save="if(typeof arioneToast === 'function') arioneToast('Salvando cenário projetado...', 'info')",
+    onclick_search="if(typeof arioneToast === 'function') arioneToast('Pesquisa ativa', 'info')",
+    onclick_filter="if(typeof arioneToast === 'function') arioneToast('Filtros avançados em desenvolvimento', 'info')",
+    onclick_list="if(typeof arioneToast === 'function') arioneToast('Listagem em desenvolvimento', 'info')",
+    onclick_clonar="if(typeof arioneToast === 'function') arioneToast('Clonando cenário...', 'info')",
+    onclick_export="if(typeof arioneToast === 'function') arioneToast('Exportando projeções para CSV/Excel...', 'info')",
+    onclick_import="if(typeof arioneToast === 'function') arioneToast('Importação indisponível nesta visão', 'info')",
+    onclick_print="window.print()",
+    onclick_email="if(typeof arioneToast === 'function') arioneToast('Enviando projeções por E-mail...', 'info')",
+    onclick_whatsapp="if(typeof arioneToast === 'function') arioneToast('Compartilhando projeções via WhatsApp...', 'info')",
+    status="Ativo",
+    ajuda="Previsão de saldo baseada nos títulos pendentes de Contas a Receber e a Pagar nos próximos 30, 60 e 90 dias.",
+    tamanho="medio"
+) }}
+
+<style>
+.proj-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.proj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+.proj-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.proj-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.proj-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+.proj-row-label { color: #64748b; font-weight: 500; }
+.proj-row-val { font-weight: 600; }
+
+.proj-total {
+    margin-top: 15px;
+    padding-top: 12px;
+    border-top: 2px dashed #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 700;
+}
+.proj-list {
+    margin-top: 15px;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    padding: 8px;
+    background: #f8fafc;
+}
+.proj-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    padding: 6px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+.proj-item:last-child { border-bottom: none; }
+</style>
+
+<div class="proj-container">
+    <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 16px; font-weight: 600; color: #0f172a; margin: 0;">Projeção de Liquidez Futura</h2>
+        <p style="font-size: 11px; color: #64748b; margin: 4px 0 0;">Previsão de saldo baseada nos títulos pendentes de Contas a Receber e a Pagar.</p>
+    </div>
+
+    <div class="proj-grid">
+        <!-- 30 DIAS -->
+        <div class="proj-card" style="border-top: 3px solid #3b82f6;">
+            <div class="proj-header"><span>Próximos 30 Dias</span><i class="fas fa-calendar-day" style="color:#3b82f6;"></i></div>
+            <div class="proj-row"><span class="proj-row-label">Receitas Previstas:</span><span class="proj-row-val" style="color:#27AE60;">R$ {{ '%.2f'|format(proj_30.receitas) }}</span></div>
+            <div class="proj-row"><span class="proj-row-label">Despesas Previstas:</span><span class="proj-row-val" style="color:#E53E3E;">R$ {{ '%.2f'|format(proj_30.despesas) }}</span></div>
+            <div class="proj-total"><span>Saldo Projetado:</span><span style="color: {{ '#27AE60' if proj_30.saldo >= 0 else '#E53E3E' }};">R$ {{ '%.2f'|format(proj_30.saldo) }}</span></div>
+            
+            <div class="proj-list">
+                <div style="font-size:10px; font-weight:600; color:#94a3b8; margin-bottom:6px;">TÍTULOS INCLUÍDOS ({{ proj_30.titulos|length }}):</div>
+                {% for t in proj_30.titulos %}
+                <div class="proj-item">
+                    <span style="color:#334155;">{{ t.descricao[:20] }}...</span>
+                    <span style="font-weight:600; color: {{ '#27AE60' if t.tipo == 'RECEITA' else '#E53E3E' }};">R$ {{ '%.2f'|format(t.valor) }}</span>
+                </div>
+                {% else %}
+                <div style="font-size:11px; color:#94a3b8; text-align:center; padding:10px 0;">Nenhum título pendente neste período</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 60 DIAS -->
+        <div class="proj-card" style="border-top: 3px solid #8b5cf6;">
+            <div class="proj-header"><span>31 a 60 Dias</span><i class="fas fa-calendar-alt" style="color:#8b5cf6;"></i></div>
+            <div class="proj-row"><span class="proj-row-label">Receitas Previstas:</span><span class="proj-row-val" style="color:#27AE60;">R$ {{ '%.2f'|format(proj_60.receitas) }}</span></div>
+            <div class="proj-row"><span class="proj-row-label">Despesas Previstas:</span><span class="proj-row-val" style="color:#E53E3E;">R$ {{ '%.2f'|format(proj_60.despesas) }}</span></div>
+            <div class="proj-total"><span>Saldo Projetado:</span><span style="color: {{ '#27AE60' if proj_60.saldo >= 0 else '#E53E3E' }};">R$ {{ '%.2f'|format(proj_60.saldo) }}</span></div>
+            
+            <div class="proj-list">
+                <div style="font-size:10px; font-weight:600; color:#94a3b8; margin-bottom:6px;">TÍTULOS INCLUÍDOS ({{ proj_60.titulos|length }}):</div>
+                {% for t in proj_60.titulos %}
+                <div class="proj-item">
+                    <span style="color:#334155;">{{ t.descricao[:20] }}...</span>
+                    <span style="font-weight:600; color: {{ '#27AE60' if t.tipo == 'RECEITA' else '#E53E3E' }};">R$ {{ '%.2f'|format(t.valor) }}</span>
+                </div>
+                {% else %}
+                <div style="font-size:11px; color:#94a3b8; text-align:center; padding:10px 0;">Nenhum título pendente neste período</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 90 DIAS -->
+        <div class="proj-card" style="border-top: 3px solid #ec4899;">
+            <div class="proj-header"><span>61 a 90 Dias</span><i class="fas fa-calendar-plus" style="color:#ec4899;"></i></div>
+            <div class="proj-row"><span class="proj-row-label">Receitas Previstas:</span><span class="proj-row-val" style="color:#27AE60;">R$ {{ '%.2f'|format(proj_90.receitas) }}</span></div>
+            <div class="proj-row"><span class="proj-row-label">Despesas Previstas:</span><span class="proj-row-val" style="color:#E53E3E;">R$ {{ '%.2f'|format(proj_90.despesas) }}</span></div>
+            <div class="proj-total"><span>Saldo Projetado:</span><span style="color: {{ '#27AE60' if proj_90.saldo >= 0 else '#E53E3E' }};">R$ {{ '%.2f'|format(proj_90.saldo) }}</span></div>
+            
+            <div class="proj-list">
+                <div style="font-size:10px; font-weight:600; color:#94a3b8; margin-bottom:6px;">TÍTULOS INCLUÍDOS ({{ proj_90.titulos|length }}):</div>
+                {% for t in proj_90.titulos %}
+                <div class="proj-item">
+                    <span style="color:#334155;">{{ t.descricao[:20] }}...</span>
+                    <span style="font-weight:600; color: {{ '#27AE60' if t.tipo == 'RECEITA' else '#E53E3E' }};">R$ {{ '%.2f'|format(t.valor) }}</span>
+                </div>
+                {% else %}
+                <div style="font-size:11px; color:#94a3b8; text-align:center; padding:10px 0;">Nenhum título pendente neste período</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function voltarParaGridFluxo() {
+    if (typeof fecharModalFlx === 'function') fecharModalFlx();
+    if (!window.location.search.includes('aba=fluxo')) { window.location.href = "{{ url_for('financeiro.abas', aba='fluxo') }}"; }
+}
+</script>
+{% endblock %}

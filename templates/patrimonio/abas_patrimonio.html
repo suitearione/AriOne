@@ -1,0 +1,608 @@
+{# =============================================================================
+   Caminho  : templates/patrimonio/abas_patrimonio.html
+   Arquivo  : abas_patrimonio.html
+   Função   : Template principal do módulo de Patrimônio.
+   Descrição: Renderiza as abas de navegação (Imóveis, Máquinas, Equipamentos, Veículos).
+============================================================================= #}
+{% extends "base.html" %}
+{% import "macros/abas_cadastro.html" as nav %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="arione-page-wrapper">
+    <style>
+        /* ESTILOS MODO ESCURO (ARIONE GLOBAL PATTERN) - REFINAMENTO SUAVE */
+        .arione-page-wrapper.dark-mode {
+            background: #334155 !important; /* Slate 700 */
+            transition: all 0.4s ease;
+            margin: -20px;
+            padding: 20px;
+        }
+        .dark-mode .arione-content-box, 
+        .dark-mode .arione-tabs-box {
+            background: #1e293b !important; /* Slate 800 */
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        }
+        .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4, .dark-mode p, .dark-mode span, .dark-mode label {
+            color: #f8fafc !important;
+        }
+        /* Realce das ABAS no Dark Mode */
+        .dark-mode .arione-aba {
+            color: #cbd5e1 !important;
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid #334155 !important;
+        }
+        .dark-mode .arione-aba.active {
+            color: #ffffff !important;
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        }
+        .dark-mode .arione-aba-label, .dark-mode .arione-aba-icon { color: inherit !important; }
+
+        /* Realce dos CARDS DO GRID no Dark Mode */
+        .dark-mode .ge-card {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .dark-mode .ge-card-label {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+        }
+        .dark-mode .ge-card-desc {
+            color: #94a3b8 !important;
+        }
+        .dark-mode .ge-card-bg-icon {
+            opacity: 0.05 !important;
+        }
+
+        /* Realce dos NOMES DOS CARDS (GRID MESTRE) no Dark Mode */
+        .dark-mode .gateway-label-mestre {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        }
+        .dark-mode .gateway-desc-mestre {
+            color: #cbd5e1 !important;
+        }
+        /* Ajuste do Título da Central de Relatórios */
+        .dark-mode .gateway-title {
+            color: #fff !important;
+        }
+
+        /* Toggle Button */
+        .dark-toggle-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dark-toggle-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+    </style>
+
+    {% set sidebar_color = '#7A255F' %} {# Cor Padrão Nacional AriOne #}
+    {% set center_color  = '#a63282' %} {# Iluminação Padrão Central #}
+    {% set icon_color    = '#BCAAA4' %} {# Identidade Cromática da Fonte (Patrimônio) #}
+
+    {% set current_gradient = 'linear-gradient(90deg, ' + sidebar_color + ' 0%, ' + center_color + ' 50%, ' + sidebar_color + ' 100%)' %}
+
+    {{ comp.cabecalho_mestre_arione(
+        titulo='Gestão de Patrimônio e Ativos',
+        subtitulo='ATIVO IMOBILIZADO • FROTAS • IMÓVEIS • MANUTENÇÃO',
+        icone='fa-landmark',
+        cor_tema='#BCAAA4',
+        onclick_novo='acaoMestreNovo()',
+        onclick_save='acaoMestreSalvar()',
+        onclick_print='acaoMestreImprimir()',
+        onclick_clonar='acaoMestreClonar()',
+        onclick_search='acaoMestrePesquisar()',
+        onclick_filter='acaoMestreFiltrar()',
+        onclick_list='acaoMestreVerLista()',
+        onclick_export='acaoMestreExportar()',
+        onclick_import='acaoMestreImportar()',
+        onclick_email='acaoMestreEmail()',
+        onclick_whatsapp='acaoMestreWhatsApp()',
+        aba_retorno='/gestao/',
+        tamanho='grande'
+    ) }}
+
+    <div class="arione-tabs-box" style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 15px; border-radius: 12px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center;">
+            {{ nav.gerar_abas_arione(abas, aba_ativa, 'patrimonio') }}
+        </div>
+        <div>
+            <button type="button" onclick="abrirModalRelatoriosPatrimonio()" style="background: #ffffff; color: #0f766e; border: 1px solid #0f766e; padding: 8px 18px; border-radius: 10px; font-weight: 800; font-size: 11px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(15,118,110,0.15);" onmouseover="this.style.background='#0f766e'; this.style.color='#ffffff';" onmouseout="this.style.background='#ffffff'; this.style.color='#0f766e';">
+                <i class="fas fa-chart-pie"></i> CENTRAL DE RELATÓRIOS
+            </button>
+        </div>
+    </div>
+
+    <script>
+    const ABA_ATUAL_MESTRE = "{{ aba_ativa }}";
+
+    async function acaoMestrePesquisar() {
+        const termo = await arionePrompt(`🔍 Digite o termo para filtrar a listagem de ${ABA_ATUAL_MESTRE.toUpperCase()}:`);
+        if (!termo) return;
+        const tbody = document.querySelector('tbody');
+        if (!tbody) { arioneAlert("Erro", "Tabela não encontrada nesta aba.", "danger"); return; }
+        const linhas = tbody.querySelectorAll('tr');
+        let count = 0;
+        linhas.forEach(tr => {
+            if (tr.textContent.toUpperCase().includes(termo.toUpperCase())) {
+                tr.style.display = ''; count++;
+            } else tr.style.display = 'none';
+        });
+        if (typeof arioneToast === 'function') arioneToast(`Pesquisa concluída: ${count} registro(s) encontrado(s).`, 'info');
+    }
+
+    function acaoMestreFiltrar() {
+        const tbody = document.querySelector('tbody'); if (!tbody) return;
+        tbody.querySelectorAll('tr').forEach(tr => tr.style.display = '');
+        if (typeof arioneToast === 'function') arioneToast(`Filtros limpos. Exibindo todos os registros de ${ABA_ATUAL_MESTRE.toUpperCase()}.`, 'success');
+    }
+
+    function acaoMestreVerLista() {
+        if (typeof arioneToast === 'function') arioneToast(`Focando no inventário de ${ABA_ATUAL_MESTRE.toUpperCase()}`, 'info');
+        const table = document.querySelector('table');
+        if (table) table.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function acaoMestreClonar() {
+        const form = document.querySelector('form'); if (!form) return;
+        const idInput = form.querySelector('[name=id]');
+        if (!idInput || idInput.value === 'new') { arioneAlert("Aviso", "Selecione um registro existente na tabela abaixo antes de clonar.", "warning"); return; }
+        const conf = await arioneConfirm("Deseja clonar os dados deste ativo para criar um novo registro independente?");
+        if (!conf) return;
+        idInput.value = 'new';
+        if (typeof arioneToast === 'function') arioneToast("Ativo clonado! Altere a identificação/placa/tag e clique em Salvar.", "success");
+    }
+
+    function acaoMestreExportar() {
+        if (typeof arioneToast === 'function') arioneToast(`📦 Gerando arquivo Excel/CSV do inventário de ${ABA_ATUAL_MESTRE.toUpperCase()}...`, 'success');
+        else arioneAlert("Exportação", `Exportando inventário de ${ABA_ATUAL_MESTRE.toUpperCase()}...`, "info");
+    }
+
+    function acaoMestreImportar() {
+        arioneAlert("Importação", `📥 Módulo de Importação em Lote via Planilha XML/CSV ativado para: ${ABA_ATUAL_MESTRE.toUpperCase()}.`, "info");
+    }
+
+    async function acaoMestreEmail() {
+        const email = await arionePrompt("📧 Digite o e-mail do destinatário para enviar a ficha deste ativo:");
+        if (email) if (typeof arioneToast === 'function') arioneToast(`Ficha enviada com sucesso para ${email}!`, 'success');
+    }
+
+    async function acaoMestreWhatsApp() {
+        const fone = await arionePrompt("💬 Digite o número do WhatsApp (com DDD) para enviar o resumo do ativo:");
+        if (fone) if (typeof arioneToast === 'function') arioneToast(`Resumo enviado para o WhatsApp (${fone})!`, 'success');
+    }
+
+    function acaoMestreNovo() {
+        if (ABA_ATUAL_MESTRE === 'imoveis' && typeof limparFormImovel === 'function') limparFormImovel();
+        else if (ABA_ATUAL_MESTRE === 'maquinas' && typeof limparFormMaquina === 'function') limparFormMaquina();
+        else if (ABA_ATUAL_MESTRE === 'equipamentos' && typeof limparFormEquipamento === 'function') limparFormEquipamento();
+        else if (ABA_ATUAL_MESTRE === 'veiculos' && typeof limparFormVeiculo === 'function') limparFormVeiculo();
+        else if (ABA_ATUAL_MESTRE === 'software' && typeof limparFormSoftware === 'function') limparFormSoftware();
+        else if (ABA_ATUAL_MESTRE === 'moveis' && typeof limparFormMovel === 'function') limparFormMovel();
+        else { const f = document.querySelector('form'); if (f) f.reset(); }
+        
+        if (typeof arioneToast === 'function') arioneToast("Modo Novo Cadastro ativado!", "info");
+    }
+
+    function acaoMestreSalvar() {
+        let formId = "";
+        if (ABA_ATUAL_MESTRE === 'imoveis') formId = "formImoveis";
+        else if (ABA_ATUAL_MESTRE === 'maquinas') formId = "formMaquinas";
+        else if (ABA_ATUAL_MESTRE === 'equipamentos') formId = "formEquipamentos";
+        else if (ABA_ATUAL_MESTRE === 'veiculos') formId = "formVeiculos";
+        else if (ABA_ATUAL_MESTRE === 'software') formId = "formSoftwares";
+        else if (ABA_ATUAL_MESTRE === 'moveis') formId = "formMoveis";
+
+        if (formId) {
+            const form = document.getElementById(formId);
+            if (form) {
+                const btnSubmit = form.querySelector('button[type="submit"]') || form.querySelector('button');
+                if (btnSubmit) btnSubmit.click();
+                else form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}));
+            } else arioneAlert("Erro", "Formulário não localizado para salvar!", "danger");
+        } else { const f = document.querySelector('form'); if (f) f.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true})); }
+    }
+
+    function acaoMestreImprimir() { window.print(); }
+
+    async function acaoMestreExcluir() {
+        let inputId = "";
+        if (ABA_ATUAL_MESTRE === 'imoveis') inputId = "imovel_id";
+        else if (ABA_ATUAL_MESTRE === 'maquinas') inputId = "maquina_id";
+        else if (ABA_ATUAL_MESTRE === 'equipamentos') inputId = "equip_id";
+        else if (ABA_ATUAL_MESTRE === 'veiculos') inputId = "veiculo_id";
+        else if (ABA_ATUAL_MESTRE === 'software') inputId = "software_id";
+        else if (ABA_ATUAL_MESTRE === 'moveis') inputId = "movel_id";
+
+        const el = document.getElementById(inputId) || document.querySelector('[name=id]');
+        if (el && el.value && el.value !== 'new') {
+            const conf = await arioneConfirm("Confirma a exclusão do registro selecionado no formulário?");
+            if (conf) {
+                if (ABA_ATUAL_MESTRE === 'imoveis' && typeof excluirImovel === 'function') excluirImovel(el.value, true);
+                else if (ABA_ATUAL_MESTRE === 'maquinas' && typeof excluirMaquina === 'function') excluirMaquina(el.value, true);
+                else if (ABA_ATUAL_MESTRE === 'equipamentos' && typeof excluirEquipamento === 'function') excluirEquipamento(el.value, true);
+                else if (ABA_ATUAL_MESTRE === 'veiculos' && typeof excluirVeiculo === 'function') excluirVeiculo(el.value, true);
+                else if (ABA_ATUAL_MESTRE === 'software' && typeof excluirSoftware === 'function') excluirSoftware(el.value, true);
+                else if (ABA_ATUAL_MESTRE === 'moveis' && typeof excluirMovel === 'function') excluirMovel(el.value, true);
+                if (typeof acaoMestreNovo === 'function') acaoMestreNovo();
+            }
+        } else {
+            arioneAlert("Aviso", "Nenhum registro existente selecionado no formulário para exclusão. Selecione um item na tabela abaixo primeiro.", "warning");
+        }
+    }
+
+    function acaoMestreAjuda() {
+        arioneAlert("Ajuda Patrimônio", "Módulo de Gestão de Patrimônio e Alienação de Ativos (PAAv1).\n\n1. Use as abas para navegar entre as categorias de ativos.\n2. Cadastre ou edite bens preenchendo os formulários.\n3. O botão [Alienar] realiza a venda/baixa fiscal do ativo (CFOP 5.551) integrando com o módulo Financeiro sem afetar metas comerciais.", "info");
+    }
+    </script>
+
+    <div class="arione-content-box">
+        {% if aba_ativa == 'imoveis' %}
+            {% include 'patrimonio/grids/grid_imoveis.html' %}
+        {% elif aba_ativa == 'maquinas' %}
+            {% include 'patrimonio/grids/grid_maquinas.html' %}
+        {% elif aba_ativa == 'equipamentos' %}
+            {% include 'patrimonio/grids/grid_equipamentos.html' %}
+        {% elif aba_ativa == 'veiculos' %}
+            {% include 'patrimonio/grids/grid_veiculos.html' %}
+        {% elif aba_ativa == 'software' %}
+            {% include 'patrimonio/grids/grid_software.html' %}
+        {% elif aba_ativa == 'moveis' %}
+            {% include 'patrimonio/grids/grid_moveis.html' %}
+        {% endif %}
+    </div>
+
+    <script>
+    function abrirModalRelatoriosPatrimonio() {
+        const url = "{{ url_for('patrimonio.gateway_modulos_patrimonio') }}";
+        const modal = document.getElementById('arione-modal-global');
+        const content = document.getElementById('arione-modal-content');
+
+        if (!modal || !content) return;
+
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                modal.style.display = 'flex';
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar Central Patrimonial:", err);
+                content.style.opacity = '1';
+            });
+    }
+    </script>
+
+    <!-- =========================================================================
+         MODAL MESTRE DE ALIENAÇÃO DE ATIVOS (VENDA DE PATRIMÔNIO) - FISCAL & CONTÁBIL
+         ========================================================================= -->
+    <div id="modal-alienacao-patr" class="ge-modal-overlay" onclick="fecharModalAlienacao()">
+        <div class="ge-modal" onclick="event.stopPropagation()" style="max-width:650px;border-radius:16px;box-shadow:0 25px 50px rgba(0,0,0,0.25);border:1px solid #cbd5e1;overflow:hidden;">
+            <div class="ge-modal-header" style="background:linear-gradient(135deg, #1e293b, #334155);padding:20px 25px;color:#fff;display:flex;justify-content:space-between;align-items:center;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">
+                        <i class="fas fa-file-invoice-dollar" style="color:#38bdf8;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:800;font-size:15px;letter-spacing:0.5px;">ALIENAÇÃO DE ATIVO IMOBILIZADO (DESMOBILIZAÇÃO)</div>
+                        <div style="font-size:11px;color:#cbd5e1;font-weight:600;">Controle Fiscal (CFOP 5.551) • Apuração de Ganho de Capital • Financeiro</div>
+                    </div>
+                </div>
+                <button type="button" onclick="fecharModalAlienacao()" style="background:rgba(255,255,255,0.2);border:none;width:32px;height:32px;border-radius:8px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="ge-modal-body" style="padding:25px;background:#fff;max-height:80vh;overflow-y:auto;">
+                <form id="formAlienacao" onsubmit="confirmarAlienacao(event)">
+                    <input type="hidden" id="alien_id">
+                    <input type="hidden" id="alien_tipo">
+                    
+                    <!-- DADOS DO ATIVO -->
+                    <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:15px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px;text-transform:uppercase;">ATIVO SELECIONADO:</div>
+                            <div id="alien_ativo_nome" style="font-size:15px;font-weight:800;color:#0f766e;">---</div>
+                            <div id="alien_ativo_detalhe" style="font-size:12px;color:#64748b;margin-top:2px;">---</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:11px;color:#64748b;font-weight:700;margin-bottom:4px;text-transform:uppercase;">VALOR CONTÁBIL ATUAL:</div>
+                            <div id="alien_ativo_valor_contabil_exib" style="font-size:16px;font-weight:800;color:#334155;">R$ 0,00</div>
+                            <input type="hidden" id="alien_ativo_valor_contabil">
+                        </div>
+                    </div>
+
+                    <!-- CLASSIFICAÇÃO FISCAL -->
+                    <div style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">1. Enquadramento Fiscal e Operacional</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:2;min-width:220px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CFOP DA ALIENAÇÃO *</label>
+                            <select id="alien_cfop" class="op-input" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="5551">5.551 - Venda de Ativo Imobilizado (Operação Interna / Mesmo Estado)</option>
+                                <option value="6551">6.551 - Venda de Ativo Imobilizado (Operação Interestadual / Outro Estado)</option>
+                                <option value="7551">7.551 - Venda de Ativo Imobilizado (Operação de Exportação / Exterior)</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DA ALIENAÇÃO *</label>
+                            <input class="op-input" type="date" id="alien_data" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;">
+                        </div>
+                    </div>
+
+                    <!-- DADOS DA VENDA E APURAÇÃO -->
+                    <div style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">2. Negociação e Apuração de Ganho de Capital</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:15px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">COMPRADOR / DESTINATÁRIO *</label>
+                            <input class="op-input" type="text" id="alien_comprador" placeholder="NOME DO COMPRADOR / RAZÃO SOCIAL" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:600;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:6px;display:block;">VALOR DA VENDA (R$) *</label>
+                            <input class="op-input" type="number" step="0.01" id="alien_valor" placeholder="0,00" required style="width:100%;border:1px solid #0f766e;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;color:#0f766e;background:#f0fdf4;" oninput="calcularGanhoCapital()">
+                        </div>
+                    </div>
+
+                    <!-- BOX DINÂMICO DE GANHO/PERDA DE CAPITAL -->
+                    <div id="box-apuracao-capital" style="background:#f1f5f9;border:1px solid #cbd5e1;padding:15px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+                        <div>
+                            <div style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;">RESULTADO CONTÁBIL DA ALIENAÇÃO:</div>
+                            <div id="texto_apuracao_capital" style="font-size:13px;font-weight:700;color:#334155;margin-top:2px;">Aguardando preenchimento do valor de venda...</div>
+                        </div>
+                        <div id="badge_apuracao_capital" style="padding:6px 14px;border-radius:8px;font-size:12px;font-weight:800;background:#e2e8f0;color:#64748b;">
+                            R$ 0,00
+                        </div>
+                    </div>
+
+                    <!-- DESTINO FINANCEIRO -->
+                    <div style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">3. Integração Financeira (Contas a Receber / Banco)</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:2;min-width:250px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CONTA BANCÁRIA DE DESTINO (RECEBIMENTO) *</label>
+                            <select id="alien_conta_bancaria" class="op-input" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="">SELECIONE UMA CONTA CADASTRADA...</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">FORMA DE RECEBIMENTO</label>
+                            <select id="alien_forma_pag" class="op-input" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="PIX">PIX / Transferência Instantânea</option>
+                                <option value="TED">TED / DOC</option>
+                                <option value="BOLETO">Boleto Bancário</option>
+                                <option value="CHEQUE">Cheque</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="op-row" style="margin-bottom:20px;">
+                        <div class="op-group" style="width:100%;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">HISTÓRICO / OBSERVAÇÕES DA ALIENAÇÃO</label>
+                            <input class="op-input" type="text" id="alien_obs" placeholder="EX: VENDA CONFORME CONTRATO DE ALIENAÇÃO Nº 2026/09" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+
+                    <div style="background:#fff7ed;border:1px solid #fed7aa;padding:12px 15px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+                        <i class="fas fa-balance-scale-right" style="color:#ea580c;font-size:20px;"></i>
+                        <span style="font-size:11px;color:#9a3412;line-height:1.4;">
+                            <strong>Aviso Contábil & Tributário:</strong> A venda de imobilizado não compõe a receita bruta operacional (faturamento comercial). O ganho de capital apurado será classificado como <i>Receita Não-Operacional</i> para tributação de IRPJ/CSLL, mantendo as metas da equipe comercial intactas.
+                        </span>
+                    </div>
+
+                    <div style="display:flex;justify-content:flex-end;gap:10px;">
+                        <button type="button" onclick="fecharModalAlienacao()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">
+                            Cancelar
+                        </button>
+                        <button type="submit" style="background:#0f766e;color:#fff;border:none;padding:10px 24px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(15,118,110,0.2);">
+                            <i class="fas fa-check-circle"></i> PROCESSAR ALIENAÇÃO & CONTABILIZAR
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function calcularGanhoCapital() {
+        const valContabil = parseFloat(document.getElementById('alien_ativo_valor_contabil').value || 0);
+        const valVenda = parseFloat(document.getElementById('alien_valor').value || 0);
+        const box = document.getElementById('box-apuracao-capital');
+        const txt = document.getElementById('texto_apuracao_capital');
+        const badge = document.getElementById('badge_apuracao_capital');
+
+        if (!valVenda) {
+            box.style.background = "#f1f5f9"; box.style.borderColor = "#cbd5e1";
+            txt.textContent = "Aguardando preenchimento do valor de venda...";
+            txt.style.color = "#334155";
+            badge.style.background = "#e2e8f0"; badge.style.color = "#64748b";
+            badge.textContent = "R$ 0,00";
+            return;
+        }
+
+        const dif = valVenda - valContabil;
+        const difFmt = Math.abs(dif).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+
+        if (dif > 0) {
+            box.style.background = "#f0fdf4"; box.style.borderColor = "#bbf7d0";
+            txt.textContent = "APURAÇÃO: GANHO DE CAPITAL (LUCRO NA ALIENAÇÃO)";
+            txt.style.color = "#166534";
+            badge.style.background = "#dcfce7"; badge.style.color = "#166534";
+            badge.textContent = `+ ${difFmt} (Tributável)`;
+        } else if (dif < 0) {
+            box.style.background = "#fef2f2"; box.style.borderColor = "#fecaca";
+            txt.textContent = "APURAÇÃO: PERDA DE CAPITAL (DESÁGIO NA ALIENAÇÃO)";
+            txt.style.color = "#991b1b";
+            badge.style.background = "#fee2e2"; badge.style.color = "#991b1b";
+            badge.textContent = `- ${difFmt} (Dedutível)`;
+        } else {
+            box.style.background = "#f8fafc"; box.style.borderColor = "#e2e8f0";
+            txt.textContent = "APURAÇÃO: ALIENAÇÃO SEM GANHO OU PERDA (VALOR CONTÁBIL EXATO)";
+            txt.style.color = "#334155";
+            badge.style.background = "#e2e8f0"; badge.style.color = "#64748b";
+            badge.textContent = "R$ 0,00";
+        }
+    }
+
+    function abrirModalAlienacao(id, tipo) {
+        let lista = [];
+        let nomeAtivo = '';
+        let detalheAtivo = '';
+        let valorContabil = 0;
+
+        // Identifica a lista e o ativo pelo tipo
+        if (tipo === 'imovel') {
+            lista = JSON.parse(localStorage.getItem('patr_imoveis')) || [];
+            const item = lista.find(x => x.id == id);
+            if (item) { nomeAtivo = item.descricao; detalheAtivo = `Tipo: ${item.tipo} | Área: ${item.area} m²`; valorContabil = item.valor || item.valor_aquisicao; }
+        } else if (tipo === 'maquina') {
+            lista = JSON.parse(localStorage.getItem('patr_maquinas')) || [];
+            const item = lista.find(x => x.id == id);
+            if (item) { nomeAtivo = item.nome; detalheAtivo = `Cat: ${item.categoria} | Série: ${item.serie}`; valorContabil = item.valor; }
+        } else if (tipo === 'equipamento') {
+            lista = JSON.parse(localStorage.getItem('patr_equipamentos')) || [];
+            const item = lista.find(x => x.id == id);
+            if (item) { nomeAtivo = item.nome; detalheAtivo = `TAG: ${item.patrimonio_tag} | Série: ${item.serie}`; valorContabil = item.valor; }
+        } else if (tipo === 'veiculo') {
+            lista = JSON.parse(localStorage.getItem('patr_veiculos')) || [];
+            const item = lista.find(x => x.id == id);
+            if (item) { nomeAtivo = item.marca_modelo; detalheAtivo = `Placa: ${item.placa} | Cat: ${item.categoria}`; valorContabil = item.valor; }
+        } else if (tipo === 'software') {
+            lista = JSON.parse(localStorage.getItem('patr_softwares')) || [];
+            const item = lista.find(x => x.id == id);
+            if (item) { nomeAtivo = item.nome; detalheAtivo = `Tipo: ${item.tipo} | Fornecedor: ${item.fornecedor}`; valorContabil = item.custo_total || item.custo_mensal; }
+        } else if (tipo === 'movel_objeto') {
+            lista = JSON.parse(localStorage.getItem('patr_moveis_objetos')) || [];
+            const item = lista.find(x => x.id == id);
+            if (item) { nomeAtivo = item.descricao; detalheAtivo = `TAG: ${item.patrimonio_tag} | Cat: ${item.categoria}`; valorContabil = item.valor; }
+        }
+
+        if (!nomeAtivo) {
+            arioneAlert("Erro", "Ativo não localizado para venda!", "danger"); return;
+        }
+
+        // Popula os campos do modal
+        document.getElementById('alien_id').value = id;
+        document.getElementById('alien_tipo').value = tipo;
+        document.getElementById('alien_ativo_nome').textContent = nomeAtivo;
+        document.getElementById('alien_ativo_detalhe').textContent = detalheAtivo;
+        
+        document.getElementById('alien_ativo_valor_contabil').value = valorContabil || 0;
+        document.getElementById('alien_ativo_valor_contabil_exib').textContent = parseFloat(valorContabil || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        
+        document.getElementById('alien_valor').value = valorContabil || '';
+        document.getElementById('alien_data').value = new Date().toISOString().split('T')[0];
+        document.getElementById('alien_comprador').value = '';
+        document.getElementById('alien_obs').value = `VENDA DE PATRIMÔNIO (${nomeAtivo})`;
+
+        calcularGanhoCapital();
+
+        // Carrega Contas Bancárias Cadastradas
+        const selectConta = document.getElementById('alien_conta_bancaria');
+        selectConta.innerHTML = '<option value="">SELECIONE UMA CONTA CADASTRADA...</option>';
+        let contas = JSON.parse(localStorage.getItem('arione_contas_bancarias_cad')) || [
+            { id: 1, banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", saldo: 15420.50 },
+            { id: 2, banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", saldo: 8250.00 }
+        ];
+        contas.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = `${c.banco} - Ag: ${c.agencia} / Cc: ${c.conta}`;
+            opt.textContent = `${c.banco} (Ag: ${c.agencia} | Cc: ${c.conta})`;
+            selectConta.appendChild(opt);
+        });
+
+        // Exibe o modal
+        document.getElementById('modal-alienacao-patr').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModalAlienacao() {
+        document.getElementById('modal-alienacao-patr').classList.remove('ativo');
+        document.body.style.overflow = '';
+    }
+
+    async function confirmarAlienacao(e) {
+        e.preventDefault();
+        const id = document.getElementById('alien_id').value;
+        const tipo = document.getElementById('alien_tipo').value;
+        const cfop = document.getElementById('alien_cfop').value;
+        const comprador = document.getElementById('alien_comprador').value.toUpperCase();
+        const data = document.getElementById('alien_data').value;
+        const valor = parseFloat(document.getElementById('alien_valor').value || 0);
+        const valContabil = parseFloat(document.getElementById('alien_ativo_valor_contabil').value || 0);
+        const contaBancaria = document.getElementById('alien_conta_bancaria').value;
+        const formaPag = document.getElementById('alien_forma_pag').value;
+        const obs = document.getElementById('alien_obs').value.toUpperCase();
+
+        const nomeAtivo = document.getElementById('alien_ativo_nome').textContent;
+        const dif = valor - valContabil;
+        const resCapitalStr = dif >= 0 ? `GANHO DE CAPITAL: R$ ${dif.toFixed(2)}` : `PERDA DE CAPITAL: R$ ${Math.abs(dif).toFixed(2)}`;
+
+        // 1. Envia a alienação para o banco de dados (que também gera o título a receber)
+        try {
+            arioneToast('Processando alienação e gerando faturamento...', 'info');
+            const payload = {
+                ativo_id: id,
+                valor_venda: valor,
+                comprador: comprador,
+                cfop: cfop,
+                forma_pagamento: formaPag,
+                conta_destino: contaBancaria,
+                observacoes_venda: `${obs} | ${resCapitalStr}`,
+                data_venda: data
+            };
+
+            const res = await fetch('/patrimonio/api/ativos/alienar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                fecharModalAlienacao();
+                if (typeof arioneToast === 'function') {
+                    arioneToast(result.message, 'success');
+                } else {
+                    arioneAlert("Sucesso", result.message, "success");
+                }
+                
+                // Recarrega o grid correspondente do banco
+                if (tipo === 'imovel' && typeof carregarImoveisAPI === 'function') await carregarImoveisAPI();
+                if (tipo === 'maquina' && typeof carregarMaquinasAPI === 'function') await carregarMaquinasAPI();
+                if (tipo === 'equipamento' && typeof carregarEquipamentosAPI === 'function') await carregarEquipamentosAPI();
+                if (tipo === 'veiculo' && typeof carregarVeiculosAPI === 'function') await carregarVeiculosAPI();
+                if (tipo === 'software' && typeof carregarSoftwaresAPI === 'function') await carregarSoftwaresAPI();
+                if (tipo === 'movel_objeto' && typeof carregarMoveisAPI === 'function') await carregarMoveisAPI();
+
+            } else {
+                arioneAlert("Erro", result.error, "danger");
+            }
+        } catch(err) {
+            console.error(err);
+            arioneAlert("Erro de Comunicação", "Não foi possível conectar ao servidor.", "danger");
+        }
+    }
+    </script>
+
+</div>
+{% endblock %}

@@ -1,0 +1,569 @@
+<!-- 
+==================================================
+📁 Arquivo: grid_dashboard.html
+📂 Caminho: templates/gestao/grids/
+🧩 Módulo: Gestão - Dashboard Clássico Unificado
+==================================================
+-->
+
+<style>
+:root {
+  --pri:#7A255F; --pri-l:#a8357f; --azul:#0072CE; --verde:#27AE60;
+  --laranja:#E67E22; --bg:#f0f2f5; --card:#ffffff;
+  --text:#1a202c; --muted:#718096; --border:#e8ecf0;
+  --radius:14px; --shadow:0 2px 16px rgba(0,0,0,0.05); --tr:0.2s ease;
+}
+@keyframes dbEntrar { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+.db-grid-content { animation:dbEntrar .45s both; max-width: 1550px; margin: 0 auto; }
+
+/* SAUDAÇÃO */
+.db-greeting {
+  display:flex; align-items:center; justify-content:space-between;
+  background: linear-gradient(135deg, #7A255F 0%, #0072CE 100%);
+  border-radius: var(--radius); padding: 20px 26px; margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(0, 114, 206, 0.12); position: relative; overflow: hidden;
+}
+.db-greeting::before { content:''; position:absolute; top:-40px; right:-40px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,0.06); }
+.db-greeting::after  { content:''; position:absolute; bottom:-60px; left:30%; width:240px; height:240px; border-radius:50%; background:rgba(255,255,255,0.04); }
+.db-greeting-left { display:flex; align-items:center; gap:16px; z-index:1; }
+.db-avatar  { width:48px; height:48px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; backdrop-filter: blur(5px); }
+.db-hello   { margin:0; font-size:19px; font-weight: 700; color:#fff; letter-spacing: -0.3px; }
+.db-sub     { margin:3px 0 0; font-size:12.5px; color:rgba(255,255,255,0.85); font-weight: 500; }
+
+/* SEÇÃO */
+.db-section-title { font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:7px; }
+
+/* ACESSO RÁPIDO (PÍLULAS PREMIUM COMPACTAS) */
+.ge-quick-bar { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 24px; scrollbar-width: none; }
+.ge-quick-bar::-webkit-scrollbar { display: none; }
+.ge-quick-pill { 
+  background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 10px 18px; 
+  display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+  font-size: 11.5px; font-weight: 700; color: var(--text); cursor: pointer; transition: all var(--tr);
+  white-space: nowrap; flex-shrink: 0;
+}
+.ge-quick-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.07); border-color: #cbd5e1; }
+.ge-quick-pill i { font-size: 15px; }
+
+/* BENTO CONTAINER */
+.db-bento-container { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; }
+@media(max-width: 1200px) { .db-bento-container { grid-template-columns: 1fr; } }
+
+/* CARDS GERAIS */
+.db-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 18px 22px; position: relative; overflow: hidden; transition: all var(--tr); }
+.db-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+
+/* KPI OPERACIONAL (GRID 4 COLUNAS COMPACTO) */
+.db-operacional-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+@media(max-width: 1100px) { .db-operacional-grid { grid-template-columns: repeat(2, 1fr); } }
+@media(max-width: 650px) { .db-operacional-grid { grid-template-columns: 1fr; } }
+.db-op-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.03); padding: 15px 18px; cursor: pointer; transition: all var(--tr); position: relative; overflow: hidden; }
+.db-op-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+.db-op-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.db-op-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.db-op-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 2px; }
+.db-op-value { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.db-op-sub { font-size: 10.5px; color: var(--muted); font-weight: 500; }
+.db-op-details { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 3px; }
+.db-detail-row { display: flex; justify-content: space-between; font-size: 9.5px; font-weight: 600; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; gap: 4px; }
+.db-detail-row span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.db-detail-val { color: #1e293b; font-weight: 700; flex-shrink: 0; }
+
+/* KPI FINANCEIRO (GRID 3 COLUNAS PERFEITAMENTE SIMÉTRICO) */
+.db-fin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+@media(max-width: 650px) { .db-fin-grid { grid-template-columns: 1fr; } }
+.db-fin-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 14px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); cursor: pointer; transition: all var(--tr); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+.db-fin-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.07); }
+.db-fin-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+.db-fin-value { font-size: 17px; font-weight: 800; }
+.db-fin-sub { font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+.db-fin-destaque { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid var(--pri); }
+.db-fin-destaque .db-fin-value { font-size: 17px; color: var(--pri); }
+
+/* CONTAS BANCÁRIAS NO BENTO */
+.db-contas-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.db-conta-item { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.02); cursor: pointer; transition: all var(--tr); }
+.db-conta-item:hover { transform: translateX(3px); box-shadow: 0 4px 14px rgba(0,0,0,0.05); border-color: #cbd5e1; }
+.db-conta-left { display: flex; align-items: center; gap: 12px; }
+.db-conta-icon { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+
+/* GRÁFICO E ALERTAS */
+.db-card-header { display:flex; align-items:center; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:16px; }
+.db-chart-wrap  { position:relative; height:260px; }
+.db-chart-empty { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12.5px; color:var(--muted); text-align:center; }
+.db-chart-legend { display:flex; gap:12px; }
+.db-leg { display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; color:var(--muted); }
+.db-leg::before { content:''; width:11px; height:11px; border-radius:3px; display:inline-block; }
+.db-leg-receita::before{background:#27AE60;} .db-leg-despesa::before{background:#E53E3E;}
+
+/* ALERTAS */
+.db-alert-badge  { background:#E53E3E; color:#fff; border-radius:20px; padding:2px 8px; font-size:10.5px; font-weight:700; }
+.db-alerts-body  { display:flex; flex-direction:column; gap:8px; }
+.db-alert-item   { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:9px; text-decoration:none; transition:all var(--tr); font-size:12px; font-weight:600; }
+.db-alert-item:hover { transform:translateX(3px); }
+.db-alert-warning{background:#fffbeb;color:#744210;border:1px solid #fbd38d;}
+.db-alert-danger {background:#fff5f5;color:#c53030;border:1px solid #fed7d7;}
+.db-alert-info   {background:#ebf8ff;color:#2b6cb0;border:1px solid #bee3f8;}
+.db-alert-icon   { font-size:15px; }
+.db-alert-arrow  { margin-left:auto; font-size:10.5px; opacity:.5; }
+.db-alerts-empty { display:flex; align-items:center; gap:10px; padding:18px; color:#27AE60; font-size:12.5px; font-weight:600; background:#f0fff4; border-radius:9px; border:1px solid #c6f6d5; }
+</style>
+
+<div class="db-grid-content">
+
+  {# ══════════ SAUDAÇÃO ══════════ #}
+  <div class="db-greeting">
+    <div class="db-greeting-left">
+      <div class="db-avatar"><i class="fas fa-user-tie"></i></div>
+      <div>
+        <h2 class="db-hello"><span id="db-saudacao-horario">Olá!</span> Bem-vindo à Central Estratégica.</h2>
+        <p class="db-sub">Acompanhe a liquidez, metas e indicadores operacionais em tempo real.</p>
+      </div>
+    </div>
+    <div style="z-index:1; text-align:right; color:#fff;">
+      <div style="font-size:14px; font-weight:700;" id="db-datetime">Carregando data...</div>
+      <div style="font-size:11px; color:rgba(255,255,255,0.8); margin-top:4px; font-weight:600;">PAAv1 • QUIET LUXURY</div>
+    </div>
+  </div>
+
+  {# ══════════ ACESSO RÁPIDO DE GESTÃO ══════════ #}
+  <div class="db-section-title">
+    <i class="fas fa-bolt" style="color: #F59E0B;"></i> Acesso Rápido Operacional
+  </div>
+  <div class="ge-quick-bar">
+    <div class="ge-quick-pill" onclick="abrirModalDash('vendas')" style="border-left: 4px solid #0072CE;">
+      <i class="fas fa-file-invoice" style="color: #0072CE;"></i>
+      <span>Orçamentos</span>
+    </div>
+    <div class="ge-quick-pill" onclick="abrirModalDash('pedidos')" style="border-left: 4px solid #7A255F;">
+      <i class="fas fa-shopping-bag" style="color: #7A255F;"></i>
+      <span>Pedidos de Venda</span>
+    </div>
+    <div class="ge-quick-pill" onclick="abrirModalDash('lucros')" style="border-left: 4px solid #27AE60;">
+      <i class="fas fa-dollar-sign" style="color: #27AE60;"></i>
+      <span>Margem & Lucros</span>
+    </div>
+    <div class="ge-quick-pill" onclick="abrirModalDash('clientes')" style="border-left: 4px solid #E67E22;">
+      <i class="fas fa-users" style="color: #E67E22;"></i>
+      <span>Clientes Ativos</span>
+    </div>
+    <div class="ge-quick-pill" onclick="abrirModalDash('producao')" style="border-left: 4px solid #8E44AD;">
+      <i class="fas fa-industry" style="color: #8E44AD;"></i>
+      <span>Status Industrial</span>
+    </div>
+    <div class="ge-quick-pill" onclick="abrirModalDash('prazos')" style="border-left: 4px solid #C0392B;">
+      <i class="fas fa-clock" style="color: #C0392B;"></i>
+      <span>Prazos & Entregas</span>
+    </div>
+  </div>
+
+  {# ══════════ BENTO COCKPIT (2 COLUNAS ASIMÉTRICAS) ══════════ #}
+  <div class="db-bento-container">
+
+    {# ─── COLUNA ESQUERDA (OPERACIONAL + GRÁFICO) ─── #}
+    <div>
+      <div class="db-section-title">
+        <i class="fas fa-sync-alt" style="color: #0072CE;"></i> Performance Operacional
+      </div>
+      <div class="db-operacional-grid">
+        
+        <!-- ORÇAMENTOS -->
+        <div class="db-op-card" onclick="abrirModalDash('vendas')" style="border-top: 3px solid #0072CE;">
+          <div class="db-op-card-header">
+            <div>
+              <div class="db-op-title">Orçamentos</div>
+              <div class="db-op-value">{{ operacoes.orcamentos.total }} <span style="font-size: 11px; font-weight: 600;">Orç.</span></div>
+              <div class="db-op-sub">R$ {{ '%.2f'|format(operacoes.orcamentos.valor) }}</div>
+            </div>
+            <div class="db-op-icon" style="background: rgba(0,114,206,0.1); color: #0072CE;"><i class="fas fa-file-invoice"></i></div>
+          </div>
+          <div class="db-op-details">
+            {% for d in operacoes.orcamentos.detalhes %}
+            <div class="db-detail-row">
+              <span>{{ d.label }} ({{ d.qtd }})</span>
+              <span class="db-detail-val">R$ {{ '%.2f'|format(d.valor) }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- VENDAS -->
+        <div class="db-op-card" onclick="abrirModalDash('pedidos')" style="border-top: 3px solid #7A255F;">
+          <div class="db-op-card-header">
+            <div>
+              <div class="db-op-title">Vendas</div>
+              <div class="db-op-value">{{ operacoes.vendas.total }} <span style="font-size: 11px; font-weight: 600;">Ped.</span></div>
+              <div class="db-op-sub">R$ {{ '%.2f'|format(operacoes.vendas.valor) }}</div>
+            </div>
+            <div class="db-op-icon" style="background: rgba(122,37,95,0.1); color: #7A255F;"><i class="fas fa-shopping-bag"></i></div>
+          </div>
+          <div class="db-op-details">
+            {% for d in operacoes.vendas.detalhes %}
+            <div class="db-detail-row">
+              <span>{{ d.label }} ({{ d.qtd }})</span>
+              <span class="db-detail-val">R$ {{ '%.2f'|format(d.valor) }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- COMPRAS -->
+        <div class="db-op-card" onclick="abrirModalDash('lucros')" style="border-top: 3px solid #E67E22;">
+          <div class="db-op-card-header">
+            <div>
+              <div class="db-op-title">Compras</div>
+              <div class="db-op-value">{{ operacoes.compras.total }} <span style="font-size: 11px; font-weight: 600;">Ped.</span></div>
+              <div class="db-op-sub">R$ {{ '%.2f'|format(operacoes.compras.valor) }}</div>
+            </div>
+            <div class="db-op-icon" style="background: rgba(230,126,34,0.1); color: #E67E22;"><i class="fas fa-truck-loading"></i></div>
+          </div>
+          <div class="db-op-details">
+            {% for d in operacoes.compras.detalhes %}
+            <div class="db-detail-row">
+              <span>{{ d.label }} ({{ d.qtd }})</span>
+              <span class="db-detail-val">R$ {{ '%.2f'|format(d.valor) }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- PRODUÇÃO -->
+        <div class="db-op-card" onclick="abrirModalDash('producao')" style="border-top: 3px solid #8E44AD;">
+          <div class="db-op-card-header">
+            <div>
+              <div class="db-op-title">Produção</div>
+              <div class="db-op-value">{{ operacoes.producao.total }} <span style="font-size: 11px; font-weight: 600;">Ord.</span></div>
+              <div class="db-op-sub">R$ {{ '%.2f'|format(operacoes.producao.valor) }}</div>
+            </div>
+            <div class="db-op-icon" style="background: rgba(142,68,173,0.1); color: #8E44AD;"><i class="fas fa-industry"></i></div>
+          </div>
+          <div class="db-op-details">
+            {% for d in operacoes.producao.detalhes %}
+            <div class="db-detail-row">
+              <span>{{ d.label }} ({{ d.qtd }})</span>
+              <span class="db-detail-val">R$ {{ '%.2f'|format(d.valor) }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- GRÁFICO FLUXO DE CAIXA -->
+      <div class="db-card" style="padding: 24px 28px;">
+        <div class="db-card-header">
+          <span><i class="fas fa-chart-bar" style="color: #7A255F; margin-right: 8px;"></i> Fluxo de Caixa Anual</span>
+          <div class="db-chart-legend">
+            <span class="db-leg db-leg-receita">Receitas</span>
+            <span class="db-leg db-leg-despesa">Despesas</span>
+          </div>
+        </div>
+        <div class="db-chart-wrap">
+          <canvas id="chartDesempenhoGrid"></canvas>
+          <div class="db-chart-empty" id="chart-empty-msg-grid">
+            <i class="fas fa-chart-bar" style="font-size:48px;opacity:.15;display:block;margin-bottom:12px;"></i>
+            Dados indisponíveis no momento
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ─── COLUNA DIREITA (FINANCEIRO + CONTAS + ALERTAS) ─── #}
+    <div>
+      <div class="db-section-title">
+        <i class="fas fa-wallet" style="color: #27AE60;"></i> Performance Financeira
+      </div>
+      <div class="db-fin-grid">
+        
+        <!-- LINHA 1: REALIZADO DO MÊS -->
+        <div class="db-fin-card" onclick="abrirModalDash('lucros')" style="border-top: 3px solid #27AE60;">
+          <div>
+            <div class="db-fin-label"><i class="fas fa-arrow-trend-up" style="color: #27AE60;"></i> Receitas</div>
+            <div class="db-fin-value" style="color: #166534;">R$ {{ '%.2f'|format(resumo.receita_mes) }}</div>
+          </div>
+          <div class="db-fin-sub">entradas no mês</div>
+        </div>
+
+        <div class="db-fin-card" onclick="abrirModalDash('lucros')" style="border-top: 3px solid #E53E3E;">
+          <div>
+            <div class="db-fin-label"><i class="fas fa-arrow-trend-down" style="color: #E53E3E;"></i> Despesas</div>
+            <div class="db-fin-value" style="color: #991b1b;">R$ {{ '%.2f'|format(resumo.despesa_mes) }}</div>
+          </div>
+          <div class="db-fin-sub">saídas no mês</div>
+        </div>
+
+        <div class="db-fin-card db-fin-destaque" onclick="abrirModalDash('lucros')">
+          <div>
+            <div class="db-fin-label" style="color: var(--pri);"><i class="fas fa-balance-scale"></i> Saldo Líquido</div>
+            <div class="db-fin-value">R$ {{ '%.2f'|format(resumo.saldo) }}</div>
+          </div>
+          <div class="db-fin-sub" style="color: #64748b;">resultado do período</div>
+        </div>
+
+        <!-- LINHA 2: PROJEÇÃO FUTURA -->
+        <div class="db-fin-card" style="border-top: 3px solid #0072CE;">
+          <div>
+            <div class="db-fin-label"><i class="fas fa-file-invoice-dollar" style="color: #0072CE;"></i> A Receber</div>
+            <div class="db-fin-value" style="color: #1e3a8a;">R$ {{ '%.2f'|format(resumo.a_receber) }}</div>
+          </div>
+          <div class="db-fin-sub">carteira de crédito</div>
+        </div>
+
+        <div class="db-fin-card" style="border-top: 3px solid #E67E22;">
+          <div>
+            <div class="db-fin-label"><i class="fas fa-receipt" style="color: #E67E22;"></i> A Pagar</div>
+            <div class="db-fin-value" style="color: #7c2d12;">R$ {{ '%.2f'|format(resumo.a_pagar) }}</div>
+          </div>
+          <div class="db-fin-sub">compromissos</div>
+        </div>
+
+        <div class="db-fin-card" style="border-top: 3px solid #8E44AD; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);">
+          <div>
+            <div class="db-fin-label" style="color: #8E44AD;"><i class="fas fa-chart-line" style="color: #8E44AD;"></i> Saldo Projetado</div>
+            <div class="db-fin-value" style="color: #6b21a8;">R$ {{ '%.2f'|format(resumo.a_receber - resumo.a_pagar) }}</div>
+          </div>
+          <div class="db-fin-sub" style="color: #64748b;">a receber - a pagar</div>
+        </div>
+
+      </div>
+
+      <!-- POSIÇÃO DE CONTAS BANCÁRIAS -->
+      <div class="db-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <div><i class="fas fa-university" style="color: #0f766e;"></i> Contas Bancárias</div>
+        <div id="totalSaldoContasDash" style="font-size: 11px; font-weight: 700; color: #0f766e; background: #ccfbf1; padding: 4px 12px; border-radius: 12px;">R$ 0,00</div>
+      </div>
+      <div id="gridContasBancariasDash" class="db-contas-container">
+        <!-- Preenchido dinamicamente via JS -->
+      </div>
+
+      <!-- ALERTAS & PENDÊNCIAS -->
+      <div class="db-card" style="padding: 20px 24px;">
+        <div class="db-card-header" style="margin-bottom: 16px;">
+          <span style="color: #FF9800;"><i class="fas fa-bell" style="color: #FF9800; margin-right: 8px;"></i> Alertas & Pendências</span>
+          {% if alertas %}<span class="db-alert-badge">{{ alertas|length }}</span>{% endif %}
+        </div>
+        <div class="db-alerts-body">
+          {% if alertas %}
+            {% for a in alertas %}
+            <a href="{{ a.link }}" class="db-alert-item db-alert-{{ a.tipo }}">
+              <i class="fas {{ a.icone }} db-alert-icon"></i>
+              <span>{{ a.texto }}</span>
+              <i class="fas fa-chevron-right db-alert-arrow"></i>
+            </a>
+            {% endfor %}
+          {% else %}
+            <div class="db-alerts-empty">
+              <i class="fas fa-check-circle"></i>
+              <span>Tudo em ordem no momento</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<!-- MODAL DASHBOARD (Reutilizado) -->
+<div id="modal-overlay-dash" class="ge-modal-overlay" onclick="fecharModalDash()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" id="modal-header-dash" style="background:linear-gradient(135deg,#0072CE,#3498db);">
+            <div class="ge-modal-title">
+                <i id="modal-icon-dash" class="ge-modal-icon"></i>
+                <span id="modal-titulo-dash">Painel</span>
+            </div>
+            <button class="ge-modal-fechar" onclick="fecharModalDash()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-dash"></div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ── Data/Hora
+function atualizarRelogioGrid(){
+  const agora=new Date();
+  const opts={weekday:'long',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'};
+  const dtEl = document.getElementById('db-datetime');
+  if (dtEl) dtEl.textContent=agora.toLocaleDateString('pt-BR',opts);
+  
+  const hora = agora.getHours();
+  let saudacao = 'Boa noite!';
+  if(hora >= 5 && hora < 12) { saudacao = 'Bom dia!'; }
+  else if(hora >= 12 && hora < 18) { saudacao = 'Boa tarde!'; }
+  const sEl = document.getElementById('db-saudacao-horario');
+  if (sEl) sEl.textContent = saudacao;
+}
+atualizarRelogioGrid();
+setInterval(atualizarRelogioGrid,30000);
+
+// ── Gráfico
+(function(){
+    const meses    = {{ grafico_meses    | tojson }};
+    const receitas = {{ grafico_receitas | tojson }};
+    const despesas = {{ grafico_despesas | tojson }};
+    const temDados = receitas.some(v=>v>0)||despesas.some(v=>v>0);
+
+    const canvas = document.getElementById('chartDesempenhoGrid');
+    if(!canvas) return;
+
+    if(temDados){
+      const emptyMsg = document.getElementById('chart-empty-msg-grid');
+      if(emptyMsg) emptyMsg.style.display='none';
+      
+      new Chart(canvas.getContext('2d'),{
+        type:'bar',
+        data:{
+          labels:meses,
+          datasets:[
+            {label:'Receitas',data:receitas,backgroundColor:'rgba(39,174,96,0.75)',borderColor:'#27AE60',borderWidth:1.5,borderRadius:6},
+            {label:'Despesas',data:despesas,backgroundColor:'rgba(229,62,62,0.70)',borderColor:'#E53E3E',borderWidth:1.5,borderRadius:6}
+          ]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2})}}},
+          scales:{
+            x:{grid:{display:false},ticks:{font:{size:11}}},
+            y:{grid:{color:'#f0f0f0'},ticks:{font:{size:11},callback:v=>'R$ '+v.toLocaleString('pt-BR')}}
+          }
+        }
+      });
+    }else{
+      canvas.style.display='none';
+    }
+})();
+
+// ── Funções de Modal
+function abrirModalDash(tipo) {
+    const rotas = {
+        vendas: '/gestao/cards/orcamentos',
+        pedidos: '/gestao/cards/pedidos',
+        lucros: '/gestao/cards/lucros',
+        clientes: '/gestao/cards/clientes',
+        producao: '/gestao/cards/producao',
+        prazos: '/gestao/cards/prazos'
+    };
+
+    const config = {
+        vendas: { titulo:'Painel de Orçamentos', icone:'fas fa-chart-line', cor:'#0072CE', corClara:'#3498db' },
+        pedidos: { titulo:'Painel de Pedidos', icone:'fas fa-shopping-bag', cor:'#7A255F', corClara:'#9b59b6' },
+        lucros: { titulo:'Painel de Lucros', icone:'fas fa-dollar-sign', cor:'#27AE60', corClara:'#2ecc71' },
+        clientes: { titulo:'Painel de Clientes', icone:'fas fa-users', cor:'#E67E22', corClara:'#f39c12' },
+        producao: { titulo:'Painel de Produção', icone:'fas fa-industry', cor:'#8E44AD', corClara:'#9b59b6' },
+        prazos: { titulo:'Painel de Prazos', icone:'fas fa-clock', cor:'#C0392B', corClara:'#e74c3c' }
+    };
+
+    const c = config[tipo];
+    if (!c) return;
+
+    document.getElementById('modal-titulo-dash').textContent = c.titulo;
+    document.getElementById('modal-icon-dash').className = c.icone + ' ge-modal-icon';
+
+    const modalHeader = document.getElementById('modal-header-dash');
+    modalHeader.style.background = `linear-gradient(135deg, ${c.cor}, ${c.corClara})`;
+
+    fetch(rotas[tipo])
+        .then(res => res.text())
+        .then(html => {
+            const container = document.getElementById('modal-body-dash');
+            container.innerHTML = html;
+            
+            Array.from(container.querySelectorAll('script')).forEach(script => {
+                const newScript = document.createElement('script');
+                Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(script.innerHTML));
+                script.parentNode.replaceChild(newScript, script);
+            });
+        });
+
+    document.getElementById('modal-overlay-dash').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModalDash() {
+    document.getElementById('modal-overlay-dash').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+// ── Contas Bancárias no Dashboard
+function carregarContasDashboard() {
+    const grid = document.getElementById('gridContasBancariasDash');
+    const totalSpan = document.getElementById('totalSaldoContasDash');
+    if (!grid || !totalSpan) return;
+
+    let contas = JSON.parse(localStorage.getItem('arione_contas_bancarias_cad')) || [
+        { id: 1, banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", saldo: 15420.50, status: "ATIVO", modalidade: "FISICO" },
+        { id: 2, banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", saldo: 8250.00, status: "ATIVO", modalidade: "FISICO" },
+        { id: 3, banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", saldo: 3400.75, status: "ATIVO", modalidade: "DIGITAL" }
+    ];
+
+    // Filtra apenas contas ativas
+    let contasAtivas = contas.filter(c => c.status !== 'INATIVO');
+
+    grid.innerHTML = '';
+    let saldoTotal = 0;
+
+    if (contasAtivas.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; background: #fff; padding: 20px; border-radius: 14px; text-align: center; color: #94a3b8; border: 1px solid #e8ecf0;">Nenhuma conta bancária ativa cadastrada.</div>`;
+        totalSpan.textContent = "SALDO TOTAL: R$ 0,00";
+        return;
+    }
+
+    contasAtivas.forEach(c => {
+        const val = parseFloat(c.saldo || 0);
+        saldoTotal += val;
+
+        const card = document.createElement('div');
+        card.style.background = "#fff";
+        card.style.borderRadius = "11px";
+        card.style.padding = "12px 16px";
+        card.style.border = "1px solid #e8ecf0";
+        card.style.boxShadow = "0 2px 10px rgba(0,0,0,0.03)";
+        card.style.display = "flex";
+        card.style.flexDirection = "column";
+        card.style.justifyContent = "space-between";
+        card.style.position = "relative";
+        card.style.overflow = "hidden";
+        card.style.transition = "transform 0.2s, box-shadow 0.2s";
+        card.style.cursor = "pointer";
+        card.onclick = () => {
+            window.location.href = "/financeiro/abas?aba=extratos";
+        };
+        card.onmouseover = () => { card.style.transform = "translateX(3px)"; card.style.boxShadow = "0 4px 14px rgba(0,0,0,0.05); border-color: #cbd5e1;"; };
+        card.onmouseout = () => { card.style.transform = "translateX(0)"; card.style.boxShadow = "0 2px 10px rgba(0,0,0,0.03); border-color: #e8ecf0;"; };
+
+        const mod = c.modalidade_banco || c.modalidade || 'FISICO';
+        const iconeModalidade = mod === 'DIGITAL' 
+            ? '<i class="fas fa-mobile-alt" style="color: #8B5CF6; background: #EDE9FE; padding: 6px 8px; border-radius: 8px; font-size: 12px;"></i>' 
+            : '<i class="fas fa-landmark" style="color: #0284C7; background: #E0F2FE; padding: 6px 8px; border-radius: 8px; font-size: 12px;"></i>';
+
+        const nomeBancoCurto = c.banco ? c.banco.split('-').pop().trim() : 'CONTA';
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div style="font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1.2;">${nomeBancoCurto}</div>
+                <div>${iconeModalidade}</div>
+            </div>
+            <div>
+                <div style="font-size: 10px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Ag: ${c.agencia || '--'} | Cc: ${c.conta || '--'}</div>
+                <div style="font-size: 18px; font-weight: 800; color: #0f766e;">R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
+            <div style="position: absolute; right: -15px; bottom: -15px; font-size: 70px; color: #0f766e; opacity: 0.04; pointer-events: none;">
+                <i class="fas fa-wallet"></i>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    totalSpan.textContent = `SALDO TOTAL: R$ ${saldoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => carregarContasDashboard());
+</script>

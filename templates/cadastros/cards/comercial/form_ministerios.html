@@ -1,0 +1,134 @@
+{# =============================================================================
+Arquivo : form_ministerios.html
+Caminho : templates/cadastros/cards/comercial/form_ministerios.html
+Função : Gestão de Parcerias Ministeriais (Igrejas/Institucional)
+Padrão : Quiet Luxury / Golden Standard
+============================================================================= #}
+
+{% import 'macros/componentes.html' as comp %}
+
+<div id="min-form-area" class="arione-fade-in" style="padding: 10px;">
+
+    {# ══ CABEÇALHO MESTRE (Luxo Silencioso) ══ #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parcerias Ministeriais",
+        subtitulo="Comercial > Gestão Institucional",
+        icone="fa-church",
+        cor_tema="#7A255F",
+        func_fechar="fecharModalCom()",
+        form_id="min-form",
+        onclick_novo='novoRegistroMin()',
+        onclick_save='arioneSalvarDocumento()',
+        onclick_search='focarBuscaMin()',
+        onclick_filter='toggleFiltroMin()',
+        status='Ativo',
+        ajuda='Gerencie parcerias ministeriais, igrejas e entidades institucionais.',
+        tamanho='medio'
+    ) }}
+
+    <div class="fp-card" style="margin-top: 15px; border-top: 4px solid #7A255F;">
+        <div class="fp-card-body">
+            <form id="min-form" method="POST" autocomplete="off">
+                <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 20px;">
+
+                    {# Foto / Brasão #}
+                    <div style="text-align: center;">
+                        <div id="min-foto-preview"
+                            style="width: 100px; height: 100px; background: #f8f9fa; border: 2px dashed #7A255F; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 10px;">
+                            <i class="fas fa-church" style="font-size: 30px; color: #7A255F; opacity: 0.3;"></i>
+                        </div>
+                        <button type="button" class="fp-btn-outline"
+                            style="font-size: 9px; padding: 4px 8px; border-color: #7A255F; color: #7A255F;">ALTERAR
+                            BRASÃO</button>
+                    </div>
+
+                    {# Dados Principais #}
+                    <div style="grid-column: span 2; display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                        <div class="gf-group">
+                            <label class="fp-label">NOME DA INSTITUIÇÃO / MINISTÉRIO *</label>
+                            <input type="text" id="min-nome" name="nome" class="fp-input"
+                                placeholder="Ex: IGREJA BATISTA CENTRAL" required>
+                        </div>
+                        <div class="gf-group">
+                            <label class="fp-label">CNPJ / REGISTRO</label>
+                            <input type="text" name="registro" class="fp-input" placeholder="00.000.000/0001-00">
+                        </div>
+                        <div class="gf-group">
+                            <label class="fp-label">LÍDER / RESPONSÁVEL 🔍</label>
+                            <div style="position: relative;">
+                                <input type="text" name="responsavel" class="fp-input"
+                                    placeholder="Selecione o líder...">
+                                <i class="fas fa-search"
+                                    style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #7A255F; cursor: pointer;"></i>
+                            </div>
+                        </div>
+                        <div class="gf-group">
+                            <label class="fp-label">CATEGORIA</label>
+                            <select name="categoria" class="fp-input">
+                                <option value="IGREJA">IGREJA</option>
+                                <option value="ONG">ONG / ENTIDADE</option>
+                                <option value="CONVENCAO">CONVENÇÃO</option>
+                                <option value="OUTROS">OUTROS</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <button type="button" class="fp-btn-outline" onclick="fecharModalCom()">CANCELAR</button>
+                    <button type="submit" class="fp-btn-primary" style="background: #7A255F; border-color: #7A255F;">
+                        <i class="fas fa-save"></i> SALVAR MINISTÉRIO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Listagem #}
+    <div class="fp-card" style="margin-top: 15px;">
+        <div class="fp-card-title">Ministérios Cadastrados</div>
+        <div class="fp-card-body" style="padding:0;">
+            <table class="fp-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">Brasão</th>
+                        <th>Instituição</th>
+                        <th>Líder</th>
+                        <th>Status</th>
+                        <th style="width:80px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for min in ministerios_lista %}
+                    <tr>
+                        <td style="text-align:center;"><i class="fas fa-church" style="color:#7A255F;"></i></td>
+                        <td><strong>{{ min.nome }}</strong></td>
+                        <td>{{ min.lider or 'N/A' }}</td>
+                        <td><span class="badge" style="background:#27AE60; color:#fff;">{{ 'ATIVO' if min.ativa else
+                                'INATIVO' }}</span></td>
+                        <td style="text-align:center;">
+                            <button class="fp-btn-icon"><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 20px; color: #aaa;">Nenhum ministério
+                            cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function novoRegistroMin() {
+        document.getElementById('min-form').reset();
+        document.getElementById('min-nome').focus();
+    }
+    function focarBuscaMin() { alert('Busca rápida ativada'); }
+    function toggleFiltroMin() { alert('Filtros avançados'); }
+</script>

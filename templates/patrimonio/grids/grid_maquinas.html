@@ -1,0 +1,476 @@
+<!-- templates/patrimonio/grids/grid_maquinas.html -->
+<div class="patr-section">
+
+    <!-- Formulário de Cadastro -->
+    <div class="op-card" style="border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.05);border:1px solid rgba(226,232,240,0.8);background:#fff;overflow:hidden;margin-bottom:25px;">
+        <div class="op-card-title" style="padding:16px 25px;border-bottom:1px solid #f1f5f9;font-weight:600;color:#334155;font-size:13px;background:#fcfdfe;display:flex;justify-content:space-between;align-items:center;">
+            <div><i class="fas fa-cogs" style="color:#7A255F;margin-right:10px;"></i><span>Dados da Máquina / Equipamento Pesado</span></div>
+            <span id="badge-maquina-status" style="background:#e2e8f0;color:#64748b;font-size:10px;padding:4px 12px;border-radius:12px;font-weight:600;">ATIVO</span>
+        </div>
+        <div class="op-card-body" style="padding:25px;">
+            <!-- ABAS INTERNAS DO FORMULÁRIO -->
+            <div style="display:flex;gap:10px;margin-bottom:25px;border-bottom:2px solid #e2e8f0;padding-bottom:10px;">
+                <button type="button" onclick="alternarAbaFormMaquina('dados')" id="btn-aba-maquina-dados" style="background:#7A255F;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(122,37,95,0.2);">
+                    <i class="fas fa-cogs"></i> DADOS DA MÁQUINA
+                </button>
+                <button type="button" onclick="alternarAbaFormMaquina('fiscal')" id="btn-aba-maquina-fiscal" style="background:#f1f5f9;color:#64748b;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;">
+                    <i class="fas fa-balance-scale"></i> FISCAL & DEPRECIAÇÃO
+                </button>
+                <button type="button" onclick="alternarAbaFormMaquina('historico')" id="btn-aba-maquina-historico" style="background:#f1f5f9;color:#64748b;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;">
+                    <i class="fas fa-history"></i> HISTÓRICO
+                </button>
+            </div>
+
+            <form id="formMaquinas" onsubmit="salvarMaquina(event)">
+                <input type="hidden" name="id" id="maquina_id" value="new">
+                
+                <!-- ================= ABA 1: DADOS DA MÁQUINA ================= -->
+                <div id="maquina-aba-dados">
+                    <div style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">1. Identificação Operacional</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:6px;display:block;">Nº PATRIMÔNIO (TAG) *</label>
+                            <input class="op-input" type="text" name="patrimonio_tag" id="maquina_tag" placeholder="EX: MAQ-001" required style="width:100%;border:1px solid #7A255F;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:700;color:#7A255F;background:#fdf2f8;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:250px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">NOME / MODELO / IDENTIFICAÇÃO *</label>
+                            <input class="op-input" type="text" name="nome" id="maquina_nome" placeholder="EX: TORNO CNC 3 EIXOS MODELO X" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:160px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CATEGORIA *</label>
+                            <select name="categoria" id="maquina_cat" class="op-input" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;transition:0.2s;">
+                                <option value="">SELECIONE...</option>
+                                <option value="INDUSTRIAL">🏭 INDUSTRIAL / MANUFATURA</option>
+                                <option value="AGRICOLA">🌾 AGRÍCOLA / CAMPO</option>
+                                <option value="CONSTRUCAO">🏗️ CONSTRUÇÃO CIVIL</option>
+                                <option value="ENERGIA">⚡ GERADORES / ENERGIA</option>
+                                <option value="OUTROS">⚙️ OUTROS EQUIPAMENTOS</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">STATUS OPERACIONAL</label>
+                            <select name="status_operacional" class="op-input" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="OPERACIONAL">🟢 OPERACIONAL</option>
+                                <option value="MANUTENCAO">🟡 EM MANUTENÇÃO</option>
+                                <option value="PARADA">🔴 PARADA / INATIVA</option>
+                                <option value="DESATIVADA">⚫ DESATIVADA / SUCATA</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">2. Especificações Técnicas</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">FABRICANTE / MARCA</label>
+                            <input class="op-input" type="text" name="fabricante" placeholder="EX: ROMI / JOHN DEERE" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:120px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">ANO FABRICAÇÃO</label>
+                            <input class="op-input" type="number" name="ano" placeholder="2024" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">Nº DE SÉRIE / CHASSI</label>
+                            <input class="op-input" type="text" name="serie" placeholder="EX: SN-987654" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:6px;display:block;">VALOR CONTÁBIL (R$) *</label>
+                            <input class="op-input" type="number" step="0.01" name="valor" placeholder="0,00" required style="width:100%;border:1px solid #0f766e;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;color:#0f766e;background:#f0fdf4;transition:0.2s;">
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">3. Utilização e Alocação</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">HORAS DE USO (HM)</label>
+                            <input class="op-input" type="number" step="0.1" name="horas_uso" placeholder="0.0" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:160px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">PRÓXIMA MANUTENÇÃO</label>
+                            <input class="op-input" type="date" name="proxima_manutencao" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">LOCALIZAÇÃO / SETOR</label>
+                            <input class="op-input" type="text" name="localizacao" placeholder="EX: GALPÃO 1 - LINHA DE USINAGEM" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ABA 2: FISCAL & DEPRECIAÇÃO ================= -->
+                <div id="maquina-aba-fiscal" style="display:none;">
+                    <div style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">4. Dados de Aquisição</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DE AQUISIÇÃO</label>
+                            <input class="op-input" type="date" name="data_aquisicao" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VALOR DE AQUISIÇÃO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="valor_aquisicao" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DE VENDA</label>
+                            <input class="op-input" type="date" name="data_venda" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">5. Depreciação e Impostos</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;background:#f8fafc;padding:15px;border-radius:12px;border:1px solid #e2e8f0;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DEPRECIAÇÃO</label>
+                            <input class="op-input" type="date" name="data_depreciacao" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">TAXA DEPRECIAÇÃO (%)</label>
+                            <input class="op-input" type="number" step="0.01" name="taxa_depreciacao" placeholder="EX: 10.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VALOR DEPRECIADO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="valor_depreciado" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">6. Manutenção e Intervenções</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">IMPOSTOS / SEGUROS (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="impostos_anuais" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CUSTO MANUTENÇÃO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="custo_manutencao" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:250px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">HISTÓRICO DE REPAROS E INTERVENÇÕES</label>
+                            <input class="op-input" type="text" name="historico_reformas" placeholder="EX: RETÍFICA DO MOTOR EM 2025" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ABA 3: HISTÓRICO DE MOVIMENTAÇÕES (SOMENTE LEITURA) ================= -->
+                <div id="maquina-aba-historico" style="display:none;">
+                    <div style="font-size:11px;font-weight:700;color:#7A255F;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">Rastreamento Histórico de Movimentações e Auditoria</div>
+                    <div id="container-historico-mov-maquina" style="background:#f8fafc;border:1px solid #e2e8f0;padding:25px;border-radius:12px;min-height:180px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                        <i class="fas fa-history" style="font-size:32px;color:#cbd5e1;margin-bottom:12px;"></i>
+                        <div style="font-size:13px;font-weight:600;color:#64748b;text-align:center;">Nenhuma movimentação selecionada. Clique em [Editar] na tabela abaixo para carregar o histórico completo desta máquina.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:5px;">
+                    <button type="button" onclick="limparFormMaquina()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">
+                        <i class="fas fa-times"></i> LIMPAR
+                    </button>
+                    <button type="submit" id="btn-salvar-maquina" style="background:#7A255F;color:#fff;border:none;padding:10px 24px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(122,37,95,0.2);transition:0.2s;">
+                        <i class="fas fa-save"></i> SALVAR MÁQUINA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Listagem -->
+    <div class="op-card" style="border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.05);border:1px solid rgba(226,232,240,0.8);background:#fff;overflow:hidden;">
+        <div class="op-card-title" style="padding:16px 25px;border-bottom:1px solid #f1f5f9;font-weight:600;color:#334155;font-size:13px;background:#fcfdfe;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;"><i class="fas fa-list" style="color:#7A255F;margin-right:10px;"></i><span>Máquinas e Equipamentos Cadastrados</span></div>
+            <div style="display:flex;align-items:center;gap:15px;">
+                <input type="text" id="input-busca-maquinas" placeholder="🔍 Pesquisar na lista..." oninput="filtrarTabelaMaquinas(this.value)" style="border:1px solid #cbd5e1;border-radius:8px;padding:6px 12px;font-size:11px;outline:none;width:200px;transition:0.2s;">
+                <span id="count-maquinas" style="background:#e2e8f0;color:#64748b;font-size:10px;padding:4px 12px;border-radius:12px;font-weight:600;">0 REGISTROS</span>
+            </div>
+        </div>
+        <div class="op-card-body" style="padding:0;overflow-x:auto;">
+            <table class="op-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                    <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:600;font-size:11px;">
+                        <th style="padding:14px 25px;">Nº TAG</th>
+                        <th style="padding:14px 15px;">MÁQUINA / MODELO</th>
+                        <th style="padding:14px 15px;">CATEGORIA</th>
+                        <th style="padding:14px 15px;">FABRICANTE</th>
+                        <th style="padding:14px 15px;">Nº SÉRIE</th>
+                        <th style="padding:14px 15px;">HORAS / HM</th>
+                        <th style="padding:14px 15px;">VALOR (R$)</th>
+                        <th style="padding:14px 15px;">PRÓX. MANUT.</th>
+                        <th style="padding:14px 15px;">STATUS</th>
+                        <th style="padding:14px 25px;text-align:right;">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-maquinas">
+                    <tr><td colspan="10" style="padding:30px;text-align:center;color:#94a3b8;font-size:12px;">Nenhuma máquina cadastrada. Utilize o formulário acima.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const COR_MAQUINA = '#7A255F';
+let maquinasCad = [];
+
+async function carregarMaquinasAPI() {
+    try {
+        const res = await fetch('/patrimonio/api/ativos/listar?categoria=MAQUINA');
+        const data = await res.json();
+        maquinasCad = data.map(item => ({
+            id: item.id,
+            status_operacional: item.status,
+            valor_aquisicao: item.valor_aquisicao,
+            valor_contabil_atual: item.valor_contabil_atual,
+            ...item
+        }));
+        renderMaquinas();
+    } catch (e) {
+        console.error("Erro ao carregar máquinas do banco:", e);
+    }
+}
+
+function alternarAbaFormMaquina(aba) {
+    const divDados = document.getElementById('maquina-aba-dados');
+    const divFiscal = document.getElementById('maquina-aba-fiscal');
+    const divHist = document.getElementById('maquina-aba-historico');
+    const btnDados = document.getElementById('btn-aba-maquina-dados');
+    const btnFiscal = document.getElementById('btn-aba-maquina-fiscal');
+    const btnHist = document.getElementById('btn-aba-maquina-historico');
+    const btnSalvar = document.getElementById('btn-salvar-maquina');
+    if (!divDados || !divFiscal || !divHist) return;
+    
+    // Reseta botoes
+    [btnDados, btnFiscal, btnHist].forEach(b => {
+        b.style.background = '#f1f5f9'; b.style.color = '#64748b'; b.style.boxShadow = 'none';
+    });
+    
+    if (aba === 'dados') {
+        divDados.style.display = 'block'; divFiscal.style.display = 'none'; divHist.style.display = 'none';
+        btnDados.style.background = COR_MAQUINA; btnDados.style.color = '#fff'; btnDados.style.boxShadow = '0 2px 8px rgba(122,37,95,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'inline-block';
+    } else if (aba === 'fiscal') {
+        divDados.style.display = 'none'; divFiscal.style.display = 'block'; divHist.style.display = 'none';
+        btnFiscal.style.background = COR_MAQUINA; btnFiscal.style.color = '#fff'; btnFiscal.style.boxShadow = '0 2px 8px rgba(122,37,95,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'inline-block';
+    } else {
+        divDados.style.display = 'none'; divFiscal.style.display = 'none'; divHist.style.display = 'block';
+        btnHist.style.background = COR_MAQUINA; btnHist.style.color = '#fff'; btnHist.style.boxShadow = '0 2px 8px rgba(122,37,95,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'none';
+    }
+}
+
+function gerarHistoricoMovMaquina(mq) {
+    const cont = document.getElementById('container-historico-mov-maquina'); if (!cont) return;
+    if (!mq || mq.id === 'new') {
+        cont.innerHTML = `<i class="fas fa-history" style="font-size:32px;color:#cbd5e1;margin-bottom:12px;"></i>
+            <div style="font-size:13px;font-weight:600;color:#64748b;text-align:center;">Nenhuma movimentação registrada. Salve a máquina para iniciar o rastreamento histórico.</div>`;
+        return;
+    }
+
+    const valAq = parseFloat(mq.valor_aquisicao || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const valDep = parseFloat(mq.valor_depreciado || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const valAtu = parseFloat(mq.valor_contabil_atual || mq.valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const impAno = parseFloat(mq.impostos_anuais || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const custMan = parseFloat(mq.custo_manutencao || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+
+    let html = `<div style="width:100%;display:flex;flex-direction:column;gap:15px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #cbd5e1;padding-bottom:10px;">
+            <span style="font-size:14px;font-weight:800;color:#334155;">Linha do Tempo: Máquina ${mq.nome}</span>
+            <span style="background:#e2e8f0;color:#475569;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;">ID Rastreamento: #PAA-${mq.id}</span>
+        </div>`;
+
+    // 1. AQUISIÇÃO
+    html += `<div style="background:#fff;border-left:4px solid ${COR_MAQUINA};padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:${COR_MAQUINA};text-transform:uppercase;">[ AQUISIÇÃO / CADASTRO ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">TAG: ${mq.patrimonio_tag||'---'} | Data da Compra: ${mq.data_aquisicao ? mq.data_aquisicao.split('-').reverse().join('/') : '---'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">VALOR DE AQUISIÇÃO</div>
+            <div style="font-size:15px;font-weight:800;color:${COR_MAQUINA};">${valAq}</div>
+        </div>
+    </div>`;
+
+    // 2. DEPRECIAÇÃO
+    html += `<div style="background:#fff;border-left:4px solid #0f766e;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;text-transform:uppercase;">[ DEPRECIAÇÃO & VALOR DE MERCADO ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Taxa Anual: ${mq.taxa_depreciacao||'0'}% | Data Depreciação: ${mq.data_depreciacao ? mq.data_depreciacao.split('-').reverse().join('/') : '---'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">VALOR ATUALIZADO (LÍQUIDO)</div>
+            <div style="font-size:15px;font-weight:800;color:#0f766e;">${valAtu}</div>
+        </div>
+    </div>`;
+
+    // 3. MANUTENÇÃO
+    html += `<div style="background:#fff;border-left:4px solid #d97706;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;">[ MANUTENÇÃO & REFORMAS ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Intervenções: ${mq.historico_reformas||'Nenhuma intervenção registrada.'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">CUSTOS DE OPERAÇÃO ANUAL</div>
+            <div style="font-size:14px;font-weight:700;color:#d97706;">Impostos: ${impAno} | Manut: ${custMan}</div>
+        </div>
+    </div>`;
+
+    // 4. ALIENAÇÃO
+    if (mq.status_operacional === 'DESATIVADA' || mq.status === 'VENDIDO') {
+        html += `<div style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #ea580c;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div style="font-size:11px;font-weight:800;color:#9a3412;text-transform:uppercase;">[ DESMOBILIZAÇÃO / ALIENAÇÃO FISCAL ]</div>
+            <div style="font-size:13px;font-weight:700;color:#334155;margin-top:4px;line-height:1.4;">${mq.observacoes || 'Máquina alienada e baixada do patrimônio.'}</div>
+        </div>`;
+    }
+
+    html += `</div>`;
+    cont.innerHTML = html;
+}
+
+function filtrarTabelaMaquinas(termo) {
+    const tbody = document.getElementById('tbody-maquinas'); if (!tbody) return;
+    const linhas = tbody.querySelectorAll('tr');
+    linhas.forEach(tr => {
+        if (tr.textContent.toUpperCase().includes(termo.toUpperCase())) tr.style.display = '';
+        else tr.style.display = 'none';
+    });
+}
+
+function renderMaquinas() {
+    const tbody = document.getElementById('tbody-maquinas');
+    const cnt = document.getElementById('count-maquinas');
+    if (!tbody) return;
+    cnt.textContent = `${maquinasCad.length} REGISTROS`;
+    if (!maquinasCad.length) {
+        tbody.innerHTML = `<tr><td colspan="10" style="padding:30px;text-align:center;color:#94a3b8;">Nenhuma máquina cadastrada no banco de dados.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = maquinasCad.map(mq => {
+        const statusBadge = mq.status_operacional === 'OPERACIONAL'
+            ? `<span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🟢 OPERACIONAL</span>`
+            : mq.status_operacional === 'MANUTENCAO'
+                ? `<span style="background:#fef08a;color:#854d0e;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🟡 MANUTENÇÃO</span>`
+                : mq.status_operacional === 'PARADA'
+                    ? `<span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🔴 PARADA</span>`
+                    : `<span style="background:#1e293b;color:#f8fafc;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">⚫ VENDIDO</span>`;
+        const valFmt = parseFloat(mq.valor_contabil_atual||mq.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const manutFmt = mq.proxima_manutencao ? mq.proxima_manutencao.split('-').reverse().join('/') : '---';
+        return `<tr style="border-bottom:1px solid #f1f5f9;transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <td style="padding:14px 25px;font-weight:700;color:${COR_MAQUINA};">${mq.patrimonio_tag||'---'}</td>
+            <td style="padding:14px 15px;font-weight:600;color:#334155;">${mq.nome}</td>
+            <td style="padding:14px 15px;color:#64748b;">${mq.categoria||'---'}</td>
+            <td style="padding:14px 15px;color:#64748b;">${mq.fabricante||'---'}</td>
+            <td style="padding:14px 15px;color:#334155;">${mq.serie||'---'}</td>
+            <td style="padding:14px 15px;font-weight:600;color:#0f766e;">${mq.horas_uso||'0'} hm</td>
+            <td style="padding:14px 15px;font-weight:600;color:#0f766e;">${valFmt}</td>
+            <td style="padding:14px 15px;color:#64748b;">${manutFmt}</td>
+            <td style="padding:14px 15px;">${statusBadge}</td>
+            <td style="padding:14px 25px;text-align:right;">
+                <button onclick="editarMaquina(${mq.id})" style="background:#f1f5f9;color:${COR_MAQUINA};border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;margin-right:5px;"><i class="fas fa-edit"></i> Editar</button>
+                <button onclick="excluirMaquina(${mq.id})" style="background:#fee2e2;color:#ef4444;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function salvarMaquina(e) {
+    e.preventDefault();
+    const f = document.getElementById('formMaquinas');
+    const idVal = f.querySelector('[name=id]').value;
+    const obj = {
+        id: idVal,
+        categoria: 'MAQUINA',
+        descricao: f.querySelector('[name=nome]').value.toUpperCase(),
+        nome: f.querySelector('[name=nome]').value.toUpperCase(),
+        tag_patrimonial: f.querySelector('[name=patrimonio_tag]').value.toUpperCase(),
+        patrimonio_tag: f.querySelector('[name=patrimonio_tag]').value.toUpperCase(),
+        subcategoria: f.querySelector('[name=categoria]').value,
+        status_operacional: f.querySelector('[name=status_operacional]').value,
+        status: f.querySelector('[name=status_operacional]').value === 'DESATIVADA' ? 'VENDIDO' : 'ATIVO',
+        fabricante: f.querySelector('[name=fabricante]').value.toUpperCase(),
+        ano: f.querySelector('[name=ano]').value,
+        serie: f.querySelector('[name=serie]').value.toUpperCase(),
+        valor: f.querySelector('[name=valor]').value,
+        horas_uso: f.querySelector('[name=horas_uso]').value,
+        proxima_manutencao: f.querySelector('[name=proxima_manutencao]').value,
+        localizacao: f.querySelector('[name=localizacao]').value.toUpperCase(),
+        data_aquisicao: f.querySelector('[name=data_aquisicao]').value,
+        valor_aquisicao: f.querySelector('[name=valor_aquisicao]').value,
+        data_depreciacao: f.querySelector('[name=data_depreciacao]').value,
+        taxa_depreciacao: f.querySelector('[name=taxa_depreciacao]').value,
+        valor_depreciado: f.querySelector('[name=valor_depreciado]').value,
+        data_venda: f.querySelector('[name=data_venda]').value,
+        impostos_anuais: f.querySelector('[name=impostos_anuais]').value,
+        custo_manutencao: f.querySelector('[name=custo_manutencao]').value,
+        historico_reformas: f.querySelector('[name=historico_reformas]').value.toUpperCase(),
+        observacoes: f.querySelector('[name=observacoes]') ? f.querySelector('[name=observacoes]').value.toUpperCase() : ""
+    };
+    
+    try {
+        const res = await fetch('/patrimonio/api/ativos/salvar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(obj)
+        });
+        const data = await res.json();
+        if(data.success) {
+            if (typeof arioneToast === 'function') arioneToast(data.message, 'success');
+            await carregarMaquinasAPI();
+            limparFormMaquina();
+        } else {
+            if (typeof arioneToast === 'function') arioneToast('Erro: ' + data.error, 'error');
+        }
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+function editarMaquina(id) {
+    const mq = maquinasCad.find(x => x.id == id); if (!mq) return;
+    const f = document.getElementById('formMaquinas');
+    f.querySelector('[name=id]').value = mq.id;
+    f.querySelector('[name=patrimonio_tag]').value = mq.patrimonio_tag||mq.tag_patrimonial||'';
+    f.querySelector('[name=nome]').value = mq.nome||mq.descricao||'';
+    f.querySelector('[name=categoria]').value = mq.subcategoria||mq.categoria||'';
+    f.querySelector('[name=status_operacional]').value = mq.status_operacional||'OPERACIONAL';
+    f.querySelector('[name=fabricante]').value = mq.fabricante||'';
+    f.querySelector('[name=ano]').value = mq.ano||'';
+    f.querySelector('[name=serie]').value = mq.serie||'';
+    f.querySelector('[name=valor]').value = mq.valor||'';
+    f.querySelector('[name=horas_uso]').value = mq.horas_uso||'';
+    f.querySelector('[name=proxima_manutencao]').value = mq.proxima_manutencao||'';
+    f.querySelector('[name=localizacao]').value = mq.localizacao||'';
+    f.querySelector('[name=data_aquisicao]').value = mq.data_aquisicao||'';
+    f.querySelector('[name=valor_aquisicao]').value = mq.valor_aquisicao||'';
+    f.querySelector('[name=data_depreciacao]').value = mq.data_depreciacao||'';
+    f.querySelector('[name=taxa_depreciacao]').value = mq.taxa_depreciacao||'';
+    f.querySelector('[name=valor_depreciado]').value = mq.valor_depreciado||'';
+    f.querySelector('[name=data_venda]').value = mq.data_venda||'';
+    f.querySelector('[name=impostos_anuais]').value = mq.impostos_anuais||'';
+    f.querySelector('[name=custo_manutencao]').value = mq.custo_manutencao||'';
+    f.querySelector('[name=historico_reformas]').value = mq.historico_reformas||'';
+    
+    // Alimenta a aba de historico
+    gerarHistoricoMovMaquina(mq);
+
+    alternarAbaFormMaquina('dados');
+    f.scrollIntoView({behavior:'smooth'});
+    if (typeof arioneToast === 'function') arioneToast(`Editando: ${mq.nome||mq.descricao}`, 'info');
+}
+
+async function excluirMaquina(id, force) {
+    if (!force) {
+        const conf = await arioneConfirm('Excluir esta máquina do banco de dados?');
+        if (!conf) return;
+    }
+    try {
+        const res = await fetch(`/patrimonio/api/ativos/excluir/${id}`, {method: 'POST'});
+        const data = await res.json();
+        if(data.success) {
+            if (typeof arioneToast === 'function') arioneToast('Máquina excluída.', 'success');
+            await carregarMaquinasAPI();
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function limparFormMaquina() {
+    const f = document.getElementById('formMaquinas'); f.reset(); f.querySelector('[name=id]').value='new';
+    gerarHistoricoMovMaquina({id:'new'});
+    alternarAbaFormMaquina('dados');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    carregarMaquinasAPI();
+    gerarHistoricoMovMaquina({id:'new'});
+});
+</script>

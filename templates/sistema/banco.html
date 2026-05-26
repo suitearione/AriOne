@@ -1,0 +1,255 @@
+{# =============================================================================
+   Caminho  : templates/sistema/banco.html
+   Função   : Painel de administração do banco de dados.
+   Descrição: Gerenciamento visual de migrações, status do banco, etc.
+============================================================================= #}
+{% extends "base.html" %}
+{% block content %}
+<div class="bd-wrap">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="bd-flash bd-flash-{{ cat }}">
+        <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  {# ══════════ CABEÇALHO ══════════ #}
+  <div class="bd-header">
+    <div class="bd-header-left">
+      <div class="bd-header-icon">
+        <i class="fas fa-database"></i>
+      </div>
+      <div>
+        <h2 class="bd-header-title">🗄️ Gerenciamento de Banco de Dados</h2>
+        <nav class="bd-breadcrumb">
+          <span>Sistema</span>
+          <i class="fas fa-chevron-right"></i>
+          <span>Banco de Dados</span>
+          <i class="fas fa-chevron-right"></i>
+          <span class="bd-env-badge">DEV</span>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  {# ══════════ STATUS DO BANCO ══════════ #}
+  <div class="bd-card">
+    <div class="bd-card-title">
+      <i class="fas fa-info-circle"></i> Status do Banco de Dados
+    </div>
+    <div class="bd-card-body">
+      <div class="bd-status-grid">
+        <div class="bd-stat">
+          <div class="bd-stat-label">Status</div>
+          <div class="bd-stat-value" style="color:{% if db_exists %}#27AE60{% else %}#e74c3c{% endif %};">
+            {% if db_exists %}
+              <i class="fas fa-check-circle"></i> Ativo
+            {% else %}
+              <i class="fas fa-times-circle"></i> Não Criado
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="bd-stat">
+          <div class="bd-stat-label">Arquivo</div>
+          <div class="bd-stat-value" style="font-size:11px; font-family:monospace;">
+            {{ db_path }}
+          </div>
+        </div>
+        
+        <div class="bd-stat">
+          <div class="bd-stat-label">Tamanho</div>
+          <div class="bd-stat-value">
+            {% if db_exists %}
+              {{ "%.2f"|format(db_size / 1024) }} KB
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="bd-stat">
+          <div class="bd-stat-label">Migrações</div>
+          <div class="bd-stat-value" style="color:{% if migrations_exists %}#27AE60{% else %}#f39c12{% endif %};">
+            {% if migrations_exists %}
+              <i class="fas fa-check-circle"></i> Inicializado
+            {% else %}
+              <i class="fas fa-exclamation-triangle"></i> Não Inicializado
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ══════════ AÇÕES RÁPIDAS ══════════ #}
+  <div class="bd-card">
+    <div class="bd-card-title">
+      <i class="fas fa-bolt"></i> Ações Rápidas
+    </div>
+    <div class="bd-card-body">
+      <div class="bd-actions-grid">
+        
+        {% if not migrations_exists %}
+        <form method="POST" action="{{ url_for('sistema.banco_init') }}" class="bd-action-card bd-action-warning">
+          <div class="bd-action-icon">
+            <i class="fas fa-power-off"></i>
+          </div>
+          <div class="bd-action-content">
+            <div class="bd-action-title">Inicializar Migrações</div>
+            <div class="bd-action-desc">Cria a pasta migrations/ pela primeira vez</div>
+          </div>
+          <button type="submit" class="bd-action-btn" onclick="return confirm('Inicializar sistema de migrações?')">
+            <i class="fas fa-play"></i> Iniciar
+          </button>
+        </form>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('sistema.banco_migrate') }}" class="bd-action-card bd-action-primary">
+          <div class="bd-action-icon">
+            <i class="fas fa-file-code"></i>
+          </div>
+          <div class="bd-action-content">
+            <div class="bd-action-title">Criar Migração</div>
+            <div class="bd-action-desc">Detecta mudanças nos modelos Python</div>
+            <input type="text" 
+                   name="message" 
+                   placeholder="Descrição da migração" 
+                   class="bd-input-mini"
+                   value="Atualizar tabelas">
+          </div>
+          <button type="submit" class="bd-action-btn">
+            <i class="fas fa-plus"></i> Criar
+          </button>
+        </form>
+
+        <form method="POST" action="{{ url_for('sistema.banco_upgrade') }}" class="bd-action-card bd-action-success">
+          <div class="bd-action-icon">
+            <i class="fas fa-arrow-up"></i>
+          </div>
+          <div class="bd-action-content">
+            <div class="bd-action-title">Aplicar Migrações</div>
+            <div class="bd-action-desc">Atualiza o banco com as mudanças</div>
+          </div>
+          <button type="submit" class="bd-action-btn" onclick="return confirm('Aplicar todas as migrações pendentes?')">
+            <i class="fas fa-check"></i> Aplicar
+          </button>
+        </form>
+
+        <a href="{{ url_for('sistema.banco_status') }}" class="bd-action-card bd-action-info">
+          <div class="bd-action-icon">
+            <i class="fas fa-heartbeat"></i>
+          </div>
+          <div class="bd-action-content">
+            <div class="bd-action-title">Ver Status</div>
+            <div class="bd-action-desc">Mostra a migração atual aplicada</div>
+          </div>
+          <div class="bd-action-btn">
+            <i class="fas fa-eye"></i> Ver
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  {# ══════════ ARQUIVOS DE MIGRAÇÃO ══════════ #}
+  {% if migration_files %}
+  <div class="bd-card">
+    <div class="bd-card-title">
+      <i class="fas fa-history"></i> Histórico de Migrações
+      <span class="bd-count-badge">{{ migration_files|length }}</span>
+    </div>
+    <div class="bd-card-body">
+      <div class="bd-migrations-list">
+        {% for file in migration_files %}
+        <div class="bd-migration-item">
+          <i class="fas fa-file-code"></i>
+          <code>{{ file }}</code>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ══════════ TUTORIAL ══════════ #}
+  <div class="bd-card" style="border-left:4px solid #3498db;">
+    <div class="bd-card-title" style="background:#eff8ff; color:#2b6cb0;">
+      <i class="fas fa-graduation-cap"></i> Como Usar
+    </div>
+    <div class="bd-card-body">
+      <ol class="bd-tutorial">
+        <li><strong>Sempre que criar/modificar um modelo</strong> (ex: adicionar coluna em <code>Empresa</code>)</li>
+        <li>Clique em <strong>"Criar Migração"</strong> → Flask detecta as mudanças</li>
+        <li>Clique em <strong>"Aplicar Migrações"</strong> → Banco é atualizado</li>
+        <li>✅ Pronto! Suas tabelas estão atualizadas sem perder dados</li>
+      </ol>
+      <div style="margin-top:12px; padding:10px; background:#fffbeb; border:1px solid #fbd38d; border-radius:6px; font-size:12px; color:#744210;">
+        <i class="fas fa-lightbulb"></i> <strong>Dica:</strong> Sempre crie uma migração ANTES de rodar o sistema após alterar modelos.
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--border:#e2e8f0;--text:#2d3748;--muted:#718096;--radius:10px;--shadow:0 2px 12px rgba(0,0,0,0.06);--tr:0.17s ease;}
+.bd-wrap{padding:20px 24px;background:var(--bg);min-height:100vh;}
+.bd-flash{padding:11px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px;}
+.bd-flash-danger{background:#fff5f5;color:#c53030;border:1px solid #fed7d7;}
+.bd-flash-success{background:#f0fff4;color:#276749;border:1px solid #c6f6d5;}
+.bd-flash-info{background:#eff8ff;color:#2b6cb0;border:1px solid #bee3f8;}
+
+.bd-header{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-radius:var(--radius);margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,0.15);background:linear-gradient(135deg,#16a085,#1abc9c);}
+.bd-header-left{display:flex;align-items:center;gap:14px;color:#fff;}
+.bd-header-icon{width:42px;height:42px;background:rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.bd-header-title{margin:0;font-size:17px;font-weight:700;color:#fff;}
+.bd-breadcrumb{display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:2px;}
+.bd-breadcrumb i{font-size:8px;}
+.bd-env-badge{background:rgba(255,255,255,0.25);color:#fff;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;}
+
+.bd-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--border);overflow:hidden;}
+.bd-card-title{padding:11px 18px;font-size:13px;font-weight:700;color:#555;border-bottom:1px solid var(--border);background:#f9f9f9;display:flex;align-items:center;gap:8px;}
+.bd-card-body{padding:20px;}
+
+.bd-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
+.bd-stat{background:#f9f9f9;padding:14px;border-radius:8px;border:1px solid var(--border);}
+.bd-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+.bd-stat-value{font-size:14px;font-weight:600;color:var(--text);}
+
+.bd-actions-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
+.bd-action-card{background:#fff;border:2px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;transition:all var(--tr);text-decoration:none;}
+.bd-action-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.bd-action-primary{border-color:#3498db;}.bd-action-primary:hover{background:#eff8ff;}
+.bd-action-success{border-color:#27ae60;}.bd-action-success:hover{background:#f0fff4;}
+.bd-action-warning{border-color:#f39c12;}.bd-action-warning:hover{background:#fffbeb;}
+.bd-action-info{border-color:#9b59b6;}.bd-action-info:hover{background:#f5f0ff;}
+
+.bd-action-icon{width:44px;height:44px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.bd-action-primary .bd-action-icon{background:#eff8ff;color:#3498db;}
+.bd-action-success .bd-action-icon{background:#f0fff4;color:#27ae60;}
+.bd-action-warning .bd-action-icon{background:#fffbeb;color:#f39c12;}
+.bd-action-info .bd-action-icon{background:#f5f0ff;color:#9b59b6;}
+
+.bd-action-content{flex:1;}
+.bd-action-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.bd-action-desc{font-size:11.5px;color:var(--muted);}
+.bd-action-btn{background:#f0f0f0;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all var(--tr);}
+.bd-action-btn:hover{background:#e0e0e0;}
+.bd-input-mini{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:5px;font-size:11px;margin-top:6px;}
+
+.bd-migrations-list{display:flex;flex-direction:column;gap:8px;}
+.bd-migration-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f9f9f9;border-radius:6px;font-size:12px;}
+.bd-migration-item i{color:#3498db;}
+.bd-migration-item code{background:#fff;padding:4px 8px;border-radius:4px;border:1px solid var(--border);}
+
+.bd-tutorial{margin:0;padding-left:24px;line-height:1.9;font-size:13px;}
+.bd-tutorial code{background:#f0f0f0;padding:2px 6px;border-radius:4px;font-size:12px;}
+.bd-count-badge{background:#888;color:#fff;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700;margin-left:auto;}
+</style>
+{% endblock %}

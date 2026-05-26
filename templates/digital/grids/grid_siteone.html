@@ -1,0 +1,55 @@
+<!-- templates/digital/grids/grid_siteone.html -->
+<div id="modal-overlay-sit" class="ge-modal-overlay" onclick="fecharModalSit()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-sit" class="ge-modal-icon"></i><span id="modal-titulo-sit">SiteOne</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalSit()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-sit"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-globe"></i><span>SiteOne</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalSit('paginas')" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-file-code ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-file-code ge-card-icon"></i></div>
+            <span class="ge-card-label">Páginas</span><span class="ge-card-desc">Criar e editar páginas</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalSit('dominio')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-globe ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-globe ge-card-icon"></i></div>
+            <span class="ge-card-label">Domínio</span><span class="ge-card-desc">Config. de domínio</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalSit('seo')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-search ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-search ge-card-icon"></i></div>
+            <span class="ge-card-label">SEO</span><span class="ge-card-desc">Otimização de busca</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const modaisSit = {
+    paginas: {titulo:'Páginas',icone:'fas fa-file-code',campos:[['Título *','titulo','text'],['Slug','slug','text'],['Conteúdo','conteudo','text'],['Status','status','text']]},
+    dominio: {titulo:'Domínio',icone:'fas fa-globe',    campos:[['Domínio *','dominio','text'],['SSL','ssl','text'],['DNS','dns','text']]},
+    seo:     {titulo:'SEO',    icone:'fas fa-search',   campos:[['Página *','pagina','text'],['Title Tag','title','text'],['Meta Description','meta','text'],['Keywords','keys','text']]},
+};
+
+function abrirModalSit(tipo) {
+    const m = modaisSit[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-sit').textContent = m.titulo;
+    document.getElementById('modal-icon-sit').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-sit').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalSit()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-sit').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalSit() { document.getElementById('modal-overlay-sit').classList.remove('ativo'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalSit(); });
+</script>

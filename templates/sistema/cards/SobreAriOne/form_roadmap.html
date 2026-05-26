@@ -1,0 +1,230 @@
+{# =============================================================================
+   Caminho do arquivo: templates/sistema/cards/SobreAriOne/form_roadmap.html
+   Nome do Arquivo   : form_roadmap.html
+   Função do Arquivo : Painel de Roadmap - Planejamento e Futuras Entregas AriOne.
+   Estética          : Quiet Luxury (Padrão Ouro AriOne)
+============================================================================= #}
+
+<div class="arione-premium-card-container" 
+     style="overflow: visible !important;">
+
+    <!-- CABEÇALHO DO CARD -->
+    <div class="fe-header" 
+         style="margin-bottom: 30px;">
+        
+        <div class="fe-header-icon-wrap" 
+             style="background: rgba(41, 128, 185, 0.1); 
+                    color: #2980B9;">
+            <i class="fas fa-map-signs fe-header-icon"></i>
+        </div>
+        
+        <div class="fe-header-text">
+            <h2 class="fe-header-title">
+                Roadmap AriOne
+            </h2>
+            <p class="fe-header-subtitle">
+                O Futuro da Soberania em Gestão
+            </p>
+        </div>
+
+    </div>
+
+    <!-- GRID DE ENTREGAS -->
+    <div class="arione-roadmap-content" 
+         style="display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+                gap: 25px;">
+        
+        <!-- COLUNA: ENGENHARIA INTERNA -->
+        <div class="arione-luxury-box" 
+             style="border-top: 4px solid #34495E; 
+                    padding: 20px; 
+                    background: rgba(52, 73, 94, 0.03); 
+                    border-radius: 12px;">
+            
+            <div style="display: flex; 
+                        align-items: center; 
+                        gap: 10px; 
+                        margin-bottom: 15px;">
+                <i class="fas fa-microchip" 
+                   style="color: #34495E; 
+                          font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; 
+                           font-size: 1rem; 
+                           font-weight: 800; 
+                           color: #2c3e50; 
+                           text-transform: uppercase;">
+                    Ciclo de Engenharia
+                </h3>
+            </div>
+
+            <ul style="list-style: none; 
+                       padding: 0; 
+                       margin: 0; 
+                       display: flex; 
+                       flex-direction: column; 
+                       gap: 12px;">
+                
+                <li style="display: flex; 
+                           align-items: flex-start; 
+                           gap: 10px; 
+                           font-size: 0.85rem; 
+                           color: #475569;">
+                    <i class="fas fa-circle-check" 
+                       style="color: #27AE60; 
+                              margin-top: 3px;"></i>
+                    <span>Refinamento da UI Quiet Luxury (Global)</span>
+                </li>
+
+                <li style="display: flex; 
+                           align-items: flex-start; 
+                           gap: 10px; 
+                           font-size: 0.85rem; 
+                           color: #475569;">
+                    <i class="fas fa-clock" 
+                       style="color: #F1C40F; 
+                              margin-top: 3px;"></i>
+                    <span>Estabilização da Matrix DEV (Fase 2)</span>
+                </li>
+
+                <li style="display: flex; 
+                           align-items: flex-start; 
+                           gap: 10px; 
+                           font-size: 0.85rem; 
+                           color: #475569;">
+                    <i class="fas fa-spinner fa-spin" 
+                       style="color: #2980B9; 
+                              margin-top: 3px;"></i>
+                    <span>Novo Módulo de Auditoria Forense</span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <!-- COLUNA: DEMANDAS DE PARCEIROS -->
+        <div class="arione-luxury-box" 
+             style="border-top: 4px solid #2980B9; 
+                    padding: 20px; 
+                    background: rgba(41, 128, 185, 0.03); 
+                    border-radius: 12px;">
+            
+            <div style="display: flex; 
+                        align-items: center; 
+                        gap: 10px; 
+                        margin-bottom: 15px;">
+                <i class="fas fa-handshake" 
+                   style="color: #2980B9; 
+                          font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; 
+                           font-size: 1rem; 
+                           font-weight: 800; 
+                           color: #2c3e50; 
+                           text-transform: uppercase;">
+                    Demandas de Parceiros
+                </h3>
+            </div>
+
+            <ul style="list-style: none; 
+                       padding: 0; 
+                       margin: 0; 
+                       display: flex; 
+                       flex-direction: column; 
+                       gap: 12px;">
+                
+                <li style="display: flex; 
+                           align-items: flex-start; 
+                           gap: 10px; 
+                           font-size: 0.85rem; 
+                           color: #475569;">
+                    <i class="fas fa-shield-halved" 
+                       style="color: #2980B9; 
+                              margin-top: 3px;"></i>
+                    <span>Módulo de Licenciamento & Governança de Tenants</span>
+                </li>
+
+                <li style="display: flex; 
+                           align-items: flex-start; 
+                           gap: 10px; 
+                           font-size: 0.85rem; 
+                           color: #475569;">
+                    <i class="fas fa-cloud-arrow-up" 
+                       style="color: #2980B9; 
+                              margin-top: 3px;"></i>
+                    <span>API de Integração com Marketplaces Externos</span>
+                </li>
+
+                <li style="display: flex; 
+                           align-items: flex-start; 
+                           gap: 10px; 
+                           font-size: 0.85rem; 
+                           color: #475569;">
+                    <i class="fas fa-users-gear" 
+                       style="color: #2980B9; 
+                              margin-top: 3px;"></i>
+                    <span>Customização Dinâmica de Identidade Visual per Tenant</span>
+                </li>
+
+            </ul>
+
+        </div>
+
+        <!-- COLUNA: VISÃO DE FUTURO -->
+        <div class="arione-luxury-box" 
+             style="border-top: 4px solid #7A255F; 
+                    padding: 20px; 
+                    background: rgba(122, 37, 95, 0.03); 
+                    border-radius: 12px;">
+            
+            <div style="display: flex; 
+                        align-items: center; 
+                        gap: 10px; 
+                        margin-bottom: 15px;">
+                <i class="fas fa-brain" 
+                   style="color: #7A255F; 
+                          font-size: 1.2rem;"></i>
+                <h3 style="margin: 0; 
+                           font-size: 1rem; 
+                           font-weight: 800; 
+                           color: #2c3e50; 
+                           text-transform: uppercase;">
+                    Futuras Demandas
+                </h3>
+            </div>
+
+            <p style="font-size: 0.85rem; 
+                      color: #64748b; 
+                      line-height: 1.6; 
+                      margin: 0;">
+                Integração Nativa de IA para Análise Preditiva de Fluxo de Caixa e Automação de Decisões Estratégicas via Voz.
+            </p>
+
+            <div style="margin-top: 20px; 
+                        padding: 10px; 
+                        border: 1px dashed #7A255F; 
+                        border-radius: 8px; 
+                        text-align: center; 
+                        font-size: 0.75rem; 
+                        color: #7A255F; 
+                        font-weight: 700;">
+                AGUARDANDO INPUT DE PARCEIROS
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RODAPÉ E AÇÕES -->
+    <div style="margin-top: 40px; 
+                padding-top: 20px; 
+                border-top: 1px solid #f1f5f9; 
+                text-align: right;">
+        <button type="button" 
+                onclick="window.fecharModalGlobal()" 
+                class="ge-btn-voltar" 
+                style="padding: 10px 25px;">
+            Fechar
+        </button>
+    </div>
+
+</div>

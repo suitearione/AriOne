@@ -1,0 +1,63 @@
+<!-- templates/digital/grids/grid_linkone.html -->
+<div id="modal-overlay-lnk" class="ge-modal-overlay" onclick="fecharModalLnk()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-lnk" class="ge-modal-icon"></i><span id="modal-titulo-lnk">LinkOne</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalLnk()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-lnk"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-link"></i><span>LinkOne</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalLnk('pagina')" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-link ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-link ge-card-icon"></i></div>
+            <span class="ge-card-label">Minha Página</span><span class="ge-card-desc">Página de links</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalLnk('links')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-plus-circle ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-plus-circle ge-card-icon"></i></div>
+            <span class="ge-card-label">Gerenciar Links</span><span class="ge-card-desc">Adicionar e ordenar</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalLnk('aparencia')" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-paint-brush ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-paint-brush ge-card-icon"></i></div>
+            <span class="ge-card-label">Aparência</span><span class="ge-card-desc">Tema e visual</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalLnk('estatisticas')" style="--card-cor:#16A085;--card-cor-bg:rgba(22,160,133,0.10);">
+            <i class="fas fa-chart-bar ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-chart-bar ge-card-icon"></i></div>
+            <span class="ge-card-label">Estatísticas</span><span class="ge-card-desc">Cliques e acessos</span>
+        </div>
+
+
+    </div>
+</div>
+
+<script>
+const modaisLnk = {
+    pagina:      {titulo:'Minha Página LinkOne', icone:'fas fa-link',        campos:[['Título da Página *','titulo','text'],['Username *','user','text'],['Descrição','desc','text'],['Cor de Fundo','cor','text']]},
+    links:       {titulo:'Gerenciar Links',      icone:'fas fa-plus-circle', campos:[['Título do Link *','titulo','text'],['URL *','url','text'],['Ícone','icone','text'],['Ordem','ordem','number']]},
+    aparencia:   {titulo:'Aparência',            icone:'fas fa-paint-brush', campos:[['Tema','tema','text'],['Cor Principal','cor','text'],['Fonte','fonte','text'],['Logo URL','logo','text']]},
+    estatisticas:{titulo:'Estatísticas',         icone:'fas fa-chart-bar',   campos:[['Período *','periodo','text'],['Link','link','text']]},
+};
+
+function abrirModalLnk(tipo) {
+    const m = modaisLnk[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-lnk').textContent = m.titulo;
+    document.getElementById('modal-icon-lnk').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-lnk').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalLnk()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-lnk').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalLnk() { document.getElementById('modal-overlay-lnk').classList.remove('ativo'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalLnk(); });
+</script>

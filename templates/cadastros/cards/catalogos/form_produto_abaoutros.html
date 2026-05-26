@@ -1,0 +1,523 @@
+{# =============================================================================
+Caminho : templates/cadastros/cards/catalogos/form_produto_abaoutros.html
+Função  : Módulo de Abas Complementares (Preços, Fiscal, PDV, Imagens)
+============================================================================= #}
+
+{# Valores & Margens #}
+<div class="fp-tab-panel" id="tab-precos">
+  
+  {# 📊 DASHBOARD DE RENTABILIDADE (KPIs) #}
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px;">
+    <div class="fp-kpi-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #C0392B; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Custo Real (Base)</div>
+        <div id="kpi-custo-real" style="font-size: 18px; font-weight: 900; color: #C0392B;">R$ 0,00</div>
+        <div style="font-size: 9px; color: #94a3b8; margin-top: 4px;" id="kpi-custo-origem">Origem: Revenda</div>
+    </div>
+    <div class="fp-kpi-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #0072CE; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Markup Aplicado</div>
+        <div id="kpi-markup" style="font-size: 18px; font-weight: 900; color: #0072CE;">0.00x</div>
+        <div style="font-size: 9px; color: #94a3b8; margin-top: 4px;">Fator multiplicador</div>
+    </div>
+    <div class="fp-kpi-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #27AE60; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Margem Líquida Est.</div>
+        <div id="kpi-margem-liq" style="font-size: 18px; font-weight: 900; color: #27AE60;">0,00%</div>
+        <div style="font-size: 9px; color: #94a3b8; margin-top: 4px;">Após impostos e taxas</div>
+    </div>
+    <div class="fp-kpi-card" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #E67E22; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Lucro Líquido Unit.</div>
+        <div id="kpi-lucro-rs" style="font-size: 18px; font-weight: 900; color: #E67E22;">R$ 0,00</div>
+        <div style="font-size: 9px; color: #94a3b8; margin-top: 4px;">Sob o preço de varejo</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1.2fr 1.8fr; gap:20px;">
+    
+    {# ── COLUNA 1: CUSTOS E ENTRADA ── #}
+    <div class="fp-addr-card" style="--addr-cor:#C0392B; background: #fdf2f2;">
+        <div class="fp-addr-title" style="margin-bottom:15px; display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-arrow-down" style="color:#C0392B;"></i> 1. Custo de Entrada
+        </div>
+        
+        <div id="box-custo-resale">
+            <div class="fp-group">
+                <label class="fp-label">Custo de Aquisição (Nota)
+                    {{ comp.info_icon("Valor unitário pago ao fornecedor na última compra.") }}
+                </label>
+                <input class="fp-input fp-mask-money fp-track" type="text" name="preco_custo" id="preco_custo" 
+                       value="{{ '%.2f'|format(produto.preco_custo|float)|replace('.',',') if produto and produto.preco_custo else '0,00' }}" 
+                       style="font-size:18px; font-weight:800; color:#C0392B;" oninput="recalcPrecosCore()">
+            </div>
+            
+            <div class="fp-row" style="margin-top:10px;">
+                <div class="fp-group fp-flex-1">
+                    <label class="fp-label">IPI/ST (%)</label>
+                    <input class="fp-input" type="number" step="0.01" name="compra_ipi" id="compra_ipi" value="0" oninput="recalcPrecosCore()">
+                </div>
+                <div class="fp-group fp-flex-1">
+                    <label class="fp-label">Frete Compra (%)</label>
+                    <input class="fp-input" type="number" step="0.01" name="compra_frete" id="compra_frete" value="0" oninput="recalcPrecosCore()">
+                </div>
+            </div>
+        </div>
+
+        <div id="box-custo-industry" style="display:none; padding:15px; background:rgba(192, 57, 43, 0.05); border:1px dashed #C0392B; border-radius:8px;">
+            <div style="font-size:10px; font-weight:800; color:#C0392B; text-transform:uppercase; margin-bottom:5px;">Custo de Fabricação (Auto)</div>
+            <div id="custo-fab-display" style="font-size:22px; font-weight:900; color:#C0392B;">R$ 0,00</div>
+            <p style="font-size:9px; color:#666; margin-top:8px;">Este valor é calculado automaticamente através da aba <b>Composição</b>.</p>
+        </div>
+        
+        <div style="margin-top:20px; padding-top:15px; border-top:1px solid rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:800; color:#475569;">CUSTO TOTAL CALCULADO</span>
+                <span id="custo-total-final" style="font-size:18px; font-weight:900; color:#1e293b;">R$ 0,00</span>
+            </div>
+        </div>
+    </div>
+
+    {# ── COLUNA 2: FORMAÇÃO E PREÇOS DE SAÍDA ── #}
+    <div class="fp-addr-card" style="--addr-cor:#7A255F;">
+        <div class="fp-addr-title" style="margin-bottom:15px; display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-calculator" style="color:#7A255F;"></i> 2. Formação de Preços & Canais
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px; padding:15px; background:#f8fafc; border-radius:12px;">
+            <div class="fp-group">
+                <label class="fp-label">Impostos Venda (%)</label>
+                <input class="fp-input" type="number" step="0.01" id="venda_impostos" value="0" oninput="recalcPrecosCore()">
+            </div>
+            <div class="fp-group">
+                <label class="fp-label">Comissão (%)</label>
+                <input class="fp-input" type="number" step="0.01" id="venda_comissao" value="0" oninput="recalcPrecosCore()">
+            </div>
+            <div class="fp-group">
+                <label class="fp-label">Outras Despesas (%)</label>
+                <input class="fp-input" type="number" step="0.01" id="venda_outros" value="0" oninput="recalcPrecosCore()">
+            </div>
+            <div class="fp-group">
+                <label class="fp-label">Markup Alvo</label>
+                <input class="fp-input" type="number" step="0.01" id="markup_alvo" value="2.5" oninput="recalcPrecosCore()">
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+             <!-- VAREJO -->
+             <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; border-top:4px solid #0072CE;">
+                <label class="fp-label" style="font-size:9px; color:#0072CE;">PREÇO VAREJO</label>
+                <input class="fp-input fp-mask-money fp-track" type="text" name="preco_varejo" id="preco_varejo" 
+                       value="{{ '%.2f'|format(produto.preco_varejo|float)|replace('.',',') if produto and produto.preco_varejo else '0,00' }}" 
+                       style="font-size:16px; font-weight:900; color:#0072CE; text-align:right;" oninput="recalcPrecosCore()">
+                <div style="margin-top:8px; display:flex; justify-content:space-between; font-size:10px;">
+                    <span style="color:#94a3b8;">LUCRO LÍQ.</span>
+                    <b id="lucro-varejo" style="color:#27AE60;">R$ 0,00</b>
+                </div>
+             </div>
+
+             <!-- ATACADO -->
+             <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; border-top:4px solid #27AE60;">
+                <label class="fp-label" style="font-size:9px; color:#27AE60;">PREÇO ATACADO</label>
+                <input class="fp-input fp-mask-money fp-track" type="text" name="preco_atacado" id="preco_atacado" 
+                       value="{{ '%.2f'|format(produto.preco_atacado|float)|replace('.',',') if produto and produto.preco_atacado else '0,00' }}" 
+                       style="font-size:16px; font-weight:900; color:#27AE60; text-align:right;" oninput="recalcPrecosCore()">
+                <div style="margin-top:8px; display:flex; justify-content:space-between; font-size:10px;">
+                    <span style="color:#94a3b8;">LUCRO LÍQ.</span>
+                    <b id="lucro-atacado" style="color:#27AE60;">R$ 0,00</b>
+                </div>
+             </div>
+
+             <!-- DISTRIBUIDOR -->
+             <div style="padding:10px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; border-top:4px solid #E67E22;">
+                <label class="fp-label" style="font-size:9px; color:#E67E22;">DISTRIBUIDOR</label>
+                <input class="fp-input fp-mask-money fp-track" type="text" name="preco_distribuidor" id="preco_distribuidor" 
+                       value="{{ '%.2f'|format(produto.preco_distribuidor|float)|replace('.',',') if produto and produto.preco_distribuidor else '0,00' }}" 
+                       style="font-size:16px; font-weight:900; color:#E67E22; text-align:right;" oninput="recalcPrecosCore()">
+                <div style="margin-top:8px; display:flex; justify-content:space-between; font-size:10px;">
+                    <span style="color:#94a3b8;">LUCRO LÍQ.</span>
+                    <b id="lucro-dist" style="color:#27AE60;">R$ 0,00</b>
+                </div>
+             </div>
+        </div>
+
+        <div style="margin-top:15px; padding:10px; background:rgba(0,114,206,0.05); border-radius:8px; border:1px dashed #0072CE;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:10px; font-weight:800; color:#0072CE;">SUGESTÃO DE PREÇO (MARKUP ALVO)</span>
+                <span id="preco-sugerido-display" style="font-size:14px; font-weight:900; color:#1e293b;">R$ 0,00</span>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ════ FUNÇÕES DE CÁLCULO ════
+  function parseMoney(v) {
+      if (!v) return 0;
+      if (typeof v === 'number') return v;
+      return parseFloat(v.toString().replace(/\./g, '').replace(',', '.')) || 0;
+  }
+
+  function formatMoney(val) {
+      return 'R$ ' + val.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+  }
+
+  // ════ FUNÇÕES DE IMAGEM ════
+  function previewImagens(input) {
+      const preview = document.getElementById('preview-imagens');
+      if (!preview) return;
+      if (input.files) {
+          const currentCount = preview.children.length;
+          [...input.files].forEach((file, index) => {
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                  const div = document.createElement('div');
+                  div.style.cssText = 'width:130px; height:130px; border-radius:12px; border:1px solid #eee; overflow:hidden; position:relative;';
+                  div.innerHTML = `
+                      <img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">
+                      <div style="position:absolute; top:8px; left:8px; background:rgba(122,37,95,0.9); color:#fff; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.2);">Imagem ${currentCount + index + 1}</div>
+                      <button type="button" onclick="this.parentElement.remove(); renumerarImagens();" style="position:absolute; top:8px; right:8px; background:rgba(231,76,60,0.9); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:12px; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">✕</button>
+                  `;
+                  preview.appendChild(div);
+
+                  // 🛡️ Atualiza a foto principal no cabeçalho com a primeira imagem
+                  if (index === 0 && currentCount === 0) {
+                      const heroPreview = document.getElementById('hero-photo-preview');
+                      if (heroPreview) {
+                          heroPreview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;" id="hero-img">`;
+                      }
+                  }
+              }
+              reader.readAsDataURL(file);
+          });
+      }
+  }
+
+  function renumerarImagens() {
+      const preview = document.getElementById('preview-imagens');
+      if (!preview) return;
+      const badges = preview.querySelectorAll('div[style*="background:rgba(122,37,95,0.9)"]');
+      badges.forEach((badge, index) => {
+          badge.textContent = `Imagem ${index + 1}`;
+      });
+  }
+
+  function recalcPrecosCore() {
+      const isInd = document.getElementById('chk-has-composicao')?.checked;
+
+      // 1. Obter Custo Base
+      let custoBase = 0;
+      let contextoLabel = 'GERAL';
+
+      if (isInd) {
+          const isGrade = document.querySelector('[name="tipo_estoque"]:checked')?.value === 'grade';
+
+          if (isGrade && typeof window.composicaoData !== 'undefined') {
+              // Para produtos com Grade: calcula custo médio ponderado
+              let custoTotal = 0;
+              let count = 0;
+
+              for (const key in window.composicaoData) {
+                  const compData = window.composicaoData[key];
+                  if (compData && compData.length > 0) {
+                      let custoContexto = 0;
+                      compData.forEach(item => {
+                          const itemCusto = parseFloat(item.custo) || 0;
+                          const itemQtd = parseFloat(item.qtd) || 0;
+                          custoContexto += itemCusto * itemQtd;
+                      });
+                      custoTotal += custoContexto;
+                      count++;
+                  }
+              }
+
+              if (count > 0) {
+                  custoBase = custoTotal / count;
+                  contextoLabel = 'MÉDIA GRADE';
+              } else {
+                  const totalStr = document.getElementById('sum-total-geral')?.textContent || '0,00';
+                  custoBase = parseMoney(totalStr);
+              }
+          } else {
+              const contextLabel = document.getElementById('comp-context-label');
+              if (contextLabel && contextLabel.textContent) {
+                  contextoLabel = contextLabel.textContent.trim();
+              }
+
+              const totalStr = document.getElementById('sum-total-geral')?.textContent || '0,00';
+              custoBase = parseMoney(totalStr);
+          }
+
+          if(document.getElementById('custo-fab-display')) {
+              document.getElementById('custo-fab-display').textContent = 'R$ ' + custoBase.toFixed(2).replace('.', ',');
+          }
+      } else {
+          custoBase = parseMoney(document.getElementById('preco_custo')?.value || '0,00');
+      }
+
+      // 2. Adicionais de Compra (IPI/Frete)
+      const ipiP = parseFloat(document.getElementById('compra_ipi')?.value || 0) / 100;
+      const freteP = parseFloat(document.getElementById('compra_frete')?.value || 0) / 100;
+      const custoEntrada = custoBase * (1 + ipiP + freteP);
+
+      // Atualiza KPI e Display de Custo
+      if(document.getElementById('kpi-custo-real')) document.getElementById('kpi-custo-real').textContent = formatMoney(custoEntrada);
+      if(document.getElementById('custo-total-final')) document.getElementById('custo-total-final').textContent = formatMoney(custoEntrada);
+
+      // Atualiza origem do custo no KPI
+      if(document.getElementById('kpi-custo-origem')) {
+          if (isInd) {
+              const isGrade = document.querySelector('[name="tipo_estoque"]:checked')?.value === 'grade';
+              if (isGrade && contextoLabel === 'MÉDIA GRADE') {
+                  document.getElementById('kpi-custo-origem').textContent = 'Origem: Composição (Média Grade)';
+              } else if (isGrade && contextoLabel !== 'GERAL') {
+                  document.getElementById('kpi-custo-origem').textContent = 'Origem: Composição (' + contextoLabel + ')';
+              } else {
+                  document.getElementById('kpi-custo-origem').textContent = 'Origem: Composição';
+              }
+          } else {
+              document.getElementById('kpi-custo-origem').textContent = 'Origem: Revenda';
+          }
+      }
+
+      // 3. Impostos e Taxas de Venda
+      const impV = parseFloat(document.getElementById('venda_impostos')?.value || 0) / 100;
+      const comV = parseFloat(document.getElementById('venda_comissao')?.value || 0) / 100;
+      const outV = parseFloat(document.getElementById('venda_outros')?.value || 0) / 100;
+      const taxasTotais = impV + comV + outV;
+
+      // 4. Markup Alvo e Sugestão
+      const mkAlvo = parseFloat(document.getElementById('markup_alvo')?.value || 1);
+      const precoSug = custoEntrada * mkAlvo;
+      if(document.getElementById('preco-sugerido-display')) document.getElementById('preco-sugerido-display').textContent = formatMoney(precoSug);
+
+      // 5. Analisar Canais (Varejo, Atacado, Dist)
+      const ids = ['varejo', 'atacado', 'dist'];
+      let varejoPrice = 0;
+
+      ids.forEach(id => {
+          const campo = document.getElementById('preco_' + id);
+          if (!campo) return;
+
+          const vVenda = parseMoney(campo.value);
+          if (id === 'varejo') varejoPrice = vVenda;
+
+          if (vVenda > 0) {
+              const lucroLiq = vVenda * (1 - taxasTotais) - custoEntrada;
+              const margemLiq = (lucroLiq / vVenda) * 100;
+              const mkReal = vVenda / custoEntrada;
+
+              const elLucro = document.getElementById('lucro-' + id);
+              if (elLucro) {
+                  elLucro.textContent = formatMoney(lucroLiq);
+                  elLucro.style.color = lucroLiq > 0 ? '#27AE60' : '#C0392B';
+              }
+          }
+      });
+
+      // 6. Atualizar KPIs principais
+      const precoBaseKPI = varejoPrice > 0 ? varejoPrice : precoSug;
+      const lucroLiqKPI = precoBaseKPI * (1 - taxasTotais) - custoEntrada;
+      const margemLiqKPI = (lucroLiqKPI / precoBaseKPI) * 100;
+      const mkRealKPI = precoBaseKPI / custoEntrada;
+
+      if(document.getElementById('kpi-markup')) document.getElementById('kpi-markup').textContent = mkRealKPI.toFixed(2) + 'x';
+      if(document.getElementById('kpi-margem-liq')) {
+          const elMg = document.getElementById('kpi-margem-liq');
+          elMg.textContent = margemLiqKPI.toFixed(2).replace('.',',') + '%';
+          elMg.style.color = margemLiqKPI > 25 ? '#27AE60' : (margemLiqKPI > 10 ? '#E67E22' : '#C0392B');
+      }
+      if(document.getElementById('kpi-lucro-rs')) document.getElementById('kpi-lucro-rs').textContent = formatMoney(lucroLiqKPI);
+
+      // 🛡️ Atualiza Margem Bruta Composição na aba Composição
+      if(typeof calcCustoEstimado === 'function') calcCustoEstimado();
+
+      // Atualiza Linha do Tempo de Preços & Custos
+      const elTimelineCusto = document.getElementById('timeline-custo-atual');
+      const elTimelineVarejo = document.getElementById('timeline-varejo-atual');
+      const elTimelineAtacado = document.getElementById('timeline-atacado-atual');
+      const elTimelineMk = document.getElementById('timeline-markup-atual');
+
+      if(elTimelineCusto) elTimelineCusto.textContent = formatMoney(custoEntrada);
+      if(elTimelineVarejo) elTimelineVarejo.textContent = formatMoney(varejoPrice);
+      if(elTimelineAtacado) {
+          const atacadoPrice = parseMoney(document.getElementById('preco_atacado')?.value || '0,00');
+          elTimelineAtacado.textContent = formatMoney(atacadoPrice);
+      }
+      if(elTimelineMk) elTimelineMk.textContent = mkRealKPI.toFixed(2) + 'x';
+  }
+
+  // Inicialização
+  document.addEventListener('DOMContentLoaded', () => {
+      recalcPrecosCore();
+  });
+</script>
+
+{# PDV #}
+<div class="fp-tab-panel" id="tab-pdv">
+  <div class="fp-addr-card" style="--addr-cor:#7A255F;">
+    <div class="fp-addr-title"><i class="fas fa-cash-register"></i> Regras Comerciais</div>
+    <div class="fp-row">
+      <div class="fp-group fp-flex-1">
+          <label class="fp-label">Permitir Desconto no PDV?</label>
+          <select class="fp-input" name="permite_desconto">
+              <option value="1" {% if produto and produto.permite_desconto %}selected{% endif %}>Sim, permitir</option>
+              <option value="0" {% if produto and not produto.permite_desconto %}selected{% endif %}>Não, preço fixo</option>
+          </select>
+      </div>
+      <div class="fp-group fp-flex-1">
+          <label class="fp-label">Limite de Desconto (%)
+            {{ comp.info_icon("Define a porcentagem máxima de desconto que o vendedor pode aplicar no PDV.") }}
+          </label>
+          <input class="fp-input" type="number" name="desconto_maximo" value="{{ produto.desconto_maximo if produto else '0' }}" placeholder="0,00">
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Fiscal #}
+<div class="fp-tab-panel" id="tab-fiscal">
+  <div class="fp-addr-card" style="--addr-cor:#7A255F; margin-bottom: 16px;">
+    <div class="fp-addr-title">Classificação Contábil (SPED)</div>
+    <div class="fp-group">
+      <label class="fp-label">Tipo de Item (SPED)
+        {{ comp.info_icon("Classificação fiscal exigida pelo SPED para identificar a natureza do produto.") }}
+      </label>
+      <select class="fp-input fp-track" name="tipo_item" {% if produto and not produto.ativo %}disabled{% endif %}>
+        <option value="00" {% if produto and produto.tipo_item == '00' %}selected{% endif %}>00 - Mercadoria para Revenda</option>
+        <option value="01" {% if produto and produto.tipo_item == '01' %}selected{% endif %}>01 - Matéria-Prima</option>
+        <option value="02" {% if produto and produto.tipo_item == '02' %}selected{% endif %}>02 - Embalagem</option>
+        <option value="03" {% if produto and produto.tipo_item == '03' %}selected{% endif %}>03 - Produto em Processo</option>
+        <option value="04" {% if produto and produto.tipo_item == '04' %}selected{% endif %}>04 - Produto Acabado</option>
+        <option value="05" {% if produto and produto.tipo_item == '05' %}selected{% endif %}>05 - Subproduto</option>
+        <option value="06" {% if produto and produto.tipo_item == '06' %}selected{% endif %}>06 - Produto Intermediário</option>
+        <option value="07" {% if produto and produto.tipo_item == '07' %}selected{% endif %}>07 - Material de Uso e Consumo</option>
+        <option value="08" {% if produto and produto.tipo_item == '08' %}selected{% endif %}>08 - Ativo Imobilizado</option>
+        <option value="09" {% if produto and produto.tipo_item == '09' %}selected{% endif %}>09 - Serviços</option>
+        <option value="10" {% if produto and produto.tipo_item == '10' %}selected{% endif %}>10 - Outros Insumos</option>
+      </select>
+    </div>
+  </div>
+  <div class="fp-addr-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+    <div class="fp-addr-card" style="--addr-cor:#E67E22;">
+      <div class="fp-addr-title">Classificação Fiscal (NCM)</div>
+      <div class="fp-row">
+        <div class="fp-group fp-flex-1">
+          <label class="fp-label">NCM <span class="fp-req">*</span>
+            {{ comp.info_icon("Nomenclatura Comum do Mercosul. Código de 8 dígitos essencial para a tributação.") }}
+          </label>
+          <input class="fp-input fp-track" name="ncm" value="{{ produto.ncm if produto else '' }}" placeholder="Ex: 6109.10.00">
+        </div>
+        <div class="fp-group fp-flex-1">
+          <label class="fp-label">CEST
+            {{ comp.info_icon("Código Especificador da Substituição Tributária. Necessário para itens com ST.") }}
+          </label>
+          <input class="fp-input" name="cest" value="{{ produto.cest if produto else '' }}" placeholder="Opcional">
+        </div>
+      </div>
+    </div>
+    <div class="fp-addr-card" style="--addr-cor:#E67E22;">
+      <div class="fp-addr-title">Tributação Estadual</div>
+      <div class="fp-row">
+        <div class="fp-group fp-flex-1"><label class="fp-label">CST / CSOSN</label><input class="fp-input fp-track" name="cst" value="{{ produto.cst if produto else '' }}" placeholder="Ex: 101, 500..."></div>
+        <div class="fp-group fp-flex-1"><label class="fp-label">Origem</label>
+          <select class="fp-input" name="origem">
+              <option value="0" {% if produto and produto.origem == '0' %}selected{% endif %}>0 - Nacional</option>
+              <option value="1" {% if produto and produto.origem == '1' %}selected{% endif %}>1 - Estrangeira - Imp. Direta</option>
+              <option value="2" {% if produto and produto.origem == '2' %}selected{% endif %}>2 - Estrangeira - Imp. Indireta</option>
+              <option value="3" {% if produto and produto.origem == '3' %}selected{% endif %}>3 - Nacional - Conteúdo Importado > 40%</option>
+              <option value="4" {% if produto and produto.origem == '4' %}selected{% endif %}>4 - Nacional - Processos Produtivos Básicos</option>
+              <option value="5" {% if produto and produto.origem == '5' %}selected{% endif %}>5 - Nacional - Conteúdo Importado ≤ 40%</option>
+              <option value="6" {% if produto and produto.origem == '6' %}selected{% endif %}>6 - Estrangeira - Adquirida no Mercado Interno</option>
+              <option value="7" {% if produto and produto.origem == '7' %}selected{% endif %}>7 - Nacional - Mercosul</option>
+              <option value="8" {% if produto and produto.origem == '8' %}selected{% endif %}>8 - Nacional - Outros</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Imagens #}
+<div class="fp-tab-panel" id="tab-imagens">
+  <div style="border: 2px dashed var(--border); border-radius:16px; padding:50px; text-align:center; background:#fcfcfc;">
+    <i class="fas fa-images" style="font-size:40px; color:var(--pri); opacity:.2; margin-bottom:15px;"></i>
+    <div style="font-weight:800; color:#555; margin-bottom:20px;">SELECIONE AS FOTOS DO PRODUTO</div>
+    <button type="button" class="fp-btn" onclick="document.getElementById('input-imagens').click()" style="background:var(--pri); color:#fff; padding:12px 40px; box-shadow:0 4px 15px rgba(122,37,95,0.2);">ESCOLHER ARQUIVOS</button>
+    <input type="file" name="imagens" id="input-imagens" multiple style="display:none;" onchange="previewImagens(this)">
+  </div>
+  <div id="preview-imagens" style="margin-top:25px; display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:15px;"></div>
+</div>
+
+{# Avançado #}
+<div class="fp-tab-panel" id="tab-avancado">
+    <div style="display:grid; grid-template-columns: 1fr 2fr; gap:20px;">
+        {# Bloco de Configurações #}
+        <div>
+            <div class="fp-addr-card" style="--addr-cor:#64748b; margin-bottom: 20px;">
+                <div class="fp-addr-title"><i class="fas fa-sliders-h"></i> Configurações Avançadas</div>
+                <div class="fp-group" style="margin-top:15px;">
+                    <label class="fp-label">Código de Integração (ERP/API)</label>
+                    <input class="fp-input" type="text" name="id_externo" value="{{ produto.id_externo if produto else '' }}" placeholder="ID do sistema legado">
+                </div>
+                <div class="fp-group">
+                    <label class="fp-label">Nível de Prioridade</label>
+                    <select class="fp-input" name="prioridade">
+                        <option value="1">Padrão</option>
+                        <option value="2">Alta (Destaque)</option>
+                        <option value="3">Crítica (Urgente)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="fp-addr-card" style="--addr-cor:#e53e3e;">
+                <div class="fp-addr-title"><i class="fas fa-trash-alt"></i> Zona de Perigo</div>
+                <p style="font-size:11px; color:#666; margin: 10px 0;">A exclusão de um produto é permanente e pode afetar históricos de vendas.</p>
+                <button type="button" class="fp-btn-ghost-dark" style="color:#e53e3e; border-color:#e53e3e; width:100%;" onclick="arioneConfirm('Deseja realmente excluir este produto?', () => { /* logica de exclusão */ })">Excluir Produto Permanentemente</button>
+            </div>
+        </div>
+
+        {# 🕒 LINHA DO TEMPO DE VALORES #}
+        <div class="fp-addr-card" style="--addr-cor:#7A255F;">
+            <div class="fp-addr-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fas fa-history"></i> Linha do Tempo de Preços & Custos</span>
+                <span style="font-size:9px; background:rgba(122,37,95,0.1); padding:2px 8px; border-radius:4px; color:var(--pri);">AUDITORIA ATIVA</span>
+            </div>
+
+            <div id="timeline-valores" style="margin-top:20px; position:relative; padding-left:30px;">
+                {# Linha Vertical #}
+                <div style="position:absolute; left:14px; top:0; bottom:0; width:2px; background:#f1f5f9;"></div>
+
+                {# Item de Exemplo (Estado Atual) #}
+                <div style="position:relative; margin-bottom:25px;">
+                    <div style="position:absolute; left:-21px; top:5px; width:12px; height:12px; border-radius:50%; background:var(--pri); border:3px solid #fff; box-shadow:0 0 0 2px rgba(122,37,95,0.2);"></div>
+                    <div style="font-size:10px; font-weight:800; color:#64748b; margin-bottom:4px;">ESTADO ATUAL</div>
+                    <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
+                        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                            <div>
+                                <small style="display:block; font-size:8px; color:#94a3b8; text-transform:uppercase;">Custo</small>
+                                <b id="timeline-custo-atual" style="color:#C0392B; font-size:14px;">R$ {{ '%.2f'|format(produto.preco_custo|float)|replace('.',',') if produto and produto.preco_custo else '0,00' }}</b>
+                            </div>
+                            <div>
+                                <small style="display:block; font-size:8px; color:#94a3b8; text-transform:uppercase;">Preço Varejo</small>
+                                <b id="timeline-varejo-atual" style="color:#0072CE; font-size:14px;">R$ {{ '%.2f'|format(produto.preco_varejo|float)|replace('.',',') if produto and produto.preco_varejo else '0,00' }}</b>
+                            </div>
+                            <div>
+                                <small style="display:block; font-size:8px; color:#94a3b8; text-transform:uppercase;">Preço Atacado</small>
+                                <b id="timeline-atacado-atual" style="color:#27AE60; font-size:14px;">R$ {{ '%.2f'|format(produto.preco_atacado|float)|replace('.',',') if produto and produto.preco_atacado else '0,00' }}</b>
+                            </div>
+                            <div style="margin-left:auto; text-align:right;">
+                                <small style="display:block; font-size:8px; color:#94a3b8; text-transform:uppercase;">Markup</small>
+                                <b id="timeline-markup-atual" style="color:#27AE60; font-size:14px;">—</b>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# Placeholder para Histórico Vazio #}
+                <div style="padding:20px; text-align:center; color:#cbd5e1; font-style:italic; font-size:12px;">
+                    <i class="fas fa-info-circle"></i> Histórico de alterações será registrado automaticamente a cada salvamento.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

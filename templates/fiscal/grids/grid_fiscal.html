@@ -1,0 +1,55 @@
+<!-- templates/fiscal/grids/grid_fiscal.html -->
+<div id="modal-overlay-fsc" class="ge-modal-overlay" onclick="fecharModalFsc()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-fsc" class="ge-modal-icon"></i><span id="modal-titulo-fsc">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalFsc()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-fsc"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-gavel"></i><span>Fiscal</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalFsc('matriz_fiscal')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-table ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-table ge-card-icon"></i></div>
+            <span class="ge-card-label">Matriz Fiscal</span><span class="ge-card-desc">Regras tributárias</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalFsc('natureza')" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-file-contract ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-file-contract ge-card-icon"></i></div>
+            <span class="ge-card-label">Natureza de Operação</span><span class="ge-card-desc">Tipos de operação fiscal</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalFsc('cfop')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-hashtag ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-hashtag ge-card-icon"></i></div>
+            <span class="ge-card-label">CFOP</span><span class="ge-card-desc">Código fiscal de operações</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const modaisFsc = {
+    matriz_fiscal: {titulo:'Matriz Fiscal',         icone:'fas fa-table',         campos:[['Origem *','origem','text'],['Destino *','destino','text'],['CST','cst','text'],['CFOP','cfop','text'],['Alíquota ICMS (%)','icms','number'],['Alíquota IPI (%)','ipi','number']]},
+    natureza:      {titulo:'Natureza de Operação',  icone:'fas fa-file-contract', campos:[['Código *','cod','text'],['Descrição *','desc','text'],['Tipo','tipo','text'],['CFOP Padrão','cfop','text']]},
+    cfop:          {titulo:'CFOP',                  icone:'fas fa-hashtag',       campos:[['Código *','cod','text'],['Descrição *','desc','text'],['Tipo Operação','tipo','text'],['Âmbito','ambito','text']]},
+};
+
+function abrirModalFsc(tipo) {
+    const m = modaisFsc[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-fsc').textContent = m.titulo;
+    document.getElementById('modal-icon-fsc').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-fsc').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalFsc()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-fsc').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalFsc() { document.getElementById('modal-overlay-fsc').classList.remove('ativo'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalFsc(); });
+</script>

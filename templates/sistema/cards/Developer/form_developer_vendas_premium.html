@@ -1,0 +1,162 @@
+{# =============================================================================
+   Caminho  : templates/sistema/cards/Developer/form_developer_vendas_premium.html
+   Função   : Protótipo de Homologação de Arquitetura (VENDAS PREMIUM)
+   Padrão   : Opção 2 (Cabeçalho Marca + Detalhes Módulo)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<style>
+    /* DNA DA OPÇÃO 2: CABEÇALHO ROXO + ACENTOS COLORIDOS */
+    :root {
+        --cor-modulo: #2980B9; /* Azul Oceano Premium (Operações) */
+        --cor-marca: #7A255F;  /* Roxo AriOne */
+    }
+
+    /* 1. Integração do Cabeçalho com o Formulário */
+    .fe-wrap.premium-mode {
+        background: #f4f6f9;
+        padding: 0 24px 40px 24px;
+        position: relative;
+    }
+
+    /* 2. Borda de Conexão (O "Sotaque" do Módulo) */
+    .premium-accent-bar {
+        height: 6px;
+        background: var(--cor-modulo);
+        margin: -20px -24px 20px -24px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 66px; /* Logo abaixo do cabeçalho fixo */
+        z-index: 999;
+    }
+
+    /* 3. Títulos de Cards com Identidade do Módulo */
+    .premium-mode .fp-card-title {
+        color: var(--cor-modulo) !important;
+        border-left: 4px solid var(--cor-modulo);
+        background: linear-gradient(to right, rgba(41, 128, 185, 0.05), transparent);
+        padding-left: 15px;
+        font-weight: 800;
+    }
+
+    .premium-mode .fp-card-title i {
+        color: var(--cor-modulo);
+        filter: drop-shadow(0 2px 4px rgba(41, 128, 185, 0.2));
+    }
+
+    /* 4. Botões de Ação com Cor do Módulo */
+    .premium-mode .btn-primary-modulo {
+        background: var(--cor-modulo);
+        color: #fff;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(41, 128, 185, 0.3);
+        transition: 0.3s;
+    }
+    .premium-mode .btn-primary-modulo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(41, 128, 185, 0.4);
+        filter: brightness(1.1);
+    }
+
+    /* 5. Inputs com Foco no Módulo */
+    .premium-mode .fp-input:focus {
+        border-color: var(--cor-modulo) !important;
+        box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1) !important;
+    }
+</style>
+
+<div class="fe-wrap fp-wrap mod-vendas premium-mode">
+
+    {# CABEÇALHO MESTRE (ASSINATURA ARIONE) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Pedido de Venda (Simulação)",
+        subtitulo="Operações > Vendas > Homologação Premium",
+        icone="fa-file-invoice",
+        form_id="form-vendas-premium",
+        cor_tema="#7A255F",
+        status="ARQUITETURA MARCA",
+        func_fechar="fecharModalGlobal()",
+        blueprint_retorno="sistema",
+        aba_retorno="lab_dev",
+        ajuda="Este é o protótipo da Opção 2. O cabeçalho é Roxo AriOne fixo em todo o sistema, enquanto a cor azul premium organiza e destaca as ações do módulo de Vendas."
+    ) }}
+
+    {# BARRA DE CONEXÃO COLORIDA #}
+    <div class="premium-accent-bar"></div>
+
+    <form id="form-vendas-premium" onsubmit="return false;">
+        
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+            
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                {# CARD: CLIENTE #}
+                <div class="fp-card">
+                    <div class="fp-card-title">
+                        <i class="fas fa-user-tie"></i> Identificação do Cliente
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-3">
+                                <label class="fp-label">NOME OU RAZÃO SOCIAL</label>
+                                <input class="fp-input" placeholder="Pesquisar cliente..." value="STAMPFÉ INDÚSTRIA E COMÉRCIO LTDA">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">CPF/CNPJ</label>
+                                <input class="fp-input" value="00.000.000/0001-00" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# CARD: ITENS #}
+                <div class="fp-card">
+                    <div class="fp-card-title">
+                        <i class="fas fa-box-open"></i> Itens do Pedido
+                    </div>
+                    <div class="fp-card-body">
+                        <div style="background: #f8fafc; border-radius: 12px; padding: 20px; text-align: center; border: 2px dashed #e2e8f0;">
+                            <i class="fas fa-plus-circle" style="font-size: 30px; color: var(--cor-modulo); opacity: 0.5; margin-bottom: 10px;"></i>
+                            <p style="font-size: 13px; color: #64748b; font-weight: 700;">Clique para Adicionar Produtos ao Pedido</p>
+                            <button class="btn-primary-modulo" style="margin-top: 10px;">ADICIONAR ITEM</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                {# CARD: RESUMO FINANCEIRO #}
+                <div class="fp-card" style="border: 2px solid var(--cor-modulo);">
+                    <div class="fp-card-title" style="background: var(--cor-modulo); color: #fff !important; border: none;">
+                        <i class="fas fa-calculator" style="color: #fff;"></i> Totais do Pedido
+                    </div>
+                    <div class="fp-card-body" style="background: #f0f7ff;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="font-size: 12px; font-weight: 700; color: #64748b;">SUBTOTAL:</span>
+                            <span style="font-size: 14px; font-weight: 900; color: #1e293b;">R$ 1.250,00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                            <span style="font-size: 12px; font-weight: 700; color: #64748b;">DESCONTOS:</span>
+                            <span style="font-size: 14px; font-weight: 900; color: #e74c3c;">R$ 50,00</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 10px; font-weight: 800; color: var(--cor-modulo);">TOTAL GERAL</div>
+                            <div style="font-size: 28px; font-weight: 950; color: var(--cor-modulo);">R$ 1.200,00</div>
+                        </div>
+                        <button class="btn-primary-modulo" style="width: 100%; margin-top: 20px; font-size: 16px; padding: 15px;">FINALIZAR PEDIDO</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}

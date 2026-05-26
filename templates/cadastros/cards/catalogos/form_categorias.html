@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-categorias" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        .fp-card-title { font-size: 13px !important; font-weight: 800 !important; }
+        
+        .cat-acc-header { transition: 0.2s; border-left: 4px solid transparent; }
+        .cat-acc-header:hover { background: #f0f4f8; border-left-color: #E67E22; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Grupos & Categorias',
+            subtitulo='Catálogos > Grupos e Categorias',
+            icone='fa-layer-group',
+            cor_tema='#7A255F',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
+            form_id='cat-form-area',
+            onclick_novo='resetFormCategoria()',
+            onclick_save='salvarCategoria()',
+            onclick_search='focarPesquisaCategoria()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            onclick_clonar='clonarCategoriaAtivo()',
+            onclick_export='exportarCategoriaCSV()',
+            onclick_import='abrirModalImportacaoXML()',
+            onclick_print='imprimirRelatorioCategoria()',
+            onclick_email='enviarCategoriaEmail()',
+            onclick_whatsapp='enviarCategoriaWhatsApp()',
+            status='Ativo',
+            ajuda='Gerencie a estrutura mercadológica de produtos, organizando grupos e categorias.',
+            tamanho='medio'
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="cat-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="cat-form" method="POST" action="{{ url_for('cadastros.card_categorias') }}">
+                <input type="hidden" name="id" id="cat-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="cat-form-titulo">CADASTRO DE CATEGORIA</span></span>
+                        <button type="button" onclick="novoRegistroCat()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="fp-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                            <div class="fp-group" style="width: 70px;">
+                                <label class="fp-label">Cor</label>
+                                <input type="color" name="cor" id="cat-cor-input" value="#E67E22" style="width:100%; height:34px; border:1.5px solid #e2e8f0; border-radius:8px; padding:2px; cursor:pointer;">
+                            </div>
+                            <div class="fp-group" style="width: 120px;">
+                                <label class="fp-label">Ícone</label>
+                                <div style="position:relative;">
+                                    <i id="cat-icone-preview" class="fas fa-layer-group" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#E67E22; font-size:13px;"></i>
+                                    <input class="fp-input" type="text" name="icone" id="cat-icone-input" value="fa-layer-group" style="padding-left:30px; width:100%;" oninput="previewIcone(this)">
+                                </div>
+                            </div>
+                            <div class="fp-group" style="flex: 2;">
+                                <label class="fp-label">Nome da Categoria <span style="color:#ef4444;">*</span></label>
+                                <input class="fp-input" type="text" name="nome_categoria" id="cat-nome-input" placeholder="EX: VESTUÁRIO" required oninput="this.value = this.value.toUpperCase()" style="width:100%; font-weight: 800;">
+                            </div>
+                            <div class="fp-group" style="flex: 1;">
+                                <label class="fp-label">Departamento</label>
+                                <select class="fp-input" name="departamento" id="cat-depto-input" style="width:100%; background:#fff;">
+                                    <option value="">— SELECIONE —</option>
+                                    {% for d in ['PRODUÇÃO','COMERCIAL','ESTOQUE','FINANCEIRO','ADMINISTRATIVO'] %}
+                                    <option value="{{ d }}">{{ d }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        {# Subcategorias #}
+                        <div style="margin-top: 20px; border: 1px solid #f1f5f9; border-radius: 10px; overflow: hidden;">
+                            <div style="background: #f8fafc; padding: 10px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;"><i class="fas fa-sitemap"></i> Subcategorias Associadas</span>
+                                <button type="button" onclick="adicionarLinhaSubcategoria()" style="background: #E67E22; border:none; color:#fff; font-size: 10px; padding: 4px 12px; border-radius: 6px; font-weight: 800; cursor:pointer;"><i class="fas fa-plus"></i> ADICIONAR SUB</button>
+                            </div>
+                            <table class="arione-table-hcm" id="tbl-subcategorias">
+                                <thead>
+                                    <tr>
+                                        <th style="padding-left: 15px;">NOME DA SUBCATEGORIA</th>
+                                        <th style="width: 150px;">MARGEM (%)</th>
+                                        <th style="width: 120px; text-align: center;">STATUS</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="list-subcategorias">
+                                    <tr id="sub-empty-row"><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; font-style: italic;">Nenhuma subcategoria pendente.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-cat" onclick="submitCategoria()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR CATEGORIA COMPLETA
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM PLENA (ESTILO HCM) ── #}
+        <div class="fp-card" id="cat-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-layer-group" style="color: #E67E22; margin-right: 8px;"></i> Estrutura de Catálogo</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="cat-search-input" oninput="filtrarCategorias()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="cat-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ categorias|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto; padding: 10px;">
+                {% for cat in categorias %}
+                <div class="cat-acc-item" id="cat-acc-{{ cat.id }}" data-nome="{{ cat.nome|upper }}" style="border: 1px solid #f1f5f9; border-radius: 10px; margin-bottom: 8px; overflow: hidden;">
+                    <div class="cat-acc-header" onclick="toggleAcc('{{ cat.id }}')" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; cursor: pointer;">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <div style="width: 38px; height: 38px; background:{{ cat.cor or '#E67E22' }}; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.1);">
+                                <i class="fas {{ cat.icone or 'fa-layer-group' }}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 900; color: #1e293b; font-size: 13px;">{{ cat.nome }}</div>
+                                <div style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">
+                                    <i class="fas fa-sitemap"></i> {{ cat.subcategorias|length }} SUB-NÍVEIS | {{ cat.departamento or 'GERAL' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <button type="button" class="fp-btn-icon" onclick="event.stopPropagation();editarCategoria('{{ cat.id }}')" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                            <button type="button" class="fp-btn-icon" onclick="event.stopPropagation();excluirCategoria('{{ cat.id }}', this)" style="color:#ef4444;"><i class="fas fa-trash-alt"></i></button>
+                            <i class="fas fa-chevron-down" id="chevron-{{ cat.id }}" style="color:#cbd5e1; font-size:11px; transition:0.3s;"></i>
+                        </div>
+                    </div>
+
+                    <div class="cat-acc-body" id="acc-body-{{ cat.id }}" style="display:none; background: #fafbfc; border-top: 1px solid #f1f5f9; padding: 10px 20px;">
+                        {% if cat.subcategorias %}
+                        <table class="arione-table-hcm" style="background:#fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:15px;">SUBCATEGORIA</th>
+                                    <th style="width:100px; text-align: right;">MARGEM (%)</th>
+                                    <th style="width:100px; text-align: center;">STATUS</th>
+                                    <th style="width:80px; text-align: center;">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in cat.subcategorias %}
+                                <tr id="sub-row-{{ sub.id }}" style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 8px 15px; font-weight: 800; color: #475569;"><i class="fas fa-caret-right" style="color:#E67E22; margin-right:8px;"></i>{{ sub.nome }}</td>
+                                    <td style="text-align: right; font-weight: 800; color: #1e293b;">{{ "%.2f"|format(sub.margem_sugerida or 0) }}%</td>
+                                    <td style="text-align: center;">
+                                        <span style="font-size: 9px; font-weight: 900; color: {{ '#27AE60' if sub.ativa else '#94a3b8' }};">
+                                            {{ 'ATIVO' if sub.ativa else 'INATIVO' }}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <button type="button" class="fp-btn-icon" style="font-size:12px; color:#ef4444;" onclick="excluirSubcategoria('{{ sub.id }}', this)"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% endif %}
+                        <button type="button" onclick="abrirFormSubcategoriaRapida('{{ cat.id }}', '{{ cat.nome }}')" style="width: 100%; background: none; border: 1.5px dashed #e2e8f0; color: #94a3b8; font-size: 10px; font-weight: 800; padding: 8px; margin-top: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.borderColor='#E67E22'; this.style.color='#E67E22'" onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#94a3b8'">
+                            <i class="fas fa-plus-circle"></i> VINCULAR NOVA SUBCATEGORIA EM {{ cat.nome }}
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {# ── MODAL: SUB RÁPIDA ── #}
+    <div id="modal-sub-rapida" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:16px; width:400px; box-shadow:0 25px 50px rgba(0,0,0,0.2); overflow:hidden; animation: feFadeUp 0.3s ease-out;">
+            <div style="background:#E67E22; padding:15px 20px; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:900; font-size:13px; text-transform:uppercase;">Nova Subcategoria</span>
+                <button type="button" onclick="fecharModalSubRapida()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:20px;">
+                <input type="hidden" id="modal-sub-cat-id">
+                <div class="fp-group" style="margin-bottom:12px;">
+                    <label class="fp-label">Nome da Subcategoria</label>
+                    <input type="text" id="modal-sub-nome" class="fp-input" placeholder="EX: CAMISETAS" style="width:100%; font-weight:800;" oninput="this.value = this.value.toUpperCase()">
+                </div>
+                <div class="fp-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div class="fp-group">
+                        <label class="fp-label">Margem (%)</label>
+                        <input type="number" id="modal-sub-margem" class="fp-input" placeholder="0.00" step="0.01" style="width:100%;">
+                    </div>
+                    <div class="fp-group">
+                        <label class="fp-label">Status</label>
+                        <select id="modal-sub-status" class="fp-input" style="width:100%; background:#fff;">
+                            <option value="ATIVO">ATIVO</option>
+                            <option value="INATIVO">INATIVO</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" onclick="salvarSubcategoriaRapida()" style="width:100%; background:#E67E22; color:#fff; border:none; padding:12px; border-radius:8px; font-weight:900; margin-top:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.2);">GRAVAR SUBCATEGORIA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroCat = function() {
+                document.getElementById('cat-form-titulo').textContent = 'NOVA CATEGORIA';
+                document.getElementById('cat-id-hidden').value = '';
+                document.getElementById('cat-form').reset();
+                document.getElementById('cat-nome-input').focus();
+            };
+
+            window.fecharFormCat = function() { novoRegistroCat(); };
+
+            window.editarCat_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('cat-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('cat-id-hidden').value = id;
+                document.getElementById('cat-nome-input').value = r.dataset.nome;
+                document.getElementById('cat-form').action = `/cadastros/cards/categorias/${id}`;
+                window.scrollTo({top:0, behavior:'smooth'});
+                setTimeout(() => document.getElementById('cat-nome-input').focus(), 300);
+            };
+
+            window.submitCategoria = async function() {
+                const form = document.getElementById('cat-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-cat');
+                const originalText = btn.innerHTML;
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const resp = await fetch(form.action, { method:'POST', body: new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(resp.ok) { arioneToast('Categoria salva!', 'success'); setTimeout(() => location.reload(), 600); }
+                    else { const err = await resp.json(); arioneToast('Erro: ' + (err.message || 'Falha'), 'danger'); }
+                } catch(e) { arioneToast('Erro de conexão.', 'danger'); }
+                finally { btn.disabled = false; btn.innerHTML = originalText; }
+            };
+
+            window.toggleAcc = function(id) {
+                $(`#acc-body-${id}`).slideToggle();
+                const icon = document.getElementById(`chevron-${id}`);
+                icon.style.transform = icon.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+                if(icon.style.transform === 'rotate(180deg)') icon.style.color = '#E67E22';
+                else icon.style.color = '#cbd5e1';
+            };
+
+            window.filtrarCategorias = function() {
+                const f = document.getElementById('cat-search-input').value.toUpperCase();
+                document.querySelectorAll('.cat-acc-item').forEach(item => {
+                    item.style.display = item.dataset.nome.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.previewIcone = function(i) {
+                document.getElementById('cat-icone-preview').className = 'fas ' + (i.value || 'fa-layer-group');
+            };
+
+            window.adicionarLinhaSubcategoria = function() {
+                $('#sub-empty-row').hide();
+                const tr = `<tr>
+                    <td><input class="fp-input" name="sub_nome[]" required style="width:100%;" oninput="this.value = this.value.toUpperCase()"></td>
+                    <td><input class="fp-input" name="sub_margem[]" type="number" step="0.01" style="width:100%;"></td>
+                    <td><select class="fp-input" name="sub_status[]" style="width:100%; background:#fff;"><option value="ATIVO">ATIVO</option><option value="INATIVO">INATIVO</option></select></td>
+                    <td style="text-align:center;"><button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="$(this).closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+                $('#list-subcategorias').append(tr);
+            };
+
+            window.abrirFormSubcategoriaRapida = function(id, nome) {
+                document.getElementById('modal-sub-cat-id').value = id;
+                document.getElementById('modal-sub-nome').value = '';
+                $('#modal-sub-rapida').css('display', 'flex');
+                document.getElementById('modal-sub-nome').focus();
+            };
+
+            window.fecharModalSubRapida = function() { $('#modal-sub-rapida').hide(); };
+
+            window.salvarSubcategoriaRapida = async function() {
+                const id = document.getElementById('modal-sub-cat-id').value;
+                const nome = document.getElementById('modal-sub-nome').value;
+                const margem = document.getElementById('modal-sub-margem').value;
+                const status = document.getElementById('modal-sub-status').value;
+                if(!nome) return;
+                const fd = new FormData(); fd.append('categoria_id', id); fd.append('nome', nome); fd.append('margem', margem); fd.append('status', status);
+                try {
+                    const r = await fetch('/cadastros/cards/subcategorias/nova', { method:'POST', body:fd, headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Subcategoria vinculada!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.editarCategoria = async function(id) {
+                const r = await fetch(`/cadastros/cards/categorias/${id}/json`);
+                const cat = await r.json();
+                document.getElementById('cat-id-hidden').value = cat.id;
+                document.getElementById('cat-nome-input').value = cat.nome;
+                document.getElementById('cat-depto-input').value = cat.departamento || '';
+                document.getElementById('cat-cor-input').value = cat.cor || '#E67E22';
+                document.getElementById('cat-icone-input').value = cat.icone || 'fa-layer-group';
+                previewIcone({value: cat.icone});
+                $('#cat-form-area').slideDown();
+                window.scrollTo({top:0, behavior:'smooth'});
+            };
+
+            window.excluirSubcategoria = async function(id, btn) {
+                if(!confirm('Excluir subcategoria?')) return;
+                const r = await fetch(`/cadastros/cards/subcategorias/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+
+            window.excluirCategoria = async function(id, btn) {
+                if(!confirm('Excluir categoria e subníveis?')) return;
+                const r = await fetch(`/cadastros/cards/categorias/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('.cat-acc-item').fadeOut(); arioneToast('Excluído.', 'info'); }
+            };
+            
+            window.focarBuscaCat = function() { document.getElementById('cat-search-input').focus(); };
+            window.toggleFiltroCat = function() { focarBuscaCat(); };
+            window.exportarCategorias = function() { arioneExportar({url:'/cadastros/cards/categorias/dados-json', modulo:'Categorias'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 10px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+        .cat-acc-item { transition: 0.3s; }
+        .cat-acc-item:hover { border-color: #E67E22; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    </style>
+</div>
+{% endblock %}

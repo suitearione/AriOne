@@ -1,0 +1,1631 @@
+{# =============================================================================
+Caminho : templates/cadastros/cards/catalogos/form_produto.html
+Função  : Formulário de Produto (ORQUESTRADOR MODULAR)
+Padrão  : Golden Standard / Quiet Luxury
+============================================================================= #}
+
+{% extends "base.html" if not request.headers.get('X-Requested-With') == 'XMLHttpRequest' else "base_modal.html" %}
+
+{% block content %}
+{% import "macros/componentes.html" as comp %}
+{# ── Modal Inativar (FORA DO FORM PRINCIPAL) ── #}
+{% if produto and produto.ativo %}
+<div id="modal-inativar"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;backdrop-filter:blur(3px);"
+  onclick="fecharModal()">
+  <div
+    style="background:#fff;border-radius:14px;width:90%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:fpEntrar .25s ease;"
+    onclick="event.stopPropagation()">
+    <div
+      style="background:linear-gradient(135deg,#c53030,#e53e3e);padding:18px 24px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between;">
+      <div style="color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;gap:10px;"><i
+          class="fas fa-ban"></i> Inativar Produto</div>
+      <button onclick="fecharModal()"
+        style="background:rgba(255,255,255,0.2);border:none;color:#fff;width:30px;height:30px;border-radius:7px;cursor:pointer;">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('cadastros.inativar_produto', id=produto.id if produto else 0) }}">
+      <div style="padding:24px;">
+        <p style="font-size:13px;color:#555;margin-bottom:18px;">O produto <strong>{{ produto.descricao }}</strong> será
+          inativado. Dados preservados.</p>
+        <div class="fp-group"><label class="fp-label">Motivo</label>
+          <select class="fp-input" name="motivo">
+            <option value="">—</option>
+            <option>Descontinuado pelo fabricante</option>
+            <option>Substituído por outro produto</option>
+            <option>Saiu de linha</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+          <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="fecharModal()">Cancelar</button>
+          <button type="submit"
+            style="background:linear-gradient(135deg,#c53030,#e53e3e);color:#fff;border:none;padding:9px 20px;border-radius:7px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;"><i
+              class="fas fa-ban"></i> Confirmar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<style>
+  :root {
+    --pri: #7A255F; --pri-l: #a8357f; --pri-bg: #fdf5fa;
+    --border: #e2e8f0; --text: #2d3748; --muted: #718096;
+    --bg: #f4f6f9; --card: #fff; --radius: 16px;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.05); --tr: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .arione-page { padding: 0 !important; }
+  .fe-wrap, .fp-wrap { padding: 0 !important; background: var(--bg); font-family: 'Inter', sans-serif; }
+  
+  /* Cards e Containers */
+  .fp-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid var(--border); overflow: hidden; }
+  .fp-card-title { padding: 18px 24px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px; font-weight: 800; color: var(--text); font-size: 15px; }
+  .fp-card-body { padding: 24px; }
+
+  /* Grid e Layout */
+  .fp-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .fp-group { display: flex; flex-direction: column; gap: 6px; }
+  .fp-flex-1 { flex: 1; } .fp-flex-2 { flex: 2; } .fp-flex-3 { flex: 3; }
+
+  /* Inputs Premium */
+  .fp-label { font-size: 11.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+  .fp-input { border: 1.5px solid var(--border); padding: 11px 15px; border-radius: 12px; font-size: 14px; color: var(--text); transition: var(--tr); outline: none; background: #fff; }
+  .fp-input:focus { border-color: var(--pri); box-shadow: 0 0 0 4px rgba(122, 37, 95, 0.1); background: #fff; }
+  .fp-input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+
+  /* Abas Premium */
+  .fp-tabs-wrap { background: #fff; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+  .fp-tabs-nav { display: flex; background: #f8fafc; border-bottom: 1px solid #eef2f6; padding: 0 10px; overflow-x: auto; gap: 5px; scrollbar-width: none; }
+  .fp-tab { padding: 14px 20px; border: none; background: none; color: var(--muted); font-weight: 700; font-size: 12.5px; cursor: pointer; border-bottom: 3px solid transparent; transition: var(--tr); white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .fp-tab:hover { color: var(--pri); background: rgba(122, 37, 95, 0.03); }
+  .fp-tab.active { color: var(--pri); border-bottom-color: var(--pri); background: #fff; }
+  .fp-tab-panel { display: none; padding: 24px; animation: feFadeIn 0.3s ease; }
+  .fp-tab-panel.active { display: block; }
+
+  /* Cards de Endereço/Estoque (Onde quebrou no print) */
+  .fp-addr-card { border: 1px solid var(--border); border-radius: 14px; padding: 18px; position: relative; overflow: hidden; background: #fff; transition: var(--tr); }
+  .fp-addr-card::before { content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: var(--addr-cor, var(--pri)); }
+  .fp-addr-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Toggle Cards (Os botões de Único/Grade) */
+  .fp-toggle-card { flex: 1; position: relative; cursor: pointer; }
+  .fp-toggle-card input { position: absolute; opacity: 0; }
+  .fp-toggle-card i, .fp-toggle-card span { display: block; text-align: center; }
+  .fp-toggle-card div { border: 1.5px solid var(--border); border-radius: 12px; padding: 15px; transition: var(--tr); background: #f8fafc; }
+  .fp-toggle-card input:checked + div { border-color: var(--pri); background: var(--pri-bg); box-shadow: 0 4px 12px rgba(122, 37, 95, 0.1); }
+  .fp-toggle-card input:checked + div i { color: var(--pri); }
+  .fp-toggle-card i { font-size: 20px; color: var(--muted); margin-bottom: 8px; }
+  .fp-toggle-card span { font-weight: 800; font-size: 13px; color: var(--text); }
+  .fp-toggle-card small { display: block; text-align: center; color: var(--muted); font-size: 10px; font-weight: 500; margin-top: 2px; }
+
+  /* Botões e Badges */
+  .fp-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: var(--tr); }
+  .fp-btn-salvar-footer { background: linear-gradient(135deg, var(--pri), var(--pri-l)); color: #fff; box-shadow: 0 8px 25px rgba(122, 37, 95, 0.25); }
+  .fp-btn-salvar-footer:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 30px rgba(122, 37, 95, 0.35); }
+  
+  /* Botões de Estoque Proporcionais (Compactos) */
+  .fp-toggle-card-mini { cursor: pointer; position: relative; width: fit-content; min-width: 200px; }
+  .fp-toggle-card-mini input { display: none; }
+  .fp-toggle-card-mini .toggle-content { 
+    display: flex; align-items: center; gap: 12px; padding: 8px 16px; 
+    background: #fff; border: 1.5px solid #f1f5f9; border-radius: 10px; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  }
+  .fp-toggle-card-mini .toggle-content i { font-size: 18px; color: #94a3b8; transition: 0.3s; }
+  .fp-toggle-card-mini .toggle-content .text { display: flex; flex-direction: column; gap: 0px; }
+  .fp-toggle-card-mini .toggle-content span { font-size: 11px; font-weight: 800; color: #334155; letter-spacing: 0.2px; white-space: nowrap; }
+  .fp-toggle-card-mini .toggle-content small { font-size: 9px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
+  
+  .fp-toggle-card-mini input:checked + .toggle-content { border-color: var(--pri); background: #fdf2f8; box-shadow: 0 4px 12px rgba(122,37,95,0.06); }
+  .fp-toggle-card-mini input:checked + .toggle-content i { color: var(--pri); transform: scale(1.05); }
+  .fp-toggle-card-mini input:checked + .toggle-content span { color: var(--pri); }
+  .fp-toggle-card-mini:hover .toggle-content { border-color: var(--pri-l); transform: translateY(-1px); }
+  
+  /* 📏 COMPACTAÇÃO MASTER (QUIET LUXURY) */
+  :root { --input-h: 34px; --label-sz: 10px; --gap-r: 8px; }
+  .fp-card { margin-bottom: 15px !important; }
+  .fp-card-title { padding: 8px 18px !important; font-size: 13px !important; }
+  .fp-card-body { padding: 15px 18px !important; gap: var(--gap-r) !important; }
+  .fp-group { margin-bottom: 8px !important; }
+  .fp-label { font-size: var(--label-sz) !important; margin-bottom: 4px !important; font-weight: 700; color: #64748b; }
+  .fp-input { height: var(--input-h) !important; font-size: 13px !important; padding: 0 12px !important; border-radius: 8px !important; }
+  .fp-row { margin-bottom: 8px !important; gap: 12px !important; }
+  
+  /* Badge Flutuante de Modo de Operação */
+  .fe-floating-mode {
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    z-index: 9999;
+    background: #fff;
+    border: 2px solid var(--pri);
+    padding: 8px 15px;
+    border-radius: 30px;
+    box-shadow: 0 10px 30px rgba(122,37,95,0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: feFadeIn 0.5s ease;
+    pointer-events: none;
+  }
+  @keyframes arione-glow {
+    0% { box-shadow: 0 0 5px rgba(192, 57, 43, 0.4); transform: scale(1); }
+    50% { box-shadow: 0 0 25px rgba(192, 57, 43, 0.8); transform: scale(1.05); }
+    100% { box-shadow: 0 0 5px rgba(192, 57, 43, 0.4); transform: scale(1); }
+  }
+  .arione-active-glow { animation: arione-glow 1.5s infinite ease-in-out; z-index: 1000 !important; }
+  .fe-floating-mode.mode-new { border-color: #27AE60; box-shadow: 0 10px 30px rgba(39,174,96,0.2); }
+  .fe-floating-mode i { font-size: 12px; }
+  .fe-floating-mode span { font-size: 10px; font-weight: 900; letter-spacing: 1px; color: var(--pri); }
+  .fe-floating-mode.mode-new span { color: #27AE60; }
+
+  @keyframes feFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .mod-produto { --pri: #7A255F; --pri-d: #4A1539; --pri-bg: #f9f5f8; }
+
+  /* 🏅 AriOne Badges (Golden Standard) */
+  .fe-badge-primary { background: var(--pri); color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+  .fe-badge-secondary { background: #f1f5f9; color: #475569; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #e2e8f0; }
+  .fe-badge-success { background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; border: 1px solid #bbf7d0; }
+  .fe-badge-warning { background: #fef3c7; color: #92400e; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; border: 1px solid #fde68a; }
+  .fe-badge-info { background: #e0f2fe; color: #075985; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; border: 1px solid #bae6fd; }
+</style>
+
+
+
+<div class="fe-wrap fp-wrap mod-produto">
+    
+    {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+    {# ── CABEÇALHO MESTRE (PADRÃO UNIVERSAL ARIONE) ── #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Gestão de Produtos",
+        subtitulo="Catálogos > Produtos > Engenharia & Composição",
+        icone="fa-box",
+        cor_tema="#7A255F",
+        func_fechar="window.location.href='/cadastros/?aba=catalogos'",
+        form_id="form-produto",
+        onclick_novo='resetFormProduto()',
+        onclick_save='forceSubmitProduto()',
+        onclick_search='focarPesquisaProduto()',
+        onclick_filter='abrirModalFiltrosAvancados()',
+        onclick_list='alternarVisaoFormLista()',
+        onclick_clonar='clonarProdutoAtivo()',
+        onclick_export='exportarProdutos()',
+        onclick_import='importarProdutos()',
+        onclick_print='imprimirMaster()',
+        onclick_email='enviarEmailMaster()',
+        onclick_whatsapp='enviarWhatsAppMaster()',
+        status="Alterando Registro #" ~ produto.id if produto and produto.id else "Novo Registro",
+        ajuda='Gerencie o catálogo de produtos, incluindo engenharia, composição, grades e variantes.',
+        tamanho="grande"
+    ) }}
+
+    <div id="area-formulario-produto" style="padding: 12px 24px; background: var(--bg);">
+        <div class="fe-form-stage" style="margin: 0; padding: 0;">
+
+            {# O formulário agora orquestra os módulos #}
+            <form method="POST" enctype="multipart/form-data" id="form-produto" novalidate>
+                <input type="hidden" name="id" id="produto_id" value="{{ produto.id if produto else 'new' }}">
+                <input type="hidden" name="composicao_json" id="input-composicao-json">
+                
+                {# PARTE 1: Identificação e Dados Básicos #}
+                {% include "cadastros/cards/catalogos/form_produto_base.html" %}
+
+                {# PARTE 2: Abas, Grades e Inteligência #}
+                {% include "cadastros/cards/catalogos/form_produto_abagrades.html" %}
+
+
+
+
+            </form>
+
+            {# ── LISTAGEM DE PRODUTOS (PADRÃO HCM GOLDEN) ── #}
+            <div id="prod-list-area">
+                {% include "cadastros/cards/catalogos/grid_produtos_lista.html" %}
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+  console.log("🛡️ AriOne: Total de produtos carregados:", {{ produtos|length if produtos else 0 }});
+  
+  function syncHeaderStatus() {
+      const statusDiv = document.getElementById('header-action-status');
+      const prodId = document.getElementById('produto_id')?.value;
+      
+      if (!statusDiv) return;
+
+      if (prodId && prodId !== 'new') {
+          statusDiv.innerHTML = `<i class="fas fa-edit"></i> ALTERANDO REGISTRO #${prodId}`;
+          statusDiv.classList.remove('status-novo');
+          statusDiv.classList.add('status-edit');
+          statusDiv.style.background = 'rgba(255,255,255,0.2)';
+      } else {
+          statusDiv.innerHTML = `<i class="fas fa-plus-circle"></i> INCLUINDO NOVO REGISTRO`;
+          statusDiv.classList.add('status-novo');
+          statusDiv.classList.remove('status-edit');
+          statusDiv.style.background = 'rgba(39, 174, 96, 0.2)';
+      }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+      syncHeaderStatus();
+  });
+
+  async function confirmarExclusaoProduto(arg1, arg2) {
+      let id, nome;
+      if (typeof arg1 === 'object') {
+          // Padrão (btn, id)
+          id = arg2;
+          const row = arg1.closest('tr');
+          nome = row ? row.dataset.nome : "este produto";
+      } else {
+          // Padrão (id, nome)
+          id = arg1;
+          nome = arg2 || "este produto";
+      }
+
+      console.log("🛡️ AriOne: Iniciando exclusão do produto:", nome, "(ID:", id, ")");
+      
+      const ok = await arioneConfirm(`🛡️ AriOne: Deseja realmente EXCLUIR o produto <strong>${nome}</strong>?<br><br><small>Esta ação é irreversível e removerá todos os vínculos de estoque e composição.</small>`);
+      if (!ok) return;
+
+      try {
+          if (typeof setStatusExcluindo === 'function') setStatusExcluindo();
+          const res = await fetch(`/cadastros/produtos/excluir/${id}`, { 
+              method: 'POST',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          
+          const data = await res.json();
+          if (data.success) {
+              arioneToast(data.message || "Produto removido com sucesso!", "success");
+              setTimeout(() => window.location.reload(), 1000);
+          } else {
+              arioneToast(data.message || "Não foi possível excluir o produto.", "warning");
+              if (typeof syncHeaderStatus === 'function') syncHeaderStatus();
+          }
+      } catch (e) {
+          console.error("Erro na exclusão:", e);
+          arioneToast("Erro de rede ao excluir.", "danger");
+          if (typeof syncHeaderStatus === 'function') syncHeaderStatus();
+      }
+  }
+
+
+
+
+  function editarProduto(id, nome) {
+      if (typeof arioneToast === 'function') arioneToast('✏️ Abrindo edição: ' + nome, 'info');
+      window.location.href = `/cadastros/produtos/cards/form/${id}`;
+  }
+
+  // ── FUNÇÕES DO CABEÇALHO MESTRE ──────────────────────────────────────────
+
+  /** FILTRO: Exibe zona de filtros avançados para a lista */
+  function abrirModalFiltrosAvancados() {
+      let zone = document.getElementById('filter-zone-produtos');
+      if (!zone) {
+          zone = document.createElement('div');
+          zone.id = 'filter-zone-produtos';
+          zone.style.cssText = 'padding:15px 20px; background:#f8fafc; border-bottom:1px solid #e2e8f0; display:flex; flex-wrap:wrap; gap:15px; animation:feFadeIn 0.3s ease;';
+          zone.innerHTML = `
+              <div style="flex:1; min-width:150px;">
+                <label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:block;">Categoria</label>
+                <select id="filter-categoria" class="fp-input" style="width:100%;" onchange="filtrarTabelaProdutos()">
+                    <option value="">TODAS</option>
+                    ${Array.from(new Set(Array.from(document.querySelectorAll('#tabela-produtos-master tr td:nth-child(4)')).map(td => td.textContent.trim()))).map(c => `<option value="${c}">${c}</option>`).join('')}
+                </select>
+              </div>
+              <div style="flex:1; min-width:150px;">
+                <label style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:block;">Origem</label>
+                <select id="filter-origem" class="fp-input" style="width:100%;" onchange="filtrarTabelaProdutos()">
+                    <option value="">TODAS</option>
+                    <option value="PROPRIA">FABRICAÇÃO PRÓPRIA</option>
+                    <option value="ADQUIRIDO">ADQUIRIDO</option>
+                </select>
+              </div>
+              <button onclick="document.getElementById('filter-zone-produtos').remove()" 
+                  style="background:none; border:none; color:#94a3b8; cursor:pointer; align-self:flex-end; padding-bottom:10px;" title="Fechar Filtros"><i class="fas fa-times"></i></button>
+          `;
+          const listArea = document.getElementById('prod-list-area');
+          if (listArea) listArea.insertBefore(zone, listArea.firstChild);
+      } else {
+          zone.remove();
+      }
+  }
+
+  /** LUPA: Exibe/Oculta zona de pesquisa da lista de produtos */
+  function focarPesquisaProduto() {
+      let zone = document.getElementById('search-zone-produtos');
+      if (!zone) {
+          // Cria dinamicamente se não existir
+          zone = document.createElement('div');
+          zone.id = 'search-zone-produtos';
+          zone.style.cssText = 'padding:10px 20px; background:#fff; border-bottom:1px solid #eee; display:flex; align-items:center; gap:10px; animation:feFadeIn 0.2s ease;';
+          zone.innerHTML = `<i class="fas fa-search" style="color:var(--pri);"></i>
+              <input type="text" id="filtro-produtos" placeholder="Pesquisar produto por nome, SKU ou categoria..." 
+                  oninput="filtrarTabelaProdutos()"
+                  style="flex:1; border:1.5px solid var(--pri); border-radius:8px; padding:8px 14px; font-size:13px; outline:none;">
+              <button onclick="document.getElementById('search-zone-produtos').remove()" 
+                  style="background:none; border:none; color:#999; cursor:pointer; font-size:16px;" title="Fechar pesquisa">✕</button>`;
+          const listArea = document.getElementById('prod-list-area');
+          if (listArea) listArea.insertBefore(zone, listArea.firstChild);
+          setTimeout(() => zone.querySelector('input')?.focus(), 100);
+      } else {
+          zone.remove();
+      }
+  }
+
+  /** LISTA: Alterna entre modo formulário + lista e somente lista (PADRÃO LUXO) */
+  function alternarVisaoFormLista(formId) {
+      formId = formId || 'form-produto';
+      const form = document.getElementById(formId);
+      const footer = document.querySelector('.fp-footer-actions');
+      const mod = document.querySelector('.mod-produto');
+      const btnList = document.querySelector('.fe-btn-header-action[title*="Lista"]');
+      const isFull = mod?.classList.contains('is-full-list');
+      
+      if (isFull) {
+          // ── EXPANDE FORMULÁRIO (RESTAURA) ──
+          if (form) form.style.display = '';
+          if (footer) footer.style.display = '';
+          mod?.classList.remove('is-full-list');
+          
+          if (btnList) {
+              btnList.innerHTML = '<i class="fas fa-list-ul"></i>';
+              btnList.title = "Ver Lista Completa";
+          }
+          
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (typeof arioneToast === 'function') arioneToast('Modo Formulário Restaurado.', 'info');
+          if (typeof syncHeaderStatus === 'function') syncHeaderStatus();
+      } else {
+          // ── RECOLHE FORMULÁRIO (MODO LISTA) ──
+          if (form) form.style.display = 'none';
+          if (footer) footer.style.display = 'none';
+          mod?.classList.add('is-full-list');
+          
+          if (btnList) {
+              btnList.innerHTML = '<i class="fas fa-window-maximize"></i>';
+              btnList.title = "Expandir Formulário";
+          }
+          
+          if (typeof arioneToast === 'function') arioneToast('Exibindo apenas a lista de produtos.', 'info');
+      }
+  }
+
+  /** CLONAR: Duplica o produto atual sem ID (padrão Smart Clone) */
+  function clonarProdutoAtivo() {
+      const produtoId = document.querySelector('input[name="id"]')?.value;
+      if (!produtoId || produtoId === 'new') {
+          if (typeof arioneToast === 'function') arioneToast('Salve o produto antes de clonar.', 'warning');
+          return;
+      }
+      // Reset de Identidade: limpa ID e SKU, força novo INSERT
+      document.querySelector('input[name="id"]').value = 'new';
+      const skuInput = document.getElementById('campo-cod-interno');
+      const refInput = document.getElementById('campo-referencia');
+      const descInput = document.getElementById('campo-descricao');
+      if (skuInput) { skuInput.value = ''; skuInput.readOnly = false; }
+      if (refInput) { refInput.value = ''; }
+      if (descInput) { descInput.value = 'CLONE - ' + (descInput.value || ''); }
+      // Atualiza URL para /novo e foca no SKU
+      window.history.pushState({}, '', '{{ url_for("cadastros.form_produto") }}');
+      if (skuInput) { skuInput.focus(); skuInput.style.borderColor = 'var(--pri)'; }
+      const statusDiv = document.getElementById('header-action-status');
+      if (statusDiv) statusDiv.innerHTML = '<i class="fas fa-clone"></i> CLONANDO PRODUTO';
+      if (typeof arioneToast === 'function') arioneToast('🔁 Clone criado! Informe o novo SKU e salve.', 'success');
+  }
+
+  /** NOVO: Reseta o formulário para criar um novo produto */
+  function resetFormProduto() {
+      window.location.href = '{{ url_for("cadastros.form_produto") }}';
+  }
+
+  /** EXPORTAR: Download do catálogo de produtos em CSV (PADRÃO DOWLOAD) */
+  function exportarProdutos() {
+      if (typeof arioneToast === 'function') arioneToast('📥 Preparando download do catálogo AriOne...', 'info');
+      // Chama a rota de exportação do backend
+      window.location.href = '/cadastros/produtos/exportar';
+  }
+
+  /** IMPORTAR: Upload de arquivo CSV para integração em lote (PADRÃO UPLOAD) */
+  function importarProdutos() {
+      let inp = document.getElementById('import-csv-input');
+      if (!inp) {
+          inp = document.createElement('input');
+          inp.type = 'file'; 
+          inp.id = 'import-csv-input';
+          inp.accept = '.csv';
+          inp.style.display = 'none';
+          inp.onchange = async function(e) {
+              const file = e.target.files[0];
+              if (!file) return;
+              
+              const formData = new FormData();
+              formData.append('arquivo', file);
+              
+              if (typeof arioneToast === 'function') arioneToast('⚙️ Integrando dados ao AriOne...', 'info');
+              
+              try {
+                  const res = await fetch('/cadastros/produtos/importar', {
+                      method: 'POST',
+                      body: formData,
+                      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                      arioneToast(data.message, 'success');
+                      // Recarrega para ver os novos produtos
+                      setTimeout(() => window.location.reload(), 1500);
+                  } else {
+                      arioneToast(data.message, 'danger');
+                  }
+              } catch(err) {
+                  console.error("Erro na importação:", err);
+                  arioneToast('Falha crítica ao enviar arquivo.', 'danger');
+              }
+          };
+          document.body.appendChild(inp);
+      }
+      inp.click();
+  }
+
+  /** IMPRIMIR: Abre janela de impressão do formulário atual */
+  function imprimirMaster() {
+      window.print();
+  }
+
+  /** EMAIL: Dispara envio de e-mail do produto */
+  function enviarEmailMaster() {
+      const nome = document.getElementById('campo-descricao')?.value || 'Produto AriOne';
+      const sku = document.getElementById('campo-cod-interno')?.value || '';
+      const url = window.location.href;
+      
+      const subject = encodeURIComponent(`Detalhes do Produto: ${nome}`);
+      const body = encodeURIComponent(`Olá,\n\nSegue o link com as informações do produto cadastrado:\n\nProduto: ${nome}\nSKU: ${sku}\nLink: ${url}\n\nAtenciosamente.`);
+      
+      window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+      if (typeof arioneToast === 'function') arioneToast('📧 Abrindo o seu cliente de e-mail...', 'info');
+  }
+
+  /** WHATSAPP: Dispara envio via WhatsApp */
+  function enviarWhatsAppMaster() {
+      const nome = document.getElementById('campo-descricao')?.value || 'Produto AriOne';
+      const sku = document.getElementById('campo-cod-interno')?.value || '';
+      const url = window.location.href;
+      
+      const text = encodeURIComponent(`*${nome}*\nSKU: ${sku}\n\nAcesse direto no sistema:\n${url}`);
+      
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+      if (typeof arioneToast === 'function') arioneToast('💬 Redirecionando para o WhatsApp...', 'success');
+  }
+
+  
+  // 1. DADOS E CONFIGURAÇÃO INICIAL --------------------------------------------
+  const existingData = {{ (produto.grade_matrix if produto and produto.grade_matrix else {})|tojson|safe }};
+  const selectedCoresGrade = [
+      {% if produto and produto.grade_cores %}
+          {% for c_nome in produto.grade_cores %}
+              {% set cor_obj = cores_catalogo|selectattr("nome", "equalto", c_nome)|first %}
+              { nome: "{{ c_nome }}", hex: "{{ cor_obj.cor_hex if cor_obj else '#CBD5E0' }}" },
+          {% endfor %}
+      {% endif %}
+  ];
+  const selectedAtributosGrade = [
+      {% if produto and produto.grade_valores_adicional %}
+          {% for a_nome in produto.grade_valores_adicional %}
+              { nome: "{{ a_nome }}" },
+          {% endfor %}
+      {% endif %}
+  ];
+
+  // 2. MOTOR DE NAVEGAÇÃO E INTERFACE ------------------------------------------
+  function positionExpandBadge(tabElement) {
+    if (!tabElement) tabElement = document.querySelector('.fp-tab.active');
+    const badge = document.getElementById('badge-expandir');
+    if (!badge || !tabElement) return;
+    setTimeout(() => {
+      const left = tabElement.offsetLeft + (tabElement.offsetWidth / 2) - (badge.offsetWidth / 2);
+      badge.style.left = left + 'px';
+    }, 10);
+  }
+
+  function toggleIdentificacao(expand) {
+    const b = document.getElementById('body-identificacao');
+    const i = document.getElementById('icon-identificacao');
+    const mod = document.querySelector('.mod-produto');
+    if (!b || !i || !mod) return;
+
+    const shouldExpand = (expand === undefined) ? b.style.display === 'none' : expand;
+
+    if (shouldExpand) {
+        b.style.display = 'flex';
+        i.style.transform = 'rotate(0deg)';
+        mod.classList.remove('is-collapsed');
+        const badge = document.getElementById('badge-expandir');
+        if (badge) badge.style.display = 'none';
+        if (expand !== undefined) window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        b.style.display = 'none';
+        i.style.transform = 'rotate(180deg)';
+        mod.classList.add('is-collapsed');
+        const badge = document.getElementById('badge-expandir');
+        if (badge) { badge.style.display = 'flex'; positionExpandBadge(); }
+    }
+  }
+
+
+
+  function filtrarTabelaProdutos() {
+    const input = document.getElementById('filtro-produtos');
+    const filter = input ? input.value.toUpperCase() : '';
+    const table = document.getElementById('tabela-produtos-master');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) {
+        let txt = tr[i].textContent || tr[i].innerText;
+        tr[i].style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+    }
+  }
+
+  // 3. LÓGICA DE CADASTROS MESTRE E SKUS ---------------------------------------
+  function abrirModalMaster(target) {
+    const rotas = {
+      'unidades': '/cadastros/cards/unidades', 
+      'modelos': '/cadastros/produtos/catalogos/modelos',
+      'categorias': '/cadastros/cards/categorias', 
+      'subcategorias': '/cadastros/cards/subcategorias',
+      'marcas': '/cadastros/cards/marcas', 
+      'fornecedores': '/cadastros/fornecedores/cards/form',
+      'depositos': '/cadastros/cards/depositos', 
+      'cores': '/cadastros/cards/cores',
+      'grades': '/cadastros/produtos/catalogos/modelos', 
+      'tamanhos': '/cadastros/cards/tamanhos', 
+      'atributos': '/cadastros/cards/atributos', 
+      'materiaprima': '/cadastros/cards/materiaprima',
+      'acessorios': '/cadastros/cards/acessorios',
+      'insumos': '/cadastros/cards/insumos',
+      'embalagens': '/cadastros/cards/embalagens',
+      'servicos': '/cadastros/servicos/cards/form'
+    };
+    const url = rotas[target] || `/cadastros/${target}/cards/form`;
+    const funcGlobal = window.abrirModalGlobal || (window.parent && window.parent.abrirModalGlobal);
+    
+    if (typeof funcGlobal === 'function') { 
+        funcGlobal(url); 
+        return; 
+    }
+
+    // 🛡️ Fallback Seguro (Pilar da Navegação): abre um modal inline para não perder o contexto do produto
+    let modalEmergencial = document.getElementById('modal-master-emergencial');
+    if (!modalEmergencial) {
+        modalEmergencial = document.createElement('div');
+        modalEmergencial.id = 'modal-master-emergencial';
+        modalEmergencial.style.cssText = 'display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(4px); animation:feFadeIn 0.2s ease;';
+        modalEmergencial.innerHTML = `
+          <div style="background:#fff; width:96%; max-width:1100px; max-height:90vh; border-radius:16px; overflow:hidden; box-shadow:0 25px 60px rgba(0,0,0,0.4); display:flex; flex-direction:column;">
+            <div style="background:#7A255F; color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+              <span style="font-weight:800; font-size:14px;"><i class="fas fa-link"></i> Cadastro Auxiliar</span>
+              <button onclick="document.getElementById('modal-master-emergencial').remove()" 
+                style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:16px;" 
+                title="Fechar e voltar ao formulário de produto">✕</button>
+            </div>
+            <iframe id="iframe-master-emergencial" src="${url}" style="flex:1; border:none; width:100%; min-height:500px;"></iframe>
+          </div>`;
+        document.body.appendChild(modalEmergencial);
+    } else {
+        document.getElementById('iframe-master-emergencial').src = url;
+        modalEmergencial.style.display = 'flex';
+    }
+  }
+
+  function gerarEAN(targetId) {
+    const input = document.getElementById(targetId);
+    if (!input) return;
+    let ean = "789" + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+    let sum = 0;
+    for (let i = 0; i < 12; i++) sum += parseInt(ean[i]) * (i % 2 === 0 ? 1 : 3);
+    ean += (10 - (sum % 10)) % 10;
+    input.value = ean;
+    if (typeof arioneToast === 'function') arioneToast(`EAN ${ean} gerado!`, "success");
+  }
+  // 4. MOTOR DE SKU PAI (GERADOR AUTOMÁTICO) ----------------------------------
+
+  async function gerarCodInternoRegra(force = false) {
+    const sO = document.getElementsByName('origem_produto')[0];
+    const sM = document.getElementsByName('tipo_material_id')[0];
+    const sC = document.getElementsByName('categoria')[0];
+    const input = document.getElementById('campo-cod-interno');
+    if (!input || !sO || !sM || !sC) return;
+
+    const getSiglaMP = (t) => {
+        if (!t || t.includes("—")) return "";
+        const w = t.trim().split(/\s+/).filter(x => x.length >= 2);
+        if (w.length >= 2) return (w[0][0] + w[1][0]).toUpperCase();
+        return t.substring(0, 2).toUpperCase();
+    };
+
+    let p1 = "";
+    if (sO.value === 'terceiros') {
+        p1 = "AF"; // A (Adquirido) + F (Fornecedor)
+    } else {
+        p1 = "FP"; // F (Fabricação) + P (Própria) - Mantendo padrão para própria
+    }
+
+    const p2 = sM.value ? getSiglaMP(sM.options[sM.selectedIndex].text) : "";
+    const p3 = sC.value ? sC.value.substring(0, 1).toUpperCase() : "";
+
+    const regra = document.getElementsByName('regra_cod_interno')[0]?.value;
+    const refInput = document.getElementsByName('referencia')[0];
+    const codInput = document.getElementById('campo-cod-interno');
+
+    if (regra === 'livre') {
+        if (codInput) { 
+            codInput.readOnly = false; 
+            codInput.style.background = '#fff'; 
+            codInput.style.cursor = 'text'; 
+            codInput.placeholder = "Digite o código...";
+        }
+    } else if (regra === 'fornecedor') {
+        if (codInput) {
+            codInput.readOnly = false;
+            codInput.style.background = '#fff';
+            codInput.style.cursor = 'text';
+            if (!codInput.value.startsWith(p1)) {
+                codInput.value = p1;
+            }
+            codInput.placeholder = `${p1} + Cód. Fornecedor`;
+        }
+    } else {
+        // MODO AUTOMÁTICO
+        if (codInput) { 
+            codInput.readOnly = true; 
+            codInput.style.background = '#f8fafc'; 
+            codInput.style.cursor = 'not-allowed'; 
+        }
+        
+        console.log("🛠️ AriOne SKU Engine:", {p1, p2, p3});
+        
+        if (p1 && p2 && p3) {
+          const prefixo = `${p1}-${p2}-${p3}`;
+          console.log("⚡ Gerando SKU Pai com prefixo:", prefixo);
+          try {
+            const res = await fetch(`/cadastros/produtos/proximo-sequencial-interno?prefixo=${encodeURIComponent(prefixo)}`);
+            const data = await res.json();
+            const num = data.proximo || 1;
+            const fullCode = prefixo + String(num);
+            codInput.value = fullCode;
+            syncSkuPai(fullCode);
+            console.log("✅ SKU Pai Gerado com Sucesso:", fullCode);
+            if(typeof arioneToast === 'function') arioneToast(`SKU Pai Gerado: ${fullCode}`, "info");
+          } catch (e) { 
+            console.error("❌ Erro no Fetch do Sequencial:", e);
+          }
+        }
+    }
+  }
+
+  let modoEstoqueInteragido = false;
+  async function forceSubmitProduto(silent = false) {
+    console.log("🚀 Iniciando salvamento " + (silent ? "automático..." : "forçado..."));
+    const form = document.getElementById('form-produto');
+    const btnFooter = document.querySelector('.fp-btn-salvar-footer');
+    
+    if (!form) return;
+
+    // Indicador visual discreto para Auto-Save
+    if (silent) {
+        let ind = document.getElementById('autosave-indicator');
+        if(!ind) {
+            ind = document.createElement('div');
+            ind.id = 'autosave-indicator';
+            ind.style = "position:fixed; bottom:20px; left:20px; background:var(--pri); color:#fff; padding:6px 12px; border-radius:20px; font-size:10px; font-weight:800; z-index:9999; box-shadow:0 4px 15px rgba(0,0,0,0.2); display:flex; align-items:center; gap:6px; transition:0.3s;";
+            document.body.appendChild(ind);
+        }
+        ind.innerHTML = '<i class="fas fa-sync fa-spin"></i> SINCRONIZANDO...';
+        ind.style.opacity = '1';
+    }
+
+    if (!silent && btnFooter) {
+        btnFooter.disabled = true;
+        btnFooter.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+    }
+    
+    try {
+      if (typeof collectMatrixData === 'function') collectMatrixData(false); // false para não disparar recursivo
+      if (typeof collectComposicaoData === 'function') collectComposicaoData();
+      
+      if (!silent) {
+          // 🛡️ Validação de Escolha Obrigatória (Modo Neutro)
+          const modoSelecionado = document.querySelector('[name="tipo_estoque"]:checked');
+          
+          if (!modoSelecionado) {
+              if (typeof arioneToast === 'function') arioneToast("⚠️ ESCOLHA OBRIGATÓRIA: Defina se este produto é ÚNICO ou COM GRADE.", "warning");
+              const tabEstoque = document.querySelector('[onclick*="aba-estoque"]');
+              if (tabEstoque) tabEstoque.click();
+              if (btnFooter) { btnFooter.disabled = false; btnFooter.innerHTML = '<i class="fas fa-save"></i> SALVAR PRODUTO'; }
+              return;
+          }
+
+          // 🛡️ Alerta de Revisão para Modo Único (Evita esquecimento)
+          if (modoSelecionado.value === 'unico') {
+              const confirmUnico = await arioneConfirm("💡 Este produto está como ÚNICO (Sem Grade). Deseja continuar ou prefere CONFIGURAR GRADE antes?", btnFooter);
+              if (!confirmUnico) {
+                  // O usuário quer revisar, então mudamos para Grade e paramos
+                  alternarGrade('grade');
+                  const radioGrade = document.querySelector('input[name="tipo_estoque"][value="grade"]');
+                  if(radioGrade) radioGrade.checked = true;
+                  if (btnFooter) { btnFooter.disabled = false; btnFooter.innerHTML = '<i class="fas fa-save"></i> SALVAR PRODUTO'; }
+                  return;
+              }
+          }
+          
+          // 🛡️ Validação de Localização (Depósito)
+          const depositoInput = document.querySelector('input[name="deposito"]');
+          if (!depositoInput || !depositoInput.value.trim()) {
+              if (typeof arioneToast === 'function') arioneToast("⚠️ LOCALIZAÇÃO OBRIGATÓRIA: Defina o Depósito onde o produto será armazenado.", "warning");
+              const tabEstoque = document.querySelector('[onclick*="aba-estoque"]');
+              if (tabEstoque) tabEstoque.click();
+              if (depositoInput) depositoInput.focus();
+              if (btnFooter) { btnFooter.disabled = false; btnFooter.innerHTML = '<i class="fas fa-save"></i> SALVAR PRODUTO'; }
+              return;
+          }
+
+          if (!await arioneConfirm("🛡️ AriOne: Deseja realmente salvar as alterações neste registro?", btnFooter)) {
+              if (btnFooter) {
+                  btnFooter.disabled = false;
+                  btnFooter.innerHTML = '<i class="fas fa-save"></i> SALVAR PRODUTO';
+              }
+              return;
+          }
+          if (!form.checkValidity()) {
+              form.reportValidity();
+              if (btnFooter) {
+                  btnFooter.disabled = false;
+                  btnFooter.innerHTML = '<i class="fas fa-save"></i> SALVAR PRODUTO';
+              }
+              return;
+          }
+      }
+
+
+      const formData = new FormData(form);
+      const response = await fetch(form.action || window.location.href, { 
+        method: 'POST', 
+        body: formData, 
+        headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+      });
+      
+      if (response.ok) { 
+          const contentType = response.headers.get("content-type");
+          if (silent) {
+              const ind = document.getElementById('autosave-indicator');
+              if(ind) {
+                  ind.innerHTML = '<i class="fas fa-check"></i> SALVO';
+                  ind.style.background = '#27AE60';
+                  // Limpa a mensagem mais rápido (800ms em vez de 2s) para não poluir o cabeçalho
+                  setTimeout(() => { ind.style.opacity = '0'; }, 800);
+              }
+          } else if (contentType && contentType.indexOf("application/json") !== -1) {
+              const data = await response.json();
+              if (data.success) {
+                  if (typeof arioneToast === 'function') arioneToast(data.message || "Salvo com sucesso!", "success");
+                  // Recarrega para o ID correto se for novo, ou apenas atualiza
+                  setTimeout(() => { window.location.href = `/cadastros/produtos/cards/form/${data.id}`; }, 500);
+              } else {
+                  if (typeof arioneToast === 'function') arioneToast(data.message, "danger");
+              }
+          } else {
+              const html = await response.text();
+              const wrapper = document.querySelector('.mod-produto');
+              if (wrapper) {
+                  const frag = document.createRange().createContextualFragment(html);
+                  wrapper.replaceWith(frag);
+                  if (typeof arioneToast === 'function') arioneToast("Produto salvo com sucesso!", "success");
+              }
+          }
+      } else { 
+          const errData = await response.json().catch(() => ({}));
+          if(!silent && typeof arioneToast === 'function') arioneToast(errData.message || "Erro ao salvar.", "danger");
+      }
+    } catch (e) { 
+        console.error("Erro no AJAX:", e);
+        if (typeof arioneToast === 'function') arioneToast("Erro de conexão. Tentando salvamento padrão...", "warning");
+        form.submit(); 
+    } finally { 
+        setTimeout(() => {
+            if (btnFooter) {
+                btnFooter.disabled = false;
+                btnFooter.innerHTML = '<i class="fas fa-save"></i> SALVAR PRODUTO';
+            }
+        }, 2000);
+    }
+  }
+
+  function syncSkuPai(val) {
+    const cod = val || document.getElementById('campo-cod-interno')?.value || '';
+    const campo = document.getElementById('campo-referencia');
+    if (campo && cod) {
+        campo.value = cod;
+        if (typeof forceRenderMatrix === 'function') forceRenderMatrix(true);
+    }
+  }
+
+  // 4. MOTOR DA MATRIZ DE VARIAÇÕES -------------------------------------------
+  function renderCoresChips() {
+      const list = document.getElementById('lista-cores-selecionadas');
+      if(!list) return;
+      list.innerHTML = selectedCoresGrade.map((c, i) => `
+        <div class="fp-selection-item active" style="display:flex; align-items:center; gap:10px; padding:10px; border:1px solid var(--pri); border-radius:10px; margin-bottom:6px; background:var(--pri-bg);">
+          <input type="checkbox" name="grade_cores" value="${c.nome}" checked style="display:none;">
+          <span style="width:14px; height:14px; border-radius:50%; background:${c.hex}; border:1px solid #ddd;"></span>
+          <span style="font-size:12px; font-weight:800; color:var(--pri); flex:1;">${c.nome}</span>
+          <i class="fas fa-times" onclick="selectedCoresGrade.splice(${i},1); renderCoresChips(); forceRenderMatrix();" style="cursor:pointer; color:#e53e3e;"></i>
+        </div>
+      `).join('');
+  }
+
+  // 5. GESTÃO DE DEPÓSITO E ENDEREÇAMENTO -----------------------------------
+  const mapeamentoEnderecos = {{ mapeamento_prateleiras|tojson|safe if mapeamento_prateleiras else '{}' }};
+
+  function filtrarPrateleiras(depInput, dataListId) {
+      if (!depInput) return;
+      const dataList = document.getElementById(dataListId || 'lista-prateleiras-dinamica');
+      if (!dataList) return;
+
+      const depositoNome = depInput.value.trim();
+      dataList.innerHTML = ''; // Limpa as sugestões anteriores
+      
+      const prateleiras = mapeamentoEnderecos[depositoNome] || [];
+      console.log(`📦 AriOne: Sugerindo ${prateleiras.length} prateleiras para o depósito "${depositoNome}"`);
+
+      prateleiras.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          dataList.appendChild(opt);
+      });
+  }
+
+  // Executa o filtro inicial se já houver um depósito selecionado
+  document.addEventListener('DOMContentLoaded', () => {
+      const inputs = document.querySelectorAll('input[name="deposito"]');
+      inputs.forEach(inp => {
+          if (inp.value) {
+              const dl = inp.closest('.fp-row').querySelector('datalist[id^="lista-prateleiras"]')?.id;
+              setTimeout(() => filtrarPrateleiras(inp, dl), 500);
+          }
+      });
+  });
+
+  function adicionarCorGradePorSelecao() {
+      const sel = document.getElementById('sel-cores-catalogo');
+      if(!sel.value || selectedCoresGrade.some(c => c.nome === sel.value)) return;
+      selectedCoresGrade.push({ nome: sel.value, hex: sel.options[sel.selectedIndex].dataset.hex });
+      renderCoresChips(); forceRenderMatrix();
+  }
+
+  function renderAtributosChips() {
+      const list = document.getElementById('lista-atributos-selecionados');
+      if(!list) return;
+      list.innerHTML = selectedAtributosGrade.map((a, i) => `
+        <div class="fp-selection-item active" style="display:flex; align-items:center; gap:10px; padding:8px; border:1px solid #F39C12; border-radius:10px; margin-bottom:6px; background:rgba(243,156,18,0.05);">
+          <input type="checkbox" name="grade_valores_adicional" value="${a.nome}" checked style="display:none;">
+          <span style="font-size:11px; font-weight:800; color:#F39C12; flex:1;">${a.nome}</span>
+          <i class="fas fa-times" onclick="selectedAtributosGrade.splice(${i},1); renderAtributosChips(); forceRenderMatrix();" style="cursor:pointer; color:#e53e3e;"></i>
+        </div>
+      `).join('');
+  }
+
+  function adicionarAtributoGrade() {
+      const sel = document.getElementById('sel-atributo-catalogo');
+      if(!sel.value || selectedAtributosGrade.some(a => a.nome === sel.value)) return;
+      selectedAtributosGrade.push({ nome: sel.value });
+      renderAtributosChips(); forceRenderMatrix();
+  }
+
+  function forceRenderMatrix(force = false) {
+      const wrap = document.getElementById('tabela-grade-wrap');
+      if(!wrap) return;
+      
+      const cores = selectedCoresGrade.map(c => c.nome);
+      const tams = [...document.querySelectorAll('[name=grade_tamanhos]:checked')].map(t => t.value);
+      const attrs = selectedAtributosGrade.map(a => a.nome);
+      
+      // Sincronização Master Preventiva
+      const refEl = document.getElementById('campo-referencia');
+      const descEl = document.getElementById('campo-descricao');
+      const codIntEl = document.getElementById('campo-cod-interno');
+      
+      if (refEl && codIntEl && !refEl.value && codIntEl.value) {
+          refEl.value = codIntEl.value;
+      }
+
+      const skuPai = refEl?.value || '';
+      const descPai = descEl?.value || '';
+      
+      if(!cores.length || !tams.length) {
+          wrap.innerHTML = '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:12px;">Defina Cores e Tamanhos para gerar a grade.</div>';
+          updateGradeSummary(); return;
+      }
+
+      if (force && (!skuPai || !descPai)) {
+          // 🛡️ AriOne Master Recovery: Tenta gerar se estiver vazio
+          if (!skuPai && typeof gerarCodInternoRegra === 'function') {
+              gerarCodInternoRegra(true);
+              setTimeout(() => forceRenderMatrix(true), 500); // Tenta de novo após gerar
+              return;
+          }
+
+          let msg = "Atenção: ";
+          if (!skuPai && !descPai) msg += "Preencha a Referência e a Descrição primeiro!";
+          else if (!skuPai) msg += "A Referência (SKU Pai) ainda não foi gerada ou preenchida!";
+          else msg += "A Descrição do produto é obrigatória!";
+          
+          console.warn("🚀 AriOne Matrix Blocked:", { skuPai, descPai });
+          if (typeof arioneToast === 'function') arioneToast(msg, "warning");
+          
+          toggleIdentificacao(true);
+          if (!descPai && descEl) { descEl.style.borderColor = "#e53e3e"; descEl.focus(); }
+          else if (!skuPai && refEl) { refEl.style.borderColor = "#e53e3e"; refEl.focus(); }
+          
+          return;
+      }
+
+      let html = `<div style="margin-top:10px; margin-bottom:5px; padding-bottom:4px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:6px;"><i class="fas fa-boxes" style="color:var(--pri); font-size:13px;"></i> <span style="font-size:11px; font-weight:800; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px;">Estrutura de Variações e Estoque</span></div>`;
+      html += `<table class="fp-table" style="font-size:9px; width:100%;"><thead><tr>
+        <th style="width:130px; padding:4px;">SKU-FILHO</th>
+        <th style="padding:4px;">Variação do produto pai</th>
+        <th style="width:90px; text-align:right; padding:4px; background:rgba(122,37,95,0.05); color:var(--pri);">CUSTO TOTAL</th>
+        <th style="width:85px; text-align:center; padding:4px;">Estoque Atacado</th>
+        <th style="width:85px; text-align:center; padding:4px;">Estoque Varejo</th>
+        <th style="width:85px; text-align:center; padding:4px;">Mínimo Atacado</th>
+        <th style="width:85px; text-align:center; padding:4px;">Mínimo Varejo</th>
+        <th style="width:65px; text-align:center; padding:4px;">Composição</th>
+        <th style="width:50px; text-align:center; padding:4px;">Status</th>
+      </tr></thead><tbody id="tbody-grade">`;
+      // Renderiza a grade com cores, tamanhos e atributos
+      if (cores.length > 0) {
+          cores.forEach(c => {
+              tams.forEach(t => {
+                  if (attrs.length > 0) attrs.forEach(a => { html += renderRow(c, t, a, force); });
+                  else html += renderRow(c, t, null, force);
+              });
+          });
+      } else {
+          // Se não houver cores, renderiza apenas tamanhos e atributos
+          tams.forEach(t => {
+              if (attrs.length > 0) attrs.forEach(a => { html += renderRow(null, t, a, force); });
+              else html += renderRow(null, t, null, force);
+          });
+      }
+      wrap.innerHTML = html + '</tbody></table>';
+      updateGradeSummary(); 
+      collectMatrixData();
+      if (typeof updateComposicaoSizes === 'function') updateComposicaoSizes();
+      triggerAutoSave();
+
+      // 🚀 FLUXO MASTER ARIONE: Pula para Composição após gerar matriz
+      if (force) {
+          const chkComp = document.getElementById('chk-has-composicao');
+          if (chkComp) chkComp.checked = true;
+          
+          if (typeof toggleComposicaoTab === 'function') toggleComposicaoTab(true);
+          
+          setTimeout(() => {
+              const btnComp = document.getElementById('btn-tab-composicao');
+              const panelComp = document.getElementById('tab-composicao');
+              
+              if (btnComp && panelComp) {
+                  // Desativa todas e ativa Composição
+                  document.querySelectorAll('.fp-tab, .fp-tab-panel').forEach(el => el.classList.remove('active'));
+                  btnComp.classList.add('active');
+                  panelComp.classList.add('active');
+                  
+                  // Scroll suave para as ações da engenharia
+                  const acoes = document.getElementById('acoes-composicao');
+                  if(acoes) acoes.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  
+                  if(typeof arioneToast === 'function') arioneToast("Grade gerada! Configure a engenharia abaixo.", "success");
+              }
+          }, 100);
+      }
+  }
+
+  function renderRow(c, t, a, force = false) {
+      const key = `${c}|${t}|${a || ''}`;
+      const val = existingData[key] || {};
+      const skuPai = document.getElementsByName('referencia')[0]?.value || '';
+      const descPai = document.getElementsByName('descricao')[0]?.value || '';
+      const cCode = c ? c.substring(0,3).toUpperCase() : 'BASE';
+      const skuAuto = (skuPai && (force || !val.sku)) ? `${skuPai}-${cCode}-${t.toUpperCase()}` : (val.sku || '');
+      const fator = val.fator || (t.includes('GG') ? '1.20' : t.includes('XG') ? '1.35' : '1.00');
+      const un_fator = val.un_fator || 'UN';
+
+      const prodId = document.querySelector('input[name="id"]')?.value || 'AUTO';
+      const catPai = document.getElementById('sel-categoria')?.value || 'S/C';
+      const depPai = document.getElementsByName('deposito')[0]?.value || 'ESTOQUE PADRÃO';
+      const pratPai = document.getElementsByName('prateleira')[0]?.value || '';
+      const localPai = pratPai ? `${depPai} - ${pratPai.toUpperCase().includes('PRATELEIRA') ? '' : 'PRATELEIRA '}${pratPai.toUpperCase()}` : depPai;
+
+      let label = descPai || '';
+      if (a) label += ' ' + a;
+
+      let suffixParts = [];
+      if (t) suffixParts.push(t);
+      if (c) suffixParts.push(c); // Se houver cor (caso de edição de variação específica futuramente)
+      if (suffixParts.length > 0) label += ' - ' + suffixParts.join(' - ');
+
+      const labelHtml = label ? `<span style="font-weight:600; color:#444; font-size:10px;">${label}</span>` : `<span style="color:#e53e3e; font-style:italic; font-size:10px;">Aguardando Descrição...</span>`;
+
+      const isOk = val.conferido === true;
+      const isReplicated = val.replicated === true;
+      const statusHtml = isReplicated ? `<i class="fas fa-check-double mat-replicated-icon" style="color:${isOk ? '#2ecc71' : '#ff4444'}; font-size:12px; transition: color 0.3s ease;" title="Variação Replicada (Aguardando Conferência)"></i>` : (val.status ? `<span style="background:#F0FFF4; color:#2ecc71; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:800; border:1px solid #C6F6D5;">${val.status}</span>` : '');
+
+      // 🚀 Calcular custo total da composição
+      let custoTotal = val.custo || 0;
+      if (typeof window.composicaoData !== 'undefined') {
+          const compKey = a ? `${c}|${t}|${a}` : `${c}|${t}|`;
+          const compData = window.composicaoData[compKey] || window.composicaoData['GERAL'] || [];
+          if (compData.length > 0) {
+              custoTotal = 0;
+              compData.forEach(item => {
+                  const itemCusto = parseFloat(item.custo) || 0;
+                  const itemQtd = parseFloat(item.qtd) || 0;
+                  custoTotal += itemCusto * itemQtd;
+              });
+          }
+      }
+
+      return `<tr class="matrix-row" data-key="${key}" onclick="openCompositionForVariation(this, '${c}', '${t}', '${a || ''}')" style="border-bottom: 1px solid #f1f5f9; cursor:pointer; transition: background 0.2s;">
+        <td style="padding: 1px;"><input class="fp-input sku-input" type="text" value="${skuAuto}" data-base-sku="${skuAuto}" placeholder="${skuPai ? skuAuto : '...'}" style="height:18px !important; width:100%; font-size:9px !important; font-weight:700 !important; color:var(--pri); padding:0 4px !important; border:none; background:rgba(122,37,95,0.03); border-radius:3px; letter-spacing:-0.1px;" onchange="collectMatrixData()" onclick="event.stopPropagation()"></td>
+        <td style="padding: 1px 4px; font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${label}"> ${labelHtml}</td>
+        <td style="padding: 1px 4px; text-align:right; font-weight:800; color:var(--pri); font-size:9px; background:rgba(122,37,95,0.03);">R$ ${custoTotal.toFixed(2).replace('.', ',')}</td>
+        <td style="padding: 1px; text-align:center;"><input class="fp-input mat-est-atacado" type="number" value="${val.est_atacado || 0}" style="height:16px; font-size:9px; text-align:center; padding:0; border:none; background:transparent; color:#444;" onchange="collectMatrixData()" onclick="event.stopPropagation()" title="Estoque Atacado"></td>
+        <td style="padding: 1px; text-align:center;"><input class="fp-input mat-est-varejo" type="number" value="${val.est_varejo || 0}" style="height:16px; font-size:9px; text-align:center; padding:0; border:none; background:transparent; color:#444;" onchange="collectMatrixData()" onclick="event.stopPropagation()" title="Estoque Varejo"></td>
+        <td style="padding: 1px; text-align:center;"><input class="fp-input mat-min-atacado" type="number" value="${val.min_atacado || 0}" style="height:16px; font-size:9px; text-align:center; padding:0; border:none; background:transparent; color:#999;" onchange="collectMatrixData()" onclick="event.stopPropagation()" title="Mínimo Atacado"></td>
+        <td style="padding: 1px; text-align:center;"><input class="fp-input mat-min-varejo" type="number" value="${val.min_varejo || 0}" style="height:16px; font-size:9px; text-align:center; padding:0; border:none; background:transparent; color:#999;" onchange="collectMatrixData()" onclick="event.stopPropagation()" title="Mínimo Varejo"></td>
+        <td style="padding: 1px; text-align:center;">
+            <button type="button" style="background:none; border:none; color:var(--pri); cursor:pointer; font-size:10px; opacity:0.6; line-height:1;" title="Inserir a engenharia para esta variação">
+                <i class="fas fa-shapes"></i>
+            </button>
+        </td>
+        <td style="padding: 1px; text-align:center;" class="mat-status-cell">
+            <div style="display:flex; align-items:center; justify-content:center; gap:5px;" onclick="event.stopPropagation()">
+                <input type="checkbox" class="mat-check-status" ${isOk ? 'checked' : ''} onchange="collectMatrixData()" style="width:12px; height:12px; cursor:pointer;" title="Marcar como conferido">
+                ${statusHtml}
+            </div>
+        </td>
+      </tr>`;
+  }
+
+  function openCompositionForVariation(el, color, size, attr) {
+      const row = el.closest('tr');
+      const skuFilho = row.querySelector('.sku-input')?.value || 'SEM SKU';
+      const key = `${color}|${size}|${attr || ''}`;
+      // Remove NULL e limpa espaços/traços extras
+      const cleanColor = color.replace(/NULL/gi, '').replace(/\s+/g, ' ').replace(/-+/g, '-').replace(/\s*-\s*/g, ' - ').trim();
+      const cleanSize = size.replace(/NULL/gi, '').replace(/\s+/g, ' ').replace(/-+/g, '-').replace(/\s*-\s*/g, ' - ').trim();
+      const cleanAttr = attr ? attr.replace(/NULL/gi, '').replace(/\s+/g, ' ').replace(/-+/g, '-').replace(/\s*-\s*/g, ' - ').trim() : '';
+      const label = `<span style="color:#000;">[${skuFilho}]</span> - ${cleanAttr ? cleanAttr + ' - ' : ''}${cleanColor} - ${cleanSize}`;
+
+      const btn = document.getElementById('btn-tab-composicao');
+      if(btn) btn.click();
+
+      if(typeof switchComposicaoVariation === 'function') {
+          switchComposicaoVariation(key, label);
+      }
+      
+      // AriOne Master Focus: Scroll e destaque no bloco de ações e botão MP com BRILHO
+      setTimeout(() => {
+          const acoes = document.getElementById('acoes-composicao');
+          if(acoes) acoes.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const btnMp = document.getElementById('btn-mp');
+          if (btnMp) {
+              btnMp.focus();
+              btnMp.classList.add('arione-active-glow');
+              setTimeout(() => { btnMp.classList.remove('arione-active-glow'); }, 5000);
+          }
+      }, 350);
+  }
+
+  function collectMatrixData(shouldAutoSave = true) {
+      const data = {};
+      const cores = selectedCoresGrade.map(c => c.nome);
+      
+      document.querySelectorAll('.matrix-row').forEach(row => {
+          const baseKey = row.dataset.key; 
+          const parts = baseKey.split('|');
+          const t = parts[1];
+          const a = parts[2] || '';
+          
+          const isOk = row.querySelector('.mat-check-status')?.checked || false;
+          const statusCell = row.querySelector('.mat-status-cell');
+          const isReplicated = statusCell?.querySelector('.mat-replicated-icon') !== null;
+          let status = statusCell?.textContent.trim() || '';
+          if (!status && isReplicated) status = 'REPLICADO';
+
+          const skuPai = document.getElementsByName('referencia')[0]?.value || '';
+          const baseRowData = { 
+              sku: row.querySelector('.sku-input')?.value || '', 
+              conferido: isOk,
+              replicated: isReplicated && !isOk,
+              status: status,
+              est_atacado: row.querySelector('.mat-est-atacado')?.value || '0', 
+              est_varejo: row.querySelector('.mat-est-varejo')?.value || '0', 
+              min_atacado: row.querySelector('.mat-min-atacado')?.value || '0', 
+              min_varejo: row.querySelector('.mat-min-varejo')?.value || '0', 
+              estoque: '0', 
+              minimo: '0',  
+              varejo: '0', 
+              atacado: '0'
+          };
+
+          // Se não houver cores, salva pelo menos a base
+          if (cores.length === 0) {
+              data[baseKey] = baseRowData;
+          } else {
+              // Expande para todas as cores selecionadas
+              cores.forEach(c => {
+                  const fullKey = `${c}|${t}|${a}`;
+                  const colorCode = c.substring(0,3).toUpperCase();
+                  let fullSku = baseRowData.sku;
+                  if (!fullSku || fullSku.includes('null') || fullSku === `${skuPai}-${t.toUpperCase()}`) {
+                      fullSku = `${skuPai}-${colorCode}-${t.toUpperCase()}`;
+                  }
+                  data[fullKey] = { ...baseRowData, sku: fullSku };
+              });
+          }
+      });
+      const hidden = document.getElementById('matrix_json_hidden');
+      if(hidden) hidden.value = JSON.stringify(data);
+      if(shouldAutoSave && typeof triggerAutoSave === 'function') triggerAutoSave();
+  }
+
+  function updateGradeSummary() {
+      const total = selectedCoresGrade.length * document.querySelectorAll('[name=grade_tamanhos]:checked').length * (selectedAtributosGrade.length || 1);
+      const b = document.getElementById('badge-variacoes');
+      if(b) b.innerHTML = `<i class="fas fa-calculator"></i> ${total} Variações`;
+  }
+
+  // 5. INICIALIZAÇÃO E EVENTOS -------------------------------------------------
+  function parseMoney(v) { 
+      if (!v) return 0;
+      if (typeof v === 'number') return v;
+      return parseFloat(v.replace(/\./g, '').replace(',', '.')) || 0; 
+  }
+  
+  function calcMargens() {
+    const custo = parseMoney(document.getElementById('preco_custo')?.value || '');
+    ['preco_varejo', 'preco_atacado'].forEach(id => {
+      const preco = parseMoney(document.getElementById(id)?.value || ''), el = document.getElementById('mg_' + id);
+      if (el && custo > 0 && preco > 0) {
+        const mg = ((preco - custo) / preco * 100).toFixed(1);
+        el.textContent = mg + '%';
+        el.style.color = parseFloat(mg) >= 0 ? '#27AE60' : '#e53e3e';
+      }
+    });
+  }
+
+  function previewImagens(input) {
+      const preview = document.getElementById('preview-imagens');
+      if (!preview) return;
+      if (input.files) {
+          const currentCount = preview.children.length;
+          [...input.files].forEach((file, index) => {
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                  const div = document.createElement('div');
+                  div.style.cssText = 'width:130px; height:130px; border-radius:12px; border:1px solid #eee; overflow:hidden; position:relative;';
+                  div.innerHTML = `
+                      <img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">
+                      <div style="position:absolute; top:8px; left:8px; background:rgba(122,37,95,0.9); color:#fff; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.2);">Imagem ${currentCount + index + 1}</div>
+                      <button type="button" onclick="this.parentElement.remove(); renumerarImagens();" style="position:absolute; top:8px; right:8px; background:rgba(231,76,60,0.9); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:12px; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">✕</button>
+                  `;
+                  preview.appendChild(div);
+              }
+              reader.readAsDataURL(file);
+          });
+      }
+  }
+
+  function renumerarImagens() {
+      const preview = document.getElementById('preview-imagens');
+      if (!preview) return;
+      const badges = preview.querySelectorAll('div[style*="background:rgba(122,37,95,0.9)"]');
+      badges.forEach((badge, index) => {
+          badge.textContent = `Imagem ${index + 1}`;
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("🚀 AriOne Engine: Orquestrador Global Consolidado Ativo.");
+    
+    // Inicia Componentes
+    if(typeof renderCoresChips === 'function') renderCoresChips();
+    if(typeof renderAtributosChips === 'function') renderAtributosChips();
+    if(typeof forceRenderMatrix === 'function') forceRenderMatrix();
+    if(typeof calcMargens === 'function') calcMargens();
+
+    // Configura Máscaras Monetárias
+    document.querySelectorAll('.fp-mask-money').forEach(el => {
+      el.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '');
+        v = (parseInt(v || '0') / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        e.target.value = v;
+      });
+    });
+    
+    // Configura Abas
+    document.querySelectorAll('.fp-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        toggleIdentificacao(false);
+        document.querySelectorAll('.fp-tab, .fp-tab-panel').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        const target = document.getElementById('tab-' + btn.dataset.tab);
+        if(target) target.classList.add('active');
+        positionExpandBadge(btn);
+      });
+    });
+
+    // Configura Scroll Inteligente
+    window.addEventListener('scroll', () => {
+      const mod = document.querySelector('.mod-produto');
+      if (mod && window.scrollY > 150) {
+        if (!mod.classList.contains('is-collapsed')) toggleIdentificacao(false);
+        mod.classList.add('is-scrolled');
+      } else if(mod) { mod.classList.remove('is-scrolled'); }
+    });
+
+    // Ouvinte para Origem do Produto (Fabricação Própria inibe Fornecedor)
+    const sO = document.getElementsByName('origem_produto')[0];
+    if (sO) sO.addEventListener('change', handleOrigemChange);
+
+    // Configura Ouvintes de SKU/CodInterno
+    const sM = document.getElementsByName('tipo_material_id')[0];
+    const sC = document.getElementsByName('categoria')[0];
+    [sO, sM, sC].forEach(el => { 
+        if(el) el.addEventListener('change', gerarCodInternoRegra);
+    });
+
+    handleOrigemChange();
+
+
+    
+    // Inicialização de Componentes de Grade
+    if(typeof sortTamanhosChips === 'function') sortTamanhosChips();
+    if(typeof gerarCodInternoRegra === 'function') gerarCodInternoRegra();
+    
+    const hasComp = document.getElementById('chk-has-composicao')?.checked;
+    if(typeof toggleComposicaoTab === 'function') toggleComposicaoTab(hasComp);
+
+    // 🛡️ AriOne Header Sync: Força o selo de status (Novo/Editando)
+    if(typeof syncHeaderStatus === 'function') syncHeaderStatus();
+
+    // Debug de Listagem
+    const listaCount = {{ produtos|length if produtos else 0 }};
+    console.log(`📦 AriOne Debug: ${listaCount} produtos recebidos do backend.`);
+    const gridBody = document.getElementById('body-lista-produtos');
+    if (gridBody) {
+        console.log(`👁️ Grid visibility: ${gridBody.style.display || 'default'}`);
+        // Força visibilidade se sumiu sem motivo
+        if (gridBody.style.display === 'none' && !document.querySelector('.mod-produto').classList.contains('is-full-list')) {
+            gridBody.style.display = 'block';
+        }
+    }
+  });
+
+  function alternarGrade(val) {
+    modoEstoqueInteragido = true;
+    
+    // Atualiza o estilo visual dos botões (labels)
+    document.querySelectorAll('.fp-toggle-mini-h').forEach(lbl => {
+        const inp = lbl.querySelector('input');
+        if (inp && inp.value === val) {
+            lbl.style.background = '#7A255F';
+            lbl.style.color = '#fff';
+            lbl.style.borderColor = '#7A255F';
+            lbl.style.boxShadow = 'none';
+        } else {
+            lbl.style.background = '#fff';
+            lbl.style.color = '#64748b';
+            lbl.style.borderColor = '#e2e8f0';
+            lbl.style.boxShadow = 'none';
+        }
+    });
+
+    const bUnico = document.getElementById('bloco-unico');
+    const bGrade = document.getElementById('bloco-grade');
+    if(bUnico) bUnico.style.display = val === 'unico' ? 'block' : 'none';
+    if(bGrade) bGrade.style.display = val === 'grade' ? 'block' : 'none';
+    
+    // Atualiza a engenharia se necessário
+    if (typeof updateComposicaoSizes === 'function') updateComposicaoSizes();
+  }
+
+  function handleOrigemChange() {
+    const selOrigem = document.querySelector('select[name="origem_produto"]');
+    const inputFornecedor = document.querySelector('input[name="fornecedor"]');
+    const wrapFornecedor = document.getElementById('wrap-fornecedor');
+    
+    if (!selOrigem || !inputFornecedor) return;
+    
+    if (selOrigem.value === 'propria') {
+        inputFornecedor.disabled = true;
+        inputFornecedor.value = ''; 
+        if (wrapFornecedor) {
+            wrapFornecedor.style.opacity = '0.5';
+            wrapFornecedor.style.pointerEvents = 'none';
+            wrapFornecedor.setAttribute('title', 'Para Fabricação Própria, não é necessário definir fornecedor externo.');
+        }
+    } else {
+        inputFornecedor.disabled = false;
+        if (wrapFornecedor) {
+            wrapFornecedor.style.opacity = '1';
+            wrapFornecedor.style.pointerEvents = 'auto';
+            wrapFornecedor.removeAttribute('title');
+        }
+    }
+  }
+
+  function renderTamanhosDynamic(itens, checkedValues = []) {
+      const wrap = document.getElementById('chips-tamanhos');
+      if (!wrap) return;
+      wrap.innerHTML = itens.map(tam => {
+          const val = tam.trim().toUpperCase();
+          const isChecked = checkedValues.includes(val);
+          return `
+            <label class="fp-chip" style="padding: 4px 10px;">
+              <input type="checkbox" name="grade_tamanhos" value="${val}" onchange="validarTrocaTamanho(this)" ${isChecked ? 'checked' : ''}>
+              <span style="font-size: 12px; font-weight: 700;">${val}</span>
+            </label>
+          `;
+      }).join('');
+      sortTamanhosChips();
+      updateGradeSummary();
+      forceRenderMatrix();
+  }
+
+  async function carregarGradeModelo() {
+    const sel = document.getElementById('sel-grade-modelo');
+    const id = sel ? sel.value : null;
+    if(!id) return;
+    try {
+        const response = await fetch(`/cadastros/catalogos/grades/${id}/json`);
+        const data = await response.json();
+        if(data && data.itens) {
+            // Ao carregar um modelo, renderizamos os tamanhos dele e marcamos todos como ativos
+            renderTamanhosDynamic(data.itens, data.itens);
+            if (typeof arioneToast === 'function') arioneToast(`Grade "${data.nome}" carregada!`, "success");
+        }
+    } catch(e) { 
+        console.error("Erro ao carregar grade:", e);
+        if (typeof arioneToast === 'function') arioneToast("Erro ao carregar modelo de grade.", "danger");
+    }
+  }
+
+  async function validarTrocaTamanho(checkbox) {
+      if (!checkbox.checked) {
+          const produtoId = document.getElementsByName('id')[0]?.value;
+          if (produtoId && produtoId !== '0') {
+              try {
+                  const res = await fetch(`/produtos/checar-uso-variacao/${produtoId}/tamanho/${checkbox.value}`);
+                  const data = await res.json();
+                  if (data.bloqueado) {
+                      checkbox.checked = true;
+                      if (typeof arioneToast === 'function') arioneToast(data.mensagem, "danger");
+                      return;
+                  }
+              } catch(e) { console.error(e); }
+          }
+      }
+      forceRenderMatrix();
+  }
+
+  function sortTamanhosChips() {
+      const wrap = document.getElementById('chips-tamanhos');
+      if (!wrap) return;
+      const chips = Array.from(wrap.querySelectorAll('.fp-chip'));
+      const standardOrder = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XGG', 'XXG', 'EXG', 'G1', 'G2', 'G3', 'G4', 'G5'];
+      chips.sort((a, b) => {
+          const valA = a.querySelector('input').value.toUpperCase();
+          const valB = b.querySelector('input').value.toUpperCase();
+          let idxA = standardOrder.indexOf(valA), idxB = standardOrder.indexOf(valB);
+          if (idxA === -1) idxA = parseInt(valA) || 500;
+          if (idxB === -1) idxB = parseInt(valB) || 500;
+          return idxA - idxB;
+      });
+      chips.forEach(chip => wrap.appendChild(chip));
+  }
+
+  function toggleComposicaoTab(show) {
+    const btn = document.getElementById('btn-tab-composicao');
+    const wrap = document.getElementById('wrap-mov-composicao');
+    const container = document.getElementById('engenharia-container');
+    
+    if (btn) btn.style.display = show ? 'flex' : 'none';
+    if (wrap) wrap.style.display = show ? 'flex' : 'none';
+    if (container) container.style.display = show ? 'block' : 'none';
+
+    if (!show && document.getElementById('tab-composicao')?.classList.contains('active')) {
+        const tabGrade = document.querySelector('.fp-tab[data-tab="grades"]');
+        if(tabGrade) tabGrade.click();
+    }
+    
+    if (show && typeof updateComposicaoSizes === 'function') {
+        updateComposicaoSizes();
+    }
+  }
+
+  // 🚀 MOTOR DE AUTO-SAVE (INTELIGÊNCIA ARIONE)
+  let autoSaveTimeout;
+  function triggerAutoSave() {
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+          if (typeof forceSubmitProduto === 'function') {
+              forceSubmitProduto(true); // true = silent save
+          }
+      }, 2000); // Salva após 2 segundos de inatividade
+  }
+
+  // Validação de Salvamento
+  const formProd = document.getElementById('form-produto');
+  if (formProd) {
+    formProd.addEventListener('submit', function(e) {
+      if(typeof collectMatrixData === 'function') collectMatrixData();
+      if(typeof collectComposicaoData === 'function') collectComposicaoData();
+      if (!this.checkValidity()) {
+        e.preventDefault();
+        this.reportValidity();
+      }
+    });
+  }
+
+  // ── VALIDAÇÃO DE DUPLICIDADE EM TEMPO REAL (ARI ONE INTEGRITY) ──
+  async function validarDuplicidadeProduto(input, campo) {
+      const valor = input.value.trim();
+      if (!valor) return;
+
+      const form = document.getElementById('form-produto');
+      const action = form.getAttribute('action') || window.location.href;
+      let id = 'new';
+      const match = action.match(/\/(\d+)$/);
+      if (match) id = match[1];
+
+      const formData = new FormData();
+      formData.append('model', 'Produto');
+      formData.append('field', campo);
+      formData.append('value', valor);
+      formData.append('exclude_id', id);
+
+      try {
+          const res = await fetch('{{ url_for("cadastros.check_duplicate") }}', {
+              method: 'POST',
+              body: formData,
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          const data = await res.json();
+
+          if (data.duplicate) {
+              input.style.borderColor = '#e53e3e';
+              input.style.background = '#fff5f5';
+              
+              let errSpan = input.parentNode.querySelector('.ari-duplicate-error');
+              if (!errSpan) {
+                  errSpan = document.createElement('span');
+                  errSpan.className = 'ari-duplicate-error';
+                  errSpan.style.cssText = 'color:#e53e3e; font-size:10px; font-weight:700; display:block; margin-top:4px;';
+                  input.parentNode.appendChild(errSpan);
+              }
+              errSpan.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Atenção: Este ${campo === 'descricao' ? 'nome' : 'código'} já existe!`;
+              
+              if(typeof arioneToast === 'function') arioneToast(`O ${campo === 'descricao' ? 'nome' : 'código'} "${valor}" já existe!`, "warning");
+          } else {
+              input.style.borderColor = '';
+              input.style.background = '';
+              const errSpan = input.parentNode.querySelector('.ari-duplicate-error');
+              if (errSpan) errSpan.remove();
+          }
+      } catch (e) {
+          console.error("Erro na validação de duplicidade:", e);
+      }
+  }
+
+  document.getElementById('campo-descricao')?.addEventListener('blur', function() { validarDuplicidadeProduto(this, 'descricao'); });
+  document.getElementById('campo-cod-interno')?.addEventListener('blur', function() { validarDuplicidadeProduto(this, 'cod_interno'); });
+
+  function filtrarTabelaProdutos() {
+      const input = document.getElementById('filtro-produtos');
+      const filterCat = document.getElementById('filter-categoria')?.value.toUpperCase() || '';
+      const filterOri = document.getElementById('filter-origem')?.value.toUpperCase() || '';
+      
+      const filterText = input ? input.value.toUpperCase() : '';
+      const table = document.getElementById('tabela-produtos-master');
+      if (!table) return;
+      const tr = table.getElementsByTagName('tr');
+
+      for (let i = 1; i < tr.length; i++) {
+          let textMatch = !filterText;
+          let catMatch = !filterCat;
+          let oriMatch = !filterOri;
+          
+          const tds = tr[i].getElementsByTagName('td');
+          
+          // Busca textual (em todas as colunas)
+          if (filterText) {
+              for (let j = 0; j < tds.length; j++) {
+                  if (tds[j]) {
+                      const txtValue = tds[j].textContent || tds[j].innerText;
+                      if (txtValue.toUpperCase().indexOf(filterText) > -1) {
+                          textMatch = true;
+                          break;
+                      }
+                  }
+              }
+          }
+          
+          // Filtro Categoria (Coluna 4)
+          if (filterCat && tds[3]) {
+              const catValue = tds[3].textContent.trim().toUpperCase();
+              if (catValue === filterCat) catMatch = true;
+          }
+          
+          // Filtro Origem (Coluna 5 - assumindo que a origem está na lista)
+          // Se não estiver na lista, podemos usar dataset na TR
+          if (filterOri && tds[4]) {
+             const oriValue = tds[4].textContent.trim().toUpperCase();
+             if (oriValue.indexOf(filterOri) > -1) oriMatch = true;
+          }
+
+          tr[i].style.display = (textMatch && catMatch && oriMatch) ? "" : "none";
+      }
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+      // Inicializa visibilidade de abas de produção
+      const chkComp = document.getElementById('chk-has-composicao');
+      if (chkComp) toggleComposicaoTab(chkComp.checked);
+      
+      console.log("🛡️ AriOne: Orquestrador de Produtos pronto.");
+      console.log("📦 AriOne Data: Fornecedores disponíveis:", {{ fornecedores|length if fornecedores else 0 }});
+  });
+
+  /** SMART SEARCH: Melhora a busca de fornecedores via datalist com feedback visual */
+  function arioneSearchFornecedor(input) {
+      const val = input.value.trim();
+      const list = document.getElementById('lista-fornecedores');
+      if (!list) return;
+      
+      const options = Array.from(list.options).map(opt => opt.value);
+      const wrapper = input.closest('.fp-input-wrapper');
+      const searchIcon = wrapper ? wrapper.querySelector('.fa-search') : null;
+      
+      if (options.includes(val)) {
+          // FOCO: Fornecedor selecionado com sucesso
+          input.style.borderColor = '#28a745';
+          input.style.backgroundColor = 'rgba(40, 167, 69, 0.02)';
+          if (searchIcon) {
+              searchIcon.className = 'fas fa-check-circle';
+              searchIcon.style.color = '#28a745';
+              searchIcon.style.opacity = '1';
+          }
+          console.log("✅ AriOne: Fornecedor selecionado e validado:", val);
+      } else {
+          // Voltando ao estado original ou buscando
+          input.style.borderColor = '';
+          input.style.backgroundColor = '';
+          if (searchIcon) {
+              searchIcon.className = 'fas fa-search';
+              searchIcon.style.color = 'var(--muted)';
+              searchIcon.style.opacity = '0.6';
+          }
+      }
+  }
+</script>
+{% endblock %}

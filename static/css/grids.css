@@ -1,0 +1,385 @@
+/* ===========================================================
+   ARIONE DEV
+   Arquivo : grids.css
+   Local   : static/css/
+   Função  : Estilos globais dos grids de cards e modais
+   =========================================================== */
+
+/* ===== GRID WRAPPER ===== */
+.ge-grid-wrapper { padding: 10px 0; }
+
+.ge-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #7A255F;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #7A255F;
+}
+
+.ge-cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* ===== CARD ===== */
+.ge-card {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    padding: 24px 15px 18px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    border: 1.5px solid #eeeeee;
+    gap: 10px;
+}
+
+.ge-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.13);
+    border-color: var(--card-cor);
+}
+
+/* ÍCONE DECORATIVO DE FUNDO */
+.ge-card-bg-icon {
+    position: absolute;
+    font-size: 90px;
+    color: var(--card-cor);
+    opacity: 0.07;
+    bottom: -10px;
+    right: -10px;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.ge-card:hover .ge-card-bg-icon {
+    opacity: 0.13;
+}
+
+/* ÍCONE PRINCIPAL */
+.ge-card-icon-wrap {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: var(--card-cor-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    z-index: 1;
+}
+
+.ge-card:hover .ge-card-icon-wrap {
+    opacity: 1;
+}
+
+.ge-card-icon {
+    font-size: 28px;
+    color: var(--card-cor);
+}
+
+.ge-card-icon-wrap i {
+    z-index: 2;
+}
+
+.ge-card-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #343a40;
+    text-align: center;
+    z-index: 1;
+}
+
+.ge-card-desc {
+    font-size: 11px;
+    color: #999;
+    text-align: center;
+    z-index: 1;
+}
+
+/* ===== MODAL ===== */
+/* Modais ge - AriOne Global Standard */
+.ge-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0,0,0,0.6);
+    z-index: 99999 !important; /* Acima de tudo, inclusive sidebar */
+    align-items: flex-start;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    padding-top: 50px;
+}
+
+.ge-modal-overlay.ativo { display: flex; }
+
+.ge-modal {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 95%;
+    max-width: 1100px; /* Aumentado para suportar grids operacionais AriOne Premium */
+    max-height: 95vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    animation: modalEntrar 0.25s ease;
+}
+
+@keyframes modalEntrar {
+    from { opacity: 0; transform: translateY(-18px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ge-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #7A255F, #a8357f);
+    border-radius: 16px 16px 0 0;
+}
+
+.ge-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.ge-modal-icon { font-size: 20px; color: #fff; }
+
+.ge-modal-fechar {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+.ge-modal-fechar:hover { background: rgba(255,255,255,0.35); }
+
+.ge-modal-body { padding: 28px 24px; }
+
+/* ===== FORMULÁRIOS ===== */
+.ge-form { display: flex; flex-direction: column; gap: 16px; }
+.ge-form-row { display: flex; gap: 16px; }
+.ge-form-row .ge-form-group { flex: 1; }
+.ge-form-group { display: flex; flex-direction: column; gap: 5px; }
+
+.ge-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+}
+
+.ge-form-group input,
+.ge-form-group select,
+.ge-form-group textarea {
+    padding: 10px 13px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fafafa;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+
+.ge-form-group input:focus,
+.ge-form-group select:focus,
+.ge-form-group textarea:focus {
+    outline: none;
+    border-color: #7A255F;
+    box-shadow: 0 0 0 3px rgba(122,37,95,0.12);
+    background: #fff;
+}
+
+.ge-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+
+.ge-btn-salvar {
+    background: linear-gradient(135deg, #7A255F, #a8357f);
+    color: #fff;
+    border: none;
+    padding: 11px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.ge-btn-salvar:hover { opacity: 0.88; }
+
+.ge-btn-cancelar {
+    background: #f0f0f0;
+    color: #555;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.ge-btn-cancelar:hover { background: #e0e0e0; }
+
+/* ===== BI DASHBOARD - GESTÃO À VISTA ===== */
+.fe-grid-decisao {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.card-decisao {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border-left: 6px solid #7A255F;
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-decisao:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.card-decisao.alerta-critico { border-left-color: #e74c3c; }
+.card-decisao.alerta-atencao { border-left-color: #f1c40f; }
+
+.card-decisao-icon {
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    font-size: 80px;
+    opacity: 0.04;
+    color: #000;
+}
+
+.card-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #a0aec0;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.card-val {
+    font-size: 26px;
+    color: #2d3748;
+    margin: 0;
+}
+
+.card-hint {
+    font-size: 13px;
+    color: #718096;
+    margin-top: 8px;
+    display: block;
+}
+
+.btn-acao {
+    margin-top: 20px;
+    background: #f8fafc;
+    color: #7A255F;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.card-decisao:hover .btn-acao {
+    background: #7A255F;
+    color: #fff;
+}
+
+/* SEÇÃO DE PENDÊNCIAS */
+.secao-decisao-rapida {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border: 1.5px solid #edf2f7;
+}
+
+.secao-decisao-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lista-pendencias {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lista-pendencias li {
+    padding: 15px 0;
+    border-bottom: 1.5px solid #f1f5f9;
+    font-size: 14px;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.lista-pendencias li:last-child { border-bottom: none; }
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.status-dot.critico { background: #e74c3c; box-shadow: 0 0 10px rgba(231, 76, 60, 0.4); }
+.status-dot.atencao { background: #f1c40f; box-shadow: 0 0 10px rgba(241, 196, 15, 0.4); }
+.status-dot.ok { background: #27ae60; box-shadow: 0 0 10px rgba(39, 174, 96, 0.4); }
+
+.link-ajuste {
+    color: #7A255F;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: auto;
+    font-size: 12px;
+}
+
+.link-ajuste:hover { text-decoration: underline; }

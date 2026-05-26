@@ -1,0 +1,1092 @@
+{# =============================================================================
+Caminho : templates/cadastros/cards/empresa/form_empresa.html
+Arquivo : form_empresa.html
+Função : Cadastro Mestre de Empresa (PAAv1 GOLDEN STANDARD)
+Cor Tema : #7A255F (Roxo Institucional)
+Estado : Restaurado para Versão de Estabilidade (22:00H)
+============================================================================= #}
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fe-wrap mod-empresa">
+
+    {# ── Flash Messages ── #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+    <div class="fe-flash fe-flash-{{ cat }}">
+        <i
+            class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+        {{ msg }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+    <style>
+        .arione-page {
+            padding: 0 !important;
+        }
+
+        .fe-wrap {
+            height: auto !important;
+            overflow: visible !important;
+            padding: 0 !important;
+        }
+    </style>
+
+    <form id="form-empresa-mestre" method="POST" enctype="multipart/form-data" novalidate>
+        {# Hidden: ID do registro (edição vs. novo) #}
+        <input type="hidden" name="id" value="{{ empresa.id|default('', true) }}">
+        {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+        {% from "macros/componentes.html" import cabecalho_mestre_arione, info_icon %}
+        {{ cabecalho_mestre_arione(
+        titulo='Cadastro de Empresa',
+        subtitulo='Cadastros > Empresa > Unidade de Negócio',
+        icone='fa-building',
+        cor_tema='#7A255F',
+        func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='empresa') ~ "'",
+        form_id='form-empresa-mestre',
+        onclick_novo='resetFormEmpresa()',
+        onclick_save='salvarEmpresa()',
+        onclick_search='focarPesquisaEmpresa()',
+        onclick_filter='abrirModalFiltrosAvancados()',
+        onclick_list='alternarFormListaEmpresa()',
+        onclick_clonar='clonarEmpresa()',
+        onclick_export='exportarEmpresasCSV()',
+        onclick_import='abrirModalImportacaoXML()',
+        onclick_print='imprimirRelatorioEmpresa()',
+        onclick_email='enviarEmpresaEmail()',
+        onclick_whatsapp='enviarEmpresaWhatsApp()',
+        status='Ativo',
+        ajuda='Gerencie os dados mestres da unidade, incluindo identificação, contatos, endereços e informações fiscais.',
+        tamanho='grande'
+        ) }}
+
+        {# ── BARRA DE FILTROS AVANÇADOS ── #}
+        <div id="filter-bar-emp" style="display: none; gap: 12px; align-items: center; padding: 10px 24px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 12px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #7A255F; text-transform: uppercase; letter-spacing: 0.5px;">
+                <i class="fas fa-sliders-h"></i> Filtros
+            </div>
+            <input type="text" id="filtro-razao" class="fe-input" style="flex: 1; min-width: 180px; padding: 6px 10px; font-size: 11px;" placeholder="Razão Social..." onkeyup="aplicarFiltrosEmpresa()">
+            <input type="text" id="filtro-cidade" class="fe-input" style="width: 140px; padding: 6px 10px; font-size: 11px;" placeholder="Cidade..." onkeyup="aplicarFiltrosEmpresa()">
+            <select id="filtro-tipo" class="fe-input" style="width: 100px; padding: 6px 10px; font-size: 11px;" onchange="aplicarFiltrosEmpresa()">
+                <option value="">Tipo</option>
+                <option value="PF">PF</option>
+                <option value="PJ">PJ</option>
+            </select>
+            <button type="button" onclick="limparFiltrosEmpresa()" class="fe-btn fe-btn-ghost-dark" style="padding: 5px 12px; font-size: 10px; font-weight: 700;">
+                <i class="fas fa-eraser"></i> Limpar
+            </button>
+        </div>
+
+        <div id="area-formulario-empresa" style="padding: 0; background: #f8fafc; min-height: 100vh; width: 100%; display: flex; flex-direction: column;">
+            {# 🏛️ PARTE SUPERIOR FIXA - CABEÇALHO GRANDE #}
+            <div style="background: #fff; border-bottom: 1px solid #e2e8f0; padding: 45px 40px; flex-shrink: 0;">
+                <div class="op-container-fluid" style="max-width: 1600px; margin: 0 auto;">
+                    <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+                        {# ── BLOCO 1: IDENTIFICAÇÃO MASTER (ENCAIXADO NO CABEÇALHO) ── #}
+                        <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+                            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fas fa-id-card" style="color: #7A255F; margin-right: 10px;"></i>
+                                    <span style="color: #7A255F; font-weight: 700;">Dados Mestres da Unidade</span>
+                                </div>
+                            </div>
+                            <div style="padding: 20px 25px;">
+                    <div class="fe-card-body">
+                        <div class="fe-row">
+                            <div class="fe-group" style="max-width: 100px;">
+                                <label class="fe-label">ID</label>
+                                <input class="fe-input" type="text" value="{{ empresa.id if empresa else '(Novo)' }}"
+                                    readonly style="background:#f8fafc; font-weight: 700; text-align: center;">
+                            </div>
+                            <div class="fe-group fe-flex-4">
+                                <label class="fe-label">Razão Social <span class="fe-req">*</span></label>
+                                <input class="fe-input" type="text" name="razao_social"
+                                    value="{{ empresa.razao_social|default('', true) }}" required
+                                    placeholder="RAZÃO SOCIAL COMPLETA" oninput="this.value = this.value.toUpperCase()"
+                                    style="font-weight: 700;">
+                            </div>
+                            <div class="fe-group fe-flex-3">
+                                <label class="fe-label">Nome Fantasia</label>
+                                <input class="fe-input" type="text" name="nome_fantasia"
+                                    value="{{ empresa.nome_fantasia|default('', true) }}"
+                                    placeholder="NOME COMERCIAL / FANTASIA"
+                                    oninput="this.value = this.value.toUpperCase()">
+                            </div>
+                            <div class="fe-group" style="max-width: 100px;">
+                                <label class="fe-label">Tipo</label>
+                                <select class="fe-input" name="tipo_pessoa" id="tipo_pessoa" onchange="toggleTipoPessoa()">
+                                    <option value="PJ" {% if not empresa or empresa.tipo_pessoa=='PJ' %}selected{% endif %}>PJ</option>
+                                    <option value="PF" {% if empresa and empresa.tipo_pessoa=='PF' %}selected{% endif %}>PF</option>
+                                </select>
+                            </div>
+                            <div class="fe-group" style="max-width: 100px;">
+                                <label class="fe-label">Unidade</label>
+                                <select class="fe-input" name="unidade">
+                                    <option value="MATRIZ" {% if not empresa or empresa.unidade=='MATRIZ' %}selected{% endif %}>Matriz</option>
+                                    <option value="FILIAL" {% if empresa and empresa.unidade=='FILIAL' %}selected{% endif %}>Filial</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="fe-row" id="row-pj">
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">CNPJ <span class="fe-req">*</span></label>
+                                <input class="fe-input mask-cnpj" type="text" name="cnpj"
+                                    value="{{ empresa.cnpj|default('', true) }}" required
+                                    placeholder="00.000.000/0000-00">
+                            </div>
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">Inscrição Estadual</label>
+                                <input class="fe-input" type="text" name="ie" value="{{ empresa.ie|default('', true) }}"
+                                    placeholder="Isento">
+                            </div>
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">CNAE Principal</label>
+                                <input class="fe-input" type="text" name="cnae"
+                                    value="{{ empresa.cnae|default('', true) }}" placeholder="0000-0/00">
+                            </div>
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">Início Atividade</label>
+                                <input class="fe-input" type="date" name="data_abertura"
+                                    value="{{ empresa.data_abertura|default('', true) }}">
+                            </div>
+                        </div>
+                        <div class="fe-row" id="row-pf" style="display: none;">
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">CPF <span class="fe-req">*</span></label>
+                                <input class="fe-input mask-cpf" type="text" name="cpf"
+                                    value="{{ empresa.cpf|default('', true) }}"
+                                    placeholder="000.000.000-00">
+                            </div>
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">RG</label>
+                                <input class="fe-input" type="text" name="rg" value="{{ empresa.rg|default('', true) }}"
+                                    placeholder="RG">
+                            </div>
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label" id="label-cnae-ssp">SSP</label>
+                                <input class="fe-input" type="text" name="cnae"
+                                    value="{{ empresa.cnae|default('', true) }}" placeholder="SSP">
+                            </div>
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">Início Atividade</label>
+                                <input class="fe-input" type="date" name="data_abertura"
+                                    value="{{ empresa.data_abertura|default('', true) }}">
+                            </div>
+                        </div>
+                        <div class="fe-row">
+                            <div class="fe-group fe-flex-2">
+                                <label class="fe-label">Regime Tributário</label>
+                                <select class="fe-input" name="regime_tributario">
+                                    <option value="" disabled selected>Selecione o Regime...</option>
+                                    <option value="MEI" {% if empresa and empresa.regime_tributario=='MEI' %}selected{% endif %}>MEI - MICROEMPREENDEDOR INDIVIDUAL</option>
+                                    <option value="SIMPLES_NACIONAL" {% if empresa and empresa.regime_tributario=='SIMPLES_NACIONAL' %}selected{% endif %}>SIMPLES NACIONAL</option>
+                                    <option value="LUCRO_PRESUMIDO" {% if empresa and empresa.regime_tributario=='LUCRO_PRESUMIDO' %}selected{% endif %}>LUCRO PRESUMIDO</option>
+                                    <option value="LUCRO_REAL" {% if empresa and empresa.regime_tributario=='LUCRO_REAL' %}selected{% endif %}>LUCRO REAL</option>
+                                    <option value="OUTROS" {% if empresa and empresa.regime_tributario=='OUTROS' %}selected{% endif %}>OUTROS / IMUNE / ISENTO</option>
+                                </select>
+                            </div>
+                            <div class="fe-group fe-flex-4">
+                                <label class="fe-label">Atividade Principal / Objeto Social</label>
+                                <select class="fe-input" name="objeto_social" style="font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                                    <option value="" disabled selected>SELECIONE A ATIVIDADE...</option>
+                                    <option value="COMERCIO_VAREJISTA" {% if empresa and empresa.objeto_social=='COMERCIO_VAREJISTA' %}selected{% endif %}>COMÉRCIO VAREJISTA</option>
+                                    <option value="COMERCIO_ATACADISTA" {% if empresa and empresa.objeto_social=='COMERCIO_ATACADISTA' %}selected{% endif %}>COMÉRCIO ATACADISTA</option>
+                                    <option value="INDUSTRIA" {% if empresa and empresa.objeto_social=='INDUSTRIA' %}selected{% endif %}>INDÚSTRIA / FABRICAÇÃO</option>
+                                    <option value="SERVICOS" {% if empresa and empresa.objeto_social=='SERVICOS' %}selected{% endif %}>PRESTAÇÃO DE SERVIÇOS</option>
+                                    <option value="AGRONEGOCIO" {% if empresa and empresa.objeto_social=='AGRONEGOCIO' %}selected{% endif %}>AGRONEGÓCIO / PECUÁRIA</option>
+                                    <option value="CONSTRUCAO_CIVIL" {% if empresa and empresa.objeto_social=='CONSTRUCAO_CIVIL' %}selected{% endif %}>CONSTRUÇÃO CIVIL</option>
+                                    <option value="TRANSPORTE" {% if empresa and empresa.objeto_social=='TRANSPORTE' %}selected{% endif %}>TRANSPORTE E LOGÍSTICA</option>
+                                    <option value="TECNOLOGIA" {% if empresa and empresa.objeto_social=='TECNOLOGIA' %}selected{% endif %}>TECNOLOGIA DA INFORMAÇÃO</option>
+                                    <option value="SAUDE" {% if empresa and empresa.objeto_social=='SAUDE' %}selected{% endif %}>SAÚDE E BEM-ESTAR</option>
+                                    <option value="OUTROS" {% if empresa and empresa.objeto_social=='OUTROS' %}selected{% endif %}>OUTROS / NÃO ESPECIFICADO</option>
+                                </select>
+                            </div>
+                        </div>
+                            </div>
+                        </div>
+
+                        {# CARD: CONTATOS (ENCAIXADO NO CABEÇALHO) #}
+                        <div class="op-card" style="flex: 1; min-width: 400px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+                            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <i class="fas fa-headset" style="color: #3399ee; margin-right: 10px;"></i>
+                                    <span style="color: #3399ee; font-weight: 700;">Canais de Comunicação</span>
+                                </div>
+                            </div>
+                            <div style="padding: 20px 25px;">
+                                <div class="fe-row">
+                                    <div class="fe-group">
+                                        <label class="fe-label"><i class="fas fa-phone" style="margin-right: 5px;"></i>Telefone Principal</label>
+                                        <input class="fe-input mask-phone" type="text" name="telefone"
+                                            value="{{ empresa.telefone|default('', true) }}" placeholder="(00) 0000-0000">
+                                    </div>
+                                    <div class="fe-group">
+                                        <label class="fe-label"><i class="fab fa-whatsapp" style="margin-right: 5px; color: #25D366;"></i>WhatsApp Corporativo</label>
+                                        <input class="fe-input mask-phone" type="text" name="whatsapp"
+                                            value="{{ empresa.whatsapp|default('', true) }}" placeholder="(00) 0 0000-0000">
+                                    </div>
+                                    <div class="fe-group">
+                                        <label class="fe-label"><i class="fas fa-envelope" style="margin-right: 5px;"></i>E-mail Operacional</label>
+                                        <input class="fe-input" type="email" name="email"
+                                            value="{{ empresa.email|default('', true) }}" placeholder="atendimento@empresa.com"
+                                            oninput="this.value = this.value.toLowerCase()">
+                                    </div>
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group">
+                                        <label class="fe-label"><i class="fas fa-user-tie" style="margin-right: 5px; color: #7A255F;"></i>Responsável</label>
+                                        <input class="fe-input" type="text" name="contato_nome"
+                                            value="{{ empresa.contato_nome|default('', true) }}" placeholder="Nome do responsável"
+                                            oninput="this.value = this.value.toUpperCase()">
+                                    </div>
+                                    <div class="fe-group">
+                                        <label class="fe-label"><i class="fab fa-instagram" style="margin-right: 5px; color: #E1306C;"></i>Instagram</label>
+                                        <input class="fe-input" type="text" name="instagram"
+                                            value="{{ empresa.instagram|default('', true) }}" placeholder="@empresa">
+                                    </div>
+                                    <div class="fe-group">
+                                        <label class="fe-label"><i class="fab fa-facebook" style="margin-right: 5px; color: #1877F2;"></i>Facebook</label>
+                                        <input class="fe-input" type="text" name="facebook"
+                                            value="{{ empresa.facebook|default('', true) }}" placeholder="facebook.com/empresa">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── NAVEGAÇÃO DE ABAS (TOP POSITION - ARIONE STANDARD) ── #}
+            <div class="fe-tabs-wrap" style="position: sticky; top: 60px; z-index: 998; margin: 0 0 10px 0; padding: 0 40px;">
+                <div class="fe-tabs-nav">
+                    <button type="button" class="fe-tab active" data-tab="identidade">
+                        <i class="fas fa-map-marker-alt"></i> Endereços
+                    </button>
+                    <button type="button" class="fe-tab" data-tab="digital">
+                        <i class="fas fa-fingerprint"></i> Digital
+                    </button>
+                    <button type="button" class="fe-tab" data-tab="documentos">
+                        <i class="fas fa-file-pdf"></i> Arquivos
+                    </button>
+                </div>
+            </div>
+
+            <div class="fe-tabs-panels" style="min-height: auto; padding-bottom: 10px; padding: 0 40px;">
+
+                    {# ── ABA ENDEREÇOS ── #}
+                    <div class="fe-tab-panel active" id="tab-identidade">
+                        <div class="fe-addr-grid"
+                            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+
+                            {# ── ENDEREÇO PRINCIPAL (FATURAMENTO) ── #}
+                            <div class="fe-addr-card"
+                                style="border-left: 4px solid #7A255F; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 12px; border: 1px solid #e2e8f0; border-left: 4px solid #7A255F;">
+                                <div class="fe-addr-title"><i class="fas fa-house-chimney"></i> Endereço Principal</div>
+                                <div class="fe-row">
+                                    <div class="fe-group" style="max-width: 110px;">
+                                        <label class="fe-label">CEP</label>
+                                        <input class="fe-input mask-cep" type="text" name="end_fat_cep" id="p-cep"
+                                            value="{{ empresa.end_fat_cep|default('', true) }}" placeholder="00000-000"
+                                            onblur="buscarCep(this,'p')">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Logradouro</label>
+                                        <input class="fe-input" type="text" name="end_fat_logradouro" id="p-rua"
+                                            value="{{ empresa.end_fat_logradouro|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()"
+                                            placeholder="LOGRADOURO / ENDEREÇO">
+                                    </div>
+                                    <div class="fe-group" style="max-width: 70px;">
+                                        <label class="fe-label">Nº</label>
+                                        <input class="fe-input" type="text" name="end_fat_numero"
+                                            value="{{ empresa.end_fat_numero|default('', true) }}" placeholder="Nº">
+                                    </div>
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Complemento</label>
+                                        <input class="fe-input" type="text" name="end_fat_complemento"
+                                            value="{{ empresa.end_fat_complemento|default('', true) }}"
+                                            placeholder="APTO, SALA, BLOCO...">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Referência</label>
+                                        <input class="fe-input" type="text" name="end_fat_referencia"
+                                            value="{{ empresa.end_fat_referencia|default('', true) }}"
+                                            placeholder="PONTO DE REFERÊNCIA">
+                                    </div>
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Bairro</label>
+                                        <input class="fe-input" type="text" name="end_fat_bairro" id="p-bairro"
+                                            value="{{ empresa.end_fat_bairro|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()" placeholder="BAIRRO">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Cidade</label>
+                                        <input class="fe-input" type="text" name="end_fat_cidade" id="p-cidade"
+                                            value="{{ empresa.end_fat_cidade|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()" placeholder="CIDADE">
+                                    </div>
+                                    <div class="fe-group" style="max-width: 50px;">
+                                        <label class="fe-label">UF</label>
+                                        <input class="fe-input" type="text" name="end_fat_uf" id="p-uf"
+                                            value="{{ empresa.end_fat_uf|default('', true) }}" maxlength="2"
+                                            placeholder="UF">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# ── ENDEREÇO LOGÍSTICO (ENTREGA) ── #}
+                            <div class="fe-addr-card"
+                                style="border-left: 4px solid #27AE60; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 12px; border: 1px solid #e2e8f0; border-left: 4px solid #27AE60;">
+                                <div class="fe-addr-title"><i class="fas fa-truck-ramp-box"></i> Endereço Logístico
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group" style="max-width: 110px;">
+                                        <label class="fe-label">CEP</label>
+                                        <input class="fe-input mask-cep" type="text" name="end_ent_cep" id="l-cep"
+                                            value="{{ empresa.end_ent_cep|default('', true) }}" placeholder="00000-000"
+                                            onblur="buscarCep(this,'l')">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Logradouro</label>
+                                        <input class="fe-input" type="text" name="end_ent_logradouro" id="l-rua"
+                                            value="{{ empresa.end_ent_logradouro|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()"
+                                            placeholder="LOGRADOURO / ENDEREÇO">
+                                    </div>
+                                    <div class="fe-group" style="max-width: 70px;">
+                                        <label class="fe-label">Nº</label>
+                                        <input class="fe-input" type="text" name="end_ent_numero"
+                                            value="{{ empresa.end_ent_numero|default('', true) }}" placeholder="Nº">
+                                    </div>
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Complemento</label>
+                                        <input class="fe-input" type="text" name="end_ent_complemento"
+                                            value="{{ empresa.end_ent_complemento|default('', true) }}"
+                                            placeholder="APTO, SALA, BLOCO...">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Referência</label>
+                                        <input class="fe-input" type="text" name="end_ent_referencia"
+                                            value="{{ empresa.end_ent_referencia|default('', true) }}"
+                                            placeholder="PONTO DE REFERÊNCIA">
+                                    </div>
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Bairro</label>
+                                        <input class="fe-input" type="text" name="end_ent_bairro" id="l-bairro"
+                                            value="{{ empresa.end_ent_bairro|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()" placeholder="BAIRRO">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Cidade</label>
+                                        <input class="fe-input" type="text" name="end_ent_cidade" id="l-cidade"
+                                            value="{{ empresa.end_ent_cidade|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()" placeholder="CIDADE">
+                                    </div>
+                                    <div class="fe-group" style="max-width: 50px;">
+                                        <label class="fe-label">UF</label>
+                                        <input class="fe-input" type="text" name="end_ent_uf" id="l-uf"
+                                            value="{{ empresa.end_ent_uf|default('', true) }}" maxlength="2"
+                                            placeholder="UF">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# ── ENDEREÇO FISCAL (CORRESPONDÊNCIA) ── #}
+                            <div class="fe-addr-card"
+                                style="border-left: 4px solid #2980B9; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 12px; border: 1px solid #e2e8f0; border-left: 4px solid #2980B9;">
+                                <div class="fe-addr-title"><i class="fas fa-file-invoice-dollar"></i> Endereço Fiscal
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group" style="max-width: 110px;">
+                                        <label class="fe-label">CEP</label>
+                                        <input class="fe-input mask-cep" type="text" name="end_cor_cep" id="f-cep"
+                                            value="{{ empresa.end_cor_cep|default('', true) }}" placeholder="00000-000"
+                                            onblur="buscarCep(this,'f')">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Logradouro</label>
+                                        <input class="fe-input" type="text" name="end_cor_logradouro" id="f-rua"
+                                            value="{{ empresa.end_cor_logradouro|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()"
+                                            placeholder="LOGRADOURO / ENDEREÇO">
+                                    </div>
+                                    <div class="fe-group" style="max-width: 70px;">
+                                        <label class="fe-label">Nº</label>
+                                        <input class="fe-input" type="text" name="end_cor_numero"
+                                            value="{{ empresa.end_cor_numero|default('', true) }}" placeholder="Nº">
+                                    </div>
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Complemento</label>
+                                        <input class="fe-input" type="text" name="end_cor_complemento"
+                                            value="{{ empresa.end_cor_complemento|default('', true) }}"
+                                            placeholder="APTO, SALA, BLOCO...">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Referência</label>
+                                        <input class="fe-input" type="text" name="end_cor_referencia"
+                                            value="{{ empresa.end_cor_referencia|default('', true) }}"
+                                            placeholder="PONTO DE REFERÊNCIA">
+                                    </div>
+                                </div>
+                                <div class="fe-row">
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Bairro</label>
+                                        <input class="fe-input" type="text" name="end_cor_bairro" id="f-bairro"
+                                            value="{{ empresa.end_cor_bairro|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()" placeholder="BAIRRO">
+                                    </div>
+                                    <div class="fe-group fe-flex-1">
+                                        <label class="fe-label">Cidade</label>
+                                        <input class="fe-input" type="text" name="end_cor_cidade" id="f-cidade"
+                                            value="{{ empresa.end_cor_cidade|default('', true) }}"
+                                            oninput="this.value = this.value.toUpperCase()" placeholder="CIDADE">
+                                    </div>
+                                    <div class="fe-group" style="max-width: 50px;">
+                                        <label class="fe-label">UF</label>
+                                        <input class="fe-input" type="text" name="end_cor_uf" id="f-uf"
+                                            value="{{ empresa.end_cor_uf|default('', true) }}" maxlength="2"
+                                            placeholder="UF">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# ── ABA DIGITAL ── #}
+                    <div class="fe-tab-panel" id="tab-digital">
+                        <div class="fe-card">
+                            <div class="fe-card-title"><i class="fas fa-image"></i> Identidade Visual</div>
+                            <div class="fe-card-body" style="text-align: center; padding: 30px;">
+                                <div
+                                    style="width: 150px; height: 150px; margin: 0 auto 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                    {% if empresa and empresa.logo %}
+                                    <img id="logo-preview"
+                                        src="{{ url_for('static', filename='uploads/logos/' + empresa.logo) }}"
+                                        style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    {% else %}
+                                    <i class="fas fa-camera" id="logo-placeholder"
+                                        style="font-size: 40px; color: #e2e8f0;"></i>
+                                    <img id="logo-preview" src=""
+                                        style="display:none; max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    {% endif %}
+                                </div>
+                                <label class="fe-btn fe-btn-add" style="cursor: pointer;">
+                                    <i class="fas fa-upload"></i> Carregar Logotipo
+                                    <input type="file" name="logo_file" id="input-logo-emp" accept="image/*"
+                                        style="display:none;" onchange="previewLogo(this)">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# ── ABA ARQUIVOS ── #}
+                    <div class="fe-tab-panel" id="tab-documentos">
+                        <div class="fe-doc-upload-area" id="drop-area-emp"
+                            ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                            ondragleave="this.classList.remove('drag-over')" ondrop="onDropEmp(event)">
+                            <i class="fas fa-cloud-upload-alt fe-doc-icon"></i>
+                            <p class="fe-doc-hint">Arraste documentos corporativos aqui ou</p>
+                            <label class="fe-btn fe-btn-add" style="cursor:pointer;">
+                                <i class="fas fa-plus"></i> Escolher Arquivos
+                                <input type="file" name="documentos" id="input-docs-emp" multiple style="display:none;"
+                                    onchange="previewDocsEmp(this)">
+                            </label>
+                        </div>
+                        <div id="preview-docs-emp" style="display:none; margin-top:20px;">
+                            <div id="preview-lista-emp" class="fe-doc-lista"></div>
+                        </div>
+                    </div>
+
+                </div>{# /fe-tabs-panels #}
+            </div>{# /fe-tabs-panels #}
+        </div>{# /area-formulario-empresa #}
+
+    </form>
+
+    {# ── LISTAGEM DE UNIDADES (GRID INFERIOR) ── #}
+    {% if empresas_lista %}
+    <div id="grid-empresas-container" class="fe-form-stage" style="margin: 0; padding: 12px 24px; display: none;">
+        <div class="fe-card" style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            <div class="fe-card-title"
+                style="background: #f8fafc; padding: 15px 20px; font-size: 12px; font-weight: 800; color: #475569; display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fas fa-list"></i> Unidades Cadastradas ({{ empresas_lista|length }})</span>
+                <div style="width: 300px;">
+                    <input type="text" id="input-busca-grid" class="fe-input"
+                        style="padding: 5px 10px; font-size: 11px;" placeholder="Pesquisar unidade..."
+                        onkeyup="filtrarGridEmpresas()">
+                </div>
+            </div>
+            <div class="fe-card-body" style="padding: 0;">
+                <table class="fe-table-listing" id="tabela-empresas-grid">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Razão Social</th>
+                            <th>Nome Fantasia</th>
+                            <th>CNPJ/CPF</th>
+                            <th>Tipo</th>
+                            <th>Unidade</th>
+                            <th>Cidade / UF</th>
+                            <th>Responsável</th>
+                            <th>Cel / WhatsApp</th>
+                            <th style="text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in empresas_lista %}
+                        <tr>
+                            <td style="font-weight: 700; color: var(--pri);">{{ emp.id }}</td>
+                            <td style="font-weight: 800;">{{ emp.razao_social }}</td>
+                            <td style="font-size: 11px; color: var(--muted); text-transform: uppercase;">{{
+                                emp.nome_fantasia or '---' }}</td>
+                            <td style="font-family: monospace; font-size: 11px;">{{ emp.cnpj or emp.cpf or '---' }}</td>
+                            <td style="font-size: 11px; font-weight: 600;">{{ emp.tipo_pessoa or '---' }}</td>
+                            <td style="font-size: 11px; font-weight: 600;">{{ emp.unidade or '---' }}</td>
+                            <td style="font-size: 11px;">{{ emp.end_fat_cidade|default('---', true) }} / {{ emp.end_fat_uf|default('---', true)
+                                }}</td>
+                            <td style="font-size: 11px; font-weight: 600;">{{ emp.contato_nome|default('---', true) }}</td>
+                            <td style="font-size: 11px; font-family: monospace;">{{ emp.whatsapp|default('---', true) }}</td>
+                            <td style="text-align: right;">
+                                <a href="{{ url_for('cadastros.form_empresa', id=emp.id) }}"
+                                    class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px;" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+
+<script>
+    // Funções de Ação do Cabeçalho Mestre (PAA §12-B)
+    function resetFormEmpresa() {
+        const form = document.getElementById('form-empresa-mestre');
+        if (form) {
+            form.reset();
+            // Limpa ID para forçar novo registro
+            const idInput = form.querySelector('input[name="id"]');
+            if (idInput) idInput.value = '';
+            // Limpa logo
+            const logoPreview = document.getElementById('logo-preview');
+            const logoPlaceholder = document.getElementById('logo-placeholder');
+            if (logoPreview) { logoPreview.src = ''; logoPreview.style.display = 'none'; }
+            if (logoPlaceholder) logoPlaceholder.style.display = 'block';
+            // Limpa TODOS os inputs de texto, select e textarea (incluindo endereços)
+            form.querySelectorAll('input:not([type="hidden"]):not([type="file"]), select, textarea').forEach(el => {
+                if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                else el.value = '';
+            });
+            // Limpa campos hidden (exceto csrf)
+            form.querySelectorAll('input[type="hidden"]').forEach(el => {
+                if (!el.name.includes('csrf')) el.value = '';
+            });
+            // Limpa preview de documentos
+            const previewDocs = document.getElementById('preview-docs-emp');
+            const previewLista = document.getElementById('preview-lista-emp');
+            if (previewDocs) previewDocs.style.display = 'none';
+            if (previewLista) previewLista.innerHTML = '';
+            // Reseta arquivos acumulados
+            if (window._empresaArquivosAcumulados) window._empresaArquivosAcumulados = [];
+            // Foca no primeiro campo
+            const razaoInput = form.querySelector('input[name="razao_social"]');
+            if (razaoInput) razaoInput.focus();
+            if (typeof arioneToast === 'function') arioneToast('✨ Formulário limpo para novo cadastro!', 'success');
+        }
+    }
+
+    function enviarEmpresaEmail() {
+        const razao = document.querySelector('input[name="razao_social"]')?.value || '';
+        const fantasia = document.querySelector('input[name="nome_fantasia"]')?.value || '';
+        const cnpj = document.querySelector('input[name="cnpj"]')?.value || document.querySelector('input[name="cpf"]')?.value || '';
+        const tel = document.querySelector('input[name="telefone"]')?.value || '';
+        const whats = document.querySelector('input[name="whatsapp"]')?.value || '';
+        const emailEmp = document.querySelector('input[name="email"]')?.value || '';
+        const cidade = document.querySelector('input[name="end_fat_cidade"]')?.value || '';
+        const uf = document.querySelector('input[name="end_fat_uf"]')?.value || '';
+        const responsavel = document.querySelector('input[name="contato_nome"]')?.value || '';
+
+        const destinatario = prompt('Para qual e-mail deseja enviar os dados?', '');
+        if (!destinatario || !destinatario.includes('@')) {
+            if (destinatario !== null && typeof arioneToast === 'function') arioneToast('⚠️ E-mail inválido.', 'warning');
+            return;
+        }
+
+        const subject = encodeURIComponent(`Dados Cadastrais: ${razao || fantasia}`);
+        const corpo = [
+            `DADOS DA EMPRESA - AriOne`,
+            `─────────────────────────`,
+            razao ? `Razão Social: ${razao}` : '',
+            fantasia ? `Nome Fantasia: ${fantasia}` : '',
+            cnpj ? `CNPJ/CPF: ${cnpj}` : '',
+            responsavel ? `Responsável: ${responsavel}` : '',
+            tel ? `Telefone: ${tel}` : '',
+            whats ? `WhatsApp: ${whats}` : '',
+            emailEmp ? `E-mail: ${emailEmp}` : '',
+            (cidade || uf) ? `Cidade/UF: ${cidade}${uf ? '/' + uf : ''}` : '',
+            ``,
+            `Enviado via AriOne Operational Suite`
+        ].filter(l => l !== '').join('\n');
+
+        window.open(`mailto:${destinatario}?subject=${subject}&body=${encodeURIComponent(corpo)}`, '_blank');
+        if (typeof arioneToast === 'function') arioneToast(`📧 Abrindo e-mail para ${destinatario}...`, 'success');
+    }
+
+    function enviarEmpresaWhatsApp() {
+        let whats = document.querySelector('input[name="whatsapp"]')?.value;
+        const razao = document.querySelector('input[name="razao_social"]')?.value || 'Empresa';
+        if (!whats) {
+            if (typeof arioneToast === 'function') arioneToast('⚠️ Informe o WhatsApp da empresa primeiro.', 'warning');
+            return;
+        }
+        whats = whats.replace(/\D/g, '');
+        if (whats.length < 10) {
+            if (typeof arioneToast === 'function') arioneToast('⚠️ Número de WhatsApp inválido.', 'warning');
+            return;
+        }
+        if (whats.length === 10 || whats.length === 11) { whats = '55' + whats; }
+        const text = encodeURIComponent(`Olá equipe da ${razao}, entramos em contato através do sistema AriOne.`);
+        window.open(`https://api.whatsapp.com/send?phone=${whats}&text=${text}`, '_blank');
+        if (typeof arioneToast === 'function') arioneToast(`💬 Abrindo WhatsApp Web para ${whats}...`, 'success');
+    }
+
+    // Função para alternar entre PJ e PF
+    function toggleTipoPessoa() {
+        const tipoPessoa = document.getElementById('tipo_pessoa').value;
+        const rowPj = document.getElementById('row-pj');
+        const rowPf = document.getElementById('row-pf');
+        const cnpjInput = document.querySelector('input[name="cnpj"]');
+        const cpfInput = document.querySelector('input[name="cpf"]');
+        const labelCnaeSsp = document.getElementById('label-cnae-ssp');
+
+        if (tipoPessoa === 'PF') {
+            rowPj.style.display = 'none';
+            rowPf.style.display = 'flex';
+            if (cnpjInput) cnpjInput.required = false;
+            if (cpfInput) cpfInput.required = true;
+            if (labelCnaeSsp) {
+                labelCnaeSsp.textContent = 'SSP';
+                document.querySelector('input[name="cnae"]').placeholder = 'SSP';
+            }
+        } else {
+            rowPj.style.display = 'flex';
+            rowPf.style.display = 'none';
+            if (cnpjInput) cnpjInput.required = true;
+            if (cpfInput) cpfInput.required = false;
+            if (labelCnaeSsp) {
+                labelCnaeSsp.textContent = 'CNAE Principal';
+                document.querySelector('input[name="cnae"]').placeholder = '0000-0/00';
+            }
+        }
+    }
+
+    // Inicializar tipo de pessoa ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleTipoPessoa();
+    });
+
+    // Navegação de Abas
+    document.querySelectorAll('.fe-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.fe-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.fe-tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+        });
+    });
+
+    // Preview de Logo
+    function previewLogo(input) {
+        if (!input.files || !input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            const preview = document.getElementById('logo-preview');
+            const placeholder = document.getElementById('logo-placeholder');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    // Consulta de CEP (Suporta prefixos p, l, f)
+    function buscarCep(input, pref) {
+        const cep = input.value.replace(/\D/g, '');
+        if (cep.length !== 8) return;
+        input.disabled = true; input.style.opacity = '.6';
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(r => r.json()).then(d => {
+                if (!d.erro) {
+                    const p = pref || 'p'; // default para principal se não vier pref
+                    _sv(p + '-rua', d.logradouro);
+                    _sv(p + '-bairro', d.bairro);
+                    _sv(p + '-cidade', d.localidade);
+                    _sv(p + '-uf', d.uf);
+                }
+            }).catch(() => { }).finally(() => { input.disabled = false; input.style.opacity = '1'; });
+    }
+    function _sv(id, val) { const el = document.getElementById(id); if (el) el.value = val || ''; }
+
+    // Máscaras
+    document.querySelectorAll('.mask-cnpj').forEach(el => el.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 14);
+        v = v.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3').replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2');
+        e.target.value = v;
+    }));
+    document.querySelectorAll('.mask-phone').forEach(el => el.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+        e.target.value = v.length > 10 ? v.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3') : v.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+    }));
+    document.querySelectorAll('.mask-cep').forEach(el => el.addEventListener('input', e => {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 8);
+        e.target.value = v.replace(/^(\d{5})(\d)/, '$1-$2');
+    }));
+
+    // Submissão AJAX (PAA §4-B: disable botão + scroll p/ erro)
+    async function salvarEmpresa() {
+        const form = document.getElementById('form-empresa-mestre');
+        const btn = document.getElementById('btn-salvar-empresa-mestre');
+        let ok = true;
+        const camposFaltantes = [];
+
+        // Validação frontend
+        form.querySelectorAll('[required]').forEach(el => {
+            el.classList.remove('error');
+            if (!el.value.trim()) { 
+                el.classList.add('error'); 
+                ok = false;
+                // Obter o label do campo
+                const label = el.closest('.fe-group')?.querySelector('label')?.textContent?.trim() || el.name;
+                camposFaltantes.push(label);
+            }
+        });
+        if (!ok) {
+            const mensagem = `Campos obrigatórios pendentes: ${camposFaltantes.join(', ')}`;
+            arioneToast(mensagem, 'warning');
+            const primeiro = form.querySelector('.error');
+            if (primeiro) primeiro.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        // Desativa botão para prevenir duplo-click (PAA §4-B)
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+        arioneToast('Sincronizando dados...', 'info');
+        try {
+            const response = await fetch(window.location.pathname + window.location.search, {
+                method: 'POST',
+                body: new FormData(form)
+            });
+            if (response.ok) {
+                arioneToast('Unidade salva com sucesso!', 'success');
+                // Permanece no formulário e limpa para novo cadastro
+                setTimeout(() => {
+                    resetFormEmpresa();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save" style="font-size: 14px;"></i>';
+                }, 1200);
+            } else {
+                arioneToast('Erro ao salvar. Verifique os dados.', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save" style="font-size: 14px;"></i>';
+            }
+        } catch (e) {
+            arioneToast('Erro crítico na persistência', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save" style="font-size: 14px;"></i>';
+        }
+    }
+
+    function previewLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('logo-preview');
+                const placeholder = document.getElementById('logo-placeholder');
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function onDropEmp(e) {
+        e.preventDefault();
+        const dropArea = document.getElementById('drop-area-emp');
+        dropArea.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        const input = document.getElementById('input-docs-emp');
+        input.files = files; // Nota: Isso funciona em navegadores modernos
+        previewDocsEmp(input);
+    }
+
+    // Acumulador de arquivos para não substituir ao adicionar novos
+    window._empresaArquivosAcumulados = [];
+
+    function previewDocsEmp(input) {
+        const lista = document.getElementById('preview-lista-emp');
+        const container = document.getElementById('preview-docs-emp');
+
+        // Acumula novos arquivos ao invés de substituir
+        if (input.files.length > 0) {
+            Array.from(input.files).forEach(f => window._empresaArquivosAcumulados.push(f));
+        }
+
+        // Reconstrói o DataTransfer com todos os arquivos acumulados
+        const dt = new DataTransfer();
+        window._empresaArquivosAcumulados.forEach(f => dt.items.add(f));
+        input.files = dt.files;
+
+        // Renderiza a lista completa
+        lista.innerHTML = '';
+        if (window._empresaArquivosAcumulados.length > 0) {
+            container.style.display = 'block';
+            window._empresaArquivosAcumulados.forEach((file, idx) => {
+                const item = document.createElement('div');
+                item.className = 'fe-doc-item';
+                item.style = 'display: flex; align-items: center; gap: 10px; padding: 8px; background: #f8fafc; border-radius: 6px; margin-bottom: 5px; font-size: 12px;';
+                item.innerHTML = `
+                <i class="fas fa-file-alt" style="color: #64748b;"></i>
+                <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${file.name}</span>
+                <span style="color: #94a3b8; font-size: 10px;">(${(file.size / 1024).toFixed(1)} KB)</span>
+                <button type="button" onclick="removerArquivoEmp(${idx})" style="background:none; border:none; color:#e53e3e; cursor:pointer; font-size:14px;" title="Remover"><i class="fas fa-times"></i></button>
+            `;
+                lista.appendChild(item);
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    }
+
+    function removerArquivoEmp(idx) {
+        window._empresaArquivosAcumulados.splice(idx, 1);
+        const input = document.getElementById('input-docs-emp');
+        const dt = new DataTransfer();
+        window._empresaArquivosAcumulados.forEach(f => dt.items.add(f));
+        input.files = dt.files;
+        previewDocsEmp(input);
+    }
+
+    function aplicarFiltrosEmpresa() {
+        const razao = (document.getElementById('filtro-razao')?.value || '').toUpperCase();
+        const cidade = (document.getElementById('filtro-cidade')?.value || '').toUpperCase();
+        const tipo = (document.getElementById('filtro-tipo')?.value || '').toUpperCase();
+        const tabela = document.getElementById('tabela-empresas-grid');
+        if (!tabela) return;
+        const rows = tabela.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const rSocial = (cells[1]?.textContent || '').toUpperCase();
+            const rCidade = (cells[6]?.textContent || '').toUpperCase();
+            const rTipo = (cells[4]?.textContent || '').toUpperCase();
+            const match = (!razao || rSocial.includes(razao)) &&
+                          (!cidade || rCidade.includes(cidade)) &&
+                          (!tipo || rTipo.includes(tipo));
+            row.style.display = match ? '' : 'none';
+        });
+    }
+
+    function limparFiltrosEmpresa() {
+        ['filtro-razao', 'filtro-cidade'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const sel = document.getElementById('filtro-tipo');
+        if (sel) sel.selectedIndex = 0;
+        aplicarFiltrosEmpresa();
+        if (typeof arioneToast === 'function') arioneToast('Filtros limpos', 'info');
+    }
+
+    function focarPesquisaEmpresa() {
+        const input = document.getElementById('input-busca-grid');
+        if (input) {
+            input.focus();
+            if (typeof arioneToast === 'function') arioneToast('🔍 Campo de pesquisa ativado', 'info');
+        }
+    }
+
+    function abrirModalFiltrosAvancados() {
+        const bar = document.getElementById('filter-bar-emp');
+        if (bar) {
+            const isHidden = bar.style.display === 'none' || !bar.style.display;
+            bar.style.display = isHidden ? 'flex' : 'none';
+            if (isHidden) {
+                const firstInput = bar.querySelector('input, select');
+                if (firstInput) setTimeout(() => firstInput.focus(), 200);
+                if (typeof arioneToast === 'function') arioneToast('🔍 Filtros ativados', 'info');
+            }
+        }
+    }
+
+    function alternarFormListaEmpresa() {
+        const formArea = document.getElementById('area-formulario-empresa');
+        const filterBar = document.getElementById('filter-bar-emp');
+        const grid = document.getElementById('grid-empresas-container');
+        if (!grid) {
+            if (typeof arioneToast === 'function') arioneToast('⚠️ Nenhuma unidade cadastrada para listar.', 'info');
+            return;
+        }
+        const gridVisible = grid.style.display !== 'none';
+        if (gridVisible) {
+            // Volta para o formulário
+            grid.style.display = 'none';
+            if (formArea) formArea.style.display = 'flex';
+            if (typeof arioneToast === 'function') arioneToast('📝 Visualizando Formulário', 'info');
+        } else {
+            // Mostra a lista (cabeçalho permanece visível)
+            grid.style.display = 'block';
+            if (formArea) formArea.style.display = 'none';
+            if (filterBar) filterBar.style.display = 'none';
+            if (typeof arioneToast === 'function') arioneToast('📋 Visualizando Lista de Unidades', 'info');
+            const searchInput = document.getElementById('input-busca-grid');
+            if (searchInput) setTimeout(() => searchInput.focus(), 200);
+        }
+    }
+
+    function clonarEmpresa() {
+        const form = document.getElementById('form-empresa-mestre');
+        const razaoInput = form.querySelector('input[name="razao_social"]');
+        
+        if (!razaoInput || !razaoInput.value) {
+            if (typeof arioneToast === 'function') arioneToast('⚠️ Nenhuma empresa selecionada para clonar. Preencha os dados primeiro.', 'warning');
+            return;
+        }
+        
+        // Limpa o ID para criar um novo registro
+        const idInput = form.querySelector('input[name="id"]');
+        if (idInput) idInput.value = '';
+        
+        // Prefixo (CÓPIA) antes do nome para destaque visual
+        const nomeOriginal = razaoInput.value.replace(/^\(CÓPIA\)\s*/i, '');
+        razaoInput.value = '(CÓPIA) ' + nomeOriginal;
+        
+        if (typeof arioneToast === 'function') arioneToast('✨ Empresa clonada! Modifique os dados e clique em Salvar.', 'success');
+        razaoInput.focus();
+        razaoInput.select();
+    }
+
+    function exportarEmpresasCSV() {
+        const tabela = document.getElementById('tabela-empresas-grid');
+        if (!tabela) {
+            // Se o grid não está visível, mostra ele primeiro
+            const grid = document.getElementById('grid-empresas-container');
+            if (grid && grid.style.display === 'none') {
+                if (typeof arioneToast === 'function') arioneToast('⚠️ Abra a lista (Ver Lista) antes de exportar.', 'info');
+                return;
+            }
+            if (typeof arioneToast === 'function') arioneToast('⚠️ Nenhuma tabela encontrada para exportar.', 'warning');
+            return;
+        }
+        
+        let csv = [];
+        const rows = tabela.querySelectorAll('tr');
+        
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td, th');
+            const rowData = [];
+            // Exclui a última coluna (Ações)
+            for (let i = 0; i < cols.length - 1; i++) {
+                rowData.push('"' + cols[i].innerText.replace(/"/g, '""').trim() + '"');
+            }
+            csv.push(rowData.join(';'));
+        });
+        
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'AriOne_Empresas_' + new Date().toLocaleDateString() + '.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        if (typeof arioneToast === 'function') arioneToast('📦 Arquivo CSV exportado com sucesso!', 'success');
+    }
+
+    function abrirModalImportacaoXML() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xml,.json';
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = evt => {
+                try {
+                    const text = evt.target.result;
+                    if (file.name.endsWith('.xml')) {
+                        const parser = new DOMParser();
+                        const xml = parser.parseFromString(text, 'text/xml');
+                        // Tenta extrair dados de NF-e (emit)
+                        const emit = xml.querySelector('emit');
+                        if (emit) {
+                            const setVal = (name, tag) => {
+                                const el = emit.querySelector(tag);
+                                const inp = document.querySelector(`input[name="${name}"]`);
+                                if (el && inp) inp.value = el.textContent.trim();
+                            };
+                            setVal('razao_social', 'xNome');
+                            setVal('nome_fantasia', 'xFant');
+                            setVal('cnpj', 'CNPJ');
+                            setVal('ie', 'IE');
+                            // Endereço
+                            const ender = emit.querySelector('enderEmit');
+                            if (ender) {
+                                const setEnd = (name, tag) => {
+                                    const el = ender.querySelector(tag);
+                                    const inp = document.querySelector(`input[name="${name}"]`);
+                                    if (el && inp) inp.value = el.textContent.trim();
+                                };
+                                setEnd('end_fat_logradouro', 'xLgr');
+                                setEnd('end_fat_numero', 'nro');
+                                setEnd('end_fat_complemento', 'xCpl');
+                                setEnd('end_fat_bairro', 'xBairro');
+                                setEnd('end_fat_cidade', 'xMun');
+                                setEnd('end_fat_uf', 'UF');
+                                setEnd('end_fat_cep', 'CEP');
+                                setEnd('telefone', 'fone');
+                            }
+                            if (typeof arioneToast === 'function') arioneToast(`Dados do emitente importados do XML!`, 'success');
+                        } else {
+                            if (typeof arioneToast === 'function') arioneToast(`XML lido, mas não contém dados de NF-e (emit).`, 'warning');
+                        }
+                    } else {
+                        if (typeof arioneToast === 'function') arioneToast(`Arquivo "${file.name}" carregado.`, 'success');
+                    }
+                } catch (err) {
+                    console.error('Erro ao processar arquivo:', err);
+                    if (typeof arioneToast === 'function') arioneToast('Erro ao processar o arquivo.', 'danger');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    function imprimirRelatorioEmpresa() {
+        if (typeof arioneToast === 'function') arioneToast('🖨️ Preparando relatório para impressão...', 'info');
+        window.print();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,456 @@
+{# =============================================================================
+Caminho : templates/gestao/cards/comercial/form_revendedores.html
+Arquivo : form_revendedores.html
+Função  : Formulário Dinâmico e Premium para cadastro de Revendedores. (Padrão CRM)
+============================================================================= #}
+
+{# ========================================== #}
+{# IMPORTS GLOBAIS DE MÁSCARAS E LÓGICAS PF/PJ #}
+{# ========================================== #}
+
+<form 
+    class="ge-form" 
+    id="form-revendedores"
+    method="POST" 
+    action="#">
+
+
+
+    <!-- ── BARRA DE OPÇÕES ── -->
+    <div style="background: #f8fafc; border-bottom: 2px solid #edf2f7; padding: 12px 18px; display: flex; gap: 8px; margin-bottom:20px; border-radius: 8px;">
+        <button type="button" class="gf-btn" style="background:#7A255F; color:#fff; border:none; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-plus"></i> Novo</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-edit"></i> Editar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-search"></i> Consultar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-print"></i> Imprimir</button>
+    </div>
+
+    {# 🪪 BLOCO 1: IDENTIFICAÇÃO BÁSICA E TRIBUTÁRIA #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-id-card"></i> Identificação e Registro
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+        
+        {# ========================================== #}
+        {# LINHA DE IDENTIFICAÇÃO (TIPO E DOCUMENTOS) #}
+        {# ========================================== #}
+        <div class="gf-row">
+            
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="tipo_pessoa">Tipo Jurídico <span class="gf-req">*</span>
+                </label>
+                <select 
+                    id="tipo_pessoa" 
+                    name="tipo_pessoa" 
+                    class="gf-input" 
+                    onchange="toggleRev.set(this.value)">
+                    <option value="PF">Pessoa Física</option>
+                    <option value="PJ" selected>Pessoa Jurídica</option>
+                </select>
+            </div>
+
+            <!-- Div contêiner do CNPJ - (Controlado pelo Utils PJ) -->
+            <div 
+                class="gf-group gf-flex-1" 
+                id="campo_cnpj" 
+                style="display: flex;">
+                <label 
+                    class="gf-label" 
+                    for="input_cnpj">CNPJ <span class="gf-req">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="input_cnpj" 
+                    name="cnpj" 
+                    class="gf-input mask-cnpj" 
+                    placeholder="00.000.000/0000-00">
+            </div>
+
+            <!-- Div contêiner do CPF - (Controlado pelo Utils PF) -->
+            <div 
+                class="gf-group gf-flex-1" 
+                id="campo_cpf" 
+                style="display: none;">
+                <label 
+                    class="gf-label" 
+                    for="input_cpf">CPF <span class="gf-req">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="input_cpf" 
+                    name="cpf" 
+                    class="gf-input mask-cpf" 
+                    placeholder="000.000.000-00">
+            </div>
+
+            <!-- Linha de IE / RG compartilhada (alternadas pelo utils) -->
+            <div 
+                class="gf-group gf-flex-1" 
+                id="campo_ie" 
+                style="display: flex;">
+                <label 
+                    class="gf-label" 
+                    for="input_ie">Inscrição Estadual
+                </label>
+                <input 
+                    type="text" 
+                    id="input_ie" 
+                    name="ie" 
+                    class="gf-input" 
+                    placeholder="Insira a IE">
+            </div>
+
+            <div 
+                class="gf-group gf-flex-1" 
+                id="campo_rg_pf" 
+                style="display: none;">
+                <label 
+                    class="gf-label" 
+                    for="input_rg">R.G.
+                </label>
+                <input 
+                    type="text" 
+                    id="input_rg" 
+                    name="rg" 
+                    class="gf-input" 
+                    placeholder="Insira o RG">
+            </div>
+            
+        </div>
+
+        {# ========================================== #}
+        {# LINHA DE TITULARIDADE (NOME/RAZÃO/FANTASIA)#}
+        {# ========================================== #}
+        <div class="gf-row">
+            <div class="gf-group gf-flex-2">
+                <label 
+                    class="gf-label" 
+                    id="label_razao" 
+                    for="input_razao">Razão Social <span class="gf-req">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="input_razao" 
+                    name="razao_social" 
+                    class="gf-input" 
+                    required 
+                    placeholder="Informe o nome ou denominação">
+            </div>
+            
+            <div class="gf-group gf-flex-2">
+                <label 
+                    class="gf-label" 
+                    id="label_fantasia" 
+                    for="input_fantasia">Nome Fantasia / Apelido
+                </label>
+                <input 
+                    type="text" 
+                    id="input_fantasia" 
+                    name="nome_fantasia" 
+                    class="gf-input" 
+                    placeholder="Nome de mercado">
+            </div>
+        </div>
+    </div>
+
+
+    {# 📬 BLOCO 2: COMUNICAÇÃO E GEOGRAFIA #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-map-marker-alt"></i> Contato e Endereço
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+
+        <div class="gf-row">
+            <div class="gf-group gf-flex-2">
+                <label 
+                    class="gf-label" 
+                    for="input_email">E-mail Comercial <span class="gf-req">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="input_email" 
+                    name="email" 
+                    class="gf-input" 
+                    required 
+                    placeholder="exemplo@venda.com">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="input_telefone">Telefone Comercial
+                </label>
+                <input 
+                    type="text" 
+                    id="input_telefone" 
+                    name="telefone" 
+                    class="gf-input mask-telefone" 
+                    placeholder="(00) 0000-0000">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="input_whatsapp">WhatsApp <span class="gf-req">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="input_whatsapp" 
+                    name="whatsapp" 
+                    class="gf-input mask-telefone" 
+                    required 
+                    placeholder="(00) 90000-0000">
+            </div>
+        </div>
+
+        <!-- Endereço via ViaCEP -->
+        <div class="gf-row">
+            <div class="gf-group" style="width: 130px; flex-shrink: 0;">
+                <label class="gf-label" for="input_cep">C.E.P</label>
+                <input 
+                    type="text" 
+                    id="input_cep" 
+                    name="cep" 
+                    class="gf-input mask-cep" 
+                    placeholder="00000-000"
+                    maxlength="9"
+                    onchange="buscarCep(this, {
+                        logradouro: 'input_logradouro',
+                        bairro:     'input_bairro',
+                        localidade: 'input_cidade',
+                        uf:         'input_uf',
+                        foco:       'input_numero'
+                    })">
+            </div>
+            <div class="gf-group gf-flex-3">
+                <label class="gf-label" for="input_logradouro">Logradouro / Rua</label>
+                <input 
+                    type="text" 
+                    id="input_logradouro" 
+                    name="logradouro" 
+                    class="gf-input" 
+                    placeholder="Nome da rua">
+            </div>
+            <div class="gf-group" style="width: 90px; flex-shrink: 0;">
+                <label class="gf-label" for="input_numero">Nº</label>
+                <input 
+                    type="text" 
+                    id="input_numero" 
+                    name="numero" 
+                    class="gf-input" 
+                    placeholder="Nº">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label" for="input_complemento">Complemento</label>
+                <input 
+                    type="text" 
+                    id="input_complemento" 
+                    name="complemento" 
+                    class="gf-input" 
+                    placeholder="Apto, Sala, Bloco...">
+            </div>
+        </div>
+
+        <div class="gf-row">
+            <div class="gf-group gf-flex-2">
+                <label class="gf-label" for="input_bairro">Bairro</label>
+                <input type="text" id="input_bairro" name="bairro" class="gf-input" placeholder="Bairro">
+            </div>
+            <div class="gf-group gf-flex-2">
+                <label class="gf-label" for="input_cidade">Cidade</label>
+                <input type="text" id="input_cidade" name="cidade" class="gf-input" placeholder="Cidade">
+            </div>
+            <div class="gf-group" style="width: 70px; flex-shrink: 0;">
+                <label class="gf-label" for="input_uf">UF</label>
+                <input type="text" id="input_uf" name="uf" class="gf-input" placeholder="UF" maxlength="2">
+            </div>
+        </div>
+    </div>{# /fecha BLOCO 2 - Contato e Endereço #}
+
+
+    {# 📈 BLOCO 3: VINCULAÇÕES COMERCIAIS E LIMITES #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-handshake"></i> Informações Comerciais B2B
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+
+        <div class="gf-row">
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="tabela_preco">Tabela de Preço Atribuída
+                </label>
+                <select 
+                    id="tabela_preco" 
+                    name="tabela_preco" 
+                    class="gf-input">
+                    <option value="padrao">Padrão Nacional (10%)</option>
+                    <option value="atacado1">Atacado Inicial (20%)</option>
+                    <option value="atacado_master">Atacado Master (35%)</option>
+                    <option value="vip">Premium - Isento</option>
+                </select>
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="limite_credito">Limite de Crédito Atribuído
+                </label>
+                <input 
+                    type="number" 
+                    step="0.01" 
+                    id="limite_credito" 
+                    name="limite_credito" 
+                    class="gf-input" 
+                    placeholder="R$ 0,00">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="consultor_interno">Consultor Designado
+                </label>
+                <select 
+                    id="consultor_interno" 
+                    name="consultor_interno" 
+                    class="gf-input">
+                    <option value="">Sem designação</option>
+                    <option value="1">Vendedor A (Fixo)</option>
+                    <option value="2">Agente Regional B</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+
+    {# 📝 BLOCO 4: OBSERVAÇÕES E SALVAMENTO #}
+    <div style="margin-bottom: 20px;">
+        <div class="gf-row" style="margin-bottom: 5px;">
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="anotacoes_gerais">Log / Anotações Gerais
+                </label>
+                <textarea 
+                    id="anotacoes_gerais" 
+                    name="anotacoes_gerais" 
+                    class="gf-input" 
+                    rows="3" 
+                    style="resize: vertical; padding: 10px;" 
+                    placeholder="Descreva observações, pendências documentais, perfil de mercado do revendedor e minutas do contrato..."></textarea>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botões inferiores - Rodapé do Modal -->
+    <div class="gf-actions">
+        <button type="button" class="gf-btn gf-btn-limpar" onclick="limparFichaRevendedores()">
+            <i class="fas fa-eraser"></i> Limpar Ficha
+        </button>
+        <button type="submit" class="gf-btn gf-btn-consultar">
+            <i class="fas fa-save"></i> Salvar Cadastro
+        </button>
+    </div>
+</form>
+
+    <!-- ── ÚLTIMOS LANÇAMENTOS ── -->
+    <div style="margin-top:25px; padding:0; overflow:hidden; border: 1.5px solid #edf2f7; border-radius: 10px;">
+        <div style="background:#7A255F; color:#fff; padding:10px 18px; font-size:11px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fas fa-list"></i> ÚLTIMOS REVENDEDORES CADASTRADOS</span>
+            <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px;">Rede de Revendas</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                    <tr>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Documento</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Revendedor</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Localidade</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Status Comercial</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-weight:800; font-size:10px;">Registrado</span></td>
+                        <td style="padding:12px 15px; color:#1e293b;"><strong>Ana Claudia Modas ME</strong></td>
+                        <td style="padding:12px 15px; color:#1e293b;">Campinas - SP</td>
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:20px; font-weight:700; font-size:10px;">Ativo Local</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<style>
+/* ── Layout ── */
+.ge-form{display:flex;flex-direction:column;gap:0;}
+.gf-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.gf-group{display:flex;flex-direction:column;gap:4px;min-width:120px;}
+.gf-flex-1{flex:1;}.gf-flex-2{flex:2;}.gf-flex-3{flex:3;}
+/* ── Labels ── */
+.gf-label{font-size:10.5px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.4px;}
+.gf-req{color:#e53e3e;}
+/* ── Inputs ── */
+.gf-input{padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#2d3748;background:#fff;transition:all .17s;width:100%;box-sizing:border-box;}
+.gf-input:focus{outline:none;border-color:#7A255F;box-shadow:0 0 0 3px rgba(122,37,95,.1);}
+.gf-input:hover{border-color:#b794c0;}
+/* ── Info do período selecionado ── */
+
+/* ── Divisores ── */
+.gf-divisor{font-size:10.5px;font-weight:700;color:#7A255F;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:7px;padding:10px 0 8px;border-bottom:2px solid #f0e6f5;margin-bottom:14px;}
+/* ── Botões ── */
+.gf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;}
+.gf-btn{padding:9px 18px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .17s;}
+.gf-btn-cancelar{background:#edf2f7;color:#4a5568;}
+.gf-btn-cancelar:hover{background:#e2e8f0;}
+.gf-btn-limpar{background:#fff;color:#718096;border:1.5px solid #e2e8f0;}
+.gf-btn-limpar:hover{border-color:#7A255F;color:#7A255F;}
+.gf-btn-consultar{background:linear-gradient(135deg,#7A255F,#a8357f);color:#fff;}
+.gf-btn-consultar:hover{opacity:.9;}
+</style>
+
+<script>
+    // =================================================================
+    // 🧠 Utilitário Automático de Gestão PF / PJ vs Documentos
+    // =================================================================
+    const toggleRev = arioneTogglePFPJ({
+        idTipoPessoa: 'tipo_pessoa',            // id do drop
+        campoPJ: ['campo_cnpj', 'campo_ie'],    // Divs que abrem se for PJ
+        campoPF: ['campo_cpf', 'campo_rg_pf'], // Divs que abrem se for PF
+        labelMap: {
+            'label_razao': { PJ: 'Razão Social *', PF: 'Nome Completo *' },
+            'label_fantasia': { PJ: 'Nome Fantasia / Apelido', PF: 'Apelido' },
+        },
+        requiredPJ: ['input_cnpj'],
+        requiredPF: ['input_cpf'],
+        ctx: document.getElementById('form-revendedores'),
+    });
+
+
+
+
+    // ── Limpar filtros (idêntico ao form_orcamentos)
+    function limparFichaRevendedores() {
+        const form = document.getElementById('form-revendedores');
+        if(!form) return;
+        form.reset();
+
+
+
+        // Reset forçado de UI - PF / PJ
+        const ts = form.querySelector('#tipo_pessoa');
+        if(ts) {
+            ts.value = 'PJ';
+            toggleRev.set('PJ');
+        }
+    }
+
+    // ── Inicializa ao carregar (IIFE no final = idêntico ao form_orcamentos)
+    (function() {
+        const rootForm = document.getElementById('form-revendedores');
+        if(!rootForm) return;
+        const t = rootForm.querySelector('#tipo_pessoa'); if (t) toggleRev.set(t.value);
+        if (typeof initMascaras === 'function') initMascaras(rootForm);
+    })();
+
+</script>

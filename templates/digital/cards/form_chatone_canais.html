@@ -1,0 +1,238 @@
+{# =============================================================================
+   Caminho  : templates/digital/cards/form_chatone_canais.html
+   Arquivo  : form_chatone_canais.html
+   Função   : Formulário Mestre de Canais de Atendimento ChatOne (Full-Page PAAv1)
+   ============================================================================= #}
+{% extends "base.html" %}
+{% block content %}
+<div class="fe-wrap" style="max-width: 1000px; margin: 0 auto;">
+
+  {# ── MENSAGENS FLASH ── #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div style="padding: 12px 18px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; background: {% if cat=='success' %}#f0fff4; color:#276749; border:1px solid #c6f6d5;{% elif cat=='danger' %}#fff5f5; color:#c53030; border:1px solid #fed7d7;{% else %}#f0f9ff; color:#0369a1; border:1px solid #bae6fd;{% endif %}">
+        <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- ── CABEÇALHO MESTRE (GOLDEN STANDARD PAAv1 §5-E) ── -->
+  {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+  {{ cabecalho_mestre_arione(
+      titulo='Canais de Atendimento',
+      subtitulo='Digital > ChatOne > Gestão de Canais e Roteamento',
+      icone='fa-broadcast-tower',
+      form_id='formChatCanais',
+      onclick_novo="window.location.href='/digital/cards/chatone/canais'",
+      onclick_save="document.getElementById('formChatCanais').requestSubmit()",
+      onclick_search="if(typeof arioneToast === 'function') arioneToast('🔍 Pesquisa rápida em desenvolvimento.', 'info')",
+      onclick_filter="if(typeof arioneToast === 'function') arioneToast('🎛️ Filtros avançados em desenvolvimento.', 'info')",
+      onclick_list="window.location.href='/digital/?aba=chatone'",
+      onclick_clonar="if(typeof arioneToast === 'function') arioneToast('📋 Clonagem de canal em desenvolvimento.', 'info')",
+      onclick_print='window.print()',
+      onclick_export="if(typeof arioneToast === 'function') arioneToast('📦 Exportação em desenvolvimento.', 'info')",
+      onclick_import="if(typeof arioneToast === 'function') arioneToast('📥 Importação em desenvolvimento.', 'info')",
+      aba_retorno='/digital/?aba=chatone',
+      cor_tema='#0072CE',
+      tamanho='medio'
+  ) }}
+
+  <form id="formChatCanais" method="POST" action="{{ url_for('digital.card_chatone_canais') }}">
+    
+    <!-- 🪪 BLOCO 1: IDENTIFICAÇÃO E ROTEAMENTO -->
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-broadcast-tower"></i> Identificação e Roteamento do Canal</div>
+      <div class="fe-card-body">
+        <div class="fe-row">
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Nome do Canal <span class="fe-req">*</span></label>
+            <input type="text" name="nome_canal" id="nome_canal" class="fe-input" placeholder="Ex: WhatsApp Oficial Suporte / Webchat Portal Matriz" required onblur="this.value = this.value.toUpperCase()">
+          </div>
+          
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Tipo de Plataforma</label>
+            <select name="tipo_canal" id="tipo_canal" class="fe-input">
+              <option value="WhatsApp Business">WhatsApp Business (App)</option>
+              <option value="WhatsApp API" selected>WhatsApp Business API</option>
+              <option value="Webchat">Webchat Widget (SiteOne)</option>
+              <option value="Telegram">Telegram Bot</option>
+              <option value="Instagram">Instagram Direct (API)</option>
+              <option value="Messenger">Facebook Messenger</option>
+              <option value="Email">E-mail SAC Integrado</option>
+            </select>
+          </div>
+
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Status Operacional</label>
+            <select name="status" id="status" class="fe-input">
+              <option value="ATIVO" selected>Ativo / Conectado</option>
+              <option value="QR_CODE">Aguardando QR Code</option>
+              <option value="FALHA">Desconectado / Falha</option>
+              <option value="INATIVO">Inativo / Suspenso</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fe-row">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Departamento / Fila Padrão</label>
+            <select name="departamento" id="departamento" class="fe-input">
+              <option value="Suporte N1" selected>Suporte Técnico N1</option>
+              <option value="Comercial B2C">Comercial & Vendas B2C</option>
+              <option value="Financeiro">Financeiro / Cobrança</option>
+              <option value="Geral">Atendimento Geral (Triagem)</option>
+            </select>
+          </div>
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Número / Identificador / WABA ID</label>
+            <input type="text" name="identificador" id="identificador" class="fe-input" placeholder="Ex: +55 (11) 99999-8888 ou ID do Bot">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔐 BLOCO 2: CREDENCIAIS E AUTOMAÇÃO -->
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-key"></i> Credenciais de API e Webhooks</div>
+      <div class="fe-card-body">
+        <div class="fe-row">
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Token de Acesso / API Key</label>
+            <input type="password" name="api_token" id="api_token" class="fe-input" placeholder="EAAK... / Bearer Token">
+          </div>
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Webhook URL de Retorno (Eventos)</label>
+            <input type="text" name="webhook_url" id="webhook_url" class="fe-input" placeholder="https://api.arione.com/v1/webhook/chatone" value="https://api.arione.com/v1/webhook/chatone">
+          </div>
+        </div>
+
+        <div class="fe-row">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Mensagem de Saudação Automática</label>
+            <textarea name="mensagem_saudacao" id="mensagem_saudacao" class="fe-input" rows="2" placeholder="Ex: Olá! Seja bem-vindo à AriOne. Como podemos te ajudar hoje?"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🤖 BLOCO 3: INTELIGÊNCIA ARTIFICIAL E SLA -->
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-robot"></i> Inteligência Artificial e SLA</div>
+      <div class="fe-card-body">
+        <div class="fe-row">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Ativar Chatbot IA (Triagem)?</label>
+            <select name="ativar_ia" id="ativar_ia" class="fe-input">
+              <option value="SIM" selected>Sim (AriOne AI Copilot)</option>
+              <option value="NAO">Não (Apenas transbordo humano)</option>
+            </select>
+          </div>
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Tempo Máx. Espera SLA (minutos)</label>
+            <input type="number" name="sla_minutos" id="sla_minutos" class="fe-input" placeholder="15" value="15" onfocus="this.select()">
+          </div>
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Mensagem de Fora de Expediente</label>
+            <input type="text" name="mensagem_ausencia" id="mensagem_ausencia" class="fe-input" placeholder="Nosso horário de atendimento é de Seg a Sex das 08h às 18h.">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ÚLTIMOS LANÇAMENTOS ── -->
+    <div class="fe-card" style="opacity: 0.95;">
+      <div class="fe-card-title"><i class="fas fa-list"></i> Últimos Canais Cadastrados</div>
+      <div class="fe-card-body" style="padding: 0; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <thead>
+            <tr>
+              <th style="background:#f8fafc; padding:12px 18px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:10px; border-bottom:1px solid #edf2f7;">Canal / Identificador</th>
+              <th style="background:#f8fafc; padding:12px 18px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:10px; border-bottom:1px solid #edf2f7;">Plataforma & Fila</th>
+              <th style="background:#f8fafc; padding:12px 18px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:10px; border-bottom:1px solid #edf2f7;">IA / SLA</th>
+              <th style="background:#f8fafc; padding:12px 18px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:10px; border-bottom:1px solid #edf2f7;">Status Conexão</th>
+              <th style="background:#f8fafc; padding:12px 18px; text-align:center; color:#64748b; font-weight:800; text-transform:uppercase; font-size:10px; border-bottom:1px solid #edf2f7;">Opções</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for c in canais %}
+            <tr style="border-bottom:1px solid #f1f5f9;">
+              <td style="padding:12px 18px; color:#1e293b;">
+                <div style="font-weight:800; color:#0072CE; font-size:13px;">{{ c.nome }}</div>
+                <div style="color:#64748b; font-size:11px;">{{ c.identificador }}</div>
+              </td>
+              <td style="padding:12px 18px; color:#1e293b;">
+                <div>
+                  {% if c.tipo == 'WhatsApp Business' %}WhatsApp Business (App)
+                  {% elif c.tipo == 'WhatsApp API' %}WhatsApp Business API
+                  {% elif c.tipo == 'Webchat' %}Webchat Widget (SiteOne)
+                  {% elif c.tipo == 'Telegram' %}Telegram Bot
+                  {% elif c.tipo == 'Instagram' %}Instagram Direct (API)
+                  {% elif c.tipo == 'Messenger' %}Facebook Messenger
+                  {% elif c.tipo == 'Email' %}E-mail SAC Integrado
+                  {% else %}{{ c.tipo }}{% endif %}
+                </div>
+                <div style="font-weight:700; color:#27AE60; font-size:11px;">Fila: {{ c.departamento }}</div>
+              </td>
+              <td style="padding:12px 18px; color:#1e293b;">
+                <div>IA: {% if c.ativar_ia == 'SIM' %}Ativada (Copilot){% else %}Não (Humano){% endif %}</div>
+                <div style="font-weight:700; color:#64748b; font-size:11px;">SLA: {{ c.sla_minutos }} min</div>
+              </td>
+              <td style="padding:12px 18px; color:#1e293b;">
+                {% if c.status == 'ATIVO' %}
+                  <span style="background:#e8f5e9; color:#2e7d32; padding:4px 12px; border-radius:20px; font-weight:700; font-size:10px;">Ativo / Conectado</span>
+                {% elif c.status == 'QR_CODE' %}
+                  <span style="background:#fff8e1; color:#f57f17; padding:4px 12px; border-radius:20px; font-weight:700; font-size:10px;">Aguardando QR / Auth</span>
+                {% elif c.status == 'FALHA' %}
+                  <span style="background:#ffebee; color:#c62828; padding:4px 12px; border-radius:20px; font-weight:700; font-size:10px;">Desconectado / Falha</span>
+                {% else %}
+                  <span style="background:#f1f5f9; color:#64748b; padding:4px 12px; border-radius:20px; font-weight:700; font-size:10px;">Inativo / Suspenso</span>
+                {% endif %}
+              </td>
+              <td style="padding:12px 18px; text-align:center;">
+                <div style="display:flex; gap:6px; justify-content:center;">
+                  <button type="button" onclick="editarCanal('{{ c.nome|escape }}', '{{ c.tipo|escape }}', '{{ c.status|escape }}', '{{ c.departamento|escape }}', '{{ c.identificador|escape }}', '{{ c.api_token|escape }}', '{{ c.webhook_url|escape }}', '{{ c.ativar_ia|escape }}', {{ c.sla_minutos }}, '{{ c.mensagem_ausencia|escape }}')" style="background:transparent; border:none; color:#0072CE; cursor:pointer; padding:4px 8px; font-size:14px;" title="Editar"><i class="fas fa-edit"></i></button>
+                  <button type="button" onclick="deletarCanal('{{ c.nome|escape }}')" style="background:transparent; border:none; color:#e53e3e; cursor:pointer; padding:4px 8px; font-size:14px;" title="Deletar"><i class="fas fa-trash-alt"></i></button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+  function editarCanal(nome, tipo, status, depto, ident, token, wbook, ia, sla, aus) {
+    document.getElementById('nome_canal').value = nome;
+    document.getElementById('tipo_canal').value = tipo;
+    document.getElementById('status').value = status;
+    document.getElementById('departamento').value = depto;
+    document.getElementById('identificador').value = ident;
+    document.getElementById('api_token').value = token;
+    document.getElementById('webhook_url').value = wbook;
+    document.getElementById('ativar_ia').value = ia;
+    document.getElementById('sla_minutos').value = sla;
+    document.getElementById('mensagem_ausencia').value = aus;
+    
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    if (typeof arioneToast === 'function') {
+      arioneToast('✏️ Canal "' + nome + '" carregado para edição com sucesso!', 'info');
+    }
+  }
+
+  function deletarCanal(nome) {
+    if (confirm('Tem certeza que deseja remover o canal "' + nome + '"?')) {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/digital/cards/chatone/canais/delete/' + encodeURIComponent(nome);
+      document.body.appendChild(form);
+      form.submit();
+    }
+  }
+</script>
+{% endblock %}

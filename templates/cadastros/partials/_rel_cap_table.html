@@ -1,0 +1,101 @@
+{# ── CAP TABLE V2 (PARTIAL) ── #}
+<div class="fe-rel-cap-panel">
+    <div class="fe-rel-chart-wrap">
+        <canvas id="chartCapTable"></canvas>
+        <div class="fe-rel-chart-center">
+            <span class="fe-rel-chart-val">100%</span>
+            <span class="fe-rel-chart-lbl">Capital Total</span>
+        </div>
+    </div>
+    <div class="fe-rel-data-wrap">
+        <h4 class="fe-rel-sec-title">Composição do Quadro Societário</h4>
+        <div class="fe-rel-table-scroll">
+            <table class="fe-table-v2">
+                <thead>
+                    <tr>
+                        <th>Sócio / Investidor</th>
+                        <th style="width: 140px; text-align: center;">Participação</th>
+                        <th style="width: 160px; text-align: right;">Cotas / Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if rel_data.socios %}
+                        {% for s in rel_data.socios %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="fe-rel-avatar">{{ s.socio.nome[:1] }}</div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <strong style="color: #2d3748;">{{ s.socio.nome }}</strong>
+                                        <small style="color: #a0aec0; font-size: 10px;">{{ s.socio.cpf_cnpj or 'CPF não cadastrado' }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="fe-rel-bar-wrap">
+                                    <div class="fe-rel-bar" style="width: {{ s.participacao or 0 }}%;"></div>
+                                </div>
+                                <span style="font-weight: 800; color: var(--pri);">{{ s.participacao_formatada or '0%' }}</span>
+                            </td>
+                            <td style="text-align: right; font-weight: 700;">{{ s.valor_formatado or '0,00' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td colspan="3" style="text-align: center; padding: 40px; color: #a0aec0;">Selecione uma empresa para visualizar o Cap Table.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Script de Gráfico (Injetado via Partial)
+(function() {
+    {% if rel_data.socios %}
+    const checkChart = setInterval(() => {
+        const canvas = document.getElementById('chartCapTable');
+        if (canvas && typeof Chart !== 'undefined') {
+            clearInterval(checkChart);
+            const ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for s in rel_data.socios %}"{{ s.socio.nome }}",{% endfor %}],
+                    datasets: [{
+                        data: [{% for s in rel_data.socios %}{{ s.participacao or 0 }},{% endfor %}],
+                        backgroundColor: ['#7A255F', '#9B59B6', '#3498DB', '#27AE60', '#FFD700', '#E67E22', '#E74C3C'],
+                        borderWidth: 6,
+                        borderColor: '#fff',
+                        hoverOffset: 20
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }, 100);
+    {% endif %}
+})();
+</script>
+
+<style>
+/* ── CAP TABLE V2 ── */
+.fe-rel-cap-panel { display: grid; grid-template-columns: 350px 1fr; gap: 60px; align-items: center; }
+.fe-rel-chart-wrap { position: relative; width: 350px; height: 350px; }
+.fe-rel-chart-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+.fe-rel-chart-val { display: block; font-size: 32px; font-weight: 900; color: #2d3748; }
+.fe-rel-chart-lbl { font-size: 12px; font-weight: 700; color: #a0aec0; text-transform: uppercase; }
+
+.fe-rel-sec-title { font-size: 14px; font-weight: 800; color: #2d3748; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.fe-table-v2 { width: 100%; border-collapse: collapse; }
+.fe-table-v2 th { text-align: left; padding: 12px; font-size: 11px; font-weight: 800; color: #a0aec0; text-transform: uppercase; border-bottom: 2px solid #f1f5f9; }
+.fe-table-v2 td { padding: 18px 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+
+.fe-rel-avatar { width: 36px; height: 36px; background: #fdf5fa; color: var(--pri); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; border: 1.5px solid #7A255F20; }
+.fe-rel-bar-wrap { width: 100px; height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden; position: relative; display: inline-block; margin-right: 10px; }
+.fe-rel-bar { height: 100%; background: var(--pri); border-radius: 10px; }
+</style>

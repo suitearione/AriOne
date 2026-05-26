@@ -1,0 +1,283 @@
+{# =============================================================================
+   Arquivo  : form_gateway_relatorios.html
+   Caminho  : templates/cadastros/cards/form_gateway_relatorios.html
+   Função   : Gateway suspenso para seleção de relatórios (Sem recarregar tela)
+   Cor Tema : #7A255F (AriOne Executive)
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header {
+            padding: 15px 25px;
+            background: linear-gradient(90deg, #7A255F 0%, #2980B9 20%, #7F8C8D 40%, #E67E22 60%, #0072CE 80%, #27AE60 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 22px 30px;
+            background: #fff;
+            border: 1.5px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gateway-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: color-mix(in srgb, var(--c), white 97%);
+            border-color: var(--c);
+        }
+
+        .gateway-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--c-bg, rgba(0,0,0,0.04));
+            color: var(--c, #7A255F);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .gateway-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .gateway-label { font-size: 18px; font-weight: 900; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; }
+        .gateway-desc { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+
+        /* Botão Voltar Glass */
+        .btn-voltar-glass {
+            background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn-voltar-glass:hover { background: rgba(255,255,255,0.3); transform: translateX(-3px); }
+    </style>
+
+    <div class="gateway-header">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <button type="button" class="btn-voltar-glass" onclick="voltarGatewayMestre()"><i class="fas fa-arrow-left"></i></button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-folder-open" style="font-size: 1.4rem; color: #BDBDBD;"></i>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div class="gateway-title" style="gap:0; color: #BDBDBD;">Central de Relatórios: Empresa</div>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Estrutura e Capital</span>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">CARDs</span>
+            {% if config.IS_DEV or sistema_nome == 'AriOneDEV' %}
+            <button type="button" onclick="toggleDebugFloating()" class="btn-voltar-glass" title="Auditoria de Integridade (Audit)"><i class="fas fa-microscope"></i></button>
+            {% endif %}
+            <button type="button" class="btn-voltar-glass" onclick="fecharCentralRelatorios()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            <!-- Dados -->
+            <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="abrirAuditoria('empresa')">
+                <div class="gateway-icon"><i class="fas fa-id-card"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Dados da Empresa</span>
+                    <span class="gateway-desc">Informações Cadastrais</span>
+                </div>
+            </div>
+
+            <!-- Setores -->
+            <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="abrirAuditoria('setor')">
+                <div class="gateway-icon"><i class="fas fa-sitemap"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Setores e Áreas</span>
+                    <span class="gateway-desc">Estrutura de Negócio</span>
+                </div>
+            </div>
+
+            <!-- Cargos -->
+            <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="abrirAuditoria('cargo')">
+                <div class="gateway-icon"><i class="fas fa-user-tie"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Cargos e Funções</span>
+                    <span class="gateway-desc">Quadro de Colaboradores</span>
+                </div>
+            </div>
+
+            <!-- Sócios -->
+            <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="abrirAuditoria('socio')">
+                <div class="gateway-icon"><i class="fas fa-users-line"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Quadro Societário</span>
+                    <span class="gateway-desc">Sócios e Acionistas</span>
+                </div>
+            </div>
+
+            <!-- Investidores -->
+            <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="abrirAuditoria('investidor')">
+                <div class="gateway-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+                <div class="gateway-label-group">
+                    <span class="gateway-label">Investidores</span>
+                    <span class="gateway-desc">Aportes e Participações</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- INTERNAL USE ONLY - Floating Debug Card Over the Central -->
+    {% if config.IS_DEV or sistema_nome == 'AriOneDEV' %}
+    <div id="debug-floating-card" style="display:none; position:absolute; top:110px; left:50%; transform:translateX(-50%); width:300px; background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25); z-index:1000; border:2px solid #6366f1; overflow:hidden; animation: slideInDebug 0.3s ease;">
+        <div style="background:#6366f1; color:#fff; padding:12px 15px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:space-between;">
+            <span><i class="fas fa-microscope" style="margin-right:8px;"></i> AUDITORIA DE INTEGRIDADE (AUDIT)</span>
+            <i class="fas fa-times" onclick="toggleDebugFloating()" style="cursor:pointer; opacity:0.8;"></i>
+        </div>
+        <div style="padding:15px;">
+            <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">Checklist de Persistência</div>
+            <div class="debug-list">
+                <div class="debug-item" onclick="abrirAuditoria('empresa')">
+                    <i class="fas fa-id-card"></i> <span>1. Dados da Empresa</span>
+                </div>
+                <div class="debug-item" onclick="abrirAuditoria('setor')">
+                    <i class="fas fa-sitemap"></i> <span>2. Setores</span>
+                </div>
+                <div class="debug-item" onclick="abrirAuditoria('cargo')">
+                    <i class="fas fa-user-tie"></i> <span>3. Cargos</span>
+                </div>
+                <div class="debug-item" onclick="abrirAuditoria('socio')">
+                    <i class="fas fa-users-line"></i> <span>4. Sócios</span>
+                </div>
+                <div class="debug-item" onclick="abrirAuditoria('investidor')">
+                    <i class="fas fa-hand-holding-dollar"></i> <span>5. Investidores</span>
+                </div>
+                
+                <div style="margin: 10px 0; border-top: 1.5px dashed #e2e8f0;"></div>
+
+                <div class="debug-item" onclick="toggleDebugFloating()" style="color:#7A255F; background:rgba(122,37,95,0.05);">
+                    <i class="fas fa-times-circle"></i> <span style="font-weight:800;">Fechar Painel de Validação</span>
+                </div>
+            </div>
+            <div style="margin-top:15px; text-align:center; font-size:9px; color:#94a3b8; font-weight:700;">
+                INTERNAL USE ONLY - ARIONE OPS
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideInDebug {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .debug-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 4px;
+        }
+        .debug-item:hover {
+            background: rgba(99,102,241,0.08);
+            color: #6366f1;
+            transform: translateX(5px);
+        }
+        .debug-item i { width: 16px; text-align: center; font-size: 14px; opacity: 0.7; }
+    </style>
+    {% endif %}
+</div>
+
+<script>
+/**
+ * Alterna a exibição do card flutuante de debug
+ */
+function toggleDebugFloating() {
+    const card = document.getElementById('debug-floating-card');
+    if (card) {
+        card.style.display = (card.style.display === 'none' || card.style.display === '') ? 'block' : 'none';
+    }
+}
+
+/**
+ * Navega para um relatório específico
+ */
+function abrirAuditoria(entidade) {
+    const url = `{{ url_for('cadastros.relatorios_cadastros', tipo='auditoria') }}&entidade=${entidade}`;
+    window.open(url, '_blank');
+}
+
+/**
+ * Volta para o menu mestre
+ */
+function voltarGatewayMestre() {
+    // Volta ao menu mestre da Central (recarrega o gateway principal inline)
+    const url = "{{ url_for('cadastros.gateway_modulos_cadastro') }}";
+    const content = document.getElementById('arione-central-inline') || document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                content.querySelectorAll('script').forEach(script => {
+                    const novo = document.createElement('script');
+                    [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+                    novo.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novo, script);
+                });
+            });
+    }
+}
+
+function fecharCentralRelatorios() {
+    // Fecha tudo e restaura o grid original
+    const gridArea = document.getElementById('arione-grid-area');
+    const inlineArea = document.getElementById('arione-central-inline');
+    if (gridArea && inlineArea) {
+        inlineArea.style.display = 'none';
+        inlineArea.innerHTML = '';
+        gridArea.style.display = '';
+        return;
+    }
+    const modal = document.getElementById('arione-modal-global');
+    if (modal) modal.style.display = 'none';
+}
+</script>
+

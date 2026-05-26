@@ -1,0 +1,143 @@
+{# =============================================================================
+Caminho : templates/gestao/cards/pessoas/form_documentação.html
+Arquivo : form_documentação.html
+Função  : Dossiê Digital, eSocial e Alertas de Saúde Ocupacional
+============================================================================= #}
+
+    <!-- ── BARRA DE OPÇÕES ── -->
+    <div style="background: #f8fafc; border-bottom: 2px solid #edf2f7; padding: 12px 18px; display: flex; gap: 8px; margin-bottom:20px; border-radius: 8px;">
+        <button type="button" class="gf-btn" style="background:#7A255F; color:#fff; border:none; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-plus"></i> Novo</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-edit"></i> Editar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-search"></i> Consultar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-print"></i> Imprimir</button>
+    </div>
+
+<form class="ge-form" id="form-documentacao" method="POST" action="#">
+    
+    {# 📁 BLOCO 1: REPOSITÓRIO DIGITAL #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-folder-open"></i> Dossiê Eletrônico (PDF/Docs)
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+        
+        <div class="gf-row">
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Documentação Base (Upload)</label>
+                <div style="display:flex; gap:8px; align-items: center;">
+                    <input type="file" id="doc-upload" class="gf-input" style="padding: 5px;">
+                    <span style="font-size: 10px; color: #718096;">RG, CPF, PIS, Residência</span>
+                </div>
+            </div>
+            <div class="gf-group" style="width: 150px;">
+                <label class="gf-label">Foto 3x4 (Perfil)</label>
+                <input type="file" class="gf-input" style="padding: 5px;" accept="image/*">
+            </div>
+        </div>
+    </div>
+
+    {# 👨‍👩‍👧 BLOCO 2: DADOS FAMILIARES (IR/SALÁRIO-FAMÍLIA) #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-users"></i> Dependentes e Família
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+        
+        <div class="gf-row">
+            <div class="gf-group gf-flex-2">
+                <label class="gf-label">Dependentes (Nome e Parentesco)</label>
+                <textarea class="gf-input" rows="2" placeholder="Ex: Maria João (Filha), José Pedro (Pônjuge)..."></textarea>
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Qtd. p/ Fins de IR</label>
+                <input type="number" class="gf-input" min="0" value="0">
+            </div>
+        </div>
+    </div>
+
+    {# 🏥 BLOCO 3: SAÚDE OCUPACIONAL (ASO) #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-heartbeat"></i> Vencimento de Exames (ASO)
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+        
+        <div class="gf-row">
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Última Consulta</label>
+                <input type="date" class="gf-input">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label" style="color:#e53e3e;">Próxima Renovação</label>
+                <input type="date" class="gf-input" style="border-color:#feb2b2;">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label">Status Saúde</label>
+                <div style="padding: 9px; background: #f0fff4; color: #2f855a; border-radius: 7px; font-size: 12px; font-weight: 600; text-align: center;">
+                    APTO
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ✅ BLOCO 4: COMPLIANCE LGPD #}
+    <div style="background: #f7fafc; padding: 15px; border-radius: 8px; border: 1px solid #edf2f7;">
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" name="compliance" required style="width: 18px; hieght: 18px;">
+            <span style="font-size: 12px; color: #4a5568; font-weight: 600;">Declaro ciência dos Termos (LGPD, Conduta e Uso de Equipamentos)</span>
+        </label>
+    </div>
+
+    <div class="gf-actions">
+        <button type="submit" class="gf-btn gf-btn-consultar">
+            <i class="fas fa-check-circle"></i> Atualizar Dossiê
+        </button>
+    </div>
+</form>
+
+    <!-- ── ÚLTIMOS LANÇAMENTOS ── -->
+    <div style="margin-top:25px; padding:0; overflow:hidden; border: 1.5px solid #edf2f7; border-radius: 10px;">
+        <div style="background:#7A255F; color:#fff; padding:10px 18px; font-size:11px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fas fa-list"></i> ÚLTIMOS DOCUMENTOS REGISTRADOS</span>
+            <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px;">Gestão de Pessoas</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                    <tr>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Referência / ID</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Descrição</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Data de Lançamento</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-weight:800; font-size:10px;">#DOC-001</span></td>
+                        <td style="padding:12px 15px; color:#1e293b;"><strong>Admissão Padrão</strong></td>
+                        <td style="padding:12px 15px; color:#1e293b;">Hoje</td>
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:20px; font-weight:700; font-size:10px;">Arquivado</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    (function() {
+        const rootForm = document.getElementById('form-documentacao');
+        if (rootForm && typeof initMascaras === 'function') initMascaras(rootForm);
+    })();
+</script>
+
+<style>
+.ge-form{display:flex;flex-direction:column;gap:0;}
+.gf-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.gf-group{display:flex;flex-direction:column;gap:4px;min-width:120px;}
+.gf-flex-1{flex:1;}.gf-flex-2{flex:2;}
+.gf-label{font-size:10.5px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.4px;}
+.gf-input{padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#2d3748;background:#fff;transition:all .17s;width:100%;box-sizing:border-box;}
+.gf-input:focus{outline:none;border-color:#7A255F;}
+.gf-actions{display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;}
+.gf-btn-consultar{background:linear-gradient(135deg,#7A255F,#a8357f);color:#fff; border:none; padding:9px 18px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer;}
+</style>

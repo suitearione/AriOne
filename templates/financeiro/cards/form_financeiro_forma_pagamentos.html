@@ -1,0 +1,261 @@
+{# =============================================================================
+   Caminho  : templates/financeiro/cards/form_financeiro_forma_pagamentos.html
+   Função   : Gestão de Formas de Pagamento (Quiet Luxury Standard) - Simplificado
+   ============================================================================= #}
+
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<style>
+    /* 🛡️ BLINDAGEM PAA §12-E: O cabeçalho deve 'beijar' o topo e expandir 100% da largura útil */
+    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+</style>
+
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Formas de Pagamento",
+        subtitulo="Financeiro > Configurações > Pagamentos",
+        icone="fa-credit-card",
+        cor_tema="#2980B9",
+        func_fechar="voltarParaGridGerencial()",
+        form_id="form-forma-pagamento",
+        onclick_novo="resetFormPag()",
+        onclick_save="salvarFormaPagamento()",
+        onclick_clonar="",
+        onclick_search="",
+        onclick_filter="",
+        onclick_export="",
+        onclick_import="",
+        onclick_print="window.print()",
+        onclick_email="",
+        onclick_whatsapp="",
+        onclick_list="",
+        status="Configurando Regras Operacionais",
+        ajuda="Defina aqui como sua empresa recebe. Agrupe por modalidade e defina a baixa automática.",
+        tamanho="medio"
+    ) }}
+
+<div class="arione-modern-container" style="padding: 0 24px 24px 24px; max-width: 1000px; margin: 0 auto; animation: feFadeUp 0.4s ease-out;">
+        
+        <div class="fp-row" style="gap: 20px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+            
+            {# COLUNA 1: FORMULÁRIO DE CADASTRO #}
+            <div class="fp-card" style="flex: 1; min-width: 400px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff;">
+                <div class="fp-card-title" style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; font-weight: 800; color: #1e293b; font-size: 13px;">
+                    <i class="fas fa-plus-circle" style="color: #2980B9; margin-right: 8px;"></i> Detalhes da Forma
+                </div>
+                <div class="fp-card-body" style="padding: 20px;">
+                    <form id="form-forma-pagamento">
+                        <input type="hidden" name="id" id="pag_id">
+                        
+                        <div class="fp-group" style="margin-bottom: 15px;">
+                            <label class="fp-label" style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 5px; display: block; text-transform: uppercase;">NOME DA FORMA (EXIBIÇÃO)</label>
+                            <input class="fp-input" type="text" name="nome" id="pag_nome" placeholder="Ex: CARTÃO DE CRÉDITO..." required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 13px; text-transform: uppercase; font-weight: 800; height: 38px; outline: none;">
+                        </div>
+
+                        <div class="fp-group" style="margin-bottom: 15px;">
+                            <label class="fp-label" style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 5px; display: block; text-transform: uppercase;">AGRUPADOR OPERACIONAL</label>
+                            <select class="fp-input" name="agrupador_operacional" id="pag_agrupador" style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0 12px; font-size: 13px; height: 38px; font-weight: 700; color: #2980B9; outline: none;">
+                                <option value="Á VISTA">Á VISTA</option>
+                                <option value="CARTÃO">CARTÃO</option>
+                                <option value="A PRAZO">A PRAZO</option>
+                                <option value="CRÉDITO">CRÉDITO</option>
+                                <option value="BANCÁRIOS">BANCÁRIOS</option>
+                                <option value="DIGITAL">DIGITAL</option>
+                                <option value="OUTROS">OUTROS</option>
+                            </select>
+                        </div>
+
+                        <div class="fp-group" style="margin-bottom: 15px;">
+                            <label class="fp-label" style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 5px; display: block; text-transform: uppercase;">BAIXA AUTOMÁTICA?</label>
+                            <select class="fp-input" name="baixa_automatica" id="pag_baixa" style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 0 12px; font-size: 13px; height: 38px; font-weight: 700; outline: none;">
+                                <option value="SIM">SIM (BAIXA NA HORA)</option>
+                                <option value="NÃO">NÃO (PENDENTE NO FINANCEIRO)</option>
+                            </select>
+                        </div>
+
+                        <div class="fp-group" style="margin-bottom: 20px;">
+                            <label class="fp-label" style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 5px; display: block; text-transform: uppercase;">COR DE IDENTIFICAÇÃO</label>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="color" name="cor" id="pag_cor" value="#2980B9" style="width: 50px; height: 38px; border: 1.5px solid #e2e8f0; border-radius: 6px; padding: 2px; background: #fff; cursor: pointer;">
+                                <input class="fp-input" type="text" id="pag_cor_hex" placeholder="#000000" style="flex: 1; font-family: monospace; height: 38px; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px; font-size: 12px;" oninput="document.getElementById('pag_cor').value = this.value">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {# COLUNA 2: LISTA DE FORMAS #}
+            <div class="fp-card" style="flex: 2; min-width: 600px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff; overflow: hidden;">
+                <div class="fp-card-title" style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: 800; color: #1e293b; font-size: 13px;"><i class="fas fa-list-ul" style="color: #2980B9;"></i> Formas Ativas</span>
+                        <button type="button" onclick="restaurarPadroesLuxury()" class="fp-btn" style="height: 24px; padding: 0 10px; font-size: 9px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; border-radius: 6px; font-weight: 800; cursor: pointer;">
+                            <i class="fas fa-magic" style="color: #2980B9;"></i> PADRÕES LUXURY
+                        </button>
+                    </div>
+                    <span style="font-size: 10px; opacity: 0.7; font-weight: 700; color: #64748b;">{{ pagamentos|length }} MODALIDADES</span>
+                </div>
+                <div class="fp-card-body" style="padding: 0;">
+                    <table class="arione-table-hcm">
+                        <thead>
+                            <tr style="background: #f8fafc;">
+                                <th style="padding: 15px 20px;">MODALIDADE</th>
+                                <th style="text-align: center;">AGRUPADOR</th>
+                                <th style="text-align: center;">BAIXA AUTOM.</th>
+                                <th style="width: 100px; text-align: center;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in pagamentos %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;">
+                                <td style="padding: 12px 20px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 36px; height: 36px; background: {{ p.cor }}15; color: {{ p.cor }}; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid {{ p.cor }}30;">
+                                            <i class="{{ p.icone }}"></i>
+                                        </div>
+                                        <div>
+                                        <div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ p.nome }}</div>
+                                        <div style="font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">{{ p.agrupador_operacional }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="text-align: center;">
+                                    <span style="background: #EBF5FB; color: #2980B9; padding: 4px 10px; border-radius: 20px; font-size: 9px; font-weight: 800; border: 1px solid #AED6F1;">
+                                        {{ p.agrupador_operacional }}
+                                    </span>
+                                </td>
+                                <td style="text-align: center;">
+                                    {% if p.baixa_automatica %}
+                                        <span style="color: #27AE60; font-weight: 800; font-size: 10px;"><i class="fas fa-bolt"></i> IMEDIATA</span>
+                                    {% else %}
+                                        <span style="color: #64748b; font-weight: 800; font-size: 10px;"><i class="fas fa-clock"></i> AGENDADA</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: center;">
+                                    <div style="display: flex; gap: 12px; justify-content: center;">
+                                        <button onclick='editarFormaPag({{ p.to_dict()|tojson }})' style="background:none; border:none; color:#2980B9; cursor:pointer; font-size: 14px;" title="Editar"><i class="fas fa-edit"></i></button>
+                                        <button onclick="excluirFormaPag({{ p.id }})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 14px;" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 60px; color: #94a3b8; font-style: italic;">
+                                    <i class="fas fa-credit-card" style="font-size: 30px; display: block; margin-bottom: 10px; opacity: 0.3;"></i>
+                                    Nenhuma forma de pagamento configurada.<br>Use os "Padrões Luxury" para começar.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function arioneMaskMoney(val) {
+            let v = val.replace(/\D/g, '');
+            v = (v / 100).toFixed(2) + '';
+            v = v.replace(".", ",");
+            v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return v;
+        }
+
+        function resetFormPag() {
+            document.getElementById('form-forma-pagamento').reset();
+            document.getElementById('pag_id').value = '';
+            document.getElementById('pag_cor').value = '#2980B9';
+            document.getElementById('pag_cor_hex').value = '#2980B9';
+            arioneToast('Formulário pronto para novo cadastro', 'info');
+        }
+
+        function editarFormaPag(data) {
+            document.getElementById('pag_id').value = data.id;
+            document.getElementById('pag_nome').value = data.nome;
+            document.getElementById('pag_agrupador').value = data.agrupador_operacional || 'OUTROS - NÃO ESPECIFICADOS';
+            document.getElementById('pag_baixa').value = data.baixa_automatica ? 'SIM' : 'NÃO';
+            document.getElementById('pag_cor').value = data.cor;
+            document.getElementById('pag_cor_hex').value = data.cor;
+            
+            document.getElementById('form-forma-pagamento').scrollIntoView({ behavior: 'smooth' });
+            arioneToast('Editando: ' + data.nome, 'info');
+        }
+
+        function salvarFormaPagamento() {
+            const form = document.getElementById('form-forma-pagamento');
+            if (!document.getElementById('pag_nome').value) {
+                arioneToast('⚠️ O nome é obrigatório', 'warning');
+                return;
+            }
+
+            const data = new FormData(form);
+            fetch("{{ url_for('financeiro.salvar_forma_pagamento') }}", {
+                method: 'POST',
+                body: data
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_formas_pagamento') }}", 'Formas de Pagamento');
+                } else {
+                    arioneToast('Erro: ' + res.error, 'danger');
+                }
+            });
+        }
+
+        function excluirFormaPag(id) {
+            if (!confirm('Deseja realmente excluir esta forma de pagamento?')) return;
+            fetch(`/financeiro/card/pagamentos/excluir/${id}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_formas_pagamento') }}", 'Formas de Pagamento');
+                } else {
+                    arioneToast('Erro: ' + res.error, 'danger');
+                }
+            });
+        }
+
+        function restaurarPadroesLuxury() {
+            if (!confirm('Deseja configurar os padrões de pagamento sugeridos pelo AriOne?')) return;
+            fetch("{{ url_for('financeiro.seed_formas_pagamento') }}", { method: 'POST' })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGlobal("{{ url_for('financeiro.card_formas_pagamento') }}", 'Formas de Pagamento');
+                }
+            });
+        }
+
+        // Sincroniza cor hex
+        document.getElementById('pag_cor').addEventListener('input', function() {
+            document.getElementById('pag_cor_hex').value = this.value.toUpperCase();
+        });
+
+        function voltarParaGridGerencial() {
+            if (typeof fecharModalGlobal === 'function') {
+                fecharModalGlobal();
+            }
+            if (!window.location.search.includes('aba=gerencial')) {
+                window.location.href = "{{ url_for('financeiro.abas', aba='gerencial') }}";
+            }
+        }
+    </script>
+
+    <style>
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .arione-table-hcm td { padding: 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .arione-table-hcm tr:hover { background: #fcfdfe; }
+        
+        .fp-input:focus { border-color: #2980B9 !important; box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1); }
+    </style>
+</div>
+{% endblock %}

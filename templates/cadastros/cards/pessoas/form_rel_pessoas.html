@@ -1,0 +1,111 @@
+{# =============================================================================
+   Arquivo  : form_rel_pessoas.html
+   Caminho  : templates/cadastros/cards/pessoas/form_rel_pessoas.html
+   Função   : Interface de Geração de Relatórios de Pessoas (Equipe/Clientes)
+   Cor Tema : #0072CE (Azul AriOne)
+============================================================================= #}
+
+<div class="ctx-relp-wrap" id="ctx-relp-{{ tipo_id|default('new') }}">
+<style>
+    /* ── PAAv1: QUIET LUXURY CSS ── */
+    .fe-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+    .gf-input { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 12px; color: #1e293b; background: #fff; transition: all 0.2s; width: 100%; box-sizing: border-box; outline: none; }
+</style>
+
+    {# ── CABEÇALHO MESTRE STICKY (PAAv1 §12-B) ── #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #fff; transition: none !important;">
+        {{ cabecalho_mestre_arione(
+            titulo='Relação de Pessoas',
+            subtitulo='Pessoas > Relatórios > Inteligência de Capital Humano',
+            icone='fa-users-cog',
+            form_id='relp-form',
+            list_id='grid-relp',
+            rota_novo='#',
+            onclick_save='document.getElementById("relp-form").submit()',
+            onclick_print='window.print()',
+            onclick_export='alert("Exportando Excel...")',
+            sub_key='RELATÓRIOS — Pessoas',
+            tela='Relatório de Pessoas',
+            cor_tema='#0072CE'
+        ) }}
+    </div>
+    {# ── ACCENT BAR 4px (PAAv1 §11-B) ── #}
+    <div style="height: 4px; background: #0072CE; width: 100%; margin: 0 0 14px 0;"></div>
+
+    <div class="ctx-relp-body">
+        <div class="relp-tabs">
+            <div class="relp-tab active"><i class="fas fa-list-ul"></i> Geral</div>
+            <div class="relp-tab"><i class="fas fa-birthday-cake"></i> Aniversariantes</div>
+            <div class="relp-tab"><i class="fas fa-map-marked-alt"></i> Localização</div>
+        </div>
+
+        <form id="relp-form" action="{{ url_for('cadastros.gateway_rel_pessoas') }}" method="POST">
+            <div class="relp-card">
+                <div class="relp-row">
+                    <div class="relp-group">
+                        <label class="relp-label">Tipo de Pessoa</label>
+                        <select class="relp-input" name="tipo_pessoa">
+                            <option value="TODOS">Todos (Geral)</option>
+                            <option value="CLIENTE">Clientes</option>
+                            <option value="FORNECEDOR">Fornecedores</option>
+                            <option value="FUNCIONARIO">Funcionários</option>
+                            <option value="MOTORISTA">Motoristas</option>
+                        </select>
+                    </div>
+                    <div class="relp-group">
+                        <label class="relp-label">Status</label>
+                        <select class="relp-input" name="status">
+                            <option value="ATIVOS">Apenas Ativos</option>
+                            <option value="TODOS">Todos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="kpi-row-p">
+                    <div class="kpi-item-p">
+                        <span class="kpi-label-p">Total Clientes</span>
+                        <span class="kpi-val-p">0</span>
+                    </div>
+                    <div class="kpi-item-p">
+                        <span class="kpi-label-p">Total Equipe</span>
+                        <span class="kpi-val-p">0</span>
+                    </div>
+                    <div class="kpi-item-p">
+                        <span class="kpi-label-p">Motoristas</span>
+                        <span class="kpi-val-p">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 25px; padding-top: 20px; border-top: 1.5px solid #edf2f7;">
+                <button type="button" class="ge-btn-cancelar" onclick="voltarGatewayPessoas()" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-weight: 700; padding: 10px 20px; border-radius: 8px; cursor: pointer;">VOLTAR</button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="ge-btn-add" style="background:#27AE60; color: #fff; border: none; border-radius: 8px; padding: 10px 15px; cursor: pointer;" title="Exportar para Excel"><i class="fas fa-file-excel"></i> EXCEL</button>
+                    <button type="submit" class="ge-btn-salvar" style="background: #0072CE; color: #fff; border: none; border-radius: 8px; padding: 10px 25px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-print"></i> IMPRIMIR RELAÇÃO
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function voltarGatewayPessoas() {
+    const url = "{{ url_for('cadastros.gateway_rel_pessoas') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url).then(res => res.text()).then(html => {
+            content.innerHTML = html;
+            content.style.opacity = '1';
+            content.querySelectorAll('script').forEach(script => {
+                const novoScript = document.createElement('script');
+                Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                novoScript.appendChild(document.createTextNode(script.innerHTML));
+                script.parentNode.replaceChild(novoScript, script);
+            });
+        });
+    }
+}
+</script>

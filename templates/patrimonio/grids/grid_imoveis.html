@@ -1,0 +1,639 @@
+<!-- templates/patrimonio/grids/grid_imoveis.html -->
+<div class="patr-section">
+
+    <!-- Formulário de Cadastro -->
+    <div class="op-card" style="border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.05);border:1px solid rgba(226,232,240,0.8);background:#fff;overflow:hidden;margin-bottom:25px;">
+        <div class="op-card-title" style="padding:16px 25px;border-bottom:1px solid #f1f5f9;font-weight:600;color:#334155;font-size:13px;background:#fcfdfe;display:flex;justify-content:space-between;align-items:center;">
+            <div><i class="fas fa-building" style="color:#0072CE;margin-right:10px;"></i><span>Dados do Imóvel / Terreno / Edificação</span></div>
+            <span id="badge-imovel-status" style="background:#e2e8f0;color:#64748b;font-size:10px;padding:4px 12px;border-radius:12px;font-weight:600;">ATIVO</span>
+        </div>
+        <div class="op-card-body" style="padding:25px;">
+            <!-- ABAS INTERNAS DO FORMULÁRIO -->
+            <div style="display:flex;gap:10px;margin-bottom:25px;border-bottom:2px solid #e2e8f0;padding-bottom:10px;">
+                <button type="button" onclick="alternarAbaFormImovel('dados')" id="btn-aba-imovel-dados" style="background:#0072CE;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,114,206,0.2);">
+                    <i class="fas fa-file-invoice"></i> DADOS DO IMÓVEL
+                </button>
+                <button type="button" onclick="alternarAbaFormImovel('fiscal')" id="btn-aba-imovel-fiscal" style="background:#f1f5f9;color:#64748b;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;">
+                    <i class="fas fa-balance-scale"></i> FISCAL & DEPRECIAÇÃO
+                </button>
+                <button type="button" onclick="alternarAbaFormImovel('historico')" id="btn-aba-imovel-historico" style="background:#f1f5f9;color:#64748b;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;">
+                    <i class="fas fa-history"></i> HISTÓRICO
+                </button>
+            </div>
+
+            <form id="formImoveis" onsubmit="salvarImovel(event)">
+                <input type="hidden" name="id" id="imovel_id" value="new">
+                
+                <!-- ================= ABA 1: DADOS DO IMÓVEL ================= -->
+                <div id="imovel-aba-dados">
+                    <!-- BLOCO 1: IDENTIFICAÇÃO PRINCIPAL -->
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">1. Identificação do Ativo</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:2;min-width:250px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DESCRIÇÃO / IDENTIFICAÇÃO *</label>
+                            <input class="op-input" type="text" name="descricao" id="imovel_desc" placeholder="EX: GALPÃO PRINCIPAL / TERRENO LOTE 12" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:160px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">TIPO DE IMÓVEL *</label>
+                            <select name="tipo" id="imovel_tipo" class="op-input" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;transition:0.2s;" onchange="alternarCamposTerreno()">
+                                <option value="">SELECIONE...</option>
+                                <option value="TERRENO">🗺️ TERRENO / LOTE</option>
+                                <option value="GALPAO">🏭 GALPÃO INDUSTRIAL</option>
+                                <option value="SALA_COMERCIAL">🏦 SALA COMERCIAL</option>
+                                <option value="CASA">🏠 CASA</option>
+                                <option value="APARTAMENTO">🏢 APARTAMENTO</option>
+                                <option value="FAZENDA">🌾 FAZENDA / SÍTIO</option>
+                                <option value="LOJA">🛒 LOJA / PONTO COMERCIAL</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">SITUAÇÃO</label>
+                            <select name="situacao" class="op-input" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="PROPRIO">🟢 PRÓPRIO</option>
+                                <option value="ALUGADO">🟡 ALUGADO</option>
+                                <option value="HIPOTECADO">🔴 HIPOTECADO</option>
+                                <option value="ARRENDADO">🔵 ARRENDADO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- BLOCO 2: MEDIÇÕES E ÁREA -->
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">2. Dimensões e Medição Perimetral</div>
+                    <div id="bloco-medicoes-terreno" style="background:#f8fafc;border:1px solid #e2e8f0;padding:15px;border-radius:12px;margin-bottom:20px;">
+                        <div style="font-size:10px;color:#64748b;font-weight:700;margin-bottom:10px;text-transform:uppercase;">Medidas do Perímetro (Metros Lineares):</div>
+                        <div class="op-row" style="gap:15px;display:flex;flex-wrap:wrap;">
+                            <div class="op-group" style="flex:1;min-width:110px;">
+                                <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">FRENTE (M)</label>
+                                <input class="op-input" type="number" step="0.01" name="medida_frente" id="med_frente" placeholder="0.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;" oninput="calcularAreaTerreno()">
+                            </div>
+                            <div class="op-group" style="flex:1;min-width:110px;">
+                                <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">FUNDOS (M)</label>
+                                <input class="op-input" type="number" step="0.01" name="medida_fundos" id="med_fundos" placeholder="0.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;" oninput="calcularAreaTerreno()">
+                            </div>
+                            <div class="op-group" style="flex:1;min-width:110px;">
+                                <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">LADO DIREITO (M)</label>
+                                <input class="op-input" type="number" step="0.01" name="medida_direito" id="med_dir" placeholder="0.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;" oninput="calcularAreaTerreno()">
+                            </div>
+                            <div class="op-group" style="flex:1;min-width:110px;">
+                                <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">LADO ESQUERDO (M)</label>
+                                <input class="op-input" type="number" step="0.01" name="medida_esquerdo" id="med_esq" placeholder="0.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;" oninput="calcularAreaTerreno()">
+                            </div>
+                            <div class="op-group" style="flex:1;min-width:130px;">
+                                <label class="op-label" style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:6px;display:block;">ÁREA TOTAL (M²) *</label>
+                                <input class="op-input" type="number" step="0.01" name="area" id="imovel_area" placeholder="0.00" required style="width:100%;border:1px solid #0f766e;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;color:#0f766e;background:#f0fdf4;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BLOCO 2B: ÁREAS CONSTRUÍDAS (CONDICIONAL) -->
+                    <div id="bloco-areas-construidas" style="background:#f8fafc;border:1px solid #e2e8f0;padding:15px;border-radius:12px;margin-bottom:20px;display:none;">
+                        <div style="font-size:10px;color:#0072CE;font-weight:700;margin-bottom:10px;text-transform:uppercase;">Áreas Construídas e Edificadas (M²):</div>
+                        <div class="op-row" style="gap:15px;display:flex;flex-wrap:wrap;">
+                            <div class="op-group" style="flex:1;min-width:150px;" title="ÁREA CONSTRUÍDA INTERNA: Refere-se à soma das áreas cobertas e fechadas da edificação (salas, galpões, escritórios, banheiros, corredores internos, mezaninos, etc.).">
+                                <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
+                                    <span>ÁREA CONSTRUÍDA (INTERNA) M²</span> <i class="fas fa-info-circle" style="color:#0072CE;"></i>
+                                </label>
+                                <input class="op-input" type="number" step="0.01" name="area_construida_interna" id="area_interna" placeholder="0.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;">
+                            </div>
+                            <div class="op-group" style="flex:1;min-width:150px;" title="ÁREA CONSTRUÍDA EXTERNA: Refere-se às estruturas complementares fora do corpo principal da edificação (pátios pavimentados, guaritas, estacionamentos cobertos ou abertos, docas externas, áreas de lazer, quiosques, galpões anexos abertos, etc.).">
+                                <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:5px;">
+                                    <span>ÁREA CONSTRUÍDA (EXTERNA) M²</span> <i class="fas fa-info-circle" style="color:#0072CE;"></i>
+                                </label>
+                                <input class="op-input" type="number" step="0.01" name="area_construida_externa" id="area_externa" placeholder="0.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BLOCO 3: ENDEREÇO COMPLETO -->
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">3. Localização e Endereço</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:15px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:140px;max-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CEP *</label>
+                            <div style="display:flex;gap:5px;">
+                                <input class="op-input" type="text" name="cep" id="imovel_cep" placeholder="00000-000" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;" onblur="buscarCepImovel(this.value)">
+                                <button type="button" onclick="buscarCepImovel(document.getElementById('imovel_cep').value)" style="background:#0072CE;color:#fff;border:none;border-radius:8px;padding:0 15px;cursor:pointer;"><i class="fas fa-search"></i></button>
+                            </div>
+                        </div>
+                        <div class="op-group" style="flex:3;min-width:250px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">LOGRADOURO (RUA/AVENIDA) *</label>
+                            <input class="op-input" type="text" name="logradouro" id="imovel_logradouro" placeholder="EX: RUA DAS FLORES" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:100px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">NÚMERO *</label>
+                            <input class="op-input" type="text" name="numero" id="imovel_numero" placeholder="EX: 123 / S/N" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">COMPLEMENTO</label>
+                            <input class="op-input" type="text" name="complemento" id="imovel_complemento" placeholder="EX: QUADRA B / LOTE 5" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:180px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">BAIRRO *</label>
+                            <input class="op-input" type="text" name="bairro" id="imovel_bairro" placeholder="EX: CENTRO" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CIDADE *</label>
+                            <input class="op-input" type="text" name="cidade" id="imovel_cidade" placeholder="EX: SÃO PAULO" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:80px;max-width:100px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">UF *</label>
+                            <input class="op-input" type="text" name="uf" id="imovel_uf" placeholder="SP" required maxlength="2" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:600;color:#334155;text-align:center;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ABA 2: FISCAL & DEPRECIAÇÃO ================= -->
+                <div id="imovel-aba-fiscal" style="display:none;">
+                    <!-- BLOCO 4: DADOS FINANCEIROS E DE AQUISIÇÃO -->
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">4. Aquisição e Avaliação Financeira</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">MODALIDADE DE AQUISIÇÃO</label>
+                            <select name="modalidade_aquisicao" class="op-input" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="COMPRA">💰 COMPRA DIRETA</option>
+                                <option value="PERMUTA">🔄 PERMUTA / TROCA</option>
+                                <option value="CONSTRUCAO">🏗️ CONSTRUÇÃO PRÓPRIA</option>
+                                <option value="DOACAO">🎁 DOAÇÃO / CESSÃO</option>
+                                <option value="OUTROS">📋 OUTROS</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DE AQUISIÇÃO</label>
+                            <input class="op-input" type="date" name="data_aquisicao" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VALOR DE AQUISIÇÃO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="valor_aquisicao" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:6px;display:block;">VALOR ATUALIZADO (R$) *</label>
+                            <input class="op-input" type="number" step="0.01" name="valor" id="imovel_valor" placeholder="0,00" required style="width:100%;border:1px solid #0f766e;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;color:#0f766e;background:#f0fdf4;">
+                        </div>
+                    </div>
+
+                    <!-- BLOCO 5: CARTÓRIO E RESPONSABILIDADES -->
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">5. Documentação e Status</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">Nº MATRÍCULA (CARTÓRIO)</label>
+                            <input class="op-input" type="text" name="matricula" placeholder="EX: 12.345" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:160px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VENC. IPTU / CONTRATO</label>
+                            <input class="op-input" type="date" name="vencimento" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">RESPONSÁVEL / INQUILINO</label>
+                            <input class="op-input" type="text" name="responsavel" placeholder="NOME DO RESPONSÁVEL OU INQUILINO" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:130px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">STATUS</label>
+                            <select name="status" class="op-input" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="ATIVO">🟢 ATIVO</option>
+                                <option value="INATIVO">🔴 INATIVO</option>
+                                <option value="VENDIDO">⚫ VENDIDO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- BLOCO 6: HISTÓRICO CONTÁBIL & INTERVENÇÕES -->
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">6. Histórico Contábil & Intervenções</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:15px;display:flex;flex-wrap:wrap;background:#f8fafc;padding:15px;border-radius:12px;border:1px solid #e2e8f0;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DEPRECIAÇÃO</label>
+                            <input class="op-input" type="date" name="data_depreciacao" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">TAXA DEPRECIAÇÃO (%)</label>
+                            <input class="op-input" type="number" step="0.01" name="taxa_depreciacao" placeholder="EX: 4.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VALOR DEPRECIADO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="valor_depreciado" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DE VENDA</label>
+                            <input class="op-input" type="date" name="data_venda" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">IMPOSTOS ANUAIS (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="impostos_anuais" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CUSTO MANUTENÇÃO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="custo_manutencao" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:250px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">HISTÓRICO DE INTERVENÇÕES / REFORMAS</label>
+                            <input class="op-input" type="text" name="historico_reformas" placeholder="EX: REFORMA DO TELHADO EM 2024" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ABA 3: HISTÓRICO DE MOVIMENTAÇÕES (SOMENTE LEITURA) ================= -->
+                <div id="imovel-aba-historico" style="display:none;">
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">Rastreamento Histórico de Movimentações e Auditoria</div>
+                    <div id="container-historico-mov-imovel" style="background:#f8fafc;border:1px solid #e2e8f0;padding:25px;border-radius:12px;min-height:180px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                        <i class="fas fa-history" style="font-size:32px;color:#cbd5e1;margin-bottom:12px;"></i>
+                        <div style="font-size:13px;font-weight:600;color:#64748b;text-align:center;">Nenhuma movimentação selecionada. Clique em [Editar] na tabela abaixo para carregar o histórico completo deste ativo.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:5px;">
+                    <button type="button" onclick="limparFormImovel()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">
+                        <i class="fas fa-times"></i> LIMPAR
+                    </button>
+                    <button type="submit" id="btn-salvar-imovel" style="background:#0072CE;color:#fff;border:none;padding:10px 24px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,114,206,0.2);transition:0.2s;">
+                        <i class="fas fa-save"></i> SALVAR IMÓVEL
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Listagem -->
+    <div class="op-card" style="border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.05);border:1px solid rgba(226,232,240,0.8);background:#fff;overflow:hidden;">
+        <div class="op-card-title" style="padding:16px 25px;border-bottom:1px solid #f1f5f9;font-weight:600;color:#334155;font-size:13px;background:#fcfdfe;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;"><i class="fas fa-list" style="color:#0072CE;margin-right:10px;"></i><span>Imóveis e Terrenos Cadastrados</span></div>
+            <div style="display:flex;align-items:center;gap:15px;">
+                <input type="text" id="input-busca-imoveis" placeholder="🔍 Pesquisar na lista..." oninput="filtrarTabelaImoveis(this.value)" style="border:1px solid #cbd5e1;border-radius:8px;padding:6px 12px;font-size:11px;outline:none;width:200px;transition:0.2s;">
+                <span id="count-imoveis" style="background:#e2e8f0;color:#64748b;font-size:10px;padding:4px 12px;border-radius:12px;font-weight:600;">0 REGISTROS</span>
+            </div>
+        </div>
+        <div class="op-card-body" style="padding:0;overflow-x:auto;">
+            <table class="op-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                    <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:600;font-size:11px;">
+                        <th style="padding:14px 25px;">IMÓVEL / DESCRIÇÃO</th>
+                        <th style="padding:14px 15px;">TIPO</th>
+                        <th style="padding:14px 15px;">SITUAÇÃO</th>
+                        <th style="padding:14px 15px;">LOCALIZAÇÃO</th>
+                        <th style="padding:14px 15px;">ÁREA (M²)</th>
+                        <th style="padding:14px 15px;">AQUISIÇÃO</th>
+                        <th style="padding:14px 15px;">VALOR ATUAL</th>
+                        <th style="padding:14px 15px;">STATUS</th>
+                        <th style="padding:14px 25px;text-align:right;">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-imoveis">
+                    <tr><td colspan="9" style="padding:30px;text-align:center;color:#94a3b8;font-size:12px;">Nenhum imóvel cadastrado. Utilize o formulário acima.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const COR_IMOVEL = '#0072CE';
+let imoveisCad = [];
+
+async function carregarImoveisAPI() {
+    try {
+        const res = await fetch('/patrimonio/api/ativos/listar?categoria=IMOVEL');
+        const data = await res.json();
+        // Mapeia para a estrutura flexivel do front
+        imoveisCad = data.map(item => ({
+            id: item.id,
+            status: item.status,
+            valor_aquisicao: item.valor_aquisicao,
+            valor_contabil_atual: item.valor_contabil_atual,
+            ...item
+        }));
+        renderImoveis();
+    } catch (e) {
+        console.error("Erro ao carregar imóveis do banco:", e);
+    }
+}
+
+function alternarAbaFormImovel(aba) {
+    const divDados = document.getElementById('imovel-aba-dados');
+    const divFiscal = document.getElementById('imovel-aba-fiscal');
+    const divHist = document.getElementById('imovel-aba-historico');
+    const btnDados = document.getElementById('btn-aba-imovel-dados');
+    const btnFiscal = document.getElementById('btn-aba-imovel-fiscal');
+    const btnHist = document.getElementById('btn-aba-imovel-historico');
+    const btnSalvar = document.getElementById('btn-salvar-imovel');
+    if (!divDados || !divFiscal || !divHist) return;
+    
+    // Reseta botoes
+    [btnDados, btnFiscal, btnHist].forEach(b => {
+        b.style.background = '#f1f5f9'; b.style.color = '#64748b'; b.style.boxShadow = 'none';
+    });
+    
+    if (aba === 'dados') {
+        divDados.style.display = 'block'; divFiscal.style.display = 'none'; divHist.style.display = 'none';
+        btnDados.style.background = '#0072CE'; btnDados.style.color = '#fff'; btnDados.style.boxShadow = '0 2px 8px rgba(0,114,206,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'inline-block';
+    } else if (aba === 'fiscal') {
+        divDados.style.display = 'none'; divFiscal.style.display = 'block'; divHist.style.display = 'none';
+        btnFiscal.style.background = '#0072CE'; btnFiscal.style.color = '#fff'; btnFiscal.style.boxShadow = '0 2px 8px rgba(0,114,206,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'inline-block';
+    } else {
+        divDados.style.display = 'none'; divFiscal.style.display = 'none'; divHist.style.display = 'block';
+        btnHist.style.background = '#0072CE'; btnHist.style.color = '#fff'; btnHist.style.boxShadow = '0 2px 8px rgba(0,114,206,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'none'; // Aba de leitura não precisa salvar
+    }
+}
+
+function gerarHistoricoMovImovel(im) {
+    const cont = document.getElementById('container-historico-mov-imovel'); if (!cont) return;
+    if (!im || im.id === 'new') {
+        cont.innerHTML = `<i class="fas fa-history" style="font-size:32px;color:#cbd5e1;margin-bottom:12px;"></i>
+            <div style="font-size:13px;font-weight:600;color:#64748b;text-align:center;">Nenhuma movimentação registrada. Salve o ativo para iniciar o rastreamento histórico.</div>`;
+        return;
+    }
+
+    const valAq = parseFloat(im.valor_aquisicao || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const valDep = parseFloat(im.valor_depreciado || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const valAtu = parseFloat(im.valor_contabil_atual || im.valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const impAno = parseFloat(im.impostos_anuais || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const custMan = parseFloat(im.custo_manutencao || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+
+    let html = `<div style="width:100%;display:flex;flex-direction:column;gap:15px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #cbd5e1;padding-bottom:10px;">
+            <span style="font-size:14px;font-weight:800;color:#334155;">Linha do Tempo e Apuração Contábil: ${im.descricao}</span>
+            <span style="background:#e2e8f0;color:#475569;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;">ID Rastreamento: #PAA-${im.id}</span>
+        </div>`;
+
+    // 1. AQUISIÇÃO
+    html += `<div style="background:#fff;border-left:4px solid #0072CE;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#0072CE;text-transform:uppercase;">[ AQUISIÇÃO / CADASTRO ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Modalidade: ${im.modalidade_aquisicao||'COMPRA'} | Data de Aquisição: ${im.data_aquisicao ? im.data_aquisicao.split('-').reverse().join('/') : '---'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">VALOR DE AQUISIÇÃO</div>
+            <div style="font-size:15px;font-weight:800;color:#0072CE;">${valAq}</div>
+        </div>
+    </div>`;
+
+    // 2. DEPRECIAÇÃO / AVALIAÇÃO
+    html += `<div style="background:#fff;border-left:4px solid #0f766e;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;text-transform:uppercase;">[ DEPRECIAÇÃO & AVALIAÇÃO ATUAL ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Taxa Anual: ${im.taxa_depreciacao||'0'}% | Data Depreciação: ${im.data_depreciacao ? im.data_depreciacao.split('-').reverse().join('/') : '---'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">VALOR ATUALIZADO (LÍQUIDO)</div>
+            <div style="font-size:15px;font-weight:800;color:#0f766e;">${valAtu}</div>
+        </div>
+    </div>`;
+
+    // 3. MANUTENÇÃO E REFORMAS
+    html += `<div style="background:#fff;border-left:4px solid #d97706;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;">[ MANUTENÇÃO, IMPOSTOS & INTERVENÇÕES ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Reformas: ${im.historico_reformas||'Nenhuma intervenção registrada.'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">CUSTOS E IMPOSTOS ANUAIS</div>
+            <div style="font-size:14px;font-weight:700;color:#d97706;">IPTU: ${impAno} | Manut: ${custMan}</div>
+        </div>
+    </div>`;
+
+    // 4. ALIENAÇÃO / BAIXA FISCAL
+    if (im.status === 'VENDIDO') {
+        html += `<div style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #ea580c;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div style="font-size:11px;font-weight:800;color:#9a3412;text-transform:uppercase;">[ DESMOBILIZAÇÃO / ALIENAÇÃO FISCAL ]</div>
+            <div style="font-size:13px;font-weight:700;color:#334155;margin-top:4px;line-height:1.4;">${im.observacoes || 'Ativo alienado e baixado do patrimônio.'}</div>
+        </div>`;
+    }
+
+    html += `</div>`;
+    cont.innerHTML = html;
+}
+
+function filtrarTabelaImoveis(termo) {
+    const tbody = document.getElementById('tbody-imoveis'); if (!tbody) return;
+    const linhas = tbody.querySelectorAll('tr');
+    linhas.forEach(tr => {
+        if (tr.textContent.toUpperCase().includes(termo.toUpperCase())) tr.style.display = '';
+        else tr.style.display = 'none';
+    });
+}
+
+function alternarCamposTerreno() {
+    const tipo = document.getElementById('imovel_tipo').value;
+    const blocoTerreno = document.getElementById('bloco-medicoes-terreno');
+    const blocoAreas = document.getElementById('bloco-areas-construidas');
+    if (blocoTerreno) blocoTerreno.style.display = 'block';
+    if (blocoAreas) {
+        if (tipo && tipo !== 'TERRENO') {
+            blocoAreas.style.display = 'block';
+            blocoAreas.style.animation = 'feFadeIn 0.3s ease';
+        } else {
+            blocoAreas.style.display = 'none';
+        }
+    }
+}
+
+function calcularAreaTerreno() {
+    const f = document.getElementById('formImoveis');
+    const fr = parseFloat(f.querySelector('[name=medida_frente]').value || 0);
+    const fu = parseFloat(f.querySelector('[name=medida_fundos]').value || 0);
+    const dir = parseFloat(f.querySelector('[name=medida_direito]').value || 0);
+    const esq = parseFloat(f.querySelector('[name=medida_esquerdo]').value || 0);
+
+    if (fr > 0 || fu > 0 || dir > 0 || esq > 0) {
+        const mediaLargura = (fr + fu) / (fr > 0 && fu > 0 ? 2 : 1);
+        const mediaComprimento = (dir + esq) / (dir > 0 && esq > 0 ? 2 : 1);
+        const areaCalc = mediaLargura * mediaComprimento;
+        f.querySelector('[name=area]').value = areaCalc.toFixed(2);
+    }
+}
+
+function buscarCepImovel(cep) {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+    
+    fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.erro) {
+                document.getElementById('imovel_logradouro').value = data.logradouro.toUpperCase();
+                document.getElementById('imovel_bairro').value = data.bairro.toUpperCase();
+                document.getElementById('imovel_cidade').value = data.localidade.toUpperCase();
+                document.getElementById('imovel_uf').value = data.uf.toUpperCase();
+                document.getElementById('imovel_numero').focus();
+                if (typeof arioneToast === 'function') arioneToast('Endereço localizado via CEP!', 'success');
+            }
+        })
+        .catch(err => console.error('Erro ao buscar CEP:', err));
+}
+
+function renderImoveis() {
+    const tbody = document.getElementById('tbody-imoveis');
+    const cnt = document.getElementById('count-imoveis');
+    if (!tbody) return;
+    cnt.textContent = `${imoveisCad.length} REGISTROS`;
+    if (!imoveisCad.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="padding:30px;text-align:center;color:#94a3b8;">Nenhum imóvel cadastrado no banco de dados.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = imoveisCad.map(im => {
+        const statusBadge = im.status === 'ATIVO'
+            ? `<span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🟢 ATIVO</span>`
+            : im.status === 'VENDIDO'
+                ? `<span style="background:#1e293b;color:#f8fafc;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">⚫ VENDIDO</span>`
+                : `<span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🔴 INATIVO</span>`;
+        const valFmt = parseFloat(im.valor_contabil_atual||im.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const aqFmt = im.data_aquisicao ? im.data_aquisicao.split('-').reverse().join('/') : '---';
+        const locFmt = `${im.cidade||'---'} - ${im.uf||'--'}`;
+        return `<tr style="border-bottom:1px solid #f1f5f9;transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <td style="padding:14px 25px;font-weight:600;color:${COR_IMOVEL};">${im.descricao}</td>
+            <td style="padding:14px 15px;color:#64748b;">${im.tipo||'---'}</td>
+            <td style="padding:14px 15px;color:#64748b;">${im.situacao||'---'}</td>
+            <td style="padding:14px 15px;color:#334155;font-weight:500;">${locFmt}</td>
+            <td style="padding:14px 15px;color:#334155;font-weight:600;">${im.area||'---'} m²</td>
+            <td style="padding:14px 15px;color:#64748b;">${im.modalidade_aquisicao||'COMPRA'} (${aqFmt})</td>
+            <td style="padding:14px 15px;font-weight:700;color:#0f766e;">${valFmt}</td>
+            <td style="padding:14px 15px;">${statusBadge}</td>
+            <td style="padding:14px 25px;text-align:right;">
+                <button onclick="abrirModalAlienacao(${im.id}, 'imovel')" style="background:#fef3c7;color:#d97706;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;margin-right:5px;"><i class="fas fa-tag"></i> Alienar</button>
+                <button onclick="editarImovel(${im.id})" style="background:#f1f5f9;color:${COR_IMOVEL};border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;margin-right:5px;"><i class="fas fa-edit"></i> Editar</button>
+                <button onclick="excluirImovel(${im.id})" style="background:#fee2e2;color:#ef4444;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function salvarImovel(e) {
+    e.preventDefault();
+    const f = document.getElementById('formImoveis');
+    const idVal = f.querySelector('[name=id]').value;
+    const obj = {
+        id: idVal,
+        categoria: 'IMOVEL',
+        descricao: f.querySelector('[name=descricao]').value.toUpperCase(),
+        tipo: f.querySelector('[name=tipo]').value,
+        situacao: f.querySelector('[name=situacao]').value,
+        medida_frente: f.querySelector('[name=medida_frente]').value,
+        medida_fundos: f.querySelector('[name=medida_fundos]').value,
+        medida_direito: f.querySelector('[name=medida_direito]').value,
+        medida_esquerdo: f.querySelector('[name=medida_esquerdo]').value,
+        area: f.querySelector('[name=area]').value,
+        area_construida_interna: f.querySelector('[name=area_construida_interna]') ? f.querySelector('[name=area_construida_interna]').value : '',
+        area_construida_externa: f.querySelector('[name=area_construida_externa]') ? f.querySelector('[name=area_construida_externa]').value : '',
+        cep: f.querySelector('[name=cep]').value,
+        logradouro: f.querySelector('[name=logradouro]').value.toUpperCase(),
+        numero: f.querySelector('[name=numero]').value.toUpperCase(),
+        complemento: f.querySelector('[name=complemento]').value.toUpperCase(),
+        bairro: f.querySelector('[name=bairro]').value.toUpperCase(),
+        cidade: f.querySelector('[name=cidade]').value.toUpperCase(),
+        uf: f.querySelector('[name=uf]').value.toUpperCase(),
+        modalidade_aquisicao: f.querySelector('[name=modalidade_aquisicao]').value,
+        data_aquisicao: f.querySelector('[name=data_aquisicao]').value,
+        valor_aquisicao: f.querySelector('[name=valor_aquisicao]').value,
+        valor: f.querySelector('[name=valor]').value,
+        matricula: f.querySelector('[name=matricula]').value,
+        tag_patrimonial: f.querySelector('[name=matricula]').value,
+        vencimento: f.querySelector('[name=vencimento]').value,
+        responsavel: f.querySelector('[name=responsavel]').value.toUpperCase(),
+        status: f.querySelector('[name=status]').value,
+        data_depreciacao: f.querySelector('[name=data_depreciacao]').value,
+        taxa_depreciacao: f.querySelector('[name=taxa_depreciacao]').value,
+        valor_depreciado: f.querySelector('[name=valor_depreciado]').value,
+        data_venda: f.querySelector('[name=data_venda]').value,
+        impostos_anuais: f.querySelector('[name=impostos_anuais]').value,
+        custo_manutencao: f.querySelector('[name=custo_manutencao]').value,
+        historico_reformas: f.querySelector('[name=historico_reformas]').value.toUpperCase(),
+        observacoes: f.querySelector('[name=observacoes]') ? f.querySelector('[name=observacoes]').value.toUpperCase() : ""
+    };
+    
+    try {
+        const res = await fetch('/patrimonio/api/ativos/salvar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(obj)
+        });
+        const data = await res.json();
+        if(data.success) {
+            if (typeof arioneToast === 'function') arioneToast(data.message, 'success');
+            await carregarImoveisAPI();
+            limparFormImovel();
+        } else {
+            if (typeof arioneToast === 'function') arioneToast('Erro: ' + data.error, 'error');
+        }
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+function editarImovel(id) {
+    const im = imoveisCad.find(x => x.id == id); if (!im) return;
+    const f = document.getElementById('formImoveis');
+    f.querySelector('[name=id]').value = im.id;
+    f.querySelector('[name=descricao]').value = im.descricao||'';
+    f.querySelector('[name=tipo]').value = im.tipo||'';
+    f.querySelector('[name=situacao]').value = im.situacao||'PROPRIO';
+    f.querySelector('[name=medida_frente]').value = im.medida_frente||'';
+    f.querySelector('[name=medida_fundos]').value = im.medida_fundos||'';
+    f.querySelector('[name=medida_direito]').value = im.medida_direito||'';
+    f.querySelector('[name=medida_esquerdo]').value = im.medida_esquerdo||'';
+    f.querySelector('[name=area]').value = im.area||'';
+    if (f.querySelector('[name=area_construida_interna]')) f.querySelector('[name=area_construida_interna]').value = im.area_construida_interna||'';
+    if (f.querySelector('[name=area_construida_externa]')) f.querySelector('[name=area_construida_externa]').value = im.area_construida_externa||'';
+    f.querySelector('[name=cep]').value = im.cep||'';
+    f.querySelector('[name=logradouro]').value = im.logradouro||'';
+    f.querySelector('[name=numero]').value = im.numero||'';
+    f.querySelector('[name=complemento]').value = im.complemento||'';
+    f.querySelector('[name=bairro]').value = im.bairro||'';
+    f.querySelector('[name=cidade]').value = im.cidade||'';
+    f.querySelector('[name=uf]').value = im.uf||'';
+    f.querySelector('[name=modalidade_aquisicao]').value = im.modalidade_aquisicao||'COMPRA';
+    f.querySelector('[name=data_aquisicao]').value = im.data_aquisicao||'';
+    f.querySelector('[name=valor_aquisicao]').value = im.valor_aquisicao||'';
+    f.querySelector('[name=valor]').value = im.valor||'';
+    f.querySelector('[name=matricula]').value = im.matricula||'';
+    f.querySelector('[name=vencimento]').value = im.vencimento||'';
+    f.querySelector('[name=responsavel]').value = im.responsavel||'';
+    f.querySelector('[name=status]').value = im.status||'ATIVO';
+    f.querySelector('[name=data_depreciacao]').value = im.data_depreciacao||'';
+    f.querySelector('[name=taxa_depreciacao]').value = im.taxa_depreciacao||'';
+    f.querySelector('[name=valor_depreciado]').value = im.valor_depreciado||'';
+    f.querySelector('[name=data_venda]').value = im.data_venda||'';
+    f.querySelector('[name=impostos_anuais]').value = im.impostos_anuais||'';
+    f.querySelector('[name=custo_manutencao]').value = im.custo_manutencao||'';
+    f.querySelector('[name=historico_reformas]').value = im.historico_reformas||'';
+    
+    // Alimenta a aba de historico
+    gerarHistoricoMovImovel(im);
+
+    alternarCamposTerreno();
+    alternarAbaFormImovel('dados');
+    f.scrollIntoView({behavior:'smooth'});
+    if (typeof arioneToast === 'function') arioneToast(`Editando: ${im.descricao}`, 'info');
+}
+
+async function excluirImovel(id, force) {
+    if (!force) {
+        const conf = await arioneConfirm('Excluir este imóvel do banco de dados?');
+        if (!conf) return;
+    }
+    try {
+        const res = await fetch(`/patrimonio/api/ativos/excluir/${id}`, {method: 'POST'});
+        const data = await res.json();
+        if(data.success) {
+            if (typeof arioneToast === 'function') arioneToast('Imóvel excluído.', 'success');
+            await carregarImoveisAPI();
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function limparFormImovel() {
+    const f = document.getElementById('formImoveis'); f.reset(); f.querySelector('[name=id]').value='new';
+    gerarHistoricoMovImovel({id:'new'});
+    alternarCamposTerreno(); alternarAbaFormImovel('dados');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    carregarImoveisAPI();
+    alternarCamposTerreno();
+    gerarHistoricoMovImovel({id:'new'});
+});
+</script>

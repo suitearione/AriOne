@@ -1,0 +1,137 @@
+<div class="ge-grid-wrapper" style="padding: 10px 20px;">
+    <div class="ge-section-title" style="color: #7A255F; border-bottom: 2px solid #7A255F; padding-bottom: 8px; margin-bottom: 20px; font-weight: 800; display: flex; align-items: center; gap: 12px;">
+        <i class="fas fa-database"></i>
+        <span>Infraestrutura & Gestão de Dados</span>
+    </div>
+
+    <div class="ge-cards-container">
+        <!-- BACKUP -->
+        <div class="ge-card" id="card-backup" onclick="window.location.href='{{ url_for('sistema.form_backup') }}'" style="--card-cor:#1ABC9C;--card-cor-bg:rgba(26,188,156,0.10);">
+            <i class="fas fa-cloud-upload-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-save ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Backup</span>
+            <span class="ge-card-desc">Gerar Snapshot Manual</span>
+        </div>
+
+        <!-- RESTAURAÇÃO -->
+        <div class="ge-card" id="card-restauracao" onclick="window.location.href='{{ url_for('sistema.form_restauracao') }}'" style="--card-cor:#3498DB;--card-cor-bg:rgba(52,152,219,0.10);">
+            <i class="fas fa-undo-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-history ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Restauração</span>
+            <span class="ge-card-desc">Ponto de Recuperação</span>
+        </div>
+
+        <!-- AGENDAMENTO -->
+        <div class="ge-card" id="card-agendamento" onclick="window.location.href='{{ url_for('sistema.form_agendamento') }}'" style="--card-cor:#9B59B6;--card-cor-bg:rgba(155,89,182,0.10);">
+            <i class="fas fa-calendar-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-clock ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Agendamento</span>
+            <span class="ge-card-desc" id="agendamento-desc">Backups Automáticos</span>
+            <script>
+                (function() {
+                    fetch('{{ url_for("sistema.backup_status") }}')
+                        .then(res => res.json())
+                        .then(data => {
+                            const desc = document.getElementById('agendamento-desc');
+                            if (data.config && data.config.horario_db) {
+                                desc.textContent = `Ativo: Próximo às ${data.config.horario_db}`;
+                                desc.style.color = '#27ae60';
+                                desc.style.fontWeight = '700';
+                            }
+                        })
+                        .catch(err => console.error("Erro status backup:", err));
+                })();
+            </script>
+        </div>
+
+        <!-- VOLUME DE DADOS -->
+        <div class="ge-card" id="card-volume-dados" onclick="window.location.href='{{ url_for('sistema.card_volume_dados') }}'" style="--card-cor:#34495e;--card-cor-bg:rgba(52,73,94,0.10);">
+            <i class="fas fa-server ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" style="background:rgba(52,73,94,0.12);">
+                <i class="fas fa-microchip ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Volume de Dados</span>
+            <span class="ge-card-desc">Análise de Workspace</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// Removi a função abrirModalEstatisticas antiga pois agora usamos o form_volume_dados.html (Luxury)
+</script>
+
+<style>
+    /* Badge de Conclusão AriOne (Mesmo Selo Antigo) */
+    .ge-card-done-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #7A255F;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        z-index: 10;
+        border: 1.5px solid #fff;
+        animation: badgeShine 3s infinite;
+    }
+    @keyframes badgeShine {
+        0% { transform: scale(1); filter: brightness(1); }
+        50% { transform: scale(1.1); filter: brightness(1.3); }
+        100% { transform: scale(1); filter: brightness(1); }
+    }
+</style>
+
+<script>
+{% if is_ari_dev %}
+// ── CARD SEAL DETECTOR (SISTEMA — ARMAZENAMENTO) ──
+function updateStorageSeals() {
+    const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    
+    const mappings = {
+        'card-backup':      { sub: "SISTEMA — Armazenamento", tela: "Backup" },
+        'card-restauracao': { sub: "SISTEMA — Armazenamento", tela: "Restauração" },
+        'card-agendamento': { sub: "SISTEMA — Armazenamento", tela: "Agendamento" }
+    };
+
+    Object.entries(mappings).forEach(([cardId, info]) => {
+        const sId = getSafeId(info.sub + "_" + info.tela);
+        const isPronto = localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+        const card = document.getElementById(cardId);
+        
+        if (card) {
+            let badge = card.querySelector('.ge-card-done-badge');
+            if (isPronto) {
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'ge-card-done-badge';
+                    badge.innerHTML = '<i class="fas fa-award"></i>';
+                    badge.title = "AriOne Golden Standard";
+                    card.appendChild(badge);
+                    card.style.borderColor = "#FFD700";
+                }
+            } else if (badge) {
+                badge.remove();
+                card.style.borderColor = "";
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateStorageSeals();
+    setInterval(updateStorageSeals, 2000);
+});
+{% endif %}
+</script>

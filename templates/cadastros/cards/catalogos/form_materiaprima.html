@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-materiaprima" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .mp-foto-upload-premium {
+            width: 100px; height: 100px; border: 2.5px dashed #e2e8f0; border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+            overflow: hidden; background: #fff; transition: 0.3s; position: relative;
+        }
+        .mp-foto-upload-premium:hover { border-color: #E67E22; background: #fffcf0; }
+        
+        .mp-row:hover { background: #fffcf0 !important; cursor: pointer; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Matéria-Prima Industrial',
+            subtitulo='Catálogos > Gestão de Materiais de Base e Suprimentos',
+            icone='fa-layer-group',
+            cor_tema='#7A255F',
+            tamanho='medio',
+            aba_retorno='catalogos',
+            form_id='mp-form-area',
+            list_id='mp-list-area',
+            onclick_novo="novoRegistroMP()",
+            onclick_save="forceSubmitMP()",
+            onclick_search="focarBuscaMP()",
+            onclick_filter="abrirModalFiltrosAvancados()",
+            onclick_clonar="arioneClonarRegistro('mp-form-area')",
+            onclick_export="exportarMP()",
+            onclick_import="arioneToast('Importação em desenvolvimento para Matéria-Prima.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Matéria-Prima')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Matéria-Prima')",
+            status="Standard PAAv1.0"
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="mp-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="mp-form" method="POST" action="{{ url_for('cadastros.card_materiaprima') }}" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="mp-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="mp-form-titulo">CADASTRO DE MATÉRIA-PRIMA</span></span>
+                        <button type="button" onclick="novoRegistroMP()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: flex; gap: 30px; align-items: flex-start;">
+                            {# FOTO #}
+                            <div style="text-align: center;">
+                                <label class="fp-label">Foto / Amostra</label>
+                                <div class="mp-foto-upload-premium" onclick="document.getElementById('mp-foto-input').click()">
+                                    <div id="mp-foto-preview" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-layer-group" style="font-size: 30px; color: #cbd5e1;"></i>
+                                    </div>
+                                    <div style="position: absolute; bottom: 0; background: rgba(230,126,34,0.9); width: 100%; color: #fff; font-size: 8px; padding: 4px 0; font-weight: 900;">ALTERAR</div>
+                                </div>
+                                <input type="file" id="mp-foto-input" name="foto_materiaprima" accept="image/*" style="display: none;" onchange="previewMPFoto(this)">
+                            </div>
+
+                            <div style="flex: 1;">
+                                <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Descrição Técnica do Material <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" class="fp-input" name="descricao" id="mp-nome-input" placeholder="EX: TECIDO ALGODÃO 200 FIOS" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Modo do Código</label>
+                                        <select class="fp-input" id="mp-sku-mode" onchange="toggleSKUMode()" style="width: 100%; background: #fff;">
+                                            <option value="AUTOMATICO">AUTOMÁTICO</option>
+                                            <option value="LIVRE">LIVRE (MANUAL)</option>
+                                            <option value="FORNECEDOR">CÓD. FORNECEDOR</option>
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">SKU / Código Único</label>
+                                        <input type="text" class="fp-input" name="sku" id="mp-sku-input" placeholder="GERANDO..." readonly style="width: 100%; font-weight: 900; background: #f8fafc; color: #E67E22; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <div class="fp-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Tipo de Material</label>
+                                        <select class="fp-input" name="tipo_id" id="mp-tipo-select" style="width: 100%; background: #fff;">
+                                            <option value="">Selecione...</option>
+                                            {% for t in tipos_list|default([]) %}
+                                            <option value="{{ t.id }}">{{ t.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Unidade Principal</label>
+                                        <select class="fp-input" name="unidade_id" id="mp-unidade-select" style="width: 100%; background: #fff;">
+                                            <option value="">Selecione...</option>
+                                            {% for un in unidades_list|default([]) %}
+                                            <option value="{{ un.id }}">{{ un.sigla }} - {{ un.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Custo Unitário Base (R$)</label>
+                                        <input type="text" class="fp-input fp-mask-money" name="preco_custo" id="mp-preco-custo" placeholder="0,00" style="width: 100%; font-weight: 900; text-align: right; color: #E67E22;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-mp" onclick="forceSubmitMP()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR MATÉRIA-PRIMA
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="mp-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-layer-group" style="color: #E67E22; margin-right: 8px;"></i> Catálogo de Materiais Base</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="mp-search-input" oninput="filtrarTabelaMP()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="mp-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ materias|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center; padding-left: 20px;">FOTO</th>
+                            <th>DESCRIÇÃO TÉCNICA</th>
+                            <th>SKU</th>
+                            <th>TIPO</th>
+                            <th style="text-align: center;">UN</th>
+                            <th style="text-align: right; padding-right: 20px;">CUSTO UNIT.</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-mp">
+                        {% for mp in materias %}
+                        <tr class="mp-row" data-id="{{ mp.id }}" data-descricao="{{ mp.descricao|upper }}" data-sku="{{ mp.sku }}" data-tipo="{{ mp.tipo_id or '' }}" data-unidade="{{ mp.unidade_id or '' }}" data-custo="{{ '%.2f'|format(mp.preco_custo|default(0))|replace('.', ',') }}" data-foto="{{ mp.foto or '' }}" onclick="editarMP_ByRow(this)">
+                            <td style="text-align: center; padding-left: 20px;">
+                                <div style="width: 38px; height: 38px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #f1f5f9; margin: 0 auto;">
+                                    {% if mp.foto %}
+                                    <img src="{{ url_for('static', filename='uploads/materiaprima/'~mp.foto) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-layer-group" style="color: #cbd5e1; font-size: 14px;"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td><div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ mp.descricao }}</div></td>
+                            <td style="font-family: monospace; font-weight: 800; color: #E67E22;">{{ mp.sku }}</td>
+                            <td><span style="font-size: 9px; font-weight: 900; background: #f1f5f9; color: #64748b; padding: 3px 8px; border-radius: 4px;">{{ mp.tipo.nome if mp.tipo else 'GERAL' }}</span></td>
+                            <td style="text-align: center;"><span style="font-weight: 900; color: #64748b; font-size: 11px;">{{ mp.unidade.sigla if mp.unidade else '—' }}</span></td>
+                            <td style="text-align: right; font-weight: 900; color: #E67E22; padding-right: 20px;">R$ {{ '%.2f'|format(mp.preco_custo|default(0))|replace('.', ',') }}</td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirMP('{{ mp.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroMP = function() {
+                document.getElementById('mp-form-titulo').textContent = 'NOVA MATÉRIA-PRIMA';
+                document.getElementById('mp-id-hidden').value = '';
+                document.getElementById('mp-form').reset();
+                document.getElementById('mp-foto-preview').innerHTML = '<i class="fas fa-layer-group" style="font-size: 30px; color: #cbd5e1;"></i>';
+                toggleSKUMode();
+                document.getElementById('mp-nome-input').focus();
+            };
+
+            window.fecharFormMP = function() { novoRegistroMP(); };
+
+            window.editarMP_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('mp-form-titulo').textContent = 'EDITANDO: ' + r.dataset.descricao;
+                document.getElementById('mp-id-hidden').value = id;
+                document.getElementById('mp-nome-input').value = r.dataset.descricao;
+                document.getElementById('mp-sku-input').value = r.dataset.sku;
+                document.getElementById('mp-tipo-select').value = r.dataset.tipo;
+                document.getElementById('mp-unidade-select').value = r.dataset.unidade;
+                document.getElementById('mp-preco-custo').value = r.dataset.custo;
+                
+                if(r.dataset.foto) {
+                    document.getElementById('mp-foto-preview').innerHTML = `<img src="/static/uploads/materiaprima/${r.dataset.foto}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else {
+                    document.getElementById('mp-foto-preview').innerHTML = '<i class="fas fa-layer-group" style="font-size: 30px; color: #cbd5e1;"></i>';
+                }
+                
+                document.getElementById('mp-form').action = `/cadastros/cards/materiaprima/${id}`;
+                $('#mp-form-area').slideDown();
+                window.scrollTo({top:0, behavior:'smooth'});
+            };
+
+            window.toggleSKUMode = async function() {
+                const mode = document.getElementById('mp-sku-mode').value;
+                const input = document.getElementById('mp-sku-input');
+                if(mode === 'AUTOMATICO') {
+                    input.readOnly = true; input.style.background = '#f8fafc';
+                    const res = await fetch('/cadastros/cards/materiaprima/proximo-sku');
+                    const data = await res.json(); input.value = data.sku;
+                } else {
+                    input.readOnly = false; input.style.background = '#fff'; input.focus();
+                }
+            };
+
+            window.forceSubmitMP = async function() {
+                const form = document.getElementById('mp-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-mp');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Material salvo!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarTabelaMP = function() {
+                const f = document.getElementById('mp-search-input').value.toUpperCase();
+                document.querySelectorAll('.mp-row').forEach(r => {
+                    const txt = r.dataset.descricao + r.dataset.sku;
+                    r.style.display = txt.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.previewMPFoto = function(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        document.getElementById('mp-foto-preview').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
+
+            window.excluirMP = async function(id, btn) {
+                if(!confirm('Excluir material?')) return;
+                const r = await fetch(`/cadastros/cards/materiaprima/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+
+            window.focarBuscaMP = function() { document.getElementById('mp-search-input').focus(); };
+            window.exportarMP = function() { arioneExportar({url:'/cadastros/cards/materiaprima/dados-json', modulo:'Matéria-Prima'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

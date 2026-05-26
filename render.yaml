@@ -1,0 +1,27 @@
+# =============================================================================
+# Render Configuration - AriOne ERP
+# =============================================================================
+# Este arquivo configura automaticamente o deploy no Render
+
+services:
+  - type: web
+    name: arione-erp
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.app:create_app() --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: 1
+      - key: PORT
+        value: 5000
+
+databases:
+  - name: arione-db
+    databaseName: arione
+    user: arione
+    region: oregon
+    plan: free

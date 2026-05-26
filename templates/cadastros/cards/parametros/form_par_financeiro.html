@@ -1,0 +1,322 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/cards/parametros/form_par_financeiro.html
+   Função   : Parâmetros Financeiros (GOLDEN STANDARD)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-sistema" style="background: #f4f6f9; min-height: 100vh;">
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros Financeiros",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-university",
+        form_id="form-par-financeiro",
+        onclick_save="arioneSalvarDocumento('parametros_financeiro', this, 'form-par-financeiro')",
+        cor_tema="#2980B9",
+        func_fechar="fecharModalGlobal()",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+        <form id="form-par-financeiro" method="POST" action="{{ url_for('cadastros.salvar_parametros') }}" novalidate>
+            <input type="hidden" name="grupo_config" value="financeiro">
+        
+        {# CARD 1: MOEDA E CONVERSÃO #}
+        <div class="fp-card">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-coins"></i> Configuração de Moeda Mestra
+                </div>
+                <button type="button" onclick="salvarSecaoMoeda()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Moeda Base do Sistema {{ comp.info_icon("Define a moeda padrão para todos os relatórios e cálculos") }}</label>
+                        <select class="fp-input" name="moeda_base" style="font-weight: 800; color: #7A255F;">
+                            <option value="BRL" selected>REAL (BRL)</option>
+                            <option value="USD">DÓLAR (USD)</option>
+                        </select>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Ativar Multi-moeda</label>
+                        <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
+                            <label class="fp-checkbox-wrap">
+                                <input type="checkbox" name="moedas_ativas" value="BRL" checked disabled>
+                                <span class="fp-checkbox-label">Real</span>
+                            </label>
+                            <label class="fp-checkbox-wrap">
+                                <input type="checkbox" name="moedas_ativas" value="USD">
+                                <span class="fp-checkbox-label">Dólar</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 2: REGRAS FINANCEIRAS #}
+        <div class="fp-card">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-university"></i> Regras Bancárias e Cobrança
+                </div>
+                <button type="button" onclick="salvarSecaoRegras()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Juros de Mora Diário (%)</label>
+                        <input class="fp-input" type="number" step="0.01" value="0.03">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Multa por Atraso (%)</label>
+                        <input class="fp-input" type="number" step="0.01" value="2.00">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Dias para Protesto Automático</label>
+                        <input class="fp-input" type="number" value="10">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 3: PARÂMETROS DE CAIXA #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-cash-register"></i> Parâmetros de Caixa (Suprimento, Sangria e Avulso)
+            </div>
+            <div class="fp-card-body">
+                <div style="background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 20px; border: 1px solid #cbd5e1; font-size: 12px; color: #64748b;">
+                    Defina as contas e centros de custo padrão para cada tipo de movimentação de caixa. Isso agiliza o lançamento, pois os campos serão preenchidos automaticamente.
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h4 style="font-size: 13px; font-weight: 600; color: #7A255F; margin-bottom: 15px; border-bottom: 2px solid #7A255F; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>SUPRIMENTO (Entrada)</span>
+                        <button type="button" onclick="salvarSecaoSuprimento()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-save"></i> Salvar
+                        </button>
+                    </h4>
+                    <div class="fp-row">
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Plano de Contas Padrão</label>
+                            <select class="fp-input" name="financeiro_caixa_suprimento_plano_contas_id">
+                                <option value="">Selecione...</option>
+                                {% for pc in planos_conta %}
+                                <option value="{{ pc.id }}">{{ pc.codigo }} - {{ pc.descricao }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Centro de Custo Padrão</label>
+                            <select class="fp-input" name="financeiro_caixa_suprimento_centro_custo_id">
+                                <option value="">Selecione...</option>
+                                {% for cc in centros_custo %}
+                                <option value="{{ cc.id }}">{{ cc.codigo }} - {{ cc.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h4 style="font-size: 13px; font-weight: 600; color: #ef4444; margin-bottom: 15px; border-bottom: 2px solid #ef4444; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>SANGRIA (Saída)</span>
+                        <button type="button" onclick="salvarSecaoSangria()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-save"></i> Salvar
+                        </button>
+                    </h4>
+                    <div class="fp-row">
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Plano de Contas Padrão</label>
+                            <select class="fp-input" name="financeiro_caixa_sangria_plano_contas_id">
+                                <option value="">Selecione...</option>
+                                {% for pc in planos_conta %}
+                                <option value="{{ pc.id }}">{{ pc.codigo }} - {{ pc.descricao }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Centro de Custo Padrão</label>
+                            <select class="fp-input" name="financeiro_caixa_sangria_centro_custo_id">
+                                <option value="">Selecione...</option>
+                                {% for cc in centros_custo %}
+                                <option value="{{ cc.id }}">{{ cc.codigo }} - {{ cc.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h4 style="font-size: 13px; font-weight: 600; color: #f59e0b; margin-bottom: 15px; border-bottom: 2px solid #f59e0b; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>AVULSO (Lançamento)</span>
+                        <button type="button" onclick="salvarSecaoAvulso()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-save"></i> Salvar
+                        </button>
+                    </h4>
+                    <div class="fp-row">
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Plano de Contas Padrão</label>
+                            <select class="fp-input" name="financeiro_caixa_avulso_plano_contas_id">
+                                <option value="">Selecione...</option>
+                                {% for pc in planos_conta %}
+                                <option value="{{ pc.id }}">{{ pc.codigo }} - {{ pc.descricao }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="fp-group fp-flex-1">
+                            <label class="fp-label">Centro de Custo Padrão</label>
+                            <select class="fp-input" name="financeiro_caixa_avulso_centro_custo_id">
+                                <option value="">Selecione...</option>
+                                {% for cc in centros_custo %}
+                                <option value="{{ cc.id }}">{{ cc.codigo }} - {{ cc.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# FOOTER #}
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="button" class="fp-btn fp-btn-salvar-footer" style="background: #7A255F; color: #fff;" onclick="arioneSalvarDocumento('parametros_financeiro', this)">
+                <i class="fas fa-save"></i> SALVAR PARÂMETROS
+            </button>
+        </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/cadastros/parametros/get?grupo=financeiro')
+            .then(res => res.json())
+            .then(data => {
+                for (const [chave, valor] of Object.entries(data)) {
+                    const el = document.querySelector(`[name="${chave}"]`);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = valor === '1';
+                        else el.value = valor;
+                    }
+                }
+            });
+    });
+    console.log('💰 Parâmetros Financeiros HCM Ativado');
+
+    function salvarSecaoMoeda() {
+        const moedaBase = document.querySelector('[name="moeda_base"]').value;
+        const moedasAtivas = Array.from(document.querySelectorAll('[name="moedas_ativas"]:checked')).map(el => el.value);
+        
+        const dados = {
+            moeda_base: moedaBase,
+            moedas_ativas: moedasAtivas.join(',')
+        };
+        
+        salvarParametrosFinanceiros(dados, 'Configuração de Moeda Mestra');
+    }
+
+    function salvarSecaoRegras() {
+        const jurosMora = document.querySelector('input[type="number"][step="0.01"]').value;
+        const multaAtraso = document.querySelectorAll('input[type="number"][step="0.01"]')[1].value;
+        const diasProtesto = document.querySelector('input[type="number"]:not([step="0.01"])').value;
+        
+        const dados = {
+            juros_mora_diario: jurosMora,
+            multa_por_atraso: multaAtraso,
+            dias_protesto_automatico: diasProtesto
+        };
+        
+        salvarParametrosFinanceiros(dados, 'Regras Bancárias e Cobrança');
+    }
+
+    function salvarSecaoSuprimento() {
+        const planoContas = document.querySelector('[name="financeiro_caixa_suprimento_plano_contas_id"]').value;
+        const centroCusto = document.querySelector('[name="financeiro_caixa_suprimento_centro_custo_id"]').value;
+        
+        const dados = {
+            financeiro_caixa_suprimento_plano_contas_id: planoContas,
+            financeiro_caixa_suprimento_centro_custo_id: centroCusto
+        };
+        
+        salvarParametrosFinanceiros(dados, 'SUPRIMENTO (Entrada)');
+    }
+
+    function salvarSecaoSangria() {
+        const planoContas = document.querySelector('[name="financeiro_caixa_sangria_plano_contas_id"]').value;
+        const centroCusto = document.querySelector('[name="financeiro_caixa_sangria_centro_custo_id"]').value;
+        
+        const dados = {
+            financeiro_caixa_sangria_plano_contas_id: planoContas,
+            financeiro_caixa_sangria_centro_custo_id: centroCusto
+        };
+        
+        salvarParametrosFinanceiros(dados, 'SANGRIA (Saída)');
+    }
+
+    function salvarSecaoAvulso() {
+        const planoContas = document.querySelector('[name="financeiro_caixa_avulso_plano_contas_id"]').value;
+        const centroCusto = document.querySelector('[name="financeiro_caixa_avulso_centro_custo_id"]').value;
+        
+        const dados = {
+            financeiro_caixa_avulso_plano_contas_id: planoContas,
+            financeiro_caixa_avulso_centro_custo_id: centroCusto
+        };
+        
+        salvarParametrosFinanceiros(dados, 'AVULSO (Lançamento)');
+    }
+
+    function salvarParametrosFinanceiros(dados, nomeSecao) {
+        // Função auxiliar para mostrar notificação
+        function mostrarNotificacao(mensagem, tipo) {
+            if (typeof window.arioneToast === 'function') {
+                window.arioneToast(mensagem, tipo);
+            } else if (typeof arioneToast === 'function') {
+                arioneToast(mensagem, tipo);
+            } else {
+                alert(mensagem);
+            }
+        }
+
+        fetch('/cadastros/parametros/salvar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({ ...dados, grupo_config: 'financeiro' })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                mostrarNotificacao(`${nomeSecao} salvo com sucesso!`, 'success');
+            } else {
+                mostrarNotificacao(`Erro ao salvar ${nomeSecao}: ${data.error || 'Erro desconhecido'}`, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro de comunicação com o servidor: ' + error.message, 'danger');
+        });
+    }
+</script>
+{% endblock %}

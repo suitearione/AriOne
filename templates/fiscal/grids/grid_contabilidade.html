@@ -1,0 +1,41 @@
+<!-- templates/fiscal/grids/grid_contabilidade.html -->
+<div id="modal-overlay-ctb" class="ge-modal-overlay" onclick="fecharModalCtb()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-ctb" class="ge-modal-icon"></i><span id="modal-titulo-ctb">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalCtb()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-ctb"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-calculator"></i><span>Contabilidade</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalCtb('contador')" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-user-tie ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-user-tie ge-card-icon"></i></div>
+            <span class="ge-card-label">Contador</span><span class="ge-card-desc">Dados do contador</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const modaisCtb = {
+    contador: {titulo:'Contador', icone:'fas fa-user-tie', campos:[['Nome *','nome','text'],['CRC *','crc','text'],['CPF/CNPJ','doc','text'],['Telefone','tel','text'],['E-mail','email','email'],['Endereço','end','text']]},
+};
+
+function abrirModalCtb(tipo) {
+    const m = modaisCtb[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-ctb').textContent = m.titulo;
+    document.getElementById('modal-icon-ctb').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-ctb').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalCtb()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-ctb').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalCtb() { document.getElementById('modal-overlay-ctb').classList.remove('ativo'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalCtb(); });
+</script>

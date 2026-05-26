@@ -1,0 +1,320 @@
+{# =============================================================================
+   Caminho  : templates/sistema/cards/conexoes/form_api_config.html
+   Função   : Hub de Integrações Dinâmico (Marketplace de APIs).
+   Padrão   : Quiet Luxury - Dynamic Architecture.
+============================================================================= #}
+{% extends "base.html" %}
+{% block content %}
+<div class="arione-page-wrapper">
+
+    {# ── CABEÇALHO HUB ── #}
+    <div class="arione-header-premium" style="background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);">
+        <div style="flex:1;">
+            <h2 style="margin:0; font-size:20px; font-weight:800;"><i class="fas fa-hub"></i> Integration Hub</h2>
+            <div style="font-size:12px; opacity:0.9;">Centralize e gerencie todas as conexões externas do AriOne</div>
+        </div>
+        <div class="fe-header-actions">
+            <a href="{{ url_for('sistema.conexoes') }}" class="fe-btn" style="background: #fff; color: #2C3E50; font-weight: 700; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </div>
+    </div>
+
+    <div class="fe-row">
+        
+        {# ── COLUNA 1: PROVEDORES DISPONÍVEIS ── #}
+        <div style="width:350px;">
+            <div class="fe-card">
+                <div class="fe-card-title"><i class="fas fa-plus-circle"></i> Adicionar Integração</div>
+                <div class="fe-card-body" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    {% for pid, pinfo in providers.items() %}
+                    <div class="provider-selector" onclick="openProviderModal('{{ pid }}')" style="--p-color: {{ pinfo.cor }};">
+                        <i class="{{ pinfo.icon }}"></i>
+                        <span>{{ pinfo.nome }}</span>
+                    </div>
+                    {% endfor %}
+
+                    {# ── CARD PARA CRIAR NOVO PROVEDOR ── #}
+                    <div class="provider-selector" onclick="openCreateProviderModal()" style="--p-color: #34495e; border-style: dashed; background: rgba(52, 73, 94, 0.05);">
+                        <i class="fas fa-plus"></i>
+                        <span>Novo Provedor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── COLUNA 2: CONEXÕES ATIVAS ── #}
+        <div class="fe-flex-1">
+            <div class="fe-card">
+                <div class="fe-card-title"><i class="fas fa-link"></i> Conexões Ativas</div>
+                <div class="fe-card-body">
+                    {% if not connections %}
+                    <div style="text-align:center; padding:40px; color:#94a3b8;">
+                        <i class="fas fa-plug" style="font-size:40px; margin-bottom:15px; opacity:0.3;"></i>
+                        <p>Nenhuma integração configurada ainda.</p>
+                    </div>
+                    {% else %}
+                    <table class="arione-table">
+                        <thead>
+                            <tr>
+                                <th>Provedor</th>
+                                <th>Identificador</th>
+                                <th>Última Atualização</th>
+                                <th>Status</th>
+                                <th style="text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for conn in connections %}
+                            {% set provider = providers.get(conn.provider) %}
+                            {% if provider %}
+                            <tr>
+                                <td>
+                                    <i class="{{ provider.icon }}" style="color:{{ provider.cor }}; margin-right:8px;"></i>
+                                    {{ provider.nome }}
+                                </td>
+                                <td><strong style="color:#2C3E50;">{{ conn.label }}</strong></td>
+                                <td style="font-size:11px; color:#64748b;">{{ conn.updated_at }}</td>
+                                <td><span class="badge-status-green">Ativo</span></td>
+                                <td style="text-align:right;">
+                                    <button class="btn-icon-table" title="Editar" onclick="editConnection('{{ conn.id }}')"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon-table" style="color:#e74c3c;" title="Remover" onclick="deleteConnection('{{ conn.id }}', '{{ conn.label }}')"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{# ── MODAL DINÂMICO DE CONFIGURAÇÃO (ADICIONAR CONEXÃO) ── #}
+<div id="modalProvider" class="arione-modal" style="display:none;">
+    <div class="arione-modal-content" style="max-width:500px;">
+        <div class="arione-modal-header">
+            <h3 id="modalTitle"><i class="fas fa-cog"></i> Configurar</h3>
+            <span class="close-modal" onclick="closeModal('modalProvider')">&times;</span>
+        </div>
+        <form action="{{ url_for('sistema.salvar_api_config') }}" method="POST" id="providerForm" autocomplete="off">
+            <input type="hidden" name="id" id="formConnId">
+            <input type="hidden" name="provider_id" id="formProviderId">
+            <div class="arione-modal-body">
+                <div class="fe-group">
+                    <label class="fe-label">Nome da Conexão (Apelido)</label>
+                    <input type="text" name="label" class="fe-input" placeholder="Ex: Backup Principal" required style="text-transform: none !important;">
+                </div>
+                <div id="dynamicFields">
+                    {# Campos serão inseridos aqui via JS #}
+                </div>
+            </div>
+            <div class="arione-modal-footer">
+                <button type="button" class="fe-btn-arione-ghost" onclick="closeModal('modalProvider')">Cancelar</button>
+                <button type="submit" class="fe-btn" style="background:#2C3E50; color:#fff;">Confirmar Integração</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ── MODAL DE CRIAÇÃO DE NOVO PROVEDOR (MOLDE) ── #}
+<div id="modalCreateProvider" class="arione-modal" style="display:none;">
+    <div class="arione-modal-content" style="max-width:600px;">
+        <div class="arione-modal-header">
+            <h3><i class="fas fa-tools"></i> Criar Molde de API (Provedor)</h3>
+            <span class="close-modal" onclick="closeModal('modalCreateProvider')">&times;</span>
+        </div>
+        <form action="{{ url_for('sistema.salvar_provedor_custom') }}" method="POST">
+            <div class="arione-modal-body">
+                <div class="fe-row">
+                    <div class="fe-group fe-flex-1">
+                        <label class="fe-label">Nome da API / Serviço</label>
+                        <input type="text" name="nome" class="fe-input" placeholder="Ex: Banco Central, Twilio" required>
+                    </div>
+                    <div class="fe-group" style="width:120px;">
+                        <label class="fe-label">Cor (Hex)</label>
+                        <input type="color" name="cor" class="fe-input" style="height:38px; padding:2px;" value="#34495e">
+                    </div>
+                </div>
+
+                <div class="fe-group" style="margin-top:15px;">
+                    <label class="fe-label">Ícone (FontAwesome Class)</label>
+                    <input type="text" name="icon" class="fe-input" placeholder="Ex: fas fa-plug" value="fas fa-plug">
+                </div>
+
+                <div style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <label class="fe-label" style="margin:0;">Definição de Campos</label>
+                        <button type="button" class="fe-btn-arione-ghost" style="padding:4px 10px; font-size:10px;" onclick="addFieldRow()">+ Add Campo</button>
+                    </div>
+                    <div id="providerFieldsList">
+                        {# Linhas de campos dinâmicos #}
+                    </div>
+                </div>
+            </div>
+            <div class="arione-modal-footer">
+                <button type="button" class="fe-btn-arione-ghost" onclick="closeModal('modalCreateProvider')">Cancelar</button>
+                <button type="submit" class="fe-btn" style="background:#16a085; color:#fff;">Salvar Novo Provedor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .provider-selector {
+        padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px;
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        cursor: pointer; transition: all 0.3s ease;
+    }
+    .provider-selector:hover {
+        background: var(--p-color); color: #fff; border-color: var(--p-color);
+        transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .provider-selector i { font-size: 24px; }
+    .provider-selector span { font-size: 11px; font-weight: 700; text-transform: uppercase; text-align: center; }
+
+    .badge-status-green {
+        background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700;
+    }
+    .btn-icon-table {
+        background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 5px; transition: color 0.2s;
+    }
+    .btn-icon-table:hover { color: #2C3E50; }
+
+    /* Modal Styles */
+    .arione-modal { position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+    .arione-modal-content { background: #fff; border-radius: 16px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; margin: 20px; }
+    .arione-modal-header { padding: 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .arione-modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+    .arione-modal-footer { padding: 15px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+    .close-modal { cursor: pointer; font-size: 24px; color: #94a3b8; }
+    .close-modal:hover { color: #1e293b; }
+</style>
+
+<script>
+    const providers = {{ providers|tojson }};
+    const connections = {{ connections|tojson }};
+
+    function openProviderModal(pid) {
+        const p = providers[pid];
+        document.getElementById('modalTitle').innerHTML = `<i class="${p.icon}"></i> Configurar ${p.nome}`;
+        document.getElementById('formProviderId').value = pid;
+        document.getElementById('formConnId').value = ''; // Limpa ID (Modo Novo)
+        
+        const container = document.getElementById('dynamicFields');
+        container.innerHTML = '';
+
+        // Reseta label
+        document.querySelector('#providerForm [name="label"]').value = '';
+
+        p.fields.forEach(f => {
+            const group = document.createElement('div');
+            group.className = 'fe-group';
+            group.style.marginTop = '15px';
+            
+            let inputHtml = '';
+            if (f.type === 'select') {
+                inputHtml = `<select name="field_${f.name}" class="fe-input no-uppercase" style="text-transform: none !important;">
+                    ${f.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                </select>`;
+            } else if (f.type === 'textarea') {
+                inputHtml = `<textarea name="field_${f.name}" class="fe-input no-uppercase" style="height:100px; font-family:monospace; font-size:10px; text-transform: none !important;"></textarea>`;
+            } else {
+                inputHtml = `<input type="${f.type}" name="field_${f.name}" class="fe-input no-uppercase" style="text-transform: none !important;" placeholder="Digite ${f.label}">`;
+            }
+
+            group.innerHTML = `<label class="fe-label">${f.label}</label>${inputHtml}`;
+            container.appendChild(group);
+        });
+
+        document.getElementById('modalProvider').style.display = 'flex';
+    }
+
+    function editConnection(id) {
+        const conn = connections.find(c => c.id === id);
+        if (!conn) return;
+
+        const p = providers[conn.provider];
+        if (!p) return;
+
+        document.getElementById('modalTitle').innerHTML = `<i class="${p.icon}"></i> Editar ${conn.label}`;
+        document.getElementById('formProviderId').value = conn.provider;
+        document.getElementById('formConnId').value = conn.id;
+
+        document.querySelector('#providerForm [name="label"]').value = conn.label;
+        
+        const container = document.getElementById('dynamicFields');
+        container.innerHTML = '';
+
+        p.fields.forEach(f => {
+            const group = document.createElement('div');
+            group.className = 'fe-group';
+            group.style.marginTop = '15px';
+            
+            const val = conn.data[f.name] || '';
+            
+            let inputHtml = '';
+            if (f.type === 'select') {
+                inputHtml = `<select name="field_${f.name}" class="fe-input no-uppercase" style="text-transform: none !important;">
+                    ${f.options.map(opt => `<option value="${opt}" ${opt === val ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>`;
+            } else if (f.type === 'textarea') {
+                inputHtml = `<textarea name="field_${f.name}" class="fe-input no-uppercase" style="height:100px; font-family:monospace; font-size:10px; text-transform: none !important;">${val}</textarea>`;
+            } else {
+                inputHtml = `<input type="${f.type}" name="field_${f.name}" class="fe-input no-uppercase" value="${val}" style="text-transform: none !important;" placeholder="Digite ${f.label}">`;
+            }
+
+            group.innerHTML = `<label class="fe-label">${f.label}</label>${inputHtml}`;
+            container.appendChild(group);
+        });
+
+        document.getElementById('modalProvider').style.display = 'flex';
+    }
+
+    function deleteConnection(id, label) {
+        if (confirm(`Tem certeza que deseja remover a integração "${label}"?`)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/sistema/conexoes/excluir-api/${id}`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function openCreateProviderModal() {
+        document.getElementById('modalCreateProvider').style.display = 'flex';
+        const list = document.getElementById('providerFieldsList');
+        if (list.children.length === 0) addFieldRow();
+    }
+
+    function addFieldRow() {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.gap = '10px';
+        div.style.marginBottom = '10px';
+        div.innerHTML = `
+            <input type="text" name="f_label[]" class="fe-input" style="flex:2;" placeholder="Label do Campo (ex: Token)">
+            <select name="f_type[]" class="fe-input" style="flex:1;">
+                <option value="text">Texto</option>
+                <option value="password">Senha/Secret</option>
+                <option value="textarea">Área de Texto (JSON)</option>
+            </select>
+            <button type="button" class="fe-btn-arione-ghost" style="color:red; border-color:red; padding:0 10px;" onclick="this.parentElement.remove()">×</button>
+        `;
+        document.getElementById('providerFieldsList').appendChild(div);
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    // Fecha ao clicar fora
+    window.onclick = function(event) {
+        if (event.classList && event.classList.contains('arione-modal')) {
+            event.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

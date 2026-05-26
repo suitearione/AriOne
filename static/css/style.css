@@ -1,0 +1,707 @@
+/* =======================================================
+   style.css - LAYOUT PRINCIPAL ARIONE
+   ======================================================= */
+:root {
+    --sidebar-width: 230px;
+    --topbar-height: 70px;
+    --cor-principal: #7A255F;
+    --cor-secundaria: #F4F6F9;
+    --cor-texto: #343a40;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    background-color: var(--cor-secundaria);
+}
+
+/* ✅ CORREÇÃO PRINCIPAL: empurra o conteúdo para fora da sidebar */
+.arione-main-wrapper {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 10px);
+    margin-top: 10px;
+    overflow: hidden;
+    min-width: 0;
+    position: relative; 
+    z-index: 2000; /* Deve ser maior que o z-index da sidebar (1000) para cobri-la com modais internos */
+}
+
+.arione-new-header-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ÁREA DE CONTEÚDO */
+.arione-page {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 20px 20px 20px;
+    background-color: var(--cor-secundaria);
+    min-height: 0;
+}
+
+.arione-page::after {
+    content: "";
+    display: block;
+    height: 20px;
+}
+
+/* TOPBAR */
+.arione-topbar {
+    flex-shrink: 0;
+    width: 100%;
+    height: var(--topbar-height);
+    background-color: #FFFFFF;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0 20px;
+    border-bottom: 1px solid var(--cor-principal);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 999;
+    box-sizing: border-box;
+}
+
+/* MENU */
+.menu-lista,
+.menu-lista ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.menu-item { margin-bottom: 4px; }
+
+.menu-toggle {
+    display: block;
+    padding: 10px 18px;
+    color: #FFFFFF;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.menu-toggle:hover { background: rgba(255,255,255,0.10); }
+
+.submenu {
+    display: none;
+    padding-left: 22px;
+    border-left: 2px solid #7A3BFF;
+    margin-top: 4px;
+}
+
+.submenu a {
+    display: block;
+    padding: 4px 0;
+    color: #E0E0E0;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.submenu a:hover { color: #FFFFFF; }
+
+.menu-item:hover > .submenu { display: block; }
+
+/* CARD FULL */
+.arione-card-full {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* MENU SCROLL */
+.menu-scroll-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 10px 20px 10px;
+}
+
+/* FORMULÁRIOS */
+.arione-header-premium {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 18px;
+    background: linear-gradient(135deg, #5A2EA6 0%, #7A3BFF 100%);
+    border-radius: 14px;
+    color: #FFF;
+    margin-bottom: 25px;
+    box-shadow: 0 6px 22px rgba(90,46,166,0.25);
+}
+
+.arione-titulo-bloco {
+    margin-bottom: 10px;
+    color: #5E193E;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.arione-input-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.arione-input-block label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4B4B4B;
+}
+
+.arione-input-block input,
+.arione-input-block select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #D9D9D9;
+    background: #FFF;
+    font-size: 15px;
+    transition: .2s;
+}
+
+.arione-input-block input:focus,
+.arione-input-block select:focus {
+    outline: none;
+    border-color: #7A3BFF;
+    box-shadow: 0 0 8px rgba(122,59,255,0.25);
+}
+
+.arione-btn-salvar {
+    margin-top: 25px;
+    background: #5A2EA6;
+    color: #FFF;
+    border: none;
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.arione-btn-salvar:hover { background: #7A3BFF; }
+
+.arione-btn-voltar {
+    margin: 15px 0;
+    border: none;
+    padding: 8px 14px;
+    background: #EEE;
+    color: #333;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.menu-logo-container {
+    max-width: 260px;
+    text-align: center;
+    padding: 0;
+}
+
+/* ÍCONES SIDEBAR */
+.menu-icon {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.icon-cadastros  { color: #BDBDBD; text-shadow: 0 0 4px rgba(189,189,189,0.3); }
+.icon-operacoes  { color: #03A9F4; text-shadow: 0 0 4px rgba(3,169,244,0.3); }
+.icon-gestao     { color: #CE93D8; text-shadow: 0 0 4px rgba(206,147,216,0.3); }
+.icon-financeiro { color: #00E676; text-shadow: 0 0 4px rgba(0,230,118,0.3); }
+.icon-fiscal     { color: #FFB74D; text-shadow: 0 0 4px rgba(255,183,77,0.3); }
+.icon-patrimonio { color: #BCAAA4; text-shadow: 0 0 4px rgba(188,170,164,0.3); }
+.icon-relatorios { color: #82B1FF; text-shadow: 0 0 4px rgba(130,177,255,0.3); }
+.icon-digital    { color: #42A5F5; text-shadow: 0 0 4px rgba(66,165,245,0.3); }
+.icon-sistema    { color: #90A4AE; text-shadow: 0 0 4px rgba(144,164,174,0.3); }
+
+
+/* CLASSE QUE REDUZ O CARD Abaixo do Menu Lateral mantendo a identidade AriOne */
+
+/* Regra principal para o Mini Card de 55px */
+.ge-card.ge-card-mini {
+    width: 55px !important;
+    height: 55px !important;
+    min-height: 55px !important;
+    padding: 5px !important; /* Padding reduzido para caber no 55px */
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 2px !important;
+    border-radius: 8px !important;
+    overflow: hidden !important; /* Impede que o texto saia do card */
+    display: flex !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Ajuste do círculo onde fica a tecla (F2, F3...) */
+.ge-card-mini .ge-card-icon-wrap {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #fff !important;
+    border: 1.5px solid var(--card-cor) !important;
+    border-radius: 4px !important; /* Estilo de tecla física */
+}
+
+/* Estilo da letra da tecla dentro do círculo */
+.tecla-f {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    color: var(--card-cor) !important;
+}
+
+/* Ajuste do texto 'Clientes', 'Vendas' etc */
+.ge-card-mini .ge-card-label {
+    font-size: 0.55rem !important; /* Texto bem pequeno para o card de 55px */
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 3;
+    color: #fcfafa;
+}
+
+/* ESCONDE o que não cabe no tamanho de 55px */
+.ge-card-mini .ge-card-desc, 
+.ge-card-mini .ge-card-bg-icon,
+.ge-card-mini .ge-card-icon {
+    display: none !important;
+}
+
+/* Efeito de Hover (Passar o mouse) */
+.ge-card.ge-card-mini:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    filter: brightness(0.95);
+}
+/* =======================================================
+   GE-CARDS — Cards de grid e atalhos (global)
+   ======================================================= */
+.ge-cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* Modais ge - AriOne Global Standard */
+.ge-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0,0,0,0.6);
+    z-index: 99999 !important; /* Acima de tudo, inclusive sidebar */
+    align-items: flex-start;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    padding-top: 50px;
+}
+.ge-modal-overlay.ativo { display: flex; }
+
+/* Modal de Filtros - Sem bloqueio do sistema por trás */
+.ge-modal-overlay.sem-bloqueio {
+    background: transparent;
+    backdrop-filter: none;
+    pointer-events: none; /* Permite clicar no sistema por trás */
+}
+.ge-modal-overlay.sem-bloqueio .ge-modal {
+    pointer-events: auto; /* Apenas o modal recebe cliques */
+}
+.ge-modal {
+    background: #fff;
+    border-radius: 14px;
+    width: 95%;
+    max-width: 860px;
+    max-height: 88vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    animation: modalEntrar 0.25s ease;
+}
+.ge-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(135deg,#5E193E,#7a2252);
+    border-radius: 14px 14px 0 0;
+    color: #fff;
+
+}
+
+.ge-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 18px 14px;
+    background: var(--card-cor-bg, rgba(122,37,95,0.08));
+    border: 1.5px solid var(--card-cor, #7A255F);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
+    overflow: hidden;
+}
+
+.ge-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    filter: brightness(0.97);
+}
+
+.ge-card-bg-icon {
+    position: absolute;
+    font-size: 64px;
+    color: var(--card-cor, #7A255F);
+    opacity: 0.07;
+    right: -8px;
+    bottom: -8px;
+    pointer-events: none;
+}
+
+.ge-card-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--card-cor, #7A255F);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ge-card-icon {
+    font-size: 20px;
+    color: var(--card-cor, #7A255F);
+}
+
+.ge-card-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--card-cor, #7A255F);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.ge-card-desc {
+    font-size: 11px;
+    color: #888;
+}
+
+/* Grid wrappers */
+.ge-grid-wrapper {
+    padding: 8px 0;
+}
+
+.ge-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #5E193E;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #5E193E;
+}
+
+
+
+/* ==================================================
+   📌 FORMULÁRIOS - GRID (Dashboard / Cards)
+   ================================================== */
+
+.ge-form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 4px;
+}
+
+/* ==================================================
+   🎯 CARDS - ANIMAÇÃO E INTERAÇÃO
+   ================================================== */
+
+.ge-card {
+    transition: all 0.25s ease;
+    transform: translateY(0);
+    cursor: pointer;
+}
+
+.ge-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+}
+
+.ge-card:active {
+    transform: scale(0.98);
+}
+
+/* Entrada suave */
+.ge-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.5s ease forwards;
+}
+
+.ge-card:nth-child(1) { animation-delay: 0.05s; }
+.ge-card:nth-child(2) { animation-delay: 0.1s; }
+.ge-card:nth-child(3) { animation-delay: 0.15s; }
+.ge-card:nth-child(4) { animation-delay: 0.2s; }
+.ge-card:nth-child(5) { animation-delay: 0.25s; }
+.ge-card:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Entrada suave */
+.ge-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.5s ease forwards;
+}
+
+.ge-card:nth-child(1) { animation-delay: 0.05s; }
+.ge-card:nth-child(2) { animation-delay: 0.1s; }
+.ge-card:nth-child(3) { animation-delay: 0.15s; }
+.ge-card:nth-child(4) { animation-delay: 0.2s; }
+.ge-card:nth-child(5) { animation-delay: 0.25s; }
+.ge-card:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================================================
+   📱 RESPONSIVIDADE
+   ================================================== */
+
+.ge-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+/* FORM GRID */
+@media (max-width: 768px) {
+    .ge-form-row {
+        grid-template-columns: repeat(1, 1fr);
+    }
+
+    .ge-form-group {
+        grid-column: span 12 !important;
+    }
+}
+
+.ge-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+    opacity: 0;
+    transition: 0.4s;
+}
+
+.ge-card:hover::after {
+    opacity: 1;
+}
+
+/* ==================================================
+   GRID DOS CARDS
+   ================================================== */
+
+.ge-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+/* FORM GRID */
+.ge-form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 4px;
+}
+
+/* span helpers para formulários */
+.ge-form-group[style*="span 2"],
+.ge-form-group.span-2 { grid-column: span 2; }
+.ge-form-group[style*="span 3"],
+.ge-form-group.span-3 { grid-column: span 3; }
+
+/* Título de seção dentro do form */
+.ge-form-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5E193E;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 0 6px;
+    border-bottom: 2px solid #5C1E4F;
+    margin-bottom: 4px;
+    grid-column: span 3;
+}
+
+/* help text */
+.ge-help {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+
+.ge-modal-title { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
+.ge-modal-icon  { font-size: 20px; }
+.ge-modal-fechar { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 14px; }
+.ge-modal-body  { padding: 20px; }
+.ge-form { display: flex; flex-direction: column; gap: 12px; }
+.ge-form-group { display: flex; flex-direction: column; gap: 4px; }
+.ge-form-group label { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; }
+.ge-form-group input, .ge-form-group select { padding: 9px 11px; border: 1.5px solid #ddd; border-radius: 7px; font-size: 13px; }
+.ge-form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+.ge-btn-cancelar { background: #f5f5f5; color: #555; border: none; padding: 9px 18px; border-radius: 7px; font-weight: 600; cursor: pointer; }
+.ge-btn-salvar   { background: linear-gradient(135deg,#7A255F,#9b3177); color: #fff; border: none; padding: 9px 20px; border-radius: 7px; font-weight: 600; cursor: pointer; }
+
+/* =======================================================
+   DROPDOWN MENU ARIONE GOLDEN (Padrão Ouro)
+   ======================================================= */
+.fe-dropdown-menu-arione {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    padding: 8px;
+    min-width: 220px;
+    z-index: 99999; /* Acima de tudo */
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.fe-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    color: #1e293b;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.fe-dropdown-item:hover {
+    background: rgba(0, 114, 206, 0.1);
+    color: #0072CE;
+    transform: translateX(4px);
+}
+
+.fe-dropdown-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Animação suave para dropdowns */
+@keyframes feFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* BOTÕES DE AÇÃO DO CABEÇALHO MESTRE (Padrão Ouro) */
+.fe-btn-header-action {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 14px;
+}
+
+.fe-btn-header-action:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.fe-btn-header-action i {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fe-btn-highlight {
+    background: #fff !important;
+    color: #7A255F !important;
+    font-weight: 800;
+}
+
+.fe-btn-highlight:hover {
+    background: #fdf2f8 !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
+}
+
+.fe-action-group-glass {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px;
+    border-radius: 14px;
+    display: flex;
+    gap: 4px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fp-header-status-pill {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}

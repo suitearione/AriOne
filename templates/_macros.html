@@ -1,0 +1,36 @@
+{% macro render_input(name, label, placeholder="", type="text", required=false, value="", step="", min="", max="", disabled=false) %}
+<div class="form-group">
+<label for="{{ name }}">{{ label }} {% if required %}*{% endif %}</label>
+<input 
+type="{{ type }}" 
+id="{{ name }}" 
+name="{{ name }}" 
+placeholder="{{ placeholder }}"
+{% if required %}required{% endif %}
+value="{{ value }}"
+        {% if step %}step="{{ step }}"{% endif %} 
+        {% if min %}min="{{ min }}"{% endif %}
+        {% if max %}max="{{ max }}"{% endif %}
+        {% if disabled %}disabled{% endif %}     >
+</div>
+{% endmacro %}
+
+
+{% macro render_select(name, label, options, required=false, selected_value="") %}
+<div class="form-group">
+    <label for="{{ name }}">{{ label }} {% if required %}*{% endif %}</label>
+    <select id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %}>
+        <option value="">Selecione...</option>
+        {% for value, text in options %}
+            <option value="{{ value }}" {% if value == selected_value %}selected{% endif %}>{{ text }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endmacro %}
+
+
+{% macro render_submit_button(text, icon="💾", class_name="btn-salvar") %}
+<button type="submit" class="arione-btn {{ class_name }}">
+    {{ icon }} {{ text }}
+</button>
+{% endmacro %}

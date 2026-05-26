@@ -1,0 +1,745 @@
+<!-- templates/financeiro/cards/form_financeiro_conciliacao.html -->
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+{{ comp.cabecalho_mestre_arione(
+    titulo="Conciliação Bancária",
+    subtitulo="Financeiro > Bancos > Conciliação Bancária",
+    icone="fa-balance-scale",
+    cor_tema="#E67E22",
+    func_fechar="voltarParaGridBancos()",
+    form_id="formConciliacao",
+    onclick_novo="",
+    onclick_save="",
+    onclick_search="",
+    onclick_filter="",
+    onclick_list="",
+    onclick_clonar="",
+    onclick_export="if(typeof arioneToast === 'function') arioneToast('Exportando relatório de conciliação...', 'info')",
+    onclick_import="if(typeof arioneToast === 'function') arioneToast('Importação indisponível', 'info')",
+    onclick_print="window.print()",
+    onclick_email="if(typeof arioneToast === 'function') arioneToast('Enviando por E-mail...', 'info')",
+    onclick_whatsapp="if(typeof arioneToast === 'function') arioneToast('Compartilhando via WhatsApp...', 'info')",
+    status="Ativo",
+    ajuda="Comparativo entre o saldo real do extrato bancário e o saldo contábil registrado no sistema AriOne.",
+    tamanho="grande"
+) }}
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; width: 100%;">
+    <div class="bnk-container" style="max-width: 100%; margin: 0 auto; padding: 30px 40px; transition: all 0.3s ease; animation: fadeIn 0.5s ease;">
+        <!-- 1. Parâmetros e Demonstrativo de Conciliação Bancária (Unificado) -->
+        <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden; margin-bottom: 25px;">
+            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <i class="fas fa-balance-scale" style="color: #E67E22; margin-right: 10px;"></i>
+                    <span>Demonstrativo e Parâmetros de Conciliação Bancária</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" onclick="abrirModalImportacaoOFX()" style="background: #f1f5f9; color: #0072CE; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);"><i class="fas fa-file-import" style="margin-right: 5px;"></i> IMPORTAR OFX / CNAB</button>
+                    <button type="button" onclick="conectarOpenFinanceMaster()" style="background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0; padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);"><i class="fas fa-link" style="margin-right: 5px;"></i> CONECTAR OPEN FINANCE</button>
+                    <span style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">SINCRONIZADO EM TEMPO REAL</span>
+                </div>
+            </div>
+            <div class="op-card-body" style="padding: 25px;">
+                <!-- Linha Superior: Seleção de Conta e Datas -->
+                <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                    <div class="op-group" style="flex: 2; min-width: 280px;">
+                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CONTA BANCÁRIA (SELECIONE DO CADASTRO) *</label>
+                        <select id="selectContaConciliacao" class="op-input" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #334155; background: #fff; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" onchange="carregarLancamentosConciliacao()">
+                            <option value="">SELECIONE UMA CONTA BANCÁRIA CADASTRADA...</option>
+                        </select>
+                    </div>
+                    <div class="op-group" style="flex: 1; min-width: 180px;">
+                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA INÍCIO</label>
+                        <input class="op-input" type="date" id="data_inicio_conciliacao" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="carregarLancamentosConciliacao()">
+                    </div>
+                    <div class="op-group" style="flex: 1; min-width: 180px;">
+                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA FIM</label>
+                        <input class="op-input" type="date" id="data_fim_conciliacao" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="carregarLancamentosConciliacao()">
+                    </div>
+                </div>
+
+                <!-- Linha Inferior: Filtros Rápidos e Bento Summary Lado a Lado (Bloomberg Terminal Style) -->
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                    <!-- Filtros Rápidos (Horizontal Flow) -->
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; white-space: nowrap;"><i class="fas fa-clock" style="color: #E67E22; margin-right: 4px;"></i> PERÍODO RÁPIDO:</span>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapidoConciliacao('hoje', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Hoje</button>
+                            <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapidoConciliacao('ontem', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Ontem</button>
+                            <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapidoConciliacao('mes_atual', this)" style="background: #E67E22; border: 1px solid #E67E22; color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Mês Atual</button>
+                            <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapidoConciliacao('mes_anterior', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Mês Anterior</button>
+                            <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapidoConciliacao('ano_atual', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Ano Atual</button>
+                            <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapidoConciliacao('ano_anterior', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Ano Anterior</button>
+                        </div>
+                    </div>
+
+                    <!-- Bento Summary Cards (Lado a Lado com os Filtros) -->
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1; justify-content: flex-end;">
+                        <!-- Saldo Extrato -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; border-left: 4px solid #0072CE; min-width: 180px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center;">
+                            <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-file-invoice-dollar" style="color: #0072CE; font-size: 13px;"></i> Saldo do Extrato
+                            </div>
+                            <div id="demo_saldo_extrato" style="font-size: 18px; font-weight: 800; color: #1e293b;">R$ 0,00</div>
+                        </div>
+
+                        <!-- Saldo Sistema -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; border-left: 4px solid #7A255F; min-width: 180px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center;">
+                            <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-laptop-code" style="color: #7A255F; font-size: 13px;"></i> Saldo Contábil
+                            </div>
+                            <div id="demo_saldo_sistema" style="font-size: 18px; font-weight: 800; color: #7A255F;">R$ 0,00</div>
+                        </div>
+
+                        <!-- Diferença Apurada -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; border-left: 4px solid #E67E22; min-width: 210px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fas fa-scale-balanced" style="color: #E67E22; font-size: 13px;"></i> Diferença Apurada
+                                </div>
+                                <div id="demo_diferenca" style="font-size: 18px; font-weight: 800; color: #E67E22;">R$ 0,00</div>
+                            </div>
+                            <div id="demo_status_badge" style="margin-left: 10px;">
+                                <span style="background: #e2e8f0; color: #64748b; padding: 3px 10px; border-radius: 12px; font-size: 9px; font-weight: 700;">AGUARDANDO</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Movimentações para Conciliação -->
+        <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <i class="fas fa-list" style="color: #E67E22; margin-right: 10px;"></i>
+                    <span>Movimentações da Conta no Período</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button type="button" onclick="conciliarTodosMaster()" style="background: #E67E22; color: #fff; border: none; padding: 5px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(230,126,34,0.2);"><i class="fas fa-check-double" style="margin-right: 4px;"></i> CONCILIAR PENDENTES</button>
+                    <span id="saldoAtualConciliacao" style="background: #dcfce7; color: #166534; font-size: 11px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">SALDO: R$ 0,00</span>
+                    <span id="totalLancamentosConciliacao" style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">0 LANÇAMENTOS</span>
+                </div>
+            </div>
+            <div class="op-card-body" style="padding: 0; overflow-x: auto;">
+                <table class="op-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-weight: 600; font-size: 11px;">
+                            <th style="padding: 14px 25px;">DATA</th>
+                            <th style="padding: 14px 15px;">HISTÓRICO / DESCRIÇÃO</th>
+                            <th style="padding: 14px 15px;">DOCUMENTO</th>
+                            <th style="padding: 14px 15px; text-align: right;">CRÉDITO (R$)</th>
+                            <th style="padding: 14px 15px; text-align: right;">DÉBITO (R$)</th>
+                            <th style="padding: 14px 15px; text-align: center;">CONCILIAÇÃO</th>
+                            <th style="padding: 14px 25px; text-align: right;">SALDO ACUMULADO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyLancamentosConciliacao">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function voltarParaGridBancos() {
+    if (typeof fecharModalBnk === 'function') fecharModalBnk();
+    if (!window.location.search.includes('aba=bancos')) { window.location.href = "{{ url_for('financeiro.abas', aba='bancos') }}"; }
+}
+
+let lancamentosConciliacaoGeral = JSON.parse(localStorage.getItem('arione_lancamentos_extrato')) || [
+    { id: 1, conta: "001 - BANCO DO BRASIL S.A. - Ag: 1122-3 / Cc: 55443-2", data: "2026-05-02", historico: "RECEBIMENTO DE CLIENTE - NF 1542", doc: "PIX-98745", valor: 4500.00, tipo: "C", conciliado: true },
+    { id: 2, conta: "001 - BANCO DO BRASIL S.A. - Ag: 1122-3 / Cc: 55443-2", data: "2026-05-05", historico: "PAGAMENTO FORNECEDOR - ALUGUEL", doc: "TED-11223", valor: -2500.00, tipo: "D", conciliado: true },
+    { id: 3, conta: "001 - BANCO DO BRASIL S.A. - Ag: 1122-3 / Cc: 55443-2", data: "2026-05-12", historico: "PAGAMENTO DE ENERGIA ELÉTRICA", doc: "BARRAS-887", valor: -450.50, tipo: "D", conciliado: false },
+    { id: 4, conta: "341 - ITAÚ UNIBANCO S.A. - Ag: 4455 / Cc: 99887-1", data: "2026-05-03", historico: "RECEBIMENTO CARTÕES DE CRÉDITO", doc: "CIELO-554", valor: 8250.00, tipo: "C", conciliado: true },
+    { id: 5, conta: "260 - NU PAGAMENTOS S.A. (NUBANK) - Ag: 0001 / Cc: 1234567-8", data: "2026-05-10", historico: "RENDIMENTO AUTOMÁTICO DE CONTA", doc: "REC-001", valor: 120.75, tipo: "C", conciliado: false }
+];
+
+function salvarLancamentosConciliacaoStorage() {
+    localStorage.setItem('arione_lancamentos_extrato', JSON.stringify(lancamentosConciliacaoGeral));
+}
+
+function salvarConciliacaoMaster(e) {
+    if (e) e.preventDefault();
+    if (typeof arioneToast === 'function') arioneToast("Conciliação confirmada com sucesso!", "success");
+    setTimeout(() => voltarParaGridBancos(), 1000);
+}
+
+function conciliarLancamentoMaster(id) {
+    const lanc = lancamentosConciliacaoGeral.find(l => l.id === id);
+    if (lanc) {
+        lanc.conciliado = true;
+        salvarLancamentosConciliacaoStorage();
+        
+        // Atualiza também o saldo contábil no sistema para refletir a conciliação perfeita
+        sincronizarSaldoContabilSistema(lanc.conta);
+        
+        carregarLancamentosConciliacao();
+        if (typeof arioneToast === 'function') arioneToast("Lançamento conciliado com sucesso com o Livro Razão!", "success");
+    }
+}
+
+function conciliarTodosMaster() {
+    const selectConta = document.getElementById('selectContaConciliacao');
+    if (!selectConta || !selectConta.value) {
+        if (typeof arioneToast === 'function') arioneToast("Selecione uma conta bancária primeiro", "warning");
+        return;
+    }
+    let pendentes = lancamentosConciliacaoGeral.filter(l => l.conta === selectConta.value && !l.conciliado);
+    if (pendentes.length === 0) {
+        if (typeof arioneToast === 'function') arioneToast("Todos os lançamentos desta conta já estão conciliados!", "info");
+        return;
+    }
+    pendentes.forEach(l => l.conciliado = true);
+    salvarLancamentosConciliacaoStorage();
+    
+    // Atualiza o saldo contábil no sistema
+    sincronizarSaldoContabilSistema(selectConta.value);
+    
+    carregarLancamentosConciliacao();
+    if (typeof arioneToast === 'function') arioneToast(`${pendentes.length} lançamentos conciliados com sucesso!`, "success");
+}
+
+function sincronizarSaldoContabilSistema(contaStr) {
+    // Calcula o saldo total do extrato para esta conta
+    let totalExtrato = 0;
+    lancamentosConciliacaoGeral.filter(l => l.conta === contaStr).forEach(l => totalExtrato += parseFloat(l.valor));
+    
+    let contas = JSON.parse(localStorage.getItem('arione_contas_bancarias_cad')) || [
+        { id: 1, banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", saldo: 15420.50 },
+        { id: 2, banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", saldo: 8250.00 },
+        { id: 3, banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", saldo: 3400.75 }
+    ];
+    
+    // Identifica qual conta do cadastro corresponde à string da movimentação
+    let cEncontrada = contas.find(c => contaStr.includes(c.banco) || contaStr.includes(c.agencia));
+    if (cEncontrada) {
+        cEncontrada.saldo = totalExtrato;
+        localStorage.setItem('arione_contas_bancarias_cad', JSON.stringify(contas));
+        
+        // Atualiza a opção no select para manter os dados visuais consistentes
+        const selectConta = document.getElementById('selectContaConciliacao');
+        if (selectConta) {
+            Array.from(selectConta.options).forEach(opt => {
+                if (opt.value === contaStr) {
+                    opt.dataset.saldo = totalExtrato;
+                    opt.textContent = `${cEncontrada.banco} (Ag: ${cEncontrada.agencia} | Cc: ${cEncontrada.conta})`;
+                }
+            });
+        }
+    }
+}
+
+function aplicarFiltroRapidoConciliacao(tipo, btnClicado) {
+    const inpInicio = document.getElementById('data_inicio_conciliacao');
+    const inpFim = document.getElementById('data_fim_conciliacao');
+    if (!inpInicio || !inpFim) return;
+
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = hoje.getMonth();
+    const dia = hoje.getDate();
+
+    document.querySelectorAll('.btn-quick-filter').forEach(btn => {
+        btn.style.background = "#f1f5f9";
+        btn.style.borderColor = "#cbd5e1";
+        btn.style.color = "#334155";
+    });
+    if (btnClicado) {
+        btnClicado.style.background = "#E67E22";
+        btnClicado.style.borderColor = "#E67E22";
+        btnClicado.style.color = "#fff";
+    }
+
+    let dInicio, dFim;
+    if (tipo === 'hoje') {
+        const hjStr = hoje.toISOString().split('T')[0];
+        dInicio = hjStr; dFim = hjStr;
+    } else if (tipo === 'ontem') {
+        const ontem = new Date(ano, mes, dia - 1);
+        const ontemStr = ontem.toISOString().split('T')[0];
+        dInicio = ontemStr; dFim = ontemStr;
+    } else if (tipo === 'mes_atual') {
+        const mesStr = String(mes + 1).padStart(2, '0');
+        const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+        dInicio = `${ano}-${mesStr}-01`; dFim = `${ano}-${mesStr}-${ultimoDia}`;
+    } else if (tipo === 'mes_anterior') {
+        const mesAnt = mes === 0 ? 12 : mes;
+        const anoAnt = mes === 0 ? ano - 1 : ano;
+        const mesAntStr = String(mesAnt).padStart(2, '0');
+        const ultimoDiaAnt = new Date(anoAnt, mesAnt, 0).getDate();
+        dInicio = `${anoAnt}-${mesAntStr}-01`; dFim = `${anoAnt}-${mesAntStr}-${ultimoDiaAnt}`;
+    } else if (tipo === 'ano_atual') {
+        dInicio = `${ano}-01-01`; dFim = `${ano}-12-31`;
+    } else if (tipo === 'ano_anterior') {
+        dInicio = `${ano - 1}-01-01`; dFim = `${ano - 1}-12-31`;
+    }
+
+    inpInicio.value = dInicio; inpFim.value = dFim;
+    carregarLancamentosConciliacao();
+    if (typeof arioneToast === 'function') arioneToast(`Filtro rápido aplicado: ${btnClicado ? btnClicado.textContent : tipo}`, 'info');
+}
+
+function inicializarContasConciliacao() {
+    const selectConta = document.getElementById('selectContaConciliacao');
+    if (!selectConta) return;
+
+    const dataAtual = new Date();
+    const ano = dataAtual.getFullYear();
+    const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
+    const ultimoDia = new Date(ano, dataAtual.getMonth() + 1, 0).getDate();
+
+    const inpInicio = document.getElementById('data_inicio_conciliacao');
+    const inpFim = document.getElementById('data_fim_conciliacao');
+
+    if (inpInicio && !inpInicio.value) inpInicio.value = `${ano}-${mes}-01`;
+    if (inpFim && !inpFim.value) inpFim.value = `${ano}-${mes}-${ultimoDia}`;
+
+    let contas = JSON.parse(localStorage.getItem('arione_contas_bancarias_cad')) || [
+        { id: 1, banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", saldo: 15420.50 },
+        { id: 2, banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", saldo: 8250.00 },
+        { id: 3, banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", saldo: 3400.75 }
+    ];
+
+    selectConta.innerHTML = '<option value="">SELECIONE UMA CONTA BANCÁRIA CADASTRADA...</option>';
+    contas.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = `${c.banco} - Ag: ${c.agencia} / Cc: ${c.conta}`;
+        opt.textContent = `${c.banco} (Ag: ${c.agencia} | Cc: ${c.conta})`;
+        opt.dataset.saldo = c.saldo || 0;
+        opt.dataset.conta = c.conta || '';
+        selectConta.appendChild(opt);
+    });
+
+    if (contas.length > 0) selectConta.selectedIndex = 1;
+    carregarLancamentosConciliacao();
+}
+
+function carregarLancamentosConciliacao(filtro = '') {
+    const selectConta = document.getElementById('selectContaConciliacao');
+    const dataInicio = document.getElementById('data_inicio_conciliacao').value;
+    const dataFim = document.getElementById('data_fim_conciliacao').value;
+    const tbody = document.getElementById('tbodyLancamentosConciliacao');
+    const totalSpan = document.getElementById('totalLancamentosConciliacao');
+    const saldoSpan = document.getElementById('saldoAtualConciliacao');
+
+    if (!selectConta || !tbody) return;
+
+    const contaSelecionada = selectConta.value;
+    tbody.innerHTML = '';
+
+    if (!contaSelecionada) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding: 25px; text-align: center; color: #94a3b8;">Selecione uma conta bancária para visualizar as movimentações para conciliação.</td></tr>`;
+        totalSpan.textContent = "0 LANÇAMENTOS";
+        saldoSpan.textContent = "SALDO: R$ 0,00";
+        atualizarDemonstrativoSaldos(0, 0);
+        return;
+    }
+
+    let lista = lancamentosConciliacaoGeral.filter(l => l.conta === contaSelecionada);
+    if (dataInicio) lista = lista.filter(l => l.data >= dataInicio);
+    if (dataFim) lista = lista.filter(l => l.data <= dataFim);
+    if (filtro) {
+        lista = lista.filter(l => l.historico.toLowerCase().includes(filtro.toLowerCase()) || l.doc.toLowerCase().includes(filtro.toLowerCase()));
+    }
+
+    lista.sort((a,b) => a.data.localeCompare(b.data));
+    totalSpan.textContent = `${lista.length} LANÇAMENTOS`;
+
+    const optSel = selectConta.options[selectConta.selectedIndex];
+    let vSistema = optSel ? parseFloat(optSel.dataset.saldo || 0) : 0;
+
+    // Para o extrato bancário, vamos somar todas as movimentações do extrato para apurar o saldo real do extrato
+    let vExtrato = 0;
+    lancamentosConciliacaoGeral.filter(l => l.conta === contaSelecionada).forEach(l => vExtrato += parseFloat(l.valor));
+
+    if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding: 25px; text-align: center; color: #94a3b8;">Nenhuma movimentação registrada para conciliação nesta conta no período selecionado.</td></tr>`;
+        saldoSpan.textContent = `SALDO: ${vExtrato.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
+        atualizarDemonstrativoSaldos(vExtrato, vSistema);
+        return;
+    }
+
+    let saldoLinha = 0;
+    lista.forEach(l => {
+        saldoLinha += parseFloat(l.valor);
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid #f1f5f9";
+        tr.style.transition = "background 0.2s";
+        tr.onmouseover = () => tr.style.background = "#f8fafc";
+        tr.onmouseout = () => tr.style.background = "transparent";
+
+        const partesData = l.data.split('-');
+        const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : l.data;
+
+        const valorFormatado = Math.abs(l.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const saldoFormatado = saldoLinha.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        const tdCredito = l.tipo === 'C'
+            ? `<td style="padding: 14px 15px; text-align: right; font-weight: 600; color: #166534;">${valorFormatado}</td>`
+            : `<td style="padding: 14px 15px; text-align: right; color: #cbd5e1;">---</td>`;
+
+        const tdDebito = l.tipo === 'D'
+            ? `<td style="padding: 14px 15px; text-align: right; font-weight: 600; color: #991b1b;">${valorFormatado}</td>`
+            : `<td style="padding: 14px 15px; text-align: right; color: #cbd5e1;">---</td>`;
+
+        const badgeConciliado = l.conciliado
+            ? `<span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 10px; display: inline-block;"><i class="fas fa-check-circle" style="margin-right: 3px;"></i> CONCILIADO</span>`
+            : `<button type="button" onclick="conciliarLancamentoMaster(${l.id})" style="background: #fef08a; color: #854d0e; border: 1px solid #facc15; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"><i class="fas fa-exclamation-circle" style="margin-right: 3px;"></i> PENDENTE (CLIQUE)</button>`;
+
+        tr.innerHTML = `
+            <td style="padding: 14px 25px; font-weight: 600; color: #E67E22;">${dataFormatada}</td>
+            <td style="padding: 14px 15px; font-weight: 500; color: #334155;">${l.historico}</td>
+            <td style="padding: 14px 15px; color: #64748b;">${l.doc || '---'}</td>
+            ${tdCredito}
+            ${tdDebito}
+            <td style="padding: 14px 15px; text-align: center;">${badgeConciliado}</td>
+            <td style="padding: 14px 25px; text-align: right; font-weight: 600; color: #0f766e;">${saldoFormatado}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    saldoSpan.textContent = `SALDO: ${vExtrato.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
+    atualizarDemonstrativoSaldos(vExtrato, vSistema);
+}
+
+function atualizarDemonstrativoSaldos(vExtrato, vSistema) {
+    const elExtrato = document.getElementById('demo_saldo_extrato');
+    const elSistema = document.getElementById('demo_saldo_sistema');
+    const elDiferenca = document.getElementById('demo_diferenca');
+    const elBadge = document.getElementById('demo_status_badge');
+
+    if (!elExtrato || !elSistema || !elDiferenca || !elBadge) return;
+
+    const dif = vExtrato - vSistema;
+
+    const fmt = val => val.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+
+    elExtrato.textContent = fmt(vExtrato);
+    elSistema.textContent = fmt(vSistema);
+    elDiferenca.textContent = fmt(dif);
+
+    if (Math.abs(dif) < 0.01) {
+        elDiferenca.style.color = "#166534";
+        elBadge.innerHTML = `<span style="background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-check-double"></i> CONCILIADO 100%</span>`;
+    } else {
+        elDiferenca.style.color = "#991b1b";
+        elBadge.innerHTML = `<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-exclamation-triangle"></i> PENDENTE DE CONCILIAÇÃO</span>`;
+    }
+}
+
+function abrirModalImportacaoOFX() {
+    const m = document.getElementById('modalImportacaoBancaria');
+    if (m) m.style.display = 'flex';
+}
+function fecharModalImportacaoOFX() {
+    const m = document.getElementById('modalImportacaoBancaria');
+    if (m) m.style.display = 'none';
+}
+function conectarOpenFinanceMaster() {
+    abrirModalImportacaoOFX();
+    alternarAbaImportacao('openfinance');
+}
+function alternarAbaImportacao(aba) {
+    const elOfx = document.getElementById('aba_ofx');
+    const elOpen = document.getElementById('aba_openfinance');
+    const cOfx = document.getElementById('conteudo_ofx');
+    const cOpen = document.getElementById('conteudo_openfinance');
+    const bProc = document.getElementById('btn_processar_ofx');
+
+    if (aba === 'ofx') {
+        elOfx.style.borderColor = '#0072CE'; elOfx.style.background = '#f0f9ff'; elOfx.querySelector('div').style.color = '#0072CE';
+        elOpen.style.borderColor = '#cbd5e1'; elOpen.style.background = '#f8fafc'; elOpen.querySelector('div').style.color = '#334155';
+        cOfx.style.display = 'block'; cOpen.style.display = 'none'; bProc.style.display = 'block';
+    } else {
+        elOpen.style.borderColor = '#10b981'; elOpen.style.background = '#ecfdf5'; elOpen.querySelector('div').style.color = '#10b981';
+        elOfx.style.borderColor = '#cbd5e1'; elOfx.style.background = '#f8fafc'; elOfx.querySelector('div').style.color = '#334155';
+        cOpen.style.display = 'block'; cOfx.style.display = 'none'; bProc.style.display = 'none';
+    }
+}
+function verificarContaNoArquivo(conteudo, numConta) {
+    if (!numConta) return 'inconclusivo';
+
+    // Gera múltiplas variações do número da conta para comparação flexível
+    const variacoes = new Set();
+    variacoes.add(numConta.trim());                                   // original: 55443-2
+    const soDigitos = numConta.replace(/[^0-9]/g, '');
+    if (soDigitos) variacoes.add(soDigitos);                          // só dígitos: 554432
+    // Últimos 6 dígitos (sufixo mais comum em OFX)
+    if (soDigitos.length >= 6) variacoes.add(soDigitos.slice(-6));
+    // Últimos 7 dígitos
+    if (soDigitos.length >= 7) variacoes.add(soDigitos.slice(-7));
+    // Últimos 8 dígitos
+    if (soDigitos.length >= 8) variacoes.add(soDigitos.slice(-8));
+
+    for (const v of variacoes) {
+        if (v && conteudo.includes(v)) return 'valido';
+    }
+
+    // Verifica se o arquivo parece ser um OFX legítimo (tem tags OFX)
+    const ehOFX = conteudo.includes('<OFX>') || conteudo.includes('<STMTTRN>') ||
+                  conteudo.includes('OFXHEADER') || conteudo.includes('<ACCTID>');
+
+    // Se é um OFX válido mas a conta não foi encontrada → claramente errado
+    if (ehOFX) return 'invalido';
+
+    // Se o arquivo não tem estrutura OFX reconhecível (CSV, TXT livre) → inconclusivo
+    return 'inconclusivo';
+}
+
+function simularLeituraOFX(inp) {
+    const fb = document.getElementById('ofx_feedback');
+    const btnProcessar = document.getElementById('btn_processar_ofx');
+    if (!inp.files.length) return;
+
+    const file = inp.files[0];
+    const selectConta = document.getElementById('selectContaConciliacao');
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const conteudo = evt.target.result;
+
+        if (!selectConta || !selectConta.value) {
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = '#fff3cd';
+                fb.style.color = '#92400e';
+                fb.style.border = '1.5px solid #fbbf24';
+                fb.innerHTML = `<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> <strong>Atenção:</strong> Selecione uma <strong>Conta Bancária</strong> antes de importar o arquivo!`;
+            }
+            if (btnProcessar) { btnProcessar.disabled = true; btnProcessar.style.opacity = '0.4'; }
+            inp.value = '';
+            return;
+        }
+
+        const opt = selectConta.options[selectConta.selectedIndex];
+        const numConta = opt ? (opt.dataset.conta || '') : '';
+        const resultado = verificarContaNoArquivo(conteudo, numConta);
+
+        if (resultado === 'invalido') {
+            // OFX identificado mas conta não confere — BLOQUEIO TOTAL
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = '#fee2e2';
+                fb.style.color = '#991b1b';
+                fb.style.border = '1.5px solid #ef4444';
+                fb.innerHTML = `
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        <i class="fas fa-shield-alt" style="font-size:20px;flex-shrink:0;margin-top:2px;"></i>
+                        <div>
+                            <div style="font-weight:800;font-size:13px;margin-bottom:4px;">⛔ ALERTA DE SEGURANÇA — IMPORTAÇÃO BLOQUEADA</div>
+                            <div style="font-size:12px;line-height:1.6;">
+                                O arquivo <strong>${file.name}</strong> é um extrato OFX válido, mas a conta identificada
+                                <strong>não corresponde à conta selecionada (Cc: ${numConta})</strong>.<br>
+                                Operação bloqueada para evitar mistura de dados (ex: PF × PJ).
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            if (btnProcessar) { btnProcessar.disabled = true; btnProcessar.style.opacity = '0.4'; }
+            inp.value = '';
+
+        } else if (resultado === 'inconclusivo') {
+            // Formato não-OFX (CSV, TXT) — não é possível verificar automaticamente, pede confirmação
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = '#fff7ed';
+                fb.style.color = '#92400e';
+                fb.style.border = '1.5px solid #f97316';
+                fb.innerHTML = `
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        <i class="fas fa-exclamation-circle" style="font-size:20px;flex-shrink:0;margin-top:2px;color:#f97316;"></i>
+                        <div style="flex:1;">
+                            <div style="font-weight:800;font-size:13px;margin-bottom:4px;">⚠️ Verificação Manual Necessária</div>
+                            <div style="font-size:12px;line-height:1.6;margin-bottom:8px;">
+                                O arquivo <strong>${file.name}</strong> não possui estrutura OFX reconhecível. 
+                                Confirme manualmente que este arquivo pertence à conta <strong>Cc: ${numConta}</strong>.
+                            </div>
+                            <button type="button" onclick="confirmarImportacaoManual()" 
+                                style="background:#f97316;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
+                                <i class="fas fa-check" style="margin-right:4px;"></i> Confirmar e Liberar
+                            </button>
+                            <button type="button" onclick="cancelarImportacao()" 
+                                style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin-left:6px;">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>`;
+            }
+            if (btnProcessar) { btnProcessar.disabled = true; btnProcessar.style.opacity = '0.4'; }
+
+        } else {
+            // Conta encontrada no arquivo — LIBERADO
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = '#dcfce7';
+                fb.style.color = '#166534';
+                fb.style.border = '1.5px solid #4ade80';
+                fb.innerHTML = `<i class="fas fa-check-circle" style="margin-right:6px;"></i> Arquivo <b>${file.name}</b> validado para a conta <strong>Cc: ${numConta}</strong>. Pronto para processar!`;
+            }
+            if (btnProcessar) { btnProcessar.disabled = false; btnProcessar.style.opacity = '1'; }
+        }
+    };
+    reader.readAsText(file);
+}
+
+function confirmarImportacaoManual() {
+    const fb = document.getElementById('ofx_feedback');
+    const btnProcessar = document.getElementById('btn_processar_ofx');
+    if (fb) {
+        fb.style.background = '#dcfce7';
+        fb.style.color = '#166534';
+        fb.style.border = '1.5px solid #4ade80';
+        fb.innerHTML = `<i class="fas fa-check-circle" style="margin-right:6px;"></i> Importação liberada manualmente pelo operador. Clique em <strong>Processar Extrato</strong> para continuar.`;
+    }
+    if (btnProcessar) { btnProcessar.disabled = false; btnProcessar.style.opacity = '1'; }
+}
+
+function cancelarImportacao() {
+    const fb = document.getElementById('ofx_feedback');
+    const inpFile = document.getElementById('input_ofx_file');
+    const btnProcessar = document.getElementById('btn_processar_ofx');
+    if (fb) fb.style.display = 'none';
+    if (inpFile) inpFile.value = '';
+    if (btnProcessar) { btnProcessar.disabled = true; btnProcessar.style.opacity = '0.4'; }
+}
+function processarImportacaoOFXMaster() {
+    const selectConta = document.getElementById('selectContaConciliacao');
+    if (!selectConta || !selectConta.value) {
+        if (typeof arioneToast === 'function') arioneToast("Por favor, selecione uma conta bancária antes de processar o arquivo OFX.", "warning");
+        return;
+    }
+
+    const opt = selectConta.options[selectConta.selectedIndex];
+    const numConta = opt ? opt.dataset.conta : '';
+    if (!numConta) {
+        if (typeof arioneToast === 'function') arioneToast("Número de conta não identificado para validação.", "error");
+        return;
+    }
+
+    const inpFile = document.getElementById('input_ofx_file');
+    if (!inpFile || inpFile.files.length === 0) {
+        if (typeof arioneToast === 'function') arioneToast("Por favor, selecione ou arraste um arquivo OFX/Extrato primeiro.", "warning");
+        return;
+    }
+
+    const file = inpFile.files[0];
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const conteudo = evt.target.result;
+        const contaClean = numConta.replace(/[^0-9]/g, '');
+
+        // Verifica se o número da conta (com ou sem hífen/formatação) existe no arquivo
+        if (!conteudo.includes(numConta) && !conteudo.includes(contaClean)) {
+            if (typeof arioneToast === 'function') arioneToast("ALERTA DE SEGURANÇA: O arquivo importado NÃO pertence à conta bancária selecionada (" + numConta + ")!", "error");
+            alert("ALERTA DE SEGURANÇA:\n\nO número da conta bancária ativa (" + numConta + ") não foi localizado no arquivo importado.\nPara sua segurança, a importação e compensação foram bloqueadas para evitar mistura de dados (ex: PF e PJ).");
+            return;
+        }
+
+        // Se passou na validação, processamos e adicionamos os dados na tela de compensação!
+        fecharModalImportacaoOFX();
+        if (typeof arioneToast === 'function') arioneToast(`Arquivo ${file.name} validado e importado com sucesso para a conta ${numConta}!`, "success");
+        
+        // Adiciona lançamentos de compensação na conta selecionada
+        setTimeout(() => {
+            const novoId1 = Date.now();
+            const novoId2 = Date.now() + 1;
+            lancamentosConciliacaoGeral.push({
+                id: novoId1, conta: selectConta.value, data: new Date().toISOString().split('T')[0], historico: "COMPENSAÇÃO BANCÁRIA - CRÉDITO VIA OFX", doc: "OFX-" + Math.floor(Math.random()*10000), valor: 3500.00, tipo: "C", conciliado: false
+            });
+            lancamentosConciliacaoGeral.push({
+                id: novoId2, conta: selectConta.value, data: new Date().toISOString().split('T')[0], historico: "COMPENSAÇÃO BANCÁRIA - TARIFA/DÉBITO OFX", doc: "OFX-" + Math.floor(Math.random()*10000), valor: -150.00, tipo: "D", conciliado: false
+            });
+            salvarLancamentosConciliacaoStorage();
+            carregarLancamentosConciliacao();
+            
+            // Limpa o input de arquivo e o feedback para futuras importações
+            inpFile.value = '';
+            const fb = document.getElementById('ofx_feedback');
+            if (fb) fb.style.display = 'none';
+        }, 800);
+    };
+    reader.readAsText(file);
+}
+function simularConexaoOpenFinance() {
+    fecharModalImportacaoOFX();
+    if (typeof arioneToast === 'function') arioneToast("Redirecionando para o portal de Open Finance do Banco...", "info");
+}
+
+document.addEventListener('DOMContentLoaded', () => inicializarContasConciliacao());
+</script>
+
+<!-- Modal de Importação OFX / CNAB / Open Finance -->
+<div id="modalImportacaoBancaria" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 99999; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #fff; border-radius: 20px; width: 100%; max-width: 650px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; overflow: hidden; animation: modalScaleIn 0.3s ease;">
+        <!-- Cabeçalho -->
+        <div style="padding: 20px 25px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-university" style="color: #0072CE; font-size: 20px;"></i>
+                <span style="font-size: 16px; font-weight: 700; color: #1e293b;">Integração Bancária & Importação de Extratos</span>
+            </div>
+            <button type="button" onclick="fecharModalImportacaoOFX()" style="background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Corpo -->
+        <div style="padding: 25px;">
+            <!-- Abas Visuais OFX vs Open Finance -->
+            <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+                <div id="aba_ofx" onclick="alternarAbaImportacao('ofx')" style="flex: 1; padding: 16px; border: 2px solid #0072CE; border-radius: 14px; background: #f0f9ff; cursor: pointer; transition: 0.2s; text-align: center;">
+                    <i class="fas fa-file-import" style="color: #0072CE; font-size: 24px; margin-bottom: 8px;"></i>
+                    <div style="font-size: 13px; font-weight: 700; color: #0072CE;">Arquivo OFX / CNAB / CSV / Excel</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Upload manual de extrato ou planilha bancária</div>
+                </div>
+                <div id="aba_openfinance" onclick="alternarAbaImportacao('openfinance')" style="flex: 1; padding: 16px; border: 1px solid #cbd5e1; border-radius: 14px; background: #f8fafc; cursor: pointer; transition: 0.2s; text-align: center;">
+                    <i class="fas fa-link" style="color: #10b981; font-size: 24px; margin-bottom: 8px;"></i>
+                    <div style="font-size: 13px; font-weight: 700; color: #334155;">Open Finance / API REST</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Sincronização automática via agregador</div>
+                </div>
+            </div>
+
+            <!-- Conteúdo Aba OFX / Planilhas -->
+            <div id="conteudo_ofx" style="display: block;">
+                <div style="border: 2px dashed #cbd5e1; border-radius: 16px; padding: 40px 20px; text-align: center; background: #f8fafc; margin-bottom: 20px; cursor: pointer;" onclick="document.getElementById('input_ofx_file').click()">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 40px; color: #94a3b8; margin-bottom: 12px;"></i>
+                    <div style="font-size: 14px; font-weight: 600; color: #334155;">Arraste e solte o arquivo (.OFX, .CNAB, .CSV, .XLSX) aqui</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">ou clique para selecionar do computador</div>
+                    <input type="file" id="input_ofx_file" style="display: none;" accept=".ofx,.cnab,.csv,.xlsx,.xls,.txt,.xml" onchange="simularLeituraOFX(this)">
+                </div>
+                <div id="ofx_feedback" style="display: none; padding: 15px; background: #dcfce7; border-radius: 12px; color: #166534; font-size: 12px; font-weight: 600; margin-bottom: 20px; text-align: center;">
+                    <i class="fas fa-check-circle" style="margin-right: 5px;"></i> Arquivo carregado com sucesso! 14 lançamentos identificados.
+                </div>
+            </div>
+
+            <!-- Conteúdo Aba Open Finance -->
+            <div id="conteudo_openfinance" style="display: none; text-align: center; padding: 10px 20px;">
+                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 14px; padding: 20px; margin-bottom: 20px;">
+                    <i class="fas fa-shield-alt" style="color: #10b981; font-size: 32px; margin-bottom: 10px;"></i>
+                    <div style="font-size: 14px; font-weight: 700; color: #065f46;">Conexão Segura mTLS / Certificado Digital</div>
+                    <div style="font-size: 12px; color: #047857; margin-top: 6px;">
+                        O AriOne utiliza protocolo de escopo restrito (Read-Only). Suas credenciais e senhas bancárias nunca são armazenadas.
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
+                    <span style="padding: 8px 16px; background: #f1f5f9; border-radius: 10px; font-size: 12px; font-weight: 600; color: #334155;"><i class="fas fa-university" style="color: #fbbf24; margin-right: 5px;"></i> Banco do Brasil</span>
+                    <span style="padding: 8px 16px; background: #f1f5f9; border-radius: 10px; font-size: 12px; font-weight: 600; color: #334155;"><i class="fas fa-university" style="color: #f97316; margin-right: 5px;"></i> Itaú Unibanco</span>
+                    <span style="padding: 8px 16px; background: #f1f5f9; border-radius: 10px; font-size: 12px; font-weight: 600; color: #334155;"><i class="fas fa-university" style="color: #8b5cf6; margin-right: 5px;"></i> Nubank PJ</span>
+                </div>
+                <button type="button" onclick="simularConexaoOpenFinance()" style="width: 100%; background: #10b981; color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">
+                    <i class="fas fa-external-link-alt" style="margin-right: 6px;"></i> INICIAR AUTENTICAÇÃO NO PORTAL DO BANCO
+                </button>
+            </div>
+        </div>
+
+        <!-- Rodapé -->
+        <div style="padding: 16px 25px; border-top: 1px solid #f1f5f9; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" onclick="fecharModalImportacaoOFX()" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;">Cancelar</button>
+            <button id="btn_processar_ofx" type="button" onclick="processarImportacaoOFXMaster()" style="background: #0072CE; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; display: block;">Processar Extrato</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

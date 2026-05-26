@@ -1,0 +1,40 @@
+# ===============================================================
+# 🟪 ARIONEDEV – requirements.txt
+# Lista de dependências Python do projeto AriOne
+# Local: /requirements.txt
+# ===============================================================
+
+# Core Flask
+Flask
+Jinja2
+SQLAlchemy
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+python-dotenv
+
+# Banco de Dados
+psycopg2-binary  # PostgreSQL adapter
+# (SQLite é incluído no Python padrão)
+
+# Servidor de Produção
+gunicorn
+waitress  # Alternativa para Windows
+
+# Armazenamento Cloud
+boto3  # AWS S3
+
+# Segurança
+cryptography
+pyopenssl
+
+# APIs Externas
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+
+# Utilitários
+redis  # Cache e filas
+celery  # Tarefas assíncronas (opcional)
+
+# ==================== FIM DO ARQUIVO ===========================

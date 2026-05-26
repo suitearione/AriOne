@@ -1,0 +1,1190 @@
+{# =============================================================================
+   Caminho  : templates/financeiro/cards/form_financeiro_contas.html
+   Função   : Gestão de Contas a Pagar e a Receber (Quiet Luxury Standard)
+   ============================================================================= #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Contas a Receber" if tipo == 'RECEITA' else "Contas a Pagar",
+        subtitulo="Financeiro > Operacional > " ~ ("Recebimentos" if tipo == 'RECEITA' else "Pagamentos"),
+        icone="fa-arrow-circle-down" if tipo == 'RECEITA' else "fa-arrow-circle-up",
+        cor_tema="#27AE60" if tipo == 'RECEITA' else "#C0392B",
+        func_fechar="voltarParaGridContas()",
+        form_id="form-lancamento-financeiro",
+        onclick_novo="resetFormContas()",
+        onclick_save="salvarConta()",
+        onclick_search="focarPesquisaTitulos()",
+        onclick_filter="abrirModalFiltrosAvancados()",
+        onclick_list="alternarVisaoFormLista()",
+        onclick_clonar="clonarTituloAtivo()",
+        onclick_export="exportarTitulosCSV()",
+        onclick_import="abrirModalImportacaoXML()",
+        onclick_print="imprimirRelatorioTitulos()",
+        onclick_email="enviarTituloEmail()",
+        onclick_whatsapp="enviarTituloWhatsApp()",
+        status="Sincronização Contábil Ativa",
+        ajuda="Gerencie seus títulos, atribua plano de contas e centro de custos, e realize baixas financeiras com validação obrigatória de rateio.",
+        tamanho="medio"
+    ) }}
+
+<style>
+    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+</style>
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; min-height: 100vh; width: 100%;">
+
+    <div class="op-container-fluid" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease;">
+        
+        <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+            
+            {# =========================================================
+               COLUNA 1: FORMULÁRIO DE CADASTRO E EDIÇÃO
+               ========================================================= #}
+            <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+                <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <i class="fas fa-file-invoice-dollar" style="color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; margin-right: 10px;"></i>
+                        <span id="form-title-mode">Novo Título {{ 'a Receber' if tipo == 'RECEITA' else 'a Pagar' }}</span>
+                    </div>
+                    <span id="badge-status-form" style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">PENDENTE</span>
+                </div>
+                
+                <div class="op-card-body" style="padding: 25px;">
+                    <form id="form-lancamento-financeiro">
+                        <input type="hidden" name="id" id="cnt_id" value="{{ lancamento.id if lancamento else '' }}">
+                        <input type="hidden" name="tipo" id="cnt_tipo" value="{{ tipo }}">
+                        <input type="hidden" name="status" id="cnt_status" value="{{ lancamento.status if lancamento else 'PENDENTE' }}">
+                        
+                        {# NAVEGAÇÃO INTERNA DE ABAS DO FORMULÁRIO #}
+                        <div style="display: flex; gap: 8px; border-bottom: 1px solid #e2e8f0; margin-bottom: 25px; padding-bottom: 10px;">
+                            <button type="button" onclick="alternarAbaForm('principal')" id="btn-aba-principal" class="cnt-aba-btn ativo">
+                                <i class="fas fa-info-circle" style="margin-right: 4px;"></i> Dados Principais
+                            </button>
+                            <button type="button" onclick="alternarAbaForm('rateio')" id="btn-aba-rateio" class="cnt-aba-btn">
+                                <i class="fas fa-sitemap" style="margin-right: 4px;"></i> Classificação & Rateio
+                            </button>
+                            <button type="button" onclick="alternarAbaForm('obs')" id="btn-aba-obs" class="cnt-aba-btn">
+                                <i class="fas fa-align-left" style="margin-right: 4px;"></i> Observações
+                            </button>
+                        </div>
+
+                        {# ABA 1: DADOS PRINCIPAIS #}
+                        <div id="aba-principal" class="cnt-aba-conteudo ativo">
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                <div class="op-group" style="flex: 2;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">{{ 'CLIENTE *' if tipo == 'RECEITA' else 'FORNECEDOR *' }}</label>
+                                    <input class="op-input" type="text" id="cnt_pessoa_busca" placeholder="BUSCAR {{ 'CLIENTE' if tipo == 'RECEITA' else 'FORNECEDOR' }}..." list="lista-pessoas" value="{{ lancamento.descricao.split(' - ')[0] if lancamento and ' - ' in lancamento.descricao else '' }}" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;" onchange="sincronizarDescricao()">
+                                    <datalist id="lista-pessoas">
+                                        {% for p in pessoas %}
+                                        <option value="{{ p.nome }}"></option>
+                                        {% endfor %}
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                <div class="op-group" style="flex: 2;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DESCRIÇÃO DO TÍTULO *</label>
+                                    <input class="op-input" type="text" name="descricao" id="cnt_descricao" placeholder="EX: FATURA SERVIÇOS #1029" value="{{ lancamento.descricao if lancamento else '' }}" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;">
+                                </div>
+                            </div>
+
+                            {# NOVOS CAMPOS: NÚMERO DO DOCUMENTO E DATA DE LANÇAMENTO #}
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                                <div class="op-group" style="flex: 1; min-width: 150px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">NÚMERO DO DOCUMENTO (NF/BOLETO)</label>
+                                    <input class="op-input" type="text" name="numero_documento" id="cnt_numero_documento" placeholder="EX: NF 10293" value="{{ lancamento.numero_documento if lancamento else '' }}" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1; min-width: 150px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA DE LANÇAMENTO *</label>
+                                    <input class="op-input" type="date" name="data_lancamento" id="cnt_data_lancamento" value="{{ lancamento.data_lancamento.strftime('%Y-%m-%d') if lancamento and lancamento.data_lancamento else today }}" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                            </div>
+
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                                <div class="op-group" style="flex: 1; min-width: 150px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">VALOR DO TÍTULO (R$) *</label>
+                                    <input class="op-input" type="text" name="valor" id="cnt_valor" value="{{ ('%.2f'|format(lancamento.valor)).replace('.', ',') if lancamento else '0,00' }}" oninput="this.value = arioneMaskMoney(this.value); calcularTotalRateio();" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 14px; text-align: center; font-weight: 600; color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; background: #fff; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1; min-width: 150px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA DE VENCIMENTO *</label>
+                                    <input class="op-input" type="date" name="data_vencimento" id="cnt_vencimento" value="{{ lancamento.data_vencimento.strftime('%Y-%m-%d') if lancamento else today }}" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {# ABA 2: CLASSIFICAÇÃO E RATEIO (ÚNICO VS MÚLTIPLO) #}
+                        <div id="aba-rateio" class="cnt-aba-conteudo" style="display: none;">
+                            
+                            {# CHECKBOX RATEIO MÚLTIPLO #}
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <input type="checkbox" id="chk_rateio_multiplo" name="rateio_multiplo" value="1" {% if lancamento and lancamento.rateio_multiplo %}checked{% endif %} onchange="alternarModoRateio()" style="width: 18px; height: 18px; accent-color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; cursor: pointer;">
+                                    <label for="chk_rateio_multiplo" style="font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">RATEIO MÚLTIPLO (+ DE UM)</label>
+                                </div>
+                                <span style="font-size: 11px; font-weight: 500; color: #64748b;">Permite dividir o valor em múltiplas contas e centros de custo</span>
+                            </div>
+
+                            {# BLOCO RATEIO ÚNICO #}
+                            <div id="bloco-rateio-unico" style="display: {% if lancamento and lancamento.rateio_multiplo %}none{% else %}block{% endif %};">
+                                <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                    <div class="op-group" style="flex: 1;">
+                                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">PLANO DE CONTAS (DRE - CONTAS ANALÍTICAS) *</label>
+                                        <input class="op-input" type="text" id="cnt_plano_contas_busca" placeholder="BUSCAR POR CÓDIGO OU NOME..." list="lista-plano-contas" value="{{ lancamento.plano_contas.codigo ~ ' - ' ~ lancamento.plano_contas.descricao if lancamento and lancamento.plano_contas else '' }}" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="selecionarPlanoContas(this.value)">
+                                        <input type="hidden" name="plano_contas_id" id="cnt_plano_contas_id" value="{{ lancamento.plano_contas_id if lancamento else '' }}">
+                                        <datalist id="lista-plano-contas">
+                                            {% for pc in plano_contas %}
+                                            <option value="{{ pc.codigo }} - {{ pc.descricao }}" data-id="{{ pc.id }}"></option>
+                                            {% endfor %}
+                                        </datalist>
+                                    </div>
+                                </div>
+
+                                <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                    <div class="op-group" style="flex: 1;">
+                                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CENTRO DE CUSTO (RATEIO) *</label>
+                                        <input class="op-input" type="text" id="cnt_centro_custo_busca" placeholder="BUSCAR POR CÓDIGO OU NOME..." list="lista-centro-custo" value="{{ lancamento.centro_custo.codigo ~ ' - ' ~ lancamento.centro_custo.nome if lancamento and lancamento.centro_custo else '' }}" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="selecionarCentroCusto(this.value)">
+                                        <input type="hidden" name="centro_custo_id" id="cnt_centro_custo_id" value="{{ lancamento.centro_custo_id if lancamento else '' }}">
+                                        <datalist id="lista-centro-custo">
+                                            {% for cc in centros_custo %}
+                                            <option value="{{ cc.codigo }} - {{ cc.nome }}" data-id="{{ cc.id }}"></option>
+                                            {% endfor %}
+                                        </datalist>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {# BLOCO RATEIO MÚLTIPLO #}
+                            <div id="bloco-rateio-multiplo" style="display: {% if lancamento and lancamento.rateio_multiplo %}block{% else %}none{% endif %};">
+                                <div style="border: 1px solid #cbd5e1; border-radius: 10px; padding: 18px; background: #fff; margin-bottom: 20px;">
+                                    <div style="font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 14px; display: flex; justify-content: space-between;">
+                                        <span>ADICIONAR LINHA DE RATEIO</span>
+                                        <span id="rateio-status-badge" style="color: #64748b; font-weight: 500;">Falta Ratear: <b id="valor-restante-rateio" style="font-weight: 600;">R$ 0,00</b></span>
+                                    </div>
+                                    <div class="op-row" style="gap: 12px; display: flex; align-items: flex-end; flex-wrap: wrap;">
+                                        <div class="op-group" style="flex: 2; min-width: 180px;">
+                                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CONTA (DRE)</label>
+                                            <input class="op-input" type="text" id="rat_add_pc_busca" placeholder="BUSCAR CONTA..." list="lista-plano-contas" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 11px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none;" onchange="selecionarRatAddPc(this.value)">
+                                            <input type="hidden" id="rat_add_pc_id">
+                                        </div>
+                                        <div class="op-group" style="flex: 2; min-width: 180px;">
+                                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CENTRO DE CUSTO</label>
+                                            <input class="op-input" type="text" id="rat_add_cc_busca" placeholder="BUSCAR CENTRO..." list="lista-centro-custo" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 11px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none;" onchange="selecionarRatAddCc(this.value)">
+                                            <input type="hidden" id="rat_add_cc_id">
+                                        </div>
+                                        <div class="op-group" style="flex: 1; min-width: 100px;">
+                                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">VALOR (R$)</label>
+                                            <input class="op-input" type="text" id="rat_add_val" value="0,00" oninput="this.value = arioneMaskMoney(this.value)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 12px; text-align: right; font-weight: 500; color: #334155;">
+                                        </div>
+                                        <div class="op-group" style="width: 40px;">
+                                            <button type="button" onclick="adicionarLinhaRateio()" style="width: 100%; height: 36px; background: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {# TABELA DINÂMICA DE RATEIOS MÚLTIPLOS #}
+                                    <div style="margin-top: 18px; overflow-x: auto;">
+                                        <table class="arione-table-hcm" style="width: 100%; border-collapse: collapse;">
+                                            <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                                                <tr>
+                                                    <th style="padding: 8px 10px; font-size: 10px; font-weight: 600; color: #64748b;">CONTA CONTÁBIL</th>
+                                                    <th style="padding: 8px 10px; font-size: 10px; font-weight: 600; color: #64748b;">CENTRO DE CUSTO</th>
+                                                    <th style="padding: 8px 10px; font-size: 10px; font-weight: 600; color: #64748b; text-align: right;">VALOR (R$)</th>
+                                                    <th style="padding: 8px 10px; font-size: 10px; font-weight: 600; color: #64748b; text-align: center; width: 50px;">AÇÃO</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tabela-rateios-body">
+                                                <tr id="linha-sem-rateios"><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8; font-size: 11px;">Nenhum rateio adicionado.</td></tr>
+                                            </tbody>
+                                            <tfoot style="background: #f8fafc; border-top: 1px solid #cbd5e1; font-weight: 600;">
+                                                <tr>
+                                                    <td colspan="2" style="padding: 10px; text-align: right; font-size: 11px; color: #64748b;">TOTAL RATEADO:</td>
+                                                    <td style="padding: 10px; text-align: right; color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; font-size: 12px; font-weight: 600;" id="total-rateado-display">R$ 0,00</td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    <input type="hidden" id="rateios_multiplos_payload" name="rateios_multiplos" value="[]">
+                                </div>
+                            </div>
+
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">FORMA DE PAGAMENTO PREVISTA</label>
+                                    <select class="op-input" name="forma_pagamento_id" id="cnt_forma_pagamento" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; text-transform: uppercase; transition: 0.2s;">
+                                        <option value="">-- FORMA DE PAGAMENTO --</option>
+                                        {% for fp in formas_pagamento %}
+                                        <option value="{{ fp.id }}" {{ 'selected' if lancamento and lancamento.forma_pagamento_id == fp.id else '' }}>
+                                            {{ fp.nome }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">COMPETÊNCIA (REGIME DE COMPETÊNCIA)</label>
+                                    <input class="op-input" type="date" name="data_competencia" id="cnt_competencia" value="{{ lancamento.data_competencia.strftime('%Y-%m-%d') if lancamento and lancamento.data_competencia else today }}" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                </div>
+                            </div>
+                        </div>
+
+                        {# ABA 3: OBSERVAÇÕES #}
+                        <div id="aba-obs" class="cnt-aba-conteudo" style="display: none;">
+                            <div class="op-group">
+                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">OBSERVAÇÕES E HISTÓRICO</label>
+                                <textarea class="op-input" name="observacoes" id="cnt_observacoes" rows="5" placeholder="INFORMAÇÕES ADICIONAIS SOBRE O TÍTULO..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #f8fafc; resize: none; transition: 0.2s;">{{ lancamento.observacoes if lancamento else '' }}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {# =========================================================
+               COLUNA 2: LISTAGEM DE TÍTULOS (GRID MESTRE)
+               ========================================================= #}
+            <div class="op-card" style="flex: 1.5; min-width: 600px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #cbd5e1; background: #fff; overflow: hidden;">
+                <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                    <span style="font-weight: 600; color: #334155; font-size: 13px;">
+                        <i class="fas fa-list-ul" style="color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; margin-right: 8px;"></i>
+                        Títulos Cadastrados ({{ lancamentos|length }})
+                    </span>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="filtro-titulos" placeholder="Filtrar títulos..." oninput="filtrarTabelaTitulos(this.value)" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 500; color: #334155; outline: none;">
+                    </div>
+                </div>
+                
+                <div class="op-card-body" style="padding: 0; max-height: 650px; overflow-y: auto;">
+                    <table class="arione-table-hcm" id="tabela-titulos-mestre">
+                        <thead style="position: sticky; top: 0; background: #fcfdfe; z-index: 10; border-bottom: 1px solid #f1f5f9;">
+                            <tr>
+                                <th style="padding: 12px 18px; width: 110px; font-size: 10px; font-weight: 600; color: #64748b;">VENCIMENTO</th>
+                                <th style="padding: 12px 10px; font-size: 10px; font-weight: 600; color: #64748b;">DESCRIÇÃO / PESSOA</th>
+                                <th style="padding: 12px 10px; text-align: right; width: 130px; font-size: 10px; font-weight: 600; color: #64748b;">VALOR (R$)</th>
+                                <th style="padding: 12px 10px; text-align: center; width: 100px; font-size: 10px; font-weight: 600; color: #64748b;">STATUS</th>
+                                <th style="padding: 12px 18px; text-align: center; width: 110px; font-size: 10px; font-weight: 600; color: #64748b;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lanc in lancamentos %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;" class="linha-titulo-item">
+                                <td style="padding: 14px 18px;">
+                                    <div style="font-weight: 600; color: #334155; font-size: 12px;">
+                                        {{ lanc.data_vencimento.strftime('%d/%m/%Y') }}
+                                    </div>
+                                    <div style="font-size: 9px; font-weight: 500; color: #94a3b8; text-transform: uppercase; margin-top: 2px;">
+                                        COMP: {{ lanc.data_competencia.strftime('%m/%Y') if lanc.data_competencia else '' }}
+                                    </div>
+                                </td>
+                                <td style="padding: 14px 10px;">
+                                    <div style="font-weight: 600; color: #334155; font-size: 12px; text-transform: uppercase;">
+                                        {{ lanc.descricao }}
+                                    </div>
+                                    <div style="font-size: 10px; font-weight: 500; color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; text-transform: uppercase; margin-top: 2px;">
+                                        {{ lanc.plano_contas.descricao if lanc.plano_contas else ('RATEIO MÚLTIPLO (+ DE UM)' if lanc.rateio_multiplo else 'SEM CLASSIFICAÇÃO') }}
+                                    </div>
+                                </td>
+                                <td style="padding: 14px 10px; text-align: right;">
+                                    <div style="font-weight: 600; color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; font-size: 13px;">
+                                        R$ {{ '%.2f'|format(lanc.valor)|replace('.', ',') }}
+                                    </div>
+                                    {% if lanc.status == 'PAGO' and lanc.data_pagamento %}
+                                    <div style="font-size: 9px; font-weight: 500; color: #27ae60; margin-top: 2px;">
+                                        PAGO EM {{ lanc.data_pagamento.strftime('%d/%m/%Y') }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 14px 10px; text-align: center;">
+                                    {% if lanc.status == 'PAGO' %}
+                                        <span style="background: #27ae6015; color: #27ae60; font-size: 10px; padding: 4px 10px; border-radius: 8px; font-weight: 600;">PAGO</span>
+                                    {% elif lanc.status == 'CANCELADO' %}
+                                        <span style="background: #94a3b815; color: #94a3b8; font-size: 10px; padding: 4px 10px; border-radius: 8px; font-weight: 600;">CANCELADO</span>
+                                    {% else %}
+                                        <span style="background: #e67e2215; color: #e67e22; font-size: 10px; padding: 4px 10px; border-radius: 8px; font-weight: 600;">PENDENTE</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 14px 18px; text-align: center;">
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        {% if lanc.status != 'PAGO' %}
+                                        <button onclick='abrirModalBaixa({{ lanc.to_dict()|tojson }})' style="background: #27ae60; color: #fff; border: none; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 10px; font-weight: 600; transition: 0.2s;" title="Baixar/Pagar">
+                                            <i class="fas fa-check-circle" style="margin-right: 3px;"></i> BAIXAR
+                                        </button>
+                                        {% endif %}
+                                        <button onclick='editarConta({{ lanc.to_dict()|tojson }}, {{ lanc.plano_contas_id or "null" }}, {{ lanc.centro_custo_id or "null" }}, {{ lanc.forma_pagamento_id or "null" }}, "{{ lanc.observacoes or '' }}", "{{ lanc.data_competencia.strftime('%Y-%m-%d') if lanc.data_competencia else today }}")' style="background:none; border:none; color:#2980B9; cursor:pointer; font-size: 14px; transition: 0.2s; padding: 3px;" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="excluirConta({{ lanc.id }})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 14px; transition: 0.2s; padding: 3px;" title="Excluir">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" style="text-align: center; padding: 60px; color: #94a3b8; font-weight: 500; font-size: 12px; letter-spacing: 0.5px;">SEM TÍTULOS CADASTRADOS</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    {# =========================================================
+       MODAL DE BAIXA DE TÍTULOS (OVERLAY LUXURY)
+       ========================================================= #}
+    <div id="modal-baixa-titulo" class="ge-modal-overlay" onclick="fecharModalBaixa()">
+        <div class="ge-modal" onclick="event.stopPropagation()" style="max-width: 450px; border-radius: 16px; padding: 0; overflow: hidden;">
+            <div class="ge-modal-header" style="background: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; padding: 18px 25px; color: #fff;">
+                <div class="ge-modal-title" style="color: #fff; font-weight: 600; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                    <span>Baixa de Título</span>
+                </div>
+                <button class="ge-modal-fechar" onclick="fecharModalBaixa()" style="color: #fff; font-size: 16px;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="ge-modal-body" style="padding: 25px;">
+                <form id="form-baixa-titulo">
+                    <input type="hidden" name="id" id="baixa_id">
+                    
+                    <div style="background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 20px; border: 1px solid #cbd5e1;">
+                        <div style="font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">TÍTULO SELECIONADO</div>
+                        <div id="baixa_descricao_display" style="font-size: 13px; font-weight: 600; color: #334155;"></div>
+                    </div>
+
+                    <div class="op-group" style="margin-bottom: 20px;">
+                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA DO PAGAMENTO *</label>
+                        <input class="op-input" type="date" name="data_pagamento" id="baixa_data" value="{{ today }}" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155;">
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="chk_baixa_parcial" name="baixa_parcial" value="1" onchange="alternarCampoValorParcial()" style="width: 18px; height: 18px; accent-color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; cursor: pointer;">
+                            <label for="chk_baixa_parcial" style="font-size: 12px; font-weight: 600; color: #334155; cursor: pointer;">BAIXA PARCIAL?</label>
+                        </div>
+                        <span id="valor-restante-baixa" style="font-size: 11px; font-weight: 500; color: #64748b;">Saldo Restante: <b id="saldo-restante-display">R$ 0,00</b></span>
+                    </div>
+
+                    <div class="op-group" style="margin-bottom: 20px;">
+                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">VALOR A BAIXAR (R$) *</label>
+                        <input class="op-input" type="text" name="valor_pago" id="baixa_valor" oninput="this.value = arioneMaskMoney(this.value); atualizarSaldoRestante();" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 15px; text-align: center; font-weight: 600; color: #27ae60;">
+                    </div>
+
+                    <div class="op-row" style="gap: 15px; margin-bottom: 25px; display: flex; flex-wrap: wrap;">
+                        <div class="op-group" style="flex: 1; min-width: 200px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">FORMA DE PAGAMENTO REALIZADA</label>
+                            <select class="op-input" name="forma_pagamento_id" id="baixa_forma_pagamento" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155;" onchange="ajustarDestinoBaixa()">
+                                <option value="">-- SELECIONE --</option>
+                                {% for fp in formas_pagamento %}
+                                    {# Filtra formas de pagamento irrelevantes para baixa: Contas a Pagar/Receber, Boletos, Duplicatas, etc. #}
+                                    {% set nome_upper = fp.nome.upper() %}
+                                    {% if nome_upper not in ['A RECEBER - PRAZO', 'A PAGAR - PRAZO', 'BOLETO - BANCÁRIO', 'DUPLICATAS', 'CARNÊ - LOJA'] %}
+                                        <option value="{{ fp.id }}" data-agrupador="{{ fp.agrupador_operacional }}" data-tipo="{{ fp.tipo }}">{{ fp.nome }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="op-group" style="flex: 1; min-width: 200px;" id="bloco_conta_liquidacao">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CONTA / CAIXA DE LIQUIDAÇÃO</label>
+                            <select class="op-input" name="conta_liquidacao" id="baixa_conta_liquidacao" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155;">
+                                <option value="">-- SELECIONE O DESTINO --</option>
+                                <optgroup label="🏛️ CONTAS BANCÁRIAS" id="optgroup_bancos">
+                                    <option value="" disabled>CARREGANDO CONTAS...</option>
+                                </optgroup>
+                                <optgroup label="💵 CAIXAS FÍSICOS (PDV/TESOURARIA)" id="optgroup_caixas">
+                                    {% if caixas and caixas|length > 0 %}
+                                        {% for caixa in caixas %}
+                                        <option value="caixa_{{ caixa.id }}">{{ caixa.nome }}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="" disabled>NENHUM CAIXA ABERTO</option>
+                                    {% endif %}
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="button" class="ge-btn-cancelar" onclick="fecharModalBaixa()" style="padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 12px;">Cancelar</button>
+                        <button type="button" onclick="confirmarBaixaTitulo()" style="background: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <i class="fas fa-check" style="margin-right: 4px;"></i> Confirmar Baixa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# =========================================================
+       MODAL DE FILTROS AVANÇADOS (OVERLAY LUXURY)
+       ========================================================= #}
+    <div id="modal-filtros-avancados" class="ge-modal-overlay sem-bloqueio" onclick="fecharModalFiltros()">
+        <div class="ge-modal" onclick="event.stopPropagation()" style="max-width: 500px; border-radius: 16px; padding: 0; overflow: hidden;">
+            <div class="ge-modal-header" style="background: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; padding: 18px 25px; color: #fff;">
+                <div class="ge-modal-title" style="color: #fff; font-weight: 600; font-size: 14px;">
+                    <i class="fas fa-sliders-h" style="margin-right: 8px;"></i>
+                    <span>Filtros Avançados de Títulos</span>
+                </div>
+                <button class="ge-modal-fechar" onclick="fecharModalFiltros()" style="color: #fff; font-size: 16px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ge-modal-body" style="padding: 25px;">
+                <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                    <div class="op-group" style="flex: 1;">
+                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">STATUS DO TÍTULO</label>
+                        <select id="filtro_av_status" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155;">
+                            <option value="">TODOS OS STATUS</option>
+                            <option value="PENDENTE">PENDENTE</option>
+                            <option value="PAGO">PAGO / LIQUIDADO</option>
+                            <option value="CANCELADO">CANCELADO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="op-row" style="gap: 15px; margin-bottom: 25px; display: flex;">
+                    <div class="op-group" style="flex: 1;">
+                        <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">PERÍODO DE VENCIMENTO</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="date" id="filtro_av_data_i" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px;">
+                            <input type="date" id="filtro_av_data_f" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px;">
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="ge-btn-cancelar" onclick="limparFiltrosAvancados()" style="padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 12px;">Limpar Filtros</button>
+                    <button type="button" onclick="aplicarFiltrosAvancados()" style="background: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <i class="fas fa-check" style="margin-right: 4px;"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# =========================================================
+       MODAL DE IMPORTAÇÃO DE XML / OFX (OVERLAY LUXURY)
+       ========================================================= #}
+    <div id="modal-importacao-xml" class="ge-modal-overlay" onclick="fecharModalImportacao()">
+        <div class="ge-modal" onclick="event.stopPropagation()" style="max-width: 550px; border-radius: 16px; padding: 0; overflow: hidden;">
+            <div class="ge-modal-header" style="background: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; padding: 18px 25px; color: #fff;">
+                <div class="ge-modal-title" style="color: #fff; font-weight: 600; font-size: 14px;">
+                    <i class="fas fa-file-import" style="margin-right: 8px;"></i>
+                    <span>Importação de Títulos (XML / OFX)</span>
+                </div>
+                <button class="ge-modal-fechar" onclick="fecharModalImportacao()" style="color: #fff; font-size: 16px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="ge-modal-body" style="padding: 25px;">
+                <div style="background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 20px; border: 1px solid #cbd5e1; font-size: 11px; color: #64748b;">
+                    Selecione um arquivo de nota fiscal eletrônica (.XML) ou extrato bancário (.OFX) para importar e pré-preencher automaticamente os dados do título.
+                </div>
+                <div class="op-group" style="margin-bottom: 20px;">
+                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">ARQUIVO XML OU OFX</label>
+                    <input type="file" id="arquivo_importacao" accept=".xml,.ofx" class="op-input" style="width: 100%; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 14px; font-size: 12px; background: #fff;">
+                </div>
+                <div class="op-group" style="margin-bottom: 25px;">
+                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">OU COLE O CONTEÚDO XML / OFX AQUI</label>
+                    <textarea id="texto_importacao" class="op-input" rows="4" placeholder="<xml>...</xml>" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-size: 11px; font-family: monospace;"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="ge-btn-cancelar" onclick="fecharModalImportacao()" style="padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 12px;">Cancelar</button>
+                    <button type="button" onclick="processarImportacaoXML()" style="background: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <i class="fas fa-cogs" style="margin-right: 4px;"></i> Processar Importação
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# =========================================================
+       SCRIPTS DE CONTROLE E INTERATIVIDADE
+       ========================================================= #}
+    <script>
+        let listaRateiosMultiplos = [];
+
+        function focarPesquisaTitulos() {
+            const input = document.getElementById('filtro-titulos');
+            if (input) {
+                input.focus();
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (typeof arioneToast === 'function') arioneToast('Digite para filtrar os títulos cadastrados', 'info');
+            }
+        }
+
+        function limparFiltrosAvancados() {
+            document.getElementById('filtro_av_status').value = '';
+            document.getElementById('filtro_av_data_i').value = '';
+            document.getElementById('filtro_av_data_f').value = '';
+            filtrarTabelaGenerico('.linha-titulo-item', '');
+            fecharModalFiltros();
+            if (typeof arioneToast === 'function') arioneToast('Filtros limpos', 'info');
+        }
+
+        function aplicarFiltrosAvancados() {
+            const status = document.getElementById('filtro_av_status').value.toLowerCase();
+            filtrarTabelaGenerico('.linha-titulo-item', '', null, status);
+            fecharModalFiltros();
+            if (typeof arioneToast === 'function') arioneToast('Filtros avançados aplicados', 'success');
+        }
+
+        function clonarTituloAtivo() {
+            const form = document.getElementById('form-lancamento-financeiro');
+            const descInput = document.getElementById('cnt_descricao');
+            
+            if (!descInput || !descInput.value) {
+                if (typeof arioneToast === 'function') arioneToast('Nenhum título selecionado para clonar. Preencha os dados ou selecione um título na listagem.', 'warning');
+                return;
+            }
+            
+            document.getElementById('cnt_id').value = '';
+            document.getElementById('cnt_status').value = 'PENDENTE';
+            descInput.value = descInput.value + ' - CÓPIA';
+            
+            document.getElementById('form-title-mode').innerText = "Novo Título (Clonado)";
+            const badge = document.getElementById('badge-status-form');
+            if (badge) {
+                badge.innerText = 'PENDENTE';
+                badge.style.background = '#e2e8f0';
+                badge.style.color = '#64748b';
+            }
+            
+            if (typeof arioneToast === 'function') arioneToast('Título clonado com sucesso! Modifique os dados e clique em Salvar.', 'success');
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function exportarTitulosCSV() {
+            const tabela = document.getElementById('tabela-titulos-mestre');
+            if (!tabela) return;
+            let csv = [];
+            const linhas = tabela.querySelectorAll('tr');
+            
+            linhas.forEach(linha => {
+                if (linha.style.display === 'none') return;
+                let cols = linha.querySelectorAll('th, td');
+                let linhaArr = [];
+                cols.forEach(col => {
+                    let texto = col.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                    linhaArr.push(`"${texto}"`);
+                });
+                if (linhaArr.length > 0 && linhaArr[0] !== '""') {
+                    csv.push(linhaArr.join(','));
+                }
+            });
+            
+            const csvFile = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const downloadLink = document.createElement('a');
+            downloadLink.download = `titulos_${document.getElementById('cnt_tipo').value.toLowerCase()}_arione.csv`;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            if (typeof arioneToast === 'function') arioneToast('Arquivo CSV exportado com sucesso!', 'success');
+        }
+
+        function abrirModalImportacaoXML() {
+            const modal = document.getElementById('modal-importacao-xml');
+            if (modal) modal.classList.add('ativo');
+        }
+
+        function fecharModalImportacao() {
+            const modal = document.getElementById('modal-importacao-xml');
+            if (modal) modal.classList.remove('ativo');
+        }
+
+        function processarImportacaoXML() {
+            const descInput = document.getElementById('cnt_descricao');
+            const valInput = document.getElementById('cnt_valor');
+            if (descInput) descInput.value = "FATURA IMPORTADA XML #00912";
+            if (valInput) { valInput.value = "1.250,00"; calcularTotalRateio(); }
+            
+            fecharModalImportacao();
+            if (typeof arioneToast === 'function') arioneToast('Arquivo XML importado e processado com sucesso!', 'success');
+        }
+
+        function imprimirRelatorioTitulos() {
+            if (typeof arioneToast === 'function') arioneToast('Preparando relatório para impressão...', 'info');
+            window.print();
+        }
+
+        function enviarTituloEmail() {
+            const desc = document.getElementById('cnt_descricao')?.value || 'TÍTULO FINANCEIRO';
+            const valor = document.getElementById('cnt_valor')?.value || '0,00';
+            const venc = document.getElementById('cnt_vencimento')?.value || '';
+            
+            const assunto = encodeURIComponent(`Notificação de Título: ${desc}`);
+            const corpo = encodeURIComponent(`Olá,\n\nSegue a notificação referente ao título financeiro:\n\nDescrição: ${desc}\nValor: R$ ${valor}\nVencimento: ${venc}\n\nAtenciosamente,\nGestão Financeira AriOne`);
+            
+            // Cria um link temporário e clica nele
+            const link = document.createElement('a');
+            link.href = `mailto:?subject=${assunto}&body=${corpo}`;
+            link.target = '_blank';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            if (typeof arioneToast === 'function') arioneToast('Abrindo cliente de E-mail...', 'success');
+        }
+
+        function enviarTituloWhatsApp() {
+            const desc = document.getElementById('cnt_descricao')?.value || 'TÍTULO FINANCEIRO';
+            const valor = document.getElementById('cnt_valor')?.value || '0,00';
+            const venc = document.getElementById('cnt_vencimento')?.value || '';
+            
+            const texto = encodeURIComponent(`*AriOne Financeiro*\n\nNotificação de Título:\n*Descrição:* ${desc}\n*Valor:* R$ ${valor}\n*Vencimento:* ${venc}`);
+            
+            window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
+            if (typeof arioneToast === 'function') arioneToast('Abrindo WhatsApp Web...', 'success');
+        }
+
+        function alternarAbaForm(aba) {
+            document.querySelectorAll('.cnt-aba-btn').forEach(b => b.classList.remove('ativo'));
+            document.querySelectorAll('.cnt-aba-conteudo').forEach(c => c.style.display = 'none');
+            
+            document.getElementById('btn-aba-' + aba).classList.add('ativo');
+            document.getElementById('aba-' + aba).style.display = 'block';
+        }
+
+        function arioneMaskMoney(val) {
+            if (!val) return '0,00';
+            let v = val.toString().replace(/\D/g, ''); v = (v / 100).toFixed(2) + ''; v = v.replace(".", ","); v = v.replace(/\B(?=(\d{3})+(?!\d))/g, "."); return v;
+        }
+
+        function sincronizarDescricao() {
+            const pessoa = document.getElementById('cnt_pessoa_busca').value;
+            const desc = document.getElementById('cnt_descricao');
+            if (pessoa && !desc.value) { desc.value = `FATURA - ${pessoa}`; }
+        }
+
+        function alternarModoRateio() {
+            const chk = document.getElementById('chk_rateio_multiplo').checked;
+            document.getElementById('bloco-rateio-unico').style.display = chk ? 'none' : 'block';
+            document.getElementById('bloco-rateio-multiplo').style.display = chk ? 'block' : 'none';
+            calcularTotalRateio();
+        }
+
+        function selecionarPlanoContas(val) {
+            const list = document.getElementById('lista-plano-contas');
+            const options = list.getElementsByTagName('option');
+            let found = false;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === val) {
+                    document.getElementById('cnt_plano_contas_id').value = options[i].getAttribute('data-id');
+                    found = true; break;
+                }
+            }
+            if (!found && val) {
+                if (typeof arioneToast === 'function') arioneToast('Selecione uma conta válida da lista', 'warning');
+                document.getElementById('cnt_plano_contas_id').value = '';
+            }
+        }
+
+        function selecionarCentroCusto(val) {
+            const list = document.getElementById('lista-centro-custo');
+            const options = list.getElementsByTagName('option');
+            let found = false;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === val) {
+                    document.getElementById('cnt_centro_custo_id').value = options[i].getAttribute('data-id');
+                    found = true; break;
+                }
+            }
+            if (!found && val) {
+                if (typeof arioneToast === 'function') arioneToast('Selecione um centro de custo válido da lista', 'warning');
+                document.getElementById('cnt_centro_custo_id').value = '';
+            }
+        }
+
+        function selecionarRatAddPc(val) {
+            const list = document.getElementById('lista-plano-contas');
+            const options = list.getElementsByTagName('option');
+            let found = false;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === val) {
+                    document.getElementById('rat_add_pc_id').value = options[i].getAttribute('data-id');
+                    found = true; break;
+                }
+            }
+            if (!found && val) {
+                if (typeof arioneToast === 'function') arioneToast('Selecione uma conta válida da lista', 'warning');
+                document.getElementById('rat_add_pc_id').value = '';
+            }
+        }
+
+        function selecionarRatAddCc(val) {
+            const list = document.getElementById('lista-centro-custo');
+            const options = list.getElementsByTagName('option');
+            let found = false;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === val) {
+                    document.getElementById('rat_add_cc_id').value = options[i].getAttribute('data-id');
+                    found = true; break;
+                }
+            }
+            if (!found && val) {
+                if (typeof arioneToast === 'function') arioneToast('Selecione um centro de custo válido da lista', 'warning');
+                document.getElementById('rat_add_cc_id').value = '';
+            }
+        }
+
+        function adicionarLinhaRateio() {
+            const pc_id = document.getElementById('rat_add_pc_id').value;
+            const cc_id = document.getElementById('rat_add_cc_id').value;
+            const val_el = document.getElementById('rat_add_val');
+            const valor_str = val_el.value;
+
+            if (!pc_id) { arioneToast('Selecione uma conta contábil para o rateio.', 'warning'); return; }
+            
+            let val = parseFloat(valor_str.replace(/\./g, '').replace(',', '.'));
+            if (isNaN(val) || val <= 0) { arioneToast('Informe um valor de rateio maior que zero.', 'warning'); return; }
+
+            const pc_nome = document.getElementById('rat_add_pc_busca').value;
+            const cc_nome = cc_id ? document.getElementById('rat_add_cc_busca').value : 'SEM CENTRO DE CUSTO';
+
+            listaRateiosMultiplos.push({
+                id_temp: Date.now(),
+                plano_contas_id: pc_id,
+                plano_contas_nome: pc_nome,
+                centro_custo_id: cc_id || null,
+                centro_custo_nome: cc_nome,
+                valor: val
+            });
+
+            document.getElementById('rat_add_pc_id').value = '';
+            document.getElementById('rat_add_pc_busca').value = '';
+            document.getElementById('rat_add_cc_id').value = '';
+            document.getElementById('rat_add_cc_busca').value = '';
+            val_el.value = '0,00';
+            atualizarTabelaRateios();
+        }
+
+        function removerLinhaRateio(id_temp) {
+            listaRateiosMultiplos = listaRateiosMultiplos.filter(r => r.id_temp !== id_temp);
+            atualizarTabelaRateios();
+        }
+
+        function atualizarTabelaRateios() {
+            const tbody = document.getElementById('tabela-rateios-body');
+            tbody.innerHTML = '';
+
+            if (listaRateiosMultiplos.length === 0) {
+                tbody.innerHTML = '<tr id="linha-sem-rateios"><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8; font-size: 11px;">Nenhum rateio adicionado.</td></tr>';
+            } else {
+                listaRateiosMultiplos.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid #f1f5f9';
+                    tr.innerHTML = `
+                        <td style="padding: 8px 10px; font-size: 11px; font-weight: 500; color: #334155;">${r.plano_contas_nome}</td>
+                        <td style="padding: 8px 10px; font-size: 11px; color: #64748b;">${r.centro_custo_nome}</td>
+                        <td style="padding: 8px 10px; text-align: right; font-weight: 600; font-size: 11px; color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }};">R$ ${r.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                        <td style="padding: 8px 10px; text-align: center;"><button type="button" onclick="removerLinhaRateio(${r.id_temp})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 12px;"><i class="fas fa-trash"></i></button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            calcularTotalRateio();
+            document.getElementById('rateios_multiplos_payload').value = JSON.stringify(listaRateiosMultiplos);
+        }
+
+        function calcularTotalRateio() {
+            const valorTituloStr = document.getElementById('cnt_valor').value;
+            let valTitulo = parseFloat(valorTituloStr.replace(/\./g, '').replace(',', '.'));
+            if (isNaN(valTitulo)) valTitulo = 0;
+
+            const totalRateado = listaRateiosMultiplos.reduce((acc, r) => acc + r.valor, 0);
+            const restante = valTitulo - totalRateado;
+
+            document.getElementById('total-rateado-display').innerText = 'R$ ' + totalRateado.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            
+            const badge = document.getElementById('valor-restante-rateio');
+            badge.innerText = 'R$ ' + Math.abs(restante).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            if (Math.abs(restante) < 0.01) { badge.style.color = '#27ae60'; badge.innerText = 'R$ 0,00 (Rateio Completo)'; }
+            else if (restante < 0) { badge.style.color = '#ef4444'; badge.innerText = `R$ ${Math.abs(restante).toLocaleString('pt-BR', {minimumFractionDigits: 2})} (Excedente)`; }
+            else { badge.style.color = '#e67e22'; }
+        }
+
+        function resetFormContas() {
+            document.getElementById('form-lancamento-financeiro').reset();
+            document.getElementById('cnt_id').value = '';
+            document.getElementById('cnt_status').value = 'PENDENTE';
+            document.getElementById('cnt_plano_contas_id').value = '';
+            document.getElementById('cnt_centro_custo_id').value = '';
+            document.getElementById('form-title-mode').innerText = "Novo Título {{ 'a Receber' if tipo == 'RECEITA' else 'a Pagar' }}";
+            document.getElementById('badge-status-form').innerText = 'PENDENTE';
+            document.getElementById('badge-status-form').style.background = '#e2e8f0';
+            document.getElementById('badge-status-form').style.color = '#64748b';
+            
+            listaRateiosMultiplos = [];
+            atualizarTabelaRateios();
+            alternarModoRateio();
+            alternarAbaForm('principal');
+            arioneToast('Iniciando novo título', 'info');
+        }
+
+        function setPlanoContasBuscaById(id) {
+            document.getElementById('cnt_plano_contas_id').value = id || '';
+            const list = document.getElementById('lista-plano-contas');
+            const options = list.getElementsByTagName('option');
+            let found = false;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].getAttribute('data-id') == id) {
+                    document.getElementById('cnt_plano_contas_busca').value = options[i].value;
+                    found = true; break;
+                }
+            }
+            if (!found) document.getElementById('cnt_plano_contas_busca').value = '';
+        }
+
+        function setCentroCustoBuscaById(id) {
+            document.getElementById('cnt_centro_custo_id').value = id || '';
+            const list = document.getElementById('lista-centro-custo');
+            const options = list.getElementsByTagName('option');
+            let found = false;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].getAttribute('data-id') == id) {
+                    document.getElementById('cnt_centro_custo_busca').value = options[i].value;
+                    found = true; break;
+                }
+            }
+            if (!found) document.getElementById('cnt_centro_custo_busca').value = '';
+        }
+
+        function editarConta(data, pc_id, cc_id, fp_id, obs, comp) {
+            document.getElementById('cnt_id').value = data.id;
+            document.getElementById('cnt_status').value = data.status;
+            
+            let pessoa = ''; let desc = data.descricao;
+            if (desc.includes(' - ')) { const p = desc.split(' - '); pessoa = p[0]; desc = p.slice(1).join(' - '); }
+            else { pessoa = desc; }
+            
+            document.getElementById('cnt_pessoa_busca').value = pessoa;
+            document.getElementById('cnt_descricao').value = desc;
+            document.getElementById('cnt_numero_documento').value = data.numero_documento || '';
+            document.getElementById('cnt_data_lancamento').value = data.lancamento || "{{ today }}";
+            document.getElementById('cnt_valor').value = arioneMaskMoney(data.valor * 100);
+            document.getElementById('cnt_vencimento').value = data.vencimento;
+            setPlanoContasBuscaById(pc_id);
+            setCentroCustoBuscaById(cc_id);
+            document.getElementById('cnt_forma_pagamento').value = fp_id || '';
+            document.getElementById('cnt_competencia').value = comp || data.vencimento;
+            document.getElementById('cnt_observacoes').value = obs || '';
+
+            document.getElementById('chk_rateio_multiplo').checked = data.rateio_multiplo;
+            listaRateiosMultiplos = data.rateios || [];
+            atualizarTabelaRateios();
+            alternarModoRateio();
+
+            document.getElementById('form-title-mode').innerText = "Editando Título #" + data.id;
+            const badge = document.getElementById('badge-status-form'); badge.innerText = data.status;
+            if (data.status === 'PAGO') { badge.style.background = '#27ae6020'; badge.style.color = '#27ae60'; }
+            else { badge.style.background = '#e67e2220'; badge.style.color = '#e67e22'; }
+
+            alternarAbaForm('principal');
+            document.getElementById('form-lancamento-financeiro').scrollIntoView({ behavior: 'smooth' });
+            arioneToast('Modo de edição ativado', 'info');
+        }
+
+        function salvarConta() {
+            const form = document.getElementById('form-lancamento-financeiro');
+            const pessoa = document.getElementById('cnt_pessoa_busca').value.trim();
+            const desc = document.getElementById('cnt_descricao').value.trim();
+            
+            if (!pessoa || !desc) { arioneToast('⚠️ Cliente/Fornecedor e Descrição são obrigatórios', 'warning'); return; }
+
+            // 🛡️ VALIDAÇÃO OBRIGATÓRIA DE CLASSIFICAÇÃO & RATEIO
+            const isMultiplo = document.getElementById('chk_rateio_multiplo').checked;
+            const valorTituloStr = document.getElementById('cnt_valor').value;
+            let valTitulo = parseFloat(valorTituloStr.replace(/\./g, '').replace(',', '.'));
+            if (isNaN(valTitulo) || valTitulo <= 0) { arioneToast('Informe um valor de título maior que zero.', 'warning'); return; }
+
+            if (!isMultiplo) {
+                const pc_id = document.getElementById('cnt_plano_contas_id').value;
+                const cc_id = document.getElementById('cnt_centro_custo_id').value;
+                if (!pc_id || !cc_id) {
+                    arioneToast('⚠️ Classificar o Rateio! Selecione Plano de Contas e Centro de Custo válidos da lista.', 'warning');
+                    alternarAbaForm('rateio');
+                    return;
+                }
+            } else {
+                const totalRateado = listaRateiosMultiplos.reduce((acc, r) => acc + r.valor, 0);
+                if (listaRateiosMultiplos.length === 0 || Math.abs(valTitulo - totalRateado) > 0.01) {
+                    arioneToast(`⚠️ Classificar o Rateio! O total rateado (R$ ${totalRateado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}) deve ser igual ao valor do título (R$ ${valTitulo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}).`, 'warning');
+                    alternarAbaForm('rateio');
+                    return;
+                }
+            }
+
+            const data = new FormData(form);
+            data.set('descricao', `${pessoa} - ${desc}`);
+
+            fetch("{{ url_for('financeiro.salvar_conta') }}", { method: 'POST', body: data })
+            .then(res => res.json()).then(res => {
+                if (res.success) {
+                    arioneToast(res.message, 'success');
+                    abrirModalGerContas("{{ tipo }}");
+                } else { arioneToast('Erro: ' + res.error, 'danger'); }
+            });
+        }
+
+        function excluirConta(id) {
+            if (!confirm('Deseja excluir este título permanentemente?')) return;
+            fetch(`/financeiro/card/contas/excluir/${id}`, { method: 'POST' })
+            .then(res => res.json()).then(res => {
+                if (res.success) { arioneToast(res.message, 'success'); abrirModalGerContas("{{ tipo }}"); }
+                else { arioneToast('Erro: ' + res.error, 'danger'); }
+            });
+        }
+
+        function carregarContasBancariasLocalStorage() {
+            try {
+                // Tenta pegar da localStorage, senão usa um array vazio
+                const contasStr = localStorage.getItem('arione_contas_bancarias_cad');
+                let contas = [];
+                if (contasStr) {
+                    contas = JSON.parse(contasStr) || [];
+                } else {
+                    // Fallback para mock de teste caso localStorage esteja limpo
+                    contas = [
+                        { id: 1, cod: "001", banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", status: "ATIVO" },
+                        { id: 2, cod: "341", banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", status: "ATIVO" }
+                    ];
+                }
+                
+                const optgroup = document.getElementById('optgroup_bancos');
+                if (optgroup) {
+                    optgroup.innerHTML = '';
+                    const ativas = contas.filter(c => c.status === 'ATIVO');
+                    if (ativas.length > 0) {
+                        ativas.forEach(c => {
+                            optgroup.innerHTML += `<option value="banco_${c.id}" data-tipo="${c.tipo || 'CORRENTE'}" data-modalidade="${c.modalidade_banco || 'FISICO'}">${c.banco} (Ag: ${c.agencia} / Cc: ${c.conta})</option>`;
+                        });
+                    } else {
+                        optgroup.innerHTML = `<option value="" disabled>NENHUMA CONTA CADASTRADA</option>`;
+                    }
+                }
+            } catch (e) { console.error('Erro ao carregar contas do localStorage', e); }
+        }
+
+        function ajustarDestinoBaixa() {
+            const selectFP = document.getElementById('baixa_forma_pagamento');
+            const selectDestino = document.getElementById('baixa_conta_liquidacao');
+            const optgroupBancos = document.getElementById('optgroup_bancos');
+            const optgroupCaixas = document.getElementById('optgroup_caixas');
+            
+            if (!selectFP || !selectDestino || !optgroupBancos || !optgroupCaixas) return;
+            
+            const optionAtiva = selectFP.options[selectFP.selectedIndex];
+            const nomeFP = optionAtiva ? optionAtiva.text.toUpperCase() : '';
+            
+            // Debug
+            console.log('DEBUG ajustarDestinoBaixa:', { nomeFP });
+            
+            // Limpa seleção anterior
+            selectDestino.value = '';
+            
+            // Garante que ambos os optgroups estejam visíveis inicialmente
+            optgroupBancos.style.display = 'block';
+            optgroupCaixas.style.display = 'block';
+            
+            // Se não selecionou forma de pagamento, mostra tudo
+            if (!nomeFP || nomeFP === '-- SELECIONE --') {
+                document.getElementById('bloco_conta_liquidacao').style.display = 'block';
+                return;
+            }
+            
+            // Lógica baseada no nome da forma de pagamento
+            if (nomeFP.includes('DINHEIRO') || nomeFP.includes('ESPÉCIE') || nomeFP.includes('NUMERÁRIO')) {
+                // Dinheiro: mostra apenas Caixas Físicos
+                document.getElementById('bloco_conta_liquidacao').style.display = 'block';
+                optgroupBancos.style.display = 'none';
+                optgroupCaixas.style.display = 'block';
+                
+                // Seleciona o primeiro caixa disponível automaticamente
+                for (let i = 0; i < selectDestino.options.length; i++) {
+                    if (selectDestino.options[i].value.startsWith('caixa_')) {
+                        selectDestino.selectedIndex = i;
+                        break;
+                    }
+                }
+            } else if (nomeFP.includes('PIX') || nomeFP.includes('TRANSFERÊNCIA') || nomeFP.includes('TED') || nomeFP.includes('DOC') || nomeFP.includes('DEPÓSITO')) {
+                // PIX/Transferência: mostra apenas Contas Bancárias
+                document.getElementById('bloco_conta_liquidacao').style.display = 'block';
+                optgroupBancos.style.display = 'block';
+                optgroupCaixas.style.display = 'none';
+            } else if (nomeFP.includes('CARTÃO') || nomeFP.includes('DÉBITO') || nomeFP.includes('CRÉDITO')) {
+                // Cartão (Débito/Crédito): mostra apenas Contas Bancárias (onde o dinheiro vai cair)
+                document.getElementById('bloco_conta_liquidacao').style.display = 'block';
+                optgroupBancos.style.display = 'block';
+                optgroupCaixas.style.display = 'none';
+            } else if (nomeFP.includes('BOLETO') || nomeFP.includes('DUPLICATA')) {
+                // Boletos/Duplicatas: mostra apenas Contas Bancárias
+                document.getElementById('bloco_conta_liquidacao').style.display = 'block';
+                optgroupBancos.style.display = 'block';
+                optgroupCaixas.style.display = 'none';
+            } else if (nomeFP.includes('CHEQUE')) {
+                // Cheque: mostra apenas Contas Bancárias
+                document.getElementById('bloco_conta_liquidacao').style.display = 'block';
+                optgroupBancos.style.display = 'block';
+                optgroupCaixas.style.display = 'none';
+            } else {
+                // Outros: mostra ambas as opções
+                document.getElementById('bloco_conta_liquidacao').style.display = 'block';
+                optgroupBancos.style.display = 'block';
+                optgroupCaixas.style.display = 'block';
+            }
+        }
+
+        let valorTotalTitulo = 0;
+
+        function abrirModalBaixa(data) {
+            carregarContasBancariasLocalStorage();
+            document.getElementById('baixa_id').value = data.id;
+            document.getElementById('baixa_descricao_display').innerText = data.descricao + ' (R$ ' + arioneMaskMoney(data.valor * 100) + ')';
+            document.getElementById('baixa_valor').value = arioneMaskMoney(data.valor * 100);
+            
+            // Armazena o valor total do título para cálculo de saldo restante
+            valorTotalTitulo = data.valor;
+            
+            // Reseta o checkbox de baixa parcial
+            document.getElementById('chk_baixa_parcial').checked = false;
+            
+            // Atualiza o saldo restante
+            atualizarSaldoRestante();
+            
+            document.getElementById('modal-baixa-titulo').classList.add('ativo');
+            ajustarDestinoBaixa();
+        }
+
+        function alternarCampoValorParcial() {
+            const chkParcial = document.getElementById('chk_baixa_parcial');
+            const valorInput = document.getElementById('baixa_valor');
+            
+            if (chkParcial.checked) {
+                // Se marcou baixa parcial, limpa o valor para o usuário informar o valor parcial
+                valorInput.value = '0,00';
+                valorInput.focus();
+            } else {
+                // Se desmarcou, preenche com o valor total do título
+                valorInput.value = arioneMaskMoney(valorTotalTitulo * 100);
+            }
+            
+            atualizarSaldoRestante();
+        }
+
+        function atualizarSaldoRestante() {
+            const valorInput = document.getElementById('baixa_valor');
+            const chkParcial = document.getElementById('chk_baixa_parcial');
+            const saldoDisplay = document.getElementById('saldo-restante-display');
+            
+            let valorBaixa = parseFloat(valorInput.value.replace(/\./g, '').replace(',', '.'));
+            if (isNaN(valorBaixa)) valorBaixa = 0;
+            
+            if (chkParcial.checked) {
+                // Se é baixa parcial, mostra o saldo restante
+                const saldoRestante = valorTotalTitulo - valorBaixa;
+                saldoDisplay.innerText = 'R$ ' + saldoRestante.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                
+                if (saldoRestante < 0) {
+                    saldoDisplay.style.color = '#ef4444';
+                } else if (saldoRestante > 0) {
+                    saldoDisplay.style.color = '#e67e22';
+                } else {
+                    saldoDisplay.style.color = '#27ae60';
+                }
+            } else {
+                // Se não é baixa parcial, mostra o valor total
+                saldoDisplay.innerText = 'R$ ' + valorTotalTitulo.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                saldoDisplay.style.color = '#64748b';
+            }
+        }
+
+        function fecharModalBaixa() { document.getElementById('modal-baixa-titulo').classList.remove('ativo'); }
+
+        function confirmarBaixaTitulo() {
+            const form = document.getElementById('form-baixa-titulo'); 
+            const data = new FormData(form);
+            
+            const chkParcial = document.getElementById('chk_baixa_parcial');
+            const valorInput = document.getElementById('baixa_valor');
+            
+            let valorBaixa = parseFloat(valorInput.value.replace(/\./g, '').replace(',', '.'));
+            if (isNaN(valorBaixa)) valorBaixa = 0;
+            
+            // Validação para baixa parcial
+            if (chkParcial.checked) {
+                if (valorBaixa <= 0) {
+                    if (typeof arioneToast === 'function') arioneToast('Informe um valor maior que zero para a baixa parcial.', 'warning');
+                    return;
+                }
+                if (valorBaixa >= valorTotalTitulo) {
+                    if (typeof arioneToast === 'function') arioneToast('Para baixa parcial, o valor deve ser menor que o valor total do título (R$ ' + valorTotalTitulo.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ').', 'warning');
+                    return;
+                }
+                data.append('baixa_parcial', '1');
+            } else {
+                // Se não é baixa parcial, o valor deve ser igual ao total
+                if (Math.abs(valorBaixa - valorTotalTitulo) > 0.01) {
+                    if (typeof arioneToast === 'function') arioneToast('Para baixa total, o valor deve ser igual ao valor total do título (R$ ' + valorTotalTitulo.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + '). Marque "Baixa Parcial?" para informar um valor diferente.', 'warning');
+                    return;
+                }
+            }
+            
+            const liquidacao = data.get('conta_liquidacao') || '';
+            if (liquidacao.startsWith('caixa_')) {
+                data.append('caixa_id', liquidacao.replace('caixa_', ''));
+            } else if (liquidacao.startsWith('banco_')) {
+                data.append('conta_bancaria_id', liquidacao.replace('banco_', ''));
+            }
+            
+            // Validar se precisa de conta de liquidação
+            const bloco = document.getElementById('bloco_conta_liquidacao');
+            if (bloco.style.display !== 'none' && !liquidacao) {
+                if (typeof arioneToast === 'function') arioneToast('Selecione uma Conta Bancária ou Caixa de destino!', 'warning');
+                return;
+            }
+
+            fetch(`/financeiro/card/contas/baixar/${document.getElementById('baixa_id').value}`, { method: 'POST', body: data })
+            .then(res => res.json()).then(res => {
+                if (res.success) { fecharModalBaixa(); arioneToast(res.message, 'success'); abrirModalGerContas("{{ tipo }}"); }
+                else { arioneToast('Erro: ' + res.error, 'danger'); }
+            });
+        }
+
+        function filtrarTabelaTitulos(termo) {
+            const t = termo.toLowerCase();
+            document.querySelectorAll('.linha-titulo-item').forEach(tr => {
+                const texto = tr.innerText.toLowerCase(); tr.style.display = texto.includes(t) ? '' : 'none';
+            });
+        }
+
+        function voltarParaGridContas() {
+            if (typeof fecharModalGlobal === 'function') fecharModalGlobal();
+            if (typeof fecharModalCnt === 'function') fecharModalCnt();
+            if (!window.location.search.includes('aba=contas')) { window.location.href = "{{ url_for('financeiro.abas', aba='contas') }}"; }
+        }
+    </script>
+
+    <style>
+        .arione-canvas-luxury { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .arione-table-hcm th { padding: 12px 10px; text-align: left; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+        .arione-table-hcm td { padding: 10px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+        .arione-table-hcm tr:hover { background: #fcfdfe; }
+        
+        .cnt-aba-btn { background: transparent; border: none; font-size: 12px; font-weight: 600; color: #64748b; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .cnt-aba-btn:hover { color: #334155; background: #f1f5f9; }
+        .cnt-aba-btn.ativo { color: {{ '#27AE60' if tipo == 'RECEITA' else '#C0392B' }}; background: {{ '#27AE6015' if tipo == 'RECEITA' else '#C0392B15' }}; font-weight: 600; }
+        
+        .op-input:focus { border-color: {{ '#27AE60' if input == 'RECEITA' else '#C0392B' }} !important; box-shadow: 0 0 0 4px {{ '#27AE6015' if tipo == 'RECEITA' else '#C0392B15' }}; background: #fff !important; }
+    </style>
+</div>
+{% endblock %}

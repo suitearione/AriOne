@@ -1,0 +1,433 @@
+{# =============================================================================
+   Caminho  : templates/sistema/cards/progressoDEV/form_progresso_dev.html
+   Função   : Dashboard de Progresso DEV (Materialização Fiel dos Grids).
+   Versão   : Restaurada para o Padrão Original do Usuário.
+============================================================================= #}
+
+<div class="fe-wrap" style="animation: fadeIn 0.4s ease-out; padding-top: 10px;">
+
+    <!-- ── SCOREBOARD ORIGINAL (RESTAURADO) ── -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+        <div class="dev-stat-card">
+            <span class="stat-label">CARDS EM GRIDS</span>
+            <span class="stat-value" style="font-size: 20px;">175</span>
+            <span class="stat-footer">MAPEAMENTO VISUAL REAL</span>
+        </div>
+        <div class="dev-stat-card" style="border-bottom: 3px solid #f39c12;">
+            <span class="stat-label">Iniciados</span>
+            <span class="stat-value" style="font-size: 20px; color:#f39c12;">77</span>
+            <span class="stat-footer">FORMS MATERIALIZADOS</span>
+        </div>
+        <div class="dev-stat-card" style="border-bottom: 3px solid #2ecc71;">
+            <span class="stat-label">Prontos</span>
+            <span class="stat-value" id="count-prontos" style="font-size: 20px; color:#2ecc71;">0</span>
+            <span class="stat-footer">VALOR AGREGADO</span>
+        </div>
+        <div class="dev-stat-card" style="border-bottom: 3px solid #e74c3c;">
+            <span class="stat-label">Delta ($\Delta$) Total</span>
+            <span class="stat-value" id="count-delta-total" style="font-size: 20px; color:#e74c3c;">176</span>
+            <span class="stat-footer">PONTOS DE MELHORIA</span>
+        </div>
+    </div>
+
+    <!-- ── CONTROL BAR ORIGINAL (RESTAURADA) ── -->
+    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 25px; background: #fff; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        
+        <!-- 0. SELETOR DE VISÃO -->
+        <div style="display: flex; gap: 5px; background: #f8fafc; padding: 4px; border-radius: 10px; border: 1.5px solid #edf2f7;">
+            <button type="button" class="view-btn active" onclick="switchDevView('table', this)">
+                <i class="fas fa-table" style="margin-right:5px;"></i> Tabela
+            </button>
+            <button type="button" class="view-btn" onclick="switchDevView('visual', this)">
+                <i class="fas fa-th-large" style="margin-right:5px;"></i> Visual
+            </button>
+        </div>
+
+        <!-- 1. SELETOR DE MÓDULOS -->
+        <div style="width: 180px;">
+            <label class="dev-stat-label" style="font-size: 8px; margin-bottom: 4px; display: block; color: #94a3b8; font-weight: 800;">FILTRAR MÓDULO</label>
+            <select id="matrixFilter" class="dev-select-input" onchange="filterFinalMatrix()" style="width: 100%; height: 36px; font-size: 11px; font-weight: 700; border-radius: 8px; border: 1.5px solid #edf2f7; background: #f8fafc; color: #475569; outline: none; transition: 0.2s;">
+                <option value="">TODOS OS MÓDULOS</option>
+                <option value="CADASTROS">CADASTROS</option>
+                <option value="OPERAÇÕES">OPERAÇÕES</option>
+                <option value="FINANCEIRO">FINANCEIRO</option>
+                <option value="GESTÃO">GESTÃO</option>
+                <option value="FISCAL">FISCAL</option>
+                <option value="PATRIMÔNIO">PATRIMÔNIO</option>
+                <option value="DIGITAL">DIGITAL</option>
+                <option value="SISTEMA">SISTEMA</option>
+                <option value="IMPRIMIR">IMPRIMIR</option>
+            </select>
+        </div>
+
+        <!-- 2. CONTAINER DE BARRAS DE STATUS (CENTRAL) -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 10px; border-left: 1.5px solid #f1f5f9; border-right: 1.5px solid #f1f5f9;">
+            
+            <!-- Barra 1: Integridade -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 7.5px; font-weight: 900; color: #64748b; width: 110px; letter-spacing: 0.5px; text-transform: uppercase;">Integridade da Matriz</span>
+                <div style="flex: 1; height: 7px; background: #f1f5f9; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                    <div id="matrix-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
+                </div>
+                <span id="matrix-progress-percent" style="font-size: 10px; font-weight: 900; color: #2ecc71; width: 35px; text-align: right;">0%</span>
+            </div>
+
+            <!-- Barra 2: Débito -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 7.5px; font-weight: 900; color: #64748b; width: 110px; letter-spacing: 0.5px; text-transform: uppercase;">Débito Técnico / Pendências</span>
+                <div style="flex: 1; height: 7px; background: #f1f5f9; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);">
+                    <div id="matrix-debt-bar" style="width: 100%; height: 100%; background: linear-gradient(90deg, #e74c3c, #c0392b); transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
+                </div>
+                <span id="matrix-debt-percent" style="font-size: 10px; font-weight: 900; color: #e74c3c; width: 35px; text-align: right;">100%</span>
+            </div>
+        </div>
+
+        <!-- 3. BUSCA RÁPIDA -->
+        <div style="width: 220px; position: relative;">
+            <label class="dev-stat-label" style="font-size: 8px; margin-bottom: 4px; display: block; color: #94a3b8; font-weight: 800;">BUSCA RÁPIDA</label>
+            <i class="fas fa-search" style="position: absolute; left: 12px; bottom: 12px; color: #cbd5e1; font-size: 11px; z-index: 5;"></i>
+            <input type="text" id="matrixSearch" onkeyup="filterFinalMatrix()" placeholder="Pesquisar card..." 
+                   style="width: 100%; height: 36px; padding: 0 15px 0 32px; border: 1.5px solid #edf2f7; border-radius: 8px; font-size: 11px; font-weight: 600; background: #f8fafc; outline: none; transition: 0.2s;">
+        </div>
+
+        <!-- 4. ATALHO PROTOCOLO UI/UX -->
+        <div style="width: 150px;">
+            <label class="dev-stat-label" style="font-size: 8px; margin-bottom: 4px; display: block; color: #94a3b8; font-weight: 800;">GOVERNANÇA</label>
+            <button onclick="window.open('/sistema/visualizar-protocolo/PAA-UI', '_blank')" 
+                    style="width: 100%; height: 36px; background: linear-gradient(135deg, #7A255F 0%, #4a1539 100%); color: white; border: none; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(122, 37, 95, 0.2); transition: 0.3s;">
+                <i class="fas fa-book-open"></i>
+                PAA-UI v2.0
+            </button>
+        </div>
+    </div>
+
+    <!-- ── TABELA ORIGINAL (RESTAURADA) ── -->
+    <div id="view-table" class="view-content">
+        <div class="fe-card" style="border-radius: 12px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.05); overflow: hidden;">
+            <table class="fe-table-matrix">
+                <thead>
+                    <tr>
+                        <th style="padding-left:20px; text-align:left;">Hierarquia AriOne (Módulo > Produto > Card)</th>
+                        <th style="width: 100px; text-align: left;">CARDS</th>
+                        <th style="width: 130px; text-align: left; color: #f39c12;">Iniciado</th>
+                        <th style="width: 130px; text-align: left; color: #3498db;">À Iniciar</th>
+                        <th style="width: 100px; text-align: center; color: #2ecc71;">Pronto</th>
+                        <th style="width: 70px; text-align: left; color: #e74c3c;">$\Delta$</th>
+                    </tr>
+                </thead>
+                <tbody id="final-matrix-body">
+                    <!-- Dinâmico -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── VISÃO VISUAL (REPLICAÇÃO DE GRIDS) ── -->
+    <div id="view-visual" class="view-content" style="display: none;">
+        <div id="visual-matrix-root">
+            <!-- Renderizado via JS -->
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const matrizFiel = {};
+    {% for modulo, produtos in SISTEMA_MATRIZ.items() %}
+        {% for produto, cards in produtos.items() %}
+            matrizFiel["{{ modulo }} — {{ produto }}"] = {{ cards | tojson | safe }};
+        {% endfor %}
+    {% endfor %}
+
+    const totalCardsAll = Object.values(matrizFiel).reduce((acc, cards) => acc + (cards.length || 0), 0);
+
+    const coreList = Object.keys({{ SISTEMA_MATRIZ | tojson | safe }});
+
+    function getSafeId(str) { 
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_"); 
+    }
+
+    function togglePronto(id) {
+        const key = 'arione_dev_p2_' + id;
+        const val = localStorage.getItem(key) === 'true';
+        const newVal = !val;
+        localStorage.setItem(key, newVal);
+        
+        updateDynamicSums();
+        
+        // Atualiza visualmente na visão de cards se estiver aberta
+        const visualCard = document.querySelector(`.ge-card[data-dev-id="${id}"]`);
+        if (visualCard) {
+            visualCard.classList.toggle('is-pronto', newVal);
+            let badge = visualCard.querySelector('.ge-card-done-badge');
+            if (newVal && !badge) {
+                badge = document.createElement('div');
+                badge.className = 'ge-card-done-badge';
+                badge.innerHTML = '<i class="fas fa-award"></i>';
+                visualCard.appendChild(badge);
+            } else if (!newVal && badge) {
+                badge.remove();
+            }
+        }
+
+        // Persiste no servidor
+        fetch('/sistema/api/progresso-dev/toggle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id, pronto: newVal })
+        }).catch(e => console.warn('[AriOne] Erro ao salvar progresso:', e));
+    }
+
+    function updateDynamicSums() {
+        let tp = 0;
+        let realTotal = 0;
+
+        document.querySelectorAll('.manual-check').forEach(chk => {
+            const id = chk.getAttribute('data-id');
+            const isChecked = localStorage.getItem('arione_dev_p2_' + id) === 'true';
+            chk.checked = isChecked;
+            const row = chk.closest('tr');
+            if(isChecked) tp++;
+            realTotal++;
+            
+            row.style.background = isChecked ? 'rgba(46, 204, 113, 0.05)' : '';
+            const icon = row.querySelector('.check-indicator'); 
+            if(icon) icon.style.display = isChecked ? 'flex' : 'none';
+            
+            const dc = row.querySelector('.delta-cell');
+            if(dc) { 
+                dc.textContent = isChecked ? '0' : '1'; 
+                dc.style.color = isChecked ? '#2ecc71' : '#e74c3c'; 
+            }
+        });
+
+        document.getElementById('count-prontos').textContent = tp;
+        const dt = realTotal - tp;
+        const dScore = document.getElementById('count-delta-total'); 
+        if(dScore) {
+            dScore.textContent = dt;
+            dScore.style.color = dt === 0 ? '#2ecc71' : '#e74c3c';
+        }
+
+        const percent = Math.round((tp / realTotal) * 100) || 0;
+        document.getElementById('matrix-progress-percent').textContent = percent + '%';
+        document.getElementById('matrix-progress-bar').style.width = percent + '%';
+        document.getElementById('matrix-debt-percent').textContent = (100 - percent) + '%';
+        document.getElementById('matrix-debt-bar').style.width = (100 - percent) + '%';
+
+        // Atualiza somas de sub-linhas e linhas mestre
+        document.querySelectorAll('.sub-row').forEach(sr => {
+            const mid = sr.getAttribute('data-m-idx');
+            const nt = parseInt(sr.getAttribute('data-nc'));
+            const np = document.querySelectorAll('.tela-row.s-' + mid + ' .manual-check:checked').length;
+            document.getElementById('sum-sub-' + mid).textContent = np;
+            const dVal = nt - np;
+            const dCell = document.getElementById('delta-sub-' + mid);
+            dCell.textContent = dVal;
+            dCell.style.color = dVal === 0 ? '#2ecc71' : '#e74c3c';
+        });
+
+        document.querySelectorAll('.core-row').forEach(cr => {
+            const cid = cr.getAttribute('data-c-idx');
+            const nt = parseInt(cr.getAttribute('data-tc'));
+            const np = document.querySelectorAll('.sub-of-c-' + cid + ' .manual-check:checked').length;
+            document.getElementById('sum-core-' + cid).textContent = np;
+            const dVal = nt - np;
+            const dCell = document.getElementById('delta-core-' + cid);
+            dCell.textContent = dVal;
+            dCell.style.color = dVal === 0 ? '#2ecc71' : '#e74c3c';
+        });
+    }
+
+    function buildMatrix() {
+        const body = document.getElementById('final-matrix-body');
+        const visualRoot = document.getElementById('visual-matrix-root');
+        let tableHtml = ''; 
+        let visualHtml = '';
+        let cIdx = 0, mIdx = 0;
+
+        coreList.forEach(core => {
+            const subs = Object.entries(matrizFiel).filter(([k]) => k.startsWith(core + " —"));
+            let tc=0; subs.forEach(s => tc += (s[1].length || 0));
+            
+            // HTML TABELA
+            tableHtml += `<tr class="core-row" data-core="${core}" data-c-idx="${cIdx}" data-tc="${tc}" onclick="toggleM('${cIdx}')">
+                        <td style="padding:10px 20px; text-align:left;"><i class="fas fa-folder-open" style="color:var(--pri);margin-right:12px;"></i> <strong>${core}</strong></td>
+                        <td style="font-weight:800; background:rgba(0,0,0,0.03);">${tc} Cards</td> <td style="font-weight:800; color:#f39c12;">${tc}</td> <td style="font-weight:800; color:#3498db;">0</td>
+                        <td align="center" style="font-weight:800; color:#2ecc71;" id="sum-core-${cIdx}">0</td> <td align="left" style="font-weight:800; color:#e74c3c;" id="delta-core-${cIdx}">${tc}</td>
+                     </tr>`;
+
+            // HTML VISUAL (Wrapper do Módulo)
+            visualHtml += `<div class="ge-grid-wrapper module-group" data-core="${core}" style="margin-bottom:40px;">
+                            <div class="ge-section-title" style="background:rgba(122,37,95,0.05); padding:15px; border-radius:12px; margin-bottom:20px;">
+                                <i class="fas fa-layer-group" style="color:#7A255F;"></i>
+                                <span style="font-weight:900; color:#7A255F;">MÓDULO: ${core}</span>
+                            </div>`;
+
+            subs.forEach(sub => {
+                const sk = sub[0], screens = sub[1]; const nc = screens.length || 0;
+                const subTitle = sk.split(" — ")[1];
+                
+                // HTML TABELA (SUB)
+                tableHtml += `<tr class="sub-row c-${cIdx}" data-core="${core}" data-m-idx="${mIdx}" data-nc="${nc}" style="display:none;" onclick="toggleS('${mIdx}')">
+                            <td style="padding-left:45px; text-align:left; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-chevron-right" id="icon-m-${mIdx}" style="color:var(--pri);font-size:10px;margin-right:8px;"></i> 
+                                <strong>${subTitle}</strong> 
+                                <div class="check-indicator golden-seal-mini" style="display:none;" title="Módulo 100% Padronizado"><i class="fas fa-award"></i></div>
+                            </td>
+                            <td style="font-weight:800; color:var(--pri);">${nc} Cards</td> <td>${nc}</td> <td>0</td> <td align="center" id="sum-sub-${mIdx}">0</td> <td align="left" id="delta-sub-${mIdx}">${nc}</td>
+                         </tr>`;
+
+                // HTML VISUAL (Sub-módulo / Grid)
+                visualHtml += `<div class="submodule-group" data-core="${core}" style="margin-left:20px; margin-bottom:30px;">
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                                    <i class="fas fa-folder-open" style="color:#94a3b8; font-size:14px;"></i>
+                                    <span style="font-size:12px; font-weight:800; color:#475569; text-transform:uppercase;">${subTitle}</span>
+                                </div>
+                                <div class="ge-cards-container" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">`;
+
+                screens.forEach(tela => {
+                    const sId = getSafeId(sk + "_" + tela);
+                    const isPronto = localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+                    
+                    // HTML TABELA (TELA)
+                    tableHtml += `<tr class="tela-row s-${mIdx} sub-of-c-${cIdx}" data-core="${core}" style="display:none;">
+                                <td style="padding-left:75px; color:#64748b; font-size:11px; display: flex; align-items: center; gap: 8px;">
+                                    ${tela} <div class="check-indicator golden-seal-mini" style="display:none;"><i class="fas fa-award"></i></div>
+                                </td>
+                                <td align="left" style="font-weight:800; color:#94a3b8;">1</td>
+                                <td><div class="mbar"><div class="mbf" style="width:100%; background:#f39c12;"></div></div></td>
+                                <td><div class="mbar"><div class="mbf" style="width:0%; background:#3498db;"></div></div></td>
+                                <td align="center">
+                                    <label class="q-check-box">
+                                        <input type="checkbox" class="manual-check" data-id="${sId}" onclick="event.stopPropagation(); togglePronto('${sId}')">
+                                        <span class="q-mark"></span>
+                                    </label>
+                                </td>
+                                <td align="left" style="font-weight:800; color:#e74c3c;" class="delta-cell">1</td>
+                             </tr>`;
+
+                    // HTML VISUAL (CARD)
+                    visualHtml += `
+                        <div class="ge-card dev-card ${isPronto ? 'is-pronto' : ''}" 
+                             data-dev-id="${sId}" data-core="${core}"
+                             onclick="togglePronto('${sId}')" 
+                             style="--card-cor:#7A255F; --card-cor-bg:rgba(122,37,95,0.05); position:relative; cursor:pointer; height:90px; padding:15px;">
+                            <i class="fas fa-code ge-card-bg-icon" style="opacity:0.03; font-size:40px;"></i>
+                            <div class="ge-card-icon-wrap" style="width:30px; height:30px; margin-bottom:8px;">
+                                <i class="fas fa-file-code ge-card-icon" style="font-size:14px;"></i>
+                            </div>
+                            <span class="ge-card-label" style="font-size:11px; line-height:1.2;">${tela}</span>
+                            ${isPronto ? '<div class="ge-card-done-badge"><i class="fas fa-award"></i></div>' : ''}
+                        </div>`;
+                });
+                visualHtml += `</div></div>`; // Fecha container de cards e submodule-group
+                mIdx++;
+            });
+            visualHtml += `</div>`; // Fecha module-group
+            cIdx++;
+        });
+        
+        body.innerHTML = tableHtml;
+        visualRoot.innerHTML = visualHtml;
+        updateDynamicSums();
+    }
+
+    function switchDevView(v, btn) {
+        document.querySelectorAll('.view-content').forEach(x => x.style.display='none');
+        document.getElementById('view-'+v).style.display='block';
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active', 'btn-active'));
+        if(btn) btn.classList.add('active', 'btn-active');
+    }
+
+    function toggleM(idx) {
+        const els = document.querySelectorAll('.c-'+idx); const isOpen = els[0].style.display !== 'none';
+        els.forEach(e => e.style.display = isOpen ? 'none' : 'table-row');
+        if(isOpen) document.querySelectorAll('.sub-of-c-'+idx).forEach(e => e.style.display = 'none');
+    }
+
+    function toggleS(idx) {
+        const els = document.querySelectorAll('.s-'+idx); const isOpen = els[0].style.display !== 'none';
+        els.forEach(e => e.style.display = isOpen ? 'none' : 'table-row');
+        document.getElementById('icon-m-'+idx).style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+    }
+
+    function filterFinalMatrix() {
+        const search = document.getElementById('matrixSearch').value.toLowerCase();
+        const mod = document.getElementById('matrixFilter').value;
+        
+        // Filtra Tabela
+        const tableRows = document.querySelectorAll('#final-matrix-body tr');
+        tableRows.forEach(r => {
+            const hasS = r.innerText.toLowerCase().includes(search);
+            const hasM = mod === "" || r.getAttribute('data-core') === mod;
+            if(search.length > 0 || mod !== "") { r.style.display = (hasS && hasM) ? 'table-row' : 'none'; } 
+            else { if(r.classList.contains('core-row')) r.style.display = 'table-row'; else r.style.display = 'none'; }
+        });
+
+        // Filtra Grid Visual
+        document.querySelectorAll('.module-group').forEach(mg => {
+            const isMatch = mod === "" || mg.getAttribute('data-core') === mod;
+            mg.style.display = isMatch ? 'block' : 'none';
+            if (isMatch) {
+                mg.querySelectorAll('.ge-card').forEach(card => {
+                    const hasSearch = card.innerText.toLowerCase().includes(search);
+                    card.style.display = hasSearch ? 'flex' : 'none';
+                });
+            }
+        });
+    }
+    
+    document.addEventListener('DOMContentLoaded', buildMatrix);
+</script>
+
+<style>
+    @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+    .dev-stat-card { background: #fff; padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 2px; border: 1px solid #f1f5f9; text-align: left; }
+    .stat-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+    .stat-value { font-weight: 900; color: #1e293b; }
+    .stat-footer { font-size: 7px; font-weight: 700; opacity: 0.5; }
+    
+    .view-btn { 
+        background: #f1f5f9; border: none; padding: 8px 18px; border-radius: 8px; 
+        font-size: 10px; font-weight: 800; color: #64748b; cursor: pointer; transition: 0.3s; 
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .view-btn.active { background: #7A255F; color: #fff; box-shadow: 0 4px 12px rgba(122, 37, 95, 0.2); }
+    .view-btn:hover:not(.active) { background: #e2e8f0; }
+
+    .fe-table-matrix th { font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 12px; color: #64748b; background: #f8fafc; border-bottom: 2px solid #edf2f7; text-align: left; }
+    .fe-table-matrix td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-size: 11px; vertical-align: middle; text-align: left; transition: background 0.3s; }
+    
+    .mbar { width: 100%; height: 4px; background: #f1f5f9; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+    .mbf { height: 100%; transition: 0.5s; }
+    
+    .q-check-box { display: block; position: relative; width: 16px; height: 16px; cursor: pointer; margin: 0 auto; }
+    .q-check-box input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+    .q-mark { position: absolute; top: 0; left: 0; height: 16px; width: 16px; background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 4px; transition: 0.2s; }
+    .q-check-box input:checked ~ .q-mark { background: #2ecc71; border-color: #27ae60; }
+    .q-mark:after { content: ""; position: absolute; display: none; left: 4px; top: 1px; width: 4px; height: 8px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+    .q-check-box input:checked ~ .q-mark:after { display: block; }
+
+    .ge-card.dev-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1.5px solid transparent; }
+    .ge-card.dev-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    .ge-card.dev-card.is-pronto { background: rgba(46, 204, 113, 0.05) !important; border-color: #2ecc71 !important; }
+    
+    .ge-card-done-badge {
+        position: absolute; top: 8px; right: 8px;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #7A255F; width: 18px; height: 18px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 9px; box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        z-index: 10; border: 1.5px solid #fff;
+        animation: sealPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .golden-seal-mini {
+        width: 14px; height: 14px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        border: 1px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        color: #7A255F; font-size: 7px; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+
+    @keyframes sealPop { from { transform: scale(0) rotate(-45deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
+</style>

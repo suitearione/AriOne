@@ -1,0 +1,346 @@
+{# =============================================================================
+   Arquivo  : form_gestao_relatorios.html
+   Caminho  : templates/gestao/cards/form_gestao_relatorios.html
+   Função   : Gateway de Seleção Dinâmico de Gestão Executiva (Nível 2).
+   Lógica   : Adapta cards baseado no parâmetro 'modulo' [dashboard, marketing, pessoas].
+   Padrão   : DNA Cadastros (Quiet Luxury).
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-sub {
+            padding: 15px 25px;
+            /* Super Gradiente Cadastros: Mix Regional */
+            background: linear-gradient(90deg, #2C3E50 0%, #34495E 11%, #E67E22 22%, #F39C12 33%, #7A255F 44%, #8E44AD 55%, #16A085 66%, #27AE60 77%, #0072CE 88%, #2980B9 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 22px 30px;
+            background: #fff;
+            border: 1.5px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gateway-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: color-mix(in srgb, var(--c), white 97%);
+            border-color: var(--c);
+        }
+
+        .gateway-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--c-bg, rgba(0,0,0,0.04));
+            color: var(--c, #2C3E50);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .gateway-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .gateway-label { font-size: 18px; font-weight: 900; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; }
+        .gateway-desc { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+
+        /* Estilo Botão Voltar Glass */
+        .btn-voltar-glass {
+            background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn-voltar-glass:hover { background: rgba(255,255,255,0.3); transform: translateX(-3px); }
+
+        /* Debug Floating Module */
+        .debug-floating-card {
+            display:none; position:absolute; top:110px; left:50%; transform:translateX(-50%); width:320px; 
+            background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25); z-index:1000; 
+            border:2px solid #2C3E50; overflow:hidden; animation: slideInDebug 0.3s ease;
+        }
+        .debug-header { background:#2C3E50; color:#fff; padding:12px 15px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:space-between; }
+        .debug-body { padding:15px; }
+        .debug-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: #475569; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 4px; }
+        .debug-item:hover { background: rgba(44,62,80,0.08); color: #2C3E50; transform: translateX(5px); }
+        @keyframes slideInDebug { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    </style>
+
+    <div class="gateway-header-sub">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayGestao()"><i class="fas fa-arrow-left"></i></button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-chart-line" style="font-size: 1.4rem; color: #CE93D8;"></i>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div class="gateway-title" style="gap:0; color: #CE93D8;">
+                        Central de Relatórios: 
+                        {% if modulo == 'dashboard' %}Dashboard
+                        {% elif modulo == 'marketing' %}Marketing
+                        {% elif modulo == 'pessoas' %}Pessoal RH
+                        {% else %}Gestão
+                        {% endif %}
+                    </div>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;">
+                        <i class="fas fa-print" style="margin-right: 5px;"></i>
+                        {% if modulo == 'dashboard' %}Indicadores Estratégicos
+                        {% elif modulo == 'marketing' %}Canais & Campanhas
+                        {% elif modulo == 'pessoas' %}H.C.M. & Pessoas
+                        {% else %}Inteligência de Mercado & Capital Humano
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">CARDs</span>
+            <button type="button" onclick="toggleDebugGestao()" class="btn-voltar-glass" title="Auditoria de Integridade (Audit)"><i class="fas fa-microscope"></i></button>
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayGestao()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            {% if modulo == 'dashboard' %}
+                <!-- Orçamentos -->
+                <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarCardGestao('orcamentos_dash')">
+                    <div class="gateway-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Orçamentos</span>
+                        <span class="gateway-desc">Painel de Orçamentos de Vendas</span>
+                    </div>
+                </div>
+                <!-- Pedidos -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardGestao('pedidos_dash')">
+                    <div class="gateway-icon"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Pedidos</span>
+                        <span class="gateway-desc">Painel de Pedidos de Vendas</span>
+                    </div>
+                </div>
+                <!-- Lucros -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardGestao('lucros_dash')">
+                    <div class="gateway-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Lucros</span>
+                        <span class="gateway-desc">Painel de Margem e lucro</span>
+                    </div>
+                </div>
+                <!-- Clientes -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardGestao('clientes_dash')">
+                    <div class="gateway-icon"><i class="fas fa-users"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Clientes</span>
+                        <span class="gateway-desc">Painel de Base ativa de clientes</span>
+                    </div>
+                </div>
+                <!-- Produção -->
+                <div class="gateway-item" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarCardGestao('producao_dash')">
+                    <div class="gateway-icon"><i class="fas fa-industry"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Produção</span>
+                        <span class="gateway-desc">Painel de Status da produção</span>
+                    </div>
+                </div>
+                <!-- Prazos -->
+                <div class="gateway-item" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarCardGestao('prazos_dash')">
+                    <div class="gateway-icon"><i class="fas fa-clock"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Prazos</span>
+                        <span class="gateway-desc">Painel das Entregas e prazos</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'marketing' %}
+                <!-- Campanhas -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardGestao('campanhas')">
+                    <div class="gateway-icon"><i class="fas fa-bullhorn"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Campanhas</span>
+                        <span class="gateway-desc">Campanhas ativas</span>
+                    </div>
+                </div>
+                <!-- Leads -->
+                <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarCardGestao('leads')">
+                    <div class="gateway-icon"><i class="fas fa-funnel-dollar"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Leads</span>
+                        <span class="gateway-desc">Captação de leads</span>
+                    </div>
+                </div>
+                <!-- Mídias -->
+                <div class="gateway-item" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarCardGestao('midias')">
+                    <div class="gateway-icon"><i class="fas fa-photo-video"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Mídias</span>
+                        <span class="gateway-desc">Canais e mídias</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'pessoas' %}
+                <!-- Recrutamento -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardGestao('recrutamento')">
+                    <div class="gateway-icon"><i class="fas fa-user-plus"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Recrutamento</span>
+                        <span class="gateway-desc">Pipeline de Talentos</span>
+                    </div>
+                </div>
+                <!-- Documentação -->
+                <div class="gateway-item" style="--c:#16A085; --c-bg:rgba(22,160,133,0.08);" onclick="navegarCardGestao('documentacao')">
+                    <div class="gateway-icon"><i class="fas fa-folder-open"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Documentação</span>
+                        <span class="gateway-desc">Dossiê e eSocial</span>
+                    </div>
+                </div>
+                <!-- Registro Legal -->
+                <div class="gateway-item" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarCardGestao('registro')">
+                    <div class="gateway-icon"><i class="fas fa-file-contract"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Registro Legal</span>
+                        <span class="gateway-desc">Compliance e Contratos</span>
+                    </div>
+                </div>
+                <!-- Treinamento -->
+                <div class="gateway-item" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarCardGestao('treinamento')">
+                    <div class="gateway-icon"><i class="fas fa-brain"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Treinamento</span>
+                        <span class="gateway-desc">Skills e Matriz</span>
+                    </div>
+                </div>
+                <!-- Pontos -->
+                <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarCardGestao('pontos')">
+                    <div class="gateway-icon"><i class="fas fa-clock"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Pontos</span>
+                        <span class="gateway-desc">Jornada e Frequência</span>
+                    </div>
+                </div>
+                <!-- Financeiro -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardGestao('folha')">
+                    <div class="gateway-icon"><i class="fas fa-coins"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Financeiro</span>
+                        <span class="gateway-desc">Folha de Pagamentos</span>
+                    </div>
+                </div>
+                <!-- Indicadores -->
+                <div class="gateway-item" style="--c:#F39C12; --c-bg:rgba(243,156,18,0.08);" onclick="navegarCardGestao('indicadores')">
+                    <div class="gateway-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Indicadores</span>
+                        <span class="gateway-desc">Dashboards e BI</span>
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- PAINEL DEBUG GESTÃO -->
+    <div id="debug-gestao-card" class="debug-floating-card">
+        <div class="debug-header">
+            <span><i class="fas fa-microscope" style="margin-right:8px;"></i> AUDITORIA DE INTEGRIDADE (AUDIT) - {{ modulo|upper }}</span>
+            <i class="fas fa-times" onclick="toggleDebugGestao()" style="cursor:pointer; opacity:0.8;"></i>
+        </div>
+        <div class="debug-body">
+            <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">Checklist Executivo</div>
+            <div id="debug-list-gestao"></div>
+            <div style="margin: 10px 0; border-top: 1.5px dashed #e2e8f0;"></div>
+            <div class="debug-item" onclick="toggleDebugGestao()" style="color:#7A255F; background:rgba(122,37,95,0.05);">
+                <i class="fas fa-times-circle"></i> <span style="font-weight:800;">Fechar Validação</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function navegarCardGestao(tipo) {
+    console.log("Navegando para ferramenta de gestão:", tipo);
+    alert("O painel executivo para " + tipo.toUpperCase() + " está sendo processado.");
+}
+
+function voltarParaGatewayGestao() {
+    const url = "{{ url_for('gestao.gateway_modulos_gestao') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        
+        // Loader Padrão Ouro
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; gap:20px; color:#2C3E50;">
+                <i class="fas fa-spinner fa-spin" style="font-size:40px;"></i>
+                <span style="font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Carregando Inteligência...</span>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+    }
+}
+
+function toggleDebugGestao() {
+    const card = document.getElementById('debug-gestao-card');
+    if (card) {
+        const isOpen = card.style.display === 'block';
+        card.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+            const items = document.querySelectorAll('.gateway-item');
+            const list = document.getElementById('debug-list-gestao');
+            list.innerHTML = '';
+            items.forEach((item, idx) => {
+                const label = item.querySelector('.gateway-label').textContent.trim();
+                const icon = item.querySelector('.gateway-icon i').className;
+                list.innerHTML += `<div class="debug-item" onclick="alert('Teste Técnico: ${label}')"><i class="${icon}"></i> <span>${idx + 1}. ${label}</span></div>`;
+            });
+        }
+    }
+}
+</script>

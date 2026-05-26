@@ -1,0 +1,1518 @@
+rquivo .md é so para instruções. 
+{% macro cabecalho_modulo_arione(titulo, subtitulo, icone='fa-cog', cor_tema='#fff', onclick_relatorio='', blueprint='')
+%}
+<div class="fe-header"
+    style="background: linear-gradient(90deg, #7A255F 0%, #a63282 50%, #7A255F 100%); margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: {{ cor_tema }}; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+        <div
+            style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: {{ cor_tema }}; border: 1px solid rgba(255,255,255,0.05);">
+            <i class="fas {{ icone }}"></i>
+        </div>
+        <div>
+            <h2
+                style="margin: 0; font-size: 16px; font-weight: 800; font-family: 'Montserrat', sans-serif; letter-spacing: 0.8px; text-transform: uppercase; line-height: 1; color: {{ cor_tema }};">
+                {{ titulo }}</h2>
+            <div
+                style="font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.6; margin-top: 3px; color: #fff;">
+                {{ subtitulo }}</div>
+        </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        {% if onclick_relatorio %}
+        <button type="button" onclick="{{ onclick_relatorio }}"
+            style="background: transparent; color: {{ cor_tema }}; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: 700; font-size: 9.5px; display: flex; align-items: center; gap: 6px; border: none; transition: all 0.3s ease; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;"
+            onmouseover="this.style.opacity='1'; this.style.background='rgba(0,0,0,0.1)';"
+            onmouseout="this.style.opacity='0.8'; this.style.background='transparent';">
+            Central de Relatórios <i class="fas {{ icone }}" style="font-size: 8px;"></i>
+        </button>
+        {% endif %}
+        <a href="{{ url_for('gestao.dashboard') }}"
+            style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; cursor: pointer; text-decoration: none;"
+            onmouseover="this.style.background='rgba(0,0,0,0.25)';"
+            onmouseout="this.style.background='rgba(0,0,0,0.15)';" title="Voltar ao Dashboard">
+            <img src="/static/img/dashboard/dashboard.png"
+                style="height: 20px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+        </a>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro cabecalho_mestre_arione(titulo, subtitulo, icone='fa-cog', form_id='', onclick_save='', onclick_novo='',
+onclick_clonar='', onclick_search='', onclick_filter='', onclick_export='', onclick_import='', onclick_print='',
+onclick_email='', onclick_whatsapp='', onclick_list='', list_id='', rota_novo='', sub_key='', tela='',
+cor_tema='#7A255F', entidade='', func_fechar='', aba_retorno='', blueprint_retorno='cadastros', status='', ajuda='',
+tamanho='grande') %}
+{# ── CONTAINER STICKY EXTERNO (PAAv1 §12-B) ── #}
+<div class="fe-header-mestre-container"
+    style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding-top: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.03); transition: none !important;">
+
+    {% set largura_max = '100%' if tamanho == 'grande' else ('1000px' if tamanho == 'medio' else '700px') %}
+    {# 🏗️ WRAPPER DE LARGURA (ALINHAMENTO VERTICAL §12.2) 🏗️ #}
+    <div class="fe-header-wrapper-{{ tamanho }}"
+        style="max-width: {{ largura_max }}; margin: 0 auto; padding: 0 24px; transition: none !important;">
+
+        {# 💎 CORPO DO CABEÇALHO (PURPLE ARI-ONE GRADIENT PAAv1 §5-D) 💎 #}
+        <div class="fe-header-mestre" data-form-id="{{ form_id }}"
+            style="background: linear-gradient(90deg, #7A255F 0%, #a63282 50%, #7A255F 100%) !important; 
+                    border-radius: 12px 12px 0 0; box-shadow: 0 10px 30px rgba(0,0,0,0.12); 
+                    padding: 7px 25px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.08); border-bottom: none;">
+
+            {# LADO ESQUERDO: TÍTULO E NAVEGAÇÃO #}
+            <div style="display: flex; align-items: center; gap: 18px;">
+                <a href="{% if aba_retorno %}{% if aba_retorno.startswith('/') or '?' in aba_retorno %}{{ aba_retorno }}{% else %}/{{ blueprint_retorno }}/?aba={{ aba_retorno }}{% endif %}{% else %}javascript:window.history.back(){% endif %}"
+                    class="fe-btn-header-action"
+                    style="width: 32px; height: 32px; border-radius: 9px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);"
+                    title="Voltar">
+                    <i class="fas fa-chevron-left" style="color: #fff; font-size: 14px;"></i>
+                </a>
+                <div class="fe-header-icon"
+                    style="background: rgba(255, 255, 255, 0.12); width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.15);">
+                    <i class="fas {{ icone }}"
+                        style="color: #fff; font-size: 14px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></i>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <h1 class="fe-header-title"
+                            style="margin: 0; font-size: 15px; font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: 0.5px; text-shadow: 0 2px 6px rgba(0,0,0,0.25);">
+                            {{ titulo }}</h1>
+                        {% if status %}
+                        <span class="fp-header-status-pill"
+                            style="background: rgba(255,255,255,0.15); color: #fff; border: 1.5px solid rgba(255,255,255,0.2); box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 9px; padding: 3px 10px; border-radius: 20px; font-weight: 800; text-transform: uppercase;">{{
+                            status }}</span>
+                        {% endif %}
+                    </div>
+                    <div
+                        style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; opacity: 1; margin-top: 3px; color: #FFFFFF;">
+                        {{ subtitulo }}</div>
+                    {% if ajuda %}
+                    <div style="font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.7); margin-top: 4px; max-width: 400px; line-height: 1.3;">
+                        <i class="fas fa-info-circle" style="margin-right: 4px;"></i>{{ ajuda }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# LADO DIREITO: AÇÕES MESTRE #}
+            <div style="display: flex; align-items: center; gap: 8px;">
+
+                {# BLOCO 1: VISUALIZAÇÃO E BUSCA #}
+                <div
+                    style="display: flex; gap: 4px; background: rgba(0,0,0,0.1); padding: 4px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    {% if onclick_search %}
+                    <button type="button" onclick="{{ onclick_search|safe }}" class="fe-btn-header-action"
+                        title="Pesquisar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    {% endif %}
+                    {% if onclick_filter %}
+                    <button type="button" onclick="{{ onclick_filter|safe }}" class="fe-btn-header-action"
+                        title="Filtros">
+                        <i class="fas fa-sliders-h"></i>
+                    </button>
+                    {% endif %}
+                    {% if onclick_list %}
+                    <button type="button" onclick="{{ onclick_list|safe }}" class="fe-btn-header-action"
+                        title="Ver Lista">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    {% elif list_id %}
+                    <button type="button" onclick="arioneAlternarVisualizacao('{{ form_id }}', '{{ list_id }}')"
+                        class="fe-btn-header-action" title="Ver Lista">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    {% endif %}
+                    {% if onclick_clonar %}
+                    <button type="button" onclick="{{ onclick_clonar|safe }}" class="fe-btn-header-action"
+                        title="Clonar Registro">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    {% endif %}
+                </div>
+
+                {# BLOCO 2: INTEGRAÇÕES E EXPORTAÇÃO (DROPDOWN UNIVERSAL FIXO) #}
+                <div class="arione-header-dropdown" style="margin: 0 4px;">
+                    <button type="button" class="fe-btn-header-action" title="Mais Opções" onclick="arioneToggleDropdown(this)">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="arione-header-dropdown-content">
+                        <a href="javascript:void(0)"
+                            onclick="{{ onclick_export|default('if(typeof arioneToast === \'function\') arioneToast(\'📦 Exportação em desenvolvimento para este módulo.\', \'info\')', true)|safe }}"
+                            class="arione-header-dropdown-item">
+                            <i class="fas fa-file-export"></i> Exportar Dados
+                        </a>
+                        <a href="javascript:void(0)"
+                            onclick="{{ onclick_import|default('if(typeof arioneToast === \'function\') arioneToast(\'📥 Importação em desenvolvimento para este módulo.\', \'info\')', true)|safe }}"
+                            class="arione-header-dropdown-item">
+                            <i class="fas fa-file-import"></i> Importar Dados
+                        </a>
+                        <a href="javascript:void(0)" onclick="{{ onclick_print|default('window.print()', true)|safe }}"
+                            class="arione-header-dropdown-item">
+                            <i class="fas fa-print"></i> Imprimir / Gerar PDF
+                        </a>
+                        <a href="javascript:void(0)"
+                            onclick="{{ onclick_email|default('if(typeof arioneToast === \'function\') arioneToast(\'📧 Integração de E-mail em desenvolvimento.\', \'info\')', true)|safe }}"
+                            class="arione-header-dropdown-item">
+                            <i class="fas fa-envelope"></i> Enviar por E-mail
+                        </a>
+                        <a href="javascript:void(0)"
+                            onclick="{{ onclick_whatsapp|default('if(typeof arioneToast === \'function\') arioneToast(\'💬 Integração de WhatsApp em desenvolvimento.\', \'info\')', true)|safe }}"
+                            class="arione-header-dropdown-item">
+                            <i class="fab fa-whatsapp" style="color: #25D366;"></i> Enviar por WhatsApp
+                        </a>
+                    </div>
+                </div>
+
+                {# BLOCO 3: AÇÕES PRINCIPAIS E CONFIRMAÇÃO #}
+                {% if onclick_novo %}
+                <button type="button" onclick="{{ onclick_novo|safe }}" class="fe-btn-header-action fe-btn-highlight"
+                    style="width: 34px; height: 34px; font-weight: bold; border-radius: 8px;" title="Novo Registro">
+                    <i class="fas fa-plus"></i>
+                </button>
+                {% endif %}
+                {% if onclick_save %}
+                <button type="button" id="btn-salvar-{{ entidade if entidade else form_id.replace('form-', '') }}"
+                    onclick="{{ onclick_save|safe }}" class="fe-btn-header-action fe-btn-highlight fe-btn-invalid"
+                    style="width: 34px; height: 34px; font-weight: bold; border-radius: 8px;" title="Salvar Registro">
+                    <i class="fas fa-save" style="font-size: 14px;"></i>
+                </button>
+                {% endif %}
+                {% if func_fechar %}
+                <button type="button" onclick="{{ func_fechar|safe }}" class="fe-btn-header-action"
+                    style="background: rgba(0,0,0,0.2) !important; color: #fff; margin-left: 5px;" title="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        {# 🌈 ACCENT BAR (MODULE IDENTIFICATION §12-B) 🌈 #}
+        <div class="fe-header-accent-bar"
+            style="height: 4px; width: 100%; background: {{ cor_tema }}; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* 🛡️ REGRAS GLOBAIS DE BLINDAGEM CABEÇALHO MESTRE §12-B */
+    .fe-header-mestre .fe-btn-header-action {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .fe-header-mestre .fe-btn-header-action:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+    }
+
+    .fe-header-mestre .fe-btn-highlight:hover {
+        background: #fdf2f8 !important;
+    }
+
+    /* ⚙️ DROPDOWN DE AÇÕES AUXILIARES */
+    .fe-header-mestre,
+    .fe-header-mestre-container,
+    .fe-header-wrapper-grande,
+    .fe-header-wrapper-medio,
+    .fe-header-wrapper-pequeno {
+        overflow: visible !important;
+    }
+
+    .arione-header-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .arione-header-dropdown-content {
+        display: none;
+        position: fixed;
+        background: #fff;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+        border-radius: 10px;
+        min-width: 210px;
+        z-index: 99999;
+        padding: 8px 0;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        animation: ariDropIn 0.15s ease-out;
+    }
+
+    .arione-header-dropdown-content.open {
+        display: block;
+    }
+
+    @keyframes ariDropIn {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .arione-header-dropdown-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        color: #475569;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+
+    .arione-header-dropdown-item i {
+        width: 24px;
+        color: #94a3b8;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .arione-header-dropdown-item:hover {
+        background: #fdf2f8;
+        color: #7A255F;
+    }
+
+    .arione-header-dropdown-item:hover i {
+        color: #7A255F;
+    }
+</style>
+
+<style>
+    .fe-btn-mini-header {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .fe-btn-mini-header:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+    }
+
+    .fe-drop-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        color: #334155;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .fe-drop-item:hover {
+        background: #f8fafc;
+
+        color: {
+                {
+                cor_tema
+            }
+        }
+
+        ;
+    }
+
+    .fe-drop-item i {
+        width: 16px;
+        text-align: center;
+        font-size: 13px;
+        opacity: 0.7;
+    }
+
+    /* ── ESTILOS REVISADOS DO CABEÇALHO (PADRÃO OURO) ── */
+    .fe-header-mestre .fe-btn-header-action {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .fe-header-mestre .fe-btn-header-action i {
+        pointer-events: none;
+    }
+
+    .fe-header-mestre .fe-btn-header-action:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .fe-header-mestre .fe-btn-highlight {
+        background: #fff !important;
+
+        color: {
+                {
+                cor_tema
+            }
+        }
+
+        !important;
+        border: none !important;
+        font-weight: 800;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .fe-header-mestre .fe-btn-highlight:hover {
+        background: #f8f9fa !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .fe-header-mestre .fe-btn-close-mestre {
+        background: rgba(0, 0, 0, 0.15) !important;
+        margin-left: 4px;
+    }
+
+    .fe-header-mestre .fe-action-group-glass {
+        display: flex;
+        gap: 4px;
+        background: rgba(0, 0, 0, 0.1);
+        padding: 3px;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+    }
+
+
+    /* ── STATUS PILL ── */
+    .fp-header-status-pill {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: 0.3s;
+    }
+
+    .fp-header-status-pill.status-hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .fp-header-status-pill i {
+        font-size: 12px;
+    }
+
+    /* ── DROPDOWN REVISADO ── */
+    .fe-dropdown-menu-arione {
+        position: absolute;
+        right: 0;
+        top: 110%;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 2000;
+        min-width: 220px;
+        padding: 8px 0;
+        border: 1px solid #edf2f7;
+        animation: feDropdownOpen 0.2s ease-out;
+    }
+
+    @keyframes feDropdownOpen {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fe-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 18px;
+        color: #4a5568;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .fe-dropdown-item:hover {
+        background: #f7fafc;
+
+        color: {
+                {
+                cor_tema
+            }
+        }
+
+        ;
+        padding-left: 22px;
+    }
+
+    .fe-dropdown-item i {
+        width: 16px;
+        text-align: center;
+        font-size: 14px;
+        opacity: 0.7;
+    }
+
+    .fe-dropdown-divider {
+        height: 1px;
+        background: #edf2f7;
+        margin: 6px 0;
+    }
+</style>
+
+<script>
+    /**
+     * ARI-ONE UI: Sincroniza o estado visual do botão de salvar com a validade do formulário.
+     * @param {string} formId - ID do formulário a monitorar
+     * @param {string} btnId - ID do botão de salvar
+     */
+    function arioneSyncSaveButton(formId, btnId) {
+        const form = document.getElementById(formId);
+        const btn = document.getElementById(btnId);
+        if (!form || !btn) return;
+
+        const check = () => {
+            if (form.checkValidity()) {
+                btn.classList.remove('fe-btn-invalid');
+            } else {
+                btn.classList.add('fe-btn-invalid');
+            }
+        };
+
+        form.addEventListener('input', check);
+        setTimeout(check, 500); // Check inicial
+    }
+
+    /**
+     * ARI-ONE: Validação de funções do cabeçalho mestre
+     * Avisa no console quando funções não existem, prevenindo erros silenciosos
+     */
+    function arioneValidateHeaderFunctions() {
+        const headerButtons = document.querySelectorAll('.fe-btn-header-action[onclick]');
+        headerButtons.forEach(btn => {
+            const onclick = btn.getAttribute('onclick');
+            if (!onclick) return;
+
+            // Extrai o nome da função (primeira palavra antes do parêntese)
+            const funcMatch = onclick.match(/(\w+)\s*\(/);
+            if (funcMatch) {
+                const funcName = funcMatch[1];
+                if (typeof window[funcName] !== 'function') {
+                    console.warn(`⚠️ AriOne: Função "${funcName}" não existe no escopo global. Botão "${btn.title}" pode não funcionar.`);
+                }
+            }
+        });
+    }
+
+    /**
+     * ARI-ONE: Lógica de Reset de Formulário Inteligente
+     * Limpa todos os campos, preservando tokens e configurações base.
+     */
+    function arioneAlternarVisualizacao(formId, listId) {
+        console.log("🔄 AriOne: Alternando visualização...");
+        const form = document.getElementById(formId);
+        const list = document.getElementById(listId);
+
+        if (!form && !list) {
+            arioneToast("Nenhum container localizado", "warning");
+            return;
+        }
+
+        if (form && list) {
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                list.style.display = 'none';
+                arioneToast("Visualizando Formulário", "info");
+            } else {
+                form.style.display = 'none';
+                list.style.display = 'block';
+                arioneToast("Visualizando Lista de Registros", "info");
+            }
+        } else if (form) {
+            // Se só tem form e o usuário clicou em "Ver Lista", não podemos sumir com tudo!
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+            } else {
+                arioneToast("Este módulo não possui listagem integrada.", "info");
+            }
+        } else if (list) {
+            list.style.display = list.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    /**
+     * ARI-ONE: Toggle de Filtros Padronizado
+     * Controla a exibição da barra de filtros e dá feedback visual no botão.
+     */
+    function arioneToggleFilter(filterBarId, btn) {
+        const bar = document.getElementById(filterBarId);
+        if (!bar) {
+            console.error("❌ AriOne: Barra de filtros não encontrada:", filterBarId);
+            return;
+        }
+
+        const isHidden = bar.style.display === 'none' || !bar.style.display;
+
+        if (isHidden) {
+            bar.style.display = 'block';
+            bar.style.animation = 'feFadeDown 0.3s ease-out';
+            if (btn) {
+                btn.classList.add('filter-active');
+                btn.style.background = 'rgba(255,255,255,0.25)';
+            }
+            // Foca no primeiro input do filtro
+            const firstInput = bar.querySelector('input, select');
+            if (firstInput) setTimeout(() => firstInput.focus(), 300);
+        } else {
+            bar.style.display = 'none';
+            if (btn) {
+                btn.classList.remove('filter-active');
+                btn.style.background = 'transparent';
+            }
+        }
+    }
+
+    // =============================================================================
+    // 🛡️ ARI-ONE UI ENGINE (PAAv1 §4)
+    // =============================================================================
+
+    /**
+     * Alterna a visibilidade de um painel de filtros com feedback visual no botão
+     * @param {string} filterId - ID do elemento container dos filtros
+     * @param {HTMLElement} btn - Referência ao botão que disparou a ação
+     */
+    function arioneToggleFilter(filterId, btn) {
+        const filterPanel = document.getElementById(filterId);
+        if (!filterPanel) {
+            console.warn(`⚠️ AriOne: Painel de filtro '${filterId}' não localizado.`);
+            return;
+        }
+
+        const isVisible = filterPanel.style.display !== 'none';
+
+        if (isVisible) {
+            filterPanel.style.display = 'none';
+            if (btn) btn.style.background = 'transparent';
+        } else {
+            filterPanel.style.display = 'block';
+            if (btn) btn.style.background = 'rgba(255,255,255,0.25)';
+
+            // Foca no primeiro input do filtro se existir
+            const firstInput = filterPanel.querySelector('input, select');
+            if (firstInput) setTimeout(() => firstInput.focus(), 100);
+        }
+    }
+
+    /**
+     * Alterna entre visualização de Formulário e Lista (Grid)
+     * @param {string} formId - ID do container do formulário
+     * @param {string} listId - ID do container da lista/grid
+     */
+    function arioneAlternarVisualizacao(formId, listId) {
+        const form = document.getElementById(formId);
+        const list = document.getElementById(listId);
+
+        if (!form || !list) {
+            console.warn("⚠️ AriOne: Containers de visualização não localizados.", { formId, listId });
+            return;
+        }
+
+        const isFormVisible = form.style.display !== 'none';
+
+        if (isFormVisible) {
+            // Mudar para LISTA
+            form.style.display = 'none';
+            list.style.display = 'block';
+            if (window.arioneToast) arioneToast("Visualizando Lista de Registros", "info");
+
+            // Foca na busca se existir
+            const searchInput = document.getElementById('cc-search-input') || document.querySelector('.fe-search-master');
+            if (searchInput) setTimeout(() => searchInput.focus(), 50);
+        } else {
+            // Mudar para FORMULÁRIO
+            list.style.display = 'none';
+            form.style.display = 'block';
+            if (window.arioneToast) arioneToast("Visualizando Formulário de Edição", "info");
+
+            // Foca no primeiro campo útil
+            const firstInput = form.querySelector('input:not([readonly]):not([type="hidden"])');
+            if (firstInput) setTimeout(() => firstInput.focus(), 100);
+        }
+    }
+
+    function arioneResetForm(formId) {
+        console.log("♻️ AriOne: Resetando formulário...");
+        const form = document.getElementById(formId) || document.querySelector('form');
+        if (!form) return;
+
+        // 1. Limpa inputs de texto, número, data, etc.
+        form.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(el => {
+            if (el.tagName === 'SELECT') el.selectedIndex = 0;
+            else el.value = '';
+
+            // Remove classes de erro/validação
+            el.style.borderColor = '';
+            el.style.backgroundColor = '';
+        });
+
+        // 2. Trata campos ocultos específicos (IDs)
+        form.querySelectorAll('input[type="hidden"]').forEach(el => {
+            // Não limpa o CSRF token ou campos de configuração global se existirem
+            if (!el.name.includes('csrf') && !el.name.includes('grupo_config')) {
+                el.value = '';
+            }
+        });
+
+        // 3. Limpeza forçada de campos de número de documento para engatilhar auto-numeração
+        const numInput = form.querySelector('input[name="numero"]') || form.querySelector('#doc_numero');
+        if (numInput) {
+            numInput.value = '';
+        }
+
+        // 4. Reseta badges e contadores se houver
+        document.querySelectorAll('.fe-badge-status').forEach(b => b.innerHTML = 'NOVO');
+
+        // 5. Re-inicializa parâmetros e datas se a função existir no template
+        if (typeof carregarParametrosVendas === 'function') {
+            console.log("⚡ AriOne: Re-inicializando parâmetros de vendas...");
+            carregarParametrosVendas();
+        } else if (typeof arioneInitForm === 'function') {
+            console.log("⚡ AriOne: Re-inicializando parâmetros globais...");
+            arioneInitForm();
+        } else {
+            if (form.id.includes('orcamento') || form.id.includes('pedido')) {
+                fetch('/cadastros/parametros/get?grupo=vendas')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (numInput && !numInput.value) {
+                            const isOrc = form.id.includes('orcamento');
+                            const ultKey = isOrc ? 'ult_orcamento' : 'ult_pedido';
+                            const prefKey = isOrc ? 'pref_orc' : 'pref_ped';
+                            const usarKey = isOrc ? 'usar_sequencia_automatica_orc' : 'usar_sequencia_automatica_ped';
+                            
+                            const usarAuto = data[usarKey] !== '0';
+                            if (usarAuto && data[ultKey]) {
+                                const inc = parseInt(data.incremento) || 1;
+                                let pref = data[prefKey] || (isOrc ? 'ORV-' : 'PV-');
+                                const reiniciarAnual = data.reiniciar_anual === '1';
+                                if (reiniciarAnual) {
+                                    const ano = new Date().getFullYear().toString();
+                                    if (!pref.includes(ano)) {
+                                        pref = pref.replace(/-$/, '') + '-' + ano + '-';
+                                    }
+                                }
+                                const proxNum = (parseInt(data[ultKey]) || (isOrc ? 5348 : 8210)) + inc;
+                                numInput.value = pref + proxNum;
+                            }
+                        }
+                    }).catch(e => console.error(e));
+            }
+        }
+
+        // 6. Coloca o foco no primeiro campo útil
+        const firstInput = form.querySelector('input:not([readonly]):not([type="hidden"])');
+        if (firstInput) firstInput.focus();
+
+        if (typeof arioneToast === 'function') arioneToast("Formulário pronto para novo registro", "info");
+
+        // Chama cálculo de totais se a função existir (para vendas/compras)
+        if (typeof calcularTotaisOrcamento === 'function') calcularTotaisOrcamento();
+        if (typeof calcularTotaisPedido === 'function') calcularTotaisPedido();
+    }
+
+    /**
+     * ARI-ONE: Envio genérico de e-mail com dados da tela atual
+     */
+    function arioneEnviarEmailGenerico(modulo) {
+        const destinatario = prompt('Para qual e-mail deseja enviar os dados de ' + modulo + '?', '');
+        if (!destinatario || !destinatario.includes('@')) {
+            if (destinatario !== null && typeof arioneToast === 'function') arioneToast('E-mail inválido.', 'warning');
+            return;
+        }
+        const subject = encodeURIComponent('Dados AriOne: ' + modulo);
+        const corpo = encodeURIComponent('Segue em anexo os dados de ' + modulo + ' extraídos do sistema AriOne.\n\nEnviado via AriOne Operational Suite');
+        window.open('mailto:' + destinatario + '?subject=' + subject + '&body=' + corpo, '_blank');
+        if (typeof arioneToast === 'function') arioneToast('Abrindo e-mail para ' + destinatario + '...', 'success');
+    }
+
+    /**
+     * ARI-ONE: Envio genérico via WhatsApp com dados da tela atual
+     */
+    function arioneEnviarWhatsAppGenerico(modulo) {
+        const numero = prompt('Para qual número deseja enviar via WhatsApp? (com DDD)', '');
+        if (!numero) return;
+        let limpo = numero.replace(/\D/g, '');
+        if (limpo.length < 10) {
+            if (typeof arioneToast === 'function') arioneToast('Número inválido.', 'warning');
+            return;
+        }
+        if (limpo.length === 10 || limpo.length === 11) limpo = '55' + limpo;
+        const text = encodeURIComponent('Dados de ' + modulo + ' - AriOne Operational Suite');
+        window.open('https://api.whatsapp.com/send?phone=' + limpo + '&text=' + text, '_blank');
+        if (typeof arioneToast === 'function') arioneToast('Abrindo WhatsApp...', 'success');
+    }
+
+    /**
+     * ARI-ONE: Toggle dropdown com position:fixed (escapa de overflow:hidden)
+     */
+    function arioneToggleDropdown(btn) {
+        const dropdown = btn.nextElementSibling;
+        if (!dropdown) return;
+
+        // Fecha todos os outros dropdowns abertos
+        document.querySelectorAll('.arione-header-dropdown-content.open').forEach(d => {
+            if (d !== dropdown) d.classList.remove('open');
+        });
+
+        // Toggle este dropdown
+        const isOpen = dropdown.classList.contains('open');
+        if (isOpen) {
+            dropdown.classList.remove('open');
+            return;
+        }
+
+        // Calcula posição fixa baseado no botão
+        const rect = btn.getBoundingClientRect();
+        dropdown.style.top = (rect.bottom + 6) + 'px';
+        dropdown.style.left = 'auto';
+        dropdown.style.right = (window.innerWidth - rect.right) + 'px';
+        dropdown.classList.add('open');
+    }
+
+    // Fecha dropdown ao clicar fora ou em um item
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.arione-header-dropdown-item')) {
+            // Clicou em um item do menu — fecha após executar
+            setTimeout(() => {
+                document.querySelectorAll('.arione-header-dropdown-content.open').forEach(d => d.classList.remove('open'));
+            }, 100);
+        } else if (!e.target.closest('.arione-header-dropdown')) {
+            document.querySelectorAll('.arione-header-dropdown-content.open').forEach(d => d.classList.remove('open'));
+        }
+    });
+
+    function switchOpeTab(btn, tabId) {
+        const container = btn.closest('.fp-tabs-wrap');
+        container.querySelectorAll('.fp-tab').forEach(t => t.classList.remove('active'));
+        container.querySelectorAll('.fp-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active'); document.getElementById(tabId).classList.add('active');
+    }
+
+    function toggleExtraActions(btn) {
+        const menu = btn.nextElementSibling;
+        const isVisible = menu.style.display === 'block';
+        document.querySelectorAll('.fe-dropdown-menu-arione').forEach(m => m.style.display = 'none');
+        if (!isVisible) {
+            menu.style.display = 'block';
+            const closeMenu = (e) => {
+                if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                    document.removeEventListener('click', closeMenu);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', closeMenu), 10);
+        }
+    }
+
+    function clonarRegistroMaster() {
+        // 1. Localiza o formulário ativo (procura no documento e em iframes se necessário)
+        const form = document.querySelector('form') || document.getElementById('form-master');
+        if (!form) {
+            if (typeof arioneToast === 'function') arioneToast("Nenhum formulário encontrado para clonagem.", "warning");
+            return;
+        }
+
+        const idInput = form.querySelector('[name="id"]') || form.querySelector('#id');
+
+        if (!idInput || (idInput.value === 'new' || idInput.value === '0' || !idInput.value)) {
+            if (typeof arioneToast === 'function') arioneToast("Apenas registros salvos podem ser clonados.", "info");
+            return;
+        }
+
+        if (!confirm("🛡️ AriOne: Deseja clonar este registro para criar um novo item idêntico?")) return;
+
+        // 2. LÓGICA DE CLONAGEM ARIONE
+        // Zera o ID para forçar novo insert
+        if (idInput) idInput.value = 'new';
+
+        // 🛡️ Ajuste de Action (Caso o ID esteja na URL da Action)
+        let action = form.getAttribute('action');
+        if (action) {
+            // Remove IDs numéricos do final da URL (ex: /123 -> /)
+            const newAction = action.replace(/\/\d+$/, '');
+            if (newAction !== action) {
+                form.setAttribute('action', newAction);
+            }
+        }
+
+        // Limpa campos de unicidade para evitar erro de duplicidade
+        const skuInput = form.querySelector('[name="sku"]') || form.querySelector('[name="cod_interno"]') || form.querySelector('[name="referencia"]');
+        if (skuInput) {
+            skuInput.value = '';
+            skuInput.placeholder = "DIGITE NOVO CÓDIGO/SKU";
+            skuInput.style.border = "2px solid var(--pri)";
+            setTimeout(() => skuInput.focus(), 100);
+        }
+
+        // Limpa fotos (opcional, mas seguro)
+        const fotoInput = form.querySelector('input[type="file"]');
+        if (fotoInput) fotoInput.value = '';
+
+        // Feedback Visual
+        if (typeof arioneToast === 'function') {
+            arioneToast("✅ Modo Clonagem Ativado! Ajuste o SKU/Código e salve como novo.", "success");
+        } else {
+            alert("Modo Clonagem Ativado! O ID foi zerado. Ajuste o Código e salve como novo.");
+        }
+
+        // Fecha o menu de ações
+        document.querySelectorAll('.fe-dropdown-menu').forEach(m => m.style.display = 'none');
+    }
+
+
+
+    // ── LÓGICA GLOBAL DO SELO OURO (INTEGRIDADE) ──
+    function checkGoldenStandardGlobal(titulo, subKey, tela) {
+        if (!subKey || !tela) return;
+
+        const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+        const sId = getSafeId(subKey + "_" + tela);
+        const key = 'arione_dev_p2_' + sId;
+
+        const isPronto = localStorage.getItem(key) === 'true';
+
+        // Procura todos os selos padrão hardcoded na página (apenas para modais antigos se houver)
+        const existingSeals = document.querySelectorAll('.golden-seal');
+        if (existingSeals.length > 0) {
+            existingSeals.forEach(seal => {
+                seal.style.display = isPronto ? 'flex' : 'none';
+            });
+        }
+    }
+
+    // ── LÓGICA DE STATUS DINÂMICO (ARIONE GLOBAL) ──
+    window.syncHeaderStatus = function () {
+        const statusEl = document.querySelector('.fp-header-status');
+        if (!statusEl) return;
+
+        // Busca preferencialmente dentro do formulário vinculado
+        const form = document.getElementById('{{ form_id }}') || document.querySelector('form');
+        const idInput = form ? (form.querySelector('input[name="id"]') || form.querySelector('input[name="id_produto"]')) : document.querySelector('input[name="id"]');
+
+        const valorId = idInput ? idInput.value : '';
+
+        if (valorId && valorId !== 'new' && valorId !== '0' && valorId !== '') {
+            statusEl.classList.remove('status-novo', 'status-excluindo', 'status-hidden');
+            statusEl.classList.add('status-editando');
+            statusEl.style.display = 'flex';
+            statusEl.innerHTML = `<i class="fas fa-edit"></i> EDITANDO REGISTRO ${valorId}`;
+        } else {
+            // Se for novo, só mostramos se houver um parâmetro 'showNew' ou se a classe 'status-novo' for forçada
+            if (!statusEl.classList.contains('status-novo')) {
+                statusEl.style.display = 'none';
+            } else {
+                statusEl.style.display = 'flex';
+                statusEl.innerHTML = `<i class="fas fa-plus-circle"></i> INCLUINDO NOVO REGISTRO`;
+            }
+        }
+    };
+
+    window.mostrarStatusNovo = function () {
+        const statusEl = document.querySelector('.fp-header-status');
+        if (statusEl) {
+            statusEl.classList.remove('status-hidden', 'status-editando', 'status-excluindo');
+            statusEl.classList.add('status-novo');
+            statusEl.style.display = 'flex';
+            statusEl.innerHTML = `<i class="fas fa-plus-circle"></i> INCLUINDO NOVO REGISTRO`;
+        }
+    };
+
+    // Interceptador para o botão excluir
+    window.setStatusExcluindo = function () {
+        const statusEl = document.querySelector('.fp-header-status');
+        if (statusEl) {
+            statusEl.classList.remove('status-novo', 'status-editando', 'status-sincronizando');
+            statusEl.classList.add('status-excluindo');
+            statusEl.innerHTML = `<i class="fas fa-trash-alt"></i> EXCLUINDO REGISTRO...`;
+        }
+    };
+
+    // Interceptador para o motor de publicação
+    window.setStatusSincronizando = function () {
+        const statusEl = document.querySelector('.fp-header-status');
+        if (statusEl) {
+            statusEl.classList.remove('status-novo', 'status-editando', 'status-excluindo');
+            statusEl.classList.add('status-sincronizando');
+            statusEl.innerHTML = `<i class="fas fa-sync fa-spin"></i> SINCRONIZANDO PRODUÇÃO...`;
+        }
+    };
+
+    // ── MOTOR DE AUDITORIA GLOBAL ARIONE (GOLDEN SEAL AUTOMATION) ──
+    window.AriOneAuditor = {
+        // Normalização agressiva para evitar erros de dash/espaço
+        getSafeId: (str) => {
+            return str.normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-zA-Z0-9]/g, "")
+                .toLowerCase();
+        },
+
+        detectContext: function () {
+            const path = window.location.href.toLowerCase();
+            if (path.includes('aba=pessoas')) return "CADASTROS — Pessoas";
+            if (path.includes('aba=catalogos')) return "CADASTROS — Catálogos";
+            if (path.includes('aba=comercial')) return "CADASTROS — Comercial";
+            if (path.includes('aba=empresa')) return "CADASTROS — Empresa";
+            if (path.includes('aba=parametros')) return "CADASTROS — Parâmetros";
+            if (path.includes('aba=administracao') || path.includes('aba=versoes') || path.includes('aba=developer')) return "SISTEMA";
+            return "GERAL";
+        },
+
+        check: function () {
+            const context = this.detectContext();
+            const cards = document.querySelectorAll('.ge-card');
+
+            cards.forEach(card => {
+                const labelEl = card.querySelector('.ge-card-label');
+                if (!labelEl) return;
+
+                const cardTitle = labelEl.innerText.trim();
+                let sk = context;
+
+                if (context === "SISTEMA") {
+                    if (["Nova Versão", "Progresso DEV", "Histórico", "Documentação", "DOCUMENTAÇÃO"].includes(cardTitle.toUpperCase()) || ["Nova Versão", "Progresso DEV", "Histórico", "Documentação"].includes(cardTitle)) sk = "SISTEMA — Developer";
+                    else if (["Backup", "Gerar Snapshot Manual", "Restauração", "Ponto de Recuperação", "Agendamento"].includes(cardTitle)) sk = "SISTEMA — Armazenamento";
+                    else if (["Usuários", "Perfis"].includes(cardTitle)) sk = "SISTEMA — Administração";
+                    else {
+                        const sIdLong = this.getSafeId(sk + "_" + cardTitle);
+                        const sIdShort = this.getSafeId(cardTitle);
+
+                        // Busca Exaustiva em localStorage
+                        let isPronto = false;
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const key = localStorage.key(i);
+                            if (key.startsWith('arione_dev_p2_')) {
+                                const cleanKey = key.replace('arione_dev_p2_', '');
+                                if (cleanKey === sIdLong || cleanKey === sIdShort || cleanKey.includes(sIdShort)) {
+                                    if (localStorage.getItem(key) === 'true') {
+                                        isPronto = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (isPronto) {
+                            card.classList.add('arione-gold-standard');
+                        } else {
+                            card.classList.remove('arione-gold-standard');
+                        }
+                    }
+                }
+
+                const sIdLong = this.getSafeId(sk + "_" + cardTitle);
+                const sIdShort = this.getSafeId(cardTitle);
+
+                // Busca Exaustiva em localStorage
+                let isPronto = false;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('arione_dev_p2_')) {
+                        const cleanKey = key.replace('arione_dev_p2_', '');
+                        if (cleanKey === sIdLong || cleanKey === sIdShort || cleanKey.includes(sIdShort)) {
+                            if (localStorage.getItem(key) === 'true') {
+                                isPronto = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isPronto) {
+                    card.classList.add('arione-gold-standard');
+                } else {
+                    card.classList.remove('arione-gold-standard');
+                }
+            });
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Valida funções do cabeçalho mestre para prevenir erros
+        if (typeof arioneValidateHeaderFunctions === 'function') {
+            arioneValidateHeaderFunctions();
+        }
+
+        // Execução imediata e cíclica para garantir sincronia
+        if (window.AriOneAuditor) {
+            window.AriOneAuditor.check();
+            setInterval(() => window.AriOneAuditor.check(), 2000);
+        }
+
+        window.syncHeaderStatus();
+        setTimeout(window.syncHeaderStatus, 100);
+
+        const form = document.getElementById('{{ form_id }}') || document.querySelector('form');
+        const idInput = form ? (form.querySelector('input[name="id"]') || form.querySelector('input[name="id_produto"]')) : document.querySelector('input[name="id"]');
+
+        if (idInput) {
+            idInput.addEventListener('change', window.syncHeaderStatus);
+            const observer = new MutationObserver(window.syncHeaderStatus);
+            observer.observe(idInput, { attributes: true });
+        }
+
+        // Auto-ativa a sincronia do botão de salvar se houver um formulário
+        const mestre = document.querySelector('.fe-header-mestre');
+        if (mestre && mestre.dataset.formId) {
+            const ent = '{{ entidade if entidade else form_id.replace("form-", "") }}';
+            if (ent) arioneSyncSaveButton(mestre.dataset.formId, 'btn-salvar-' + ent);
+        }
+    });
+</script>
+
+<style>
+    /* ── PADRÃO OURO ARIONE (ESTRUTURAL) ── */
+    .arione-gold-standard { position: relative !important; overflow: visible !important; border-color: #FFD700 !important; }
+
+    .arione-gold-standard::after {
+        content: '\f091';
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 26px;
+        height: 26px;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        border: 2.5px solid #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #7A255F;
+        font-size: 11px;
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        z-index: 9999;
+        animation: sealPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes sealPop {
+        0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+        100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+</style>
+
+<script>
+        // ── VALIDAÇÃO DE DUPLICIDADE PROATIVA (INTEGRIDADE ARIONE) ──
+        async function checkDuplicateField(el, model, field) {
+    const value = el.value.trim();
+        if (!value) return;
+
+        // Se estiver em modo edição e o valor não mudou, ignora
+        if (el.dataset.originalValue === value) return;
+
+        // Busca o ID do registro atual (se houver) para excluir da busca
+        const form = el.closest('form');
+        const idInput = form ? (form.querySelector('input[name="id"]') || form.querySelector('input[name="id_produto"]')) : null;
+        const excludeId = idInput ? idInput.value : 'new';
+
+        try {
+        const formData = new FormData();
+        formData.append('model', model);
+        formData.append('field', field);
+        formData.append('value', value);
+        formData.append('exclude_id', excludeId);
+
+        const resp = await fetch('/cadastros/check-duplicate', {
+            method: 'POST',
+        body: formData
+        });
+        const data = await resp.json();
+
+        if (data.duplicate) {
+            el.style.borderColor = '#e53e3e';
+        el.style.backgroundColor = '#fff5f5';
+        el.style.boxShadow = '0 0 0 3px rgba(229, 62, 62, 0.1)';
+
+        const msg = `🛡️ AriOne Integridade: Já existe um registro de "${model}" com este "${field}" (${value}).\n\nDeseja manter assim mesmo?`;
+
+        if (typeof arioneConfirm === 'function') {
+            arioneConfirm(msg, () => {
+                // Mantém se o usuário confirmar
+            }, () => {
+                // Se cancelar, foca no campo
+                el.focus();
+            });
+            } else {
+                if (!confirm(msg)) {
+            el.focus();
+                }
+            }
+        } else {
+            el.style.borderColor = '';
+        el.style.backgroundColor = '';
+        el.style.boxShadow = '';
+        }
+    } catch (e) {
+            console.error("Erro na verificação de duplicidade:", e);
+    }
+}
+
+// Armazena o valor original para evitar re-validação em campos não alterados
+document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('input[onblur*="checkDuplicateField"]').forEach(input => {
+                input.dataset.originalValue = input.value.trim();
+            });
+});
+
+        // Auto-executar se os parâmetros existirem
+        {% if sub_key and tela %}
+document.addEventListener('DOMContentLoaded', () => {
+            checkGoldenStandardGlobal('{{ titulo }}', '{{ sub_key }}', '{{ tela }}');
+});
+        {% endif %}
+</script>
+{% endmacro %}
+
+{# --- 1B. CABEÇALHO DO FORMULÁRIO (LEGADO/SIMPLES) --- #}
+{# O último argumento 'rota_base_link' é o que resolve o erro de BuildError #}
+
+
+{% macro cabecalho_formulario(titulo, subtitulo, form_id, id_registro, rota_base_link) %}
+<div class="form-header"
+    style="background: #f8f9fa; padding: 15px; border-radius: 8px 8px 0 0; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center;">
+
+    <div>
+        <h3 style="margin: 0; color: #333; font-size: 18px; font-weight: 600;">{{ titulo }}</h3>
+        <small style="color: #6c757d;">{{ subtitulo }}</small>
+    </div>
+
+    <div class="form-actions" style="display: flex; gap: 10px; align-items: center;">
+
+        <button type="submit" form="{{ form_id }}" class="btn-arione-save"
+            style="background: #28a745; color: white; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-weight: 500; transition: 0.3s;">
+            <i class="fas fa-save"></i> Salvar
+        </button>
+
+        <div class="arione-dropdown" style="position: relative; display: inline-block;">
+            <button type="button"
+                onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'"
+                style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">
+                Opções <i class="fas fa-caret-down"></i>
+            </button>
+
+            <div class="dropdown-content"
+                style="display: none; position: absolute; right: 0; background-color: #fff; min-width: 180px; box-shadow: 0px 8px 16px rgba(0,0,0,0.15); z-index: 100; border-radius: 4px; margin-top: 5px; border: 1px solid #ddd;">
+
+                <a href="{{ url_for(rota_base_link, id=0) }}"
+                    style="color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px; border-bottom: 1px solid #eee;">
+                    <i class="fas fa-plus-circle" style="color: #28a745;"></i> Novo Registro
+                </a>
+
+                {% if id_registro and id_registro > 0 %}
+                <a href="#"
+                    onclick="if(confirm('Tem certeza que deseja excluir?')) window.location.href='{{ url_for(rota_base_link, id=id_registro) }}';"
+                    style="color: #dc3545; padding: 12px 16px; text-decoration: none; display: block; font-size: 13px;">
+                    <i class="fas fa-trash"></i> Excluir Registro
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* Fecha o dropdown se clicar fora dele */
+    window.onclick = function(event) {
+    if (!event.target.matches('.btn-arione-opt')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+    for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+    if (openDropdown.style.display === 'block') {
+        openDropdown.style.display = 'none';
+            }
+        }
+    }
+}
+</script>
+{% endmacro %}
+
+{# --- 2. INPUT PADRÃO --- #}
+{% macro form_input(label, name, value='', type='text', placeholder='', required=False) %}
+<div class="form-group" style="margin-bottom: 15px; width: 100%;">
+    <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px; color: #444;">{{ label
+        }}</label>
+    <input type="{{ type }}" name="{{ name }}" value="{{ value if value != None else '' }}"
+        placeholder="{{ placeholder }}" {{ 'required' if required }}
+        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+</div>
+{% endmacro %}
+
+{# --- 3. TEXTAREA --- #}
+{% macro form_textarea(label, name, value='', rows=3) %}
+<div class="form-group" style="margin-bottom: 15px; width: 100%;">
+    <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px;">{{ label }}</label>
+    <textarea name="{{ name }}" rows="{{ rows }}"
+        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box;">{{ value if value != None else '' }}</textarea>
+</div>
+{% endmacro %}
+
+{% macro footer_formulario(form_id) %}
+<div class="form-footer" style="display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;">
+
+    <button type="reset" class="btn btn-secondary">
+        Limpar
+    </button>
+
+    <button type="submit" form="{{ form_id }}" class="btn btn-primary">
+        Salvar
+    </button>
+
+</div>
+{% endmacro %}
+
+{# --- 4. TOOLBOX ARIONE --- #}
+{% macro toolbox_arione(form_id, rota_novo, rota_imprimir='#', search_id='tool-search', search_onkeyup='') %}
+<div class="arione-toolbox"
+    style="background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 10px 18px; display: flex; align-items: center; gap: 12px; margin-bottom:16px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+
+    {# Botão Novo #}
+    <a href="{{ url_for(rota_novo) }}" class="tool-btn tool-btn-pri" title="Novo Registro">
+        <i class="fas fa-plus"></i> <span>Novo</span>
+    </a>
+
+    {# Pesquisa por Nome #}
+    <div class="tool-search-wrap" style="flex: 1; position: relative; max-width: 400px;">
+        <i class="fas fa-search"
+            style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+        <input type="text" id="{{ search_id }}" class="tool-search-input" placeholder="Pesquisar por nome..."
+            onkeyup="{{ search_onkeyup }}"
+            style="width: 100%; padding: 8px 12px 8px 36px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--pri, #0072CE)'" onblur="this.style.borderColor='#e2e8f0'">
+    </div>
+
+    {# Filtrar #}
+    <button type="button" class="tool-btn tool-btn-white" title="Filtros Avançados">
+        <i class="fas fa-filter"></i> <span>Filtrar</span>
+    </button>
+
+    {# Imprimir / Compartilhar #}
+    <div class="arione-dropdown-tool" style="position: relative;">
+        <button type="button" class="tool-btn tool-btn-white"
+            onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
+            <i class="fas fa-share-nodes"></i> <span>Imprimir / Compartilhar</span> <i class="fas fa-chevron-down"
+                style="font-size: 10px; margin-left: 4px;"></i>
+        </button>
+        <div class="tool-dropdown-content"
+            style="display: none; position: absolute; right: 0; top: 110%; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; min-width: 180px;">
+            <a href="{{ rota_imprimir }}" target="_blank"
+                style="padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #475569; text-decoration: none; font-size: 13px; transition: background 0.2s; border-bottom: 1px solid #f1f5f9;">
+                <i class="fas fa-file-pdf" style="color: #e11d48;"></i> Gerar PDF
+            </a>
+            <a href="#"
+                style="padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #475569; text-decoration: none; font-size: 13px;">
+                <i class="fab fa-whatsapp" style="color: #16a34a;"></i> Enviar WhatsApp
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tool-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        white-space: nowrap;
+    }
+
+    .tool-btn-pri {
+        background: var(--pri, #0072CE);
+        color: #fff;
+    }
+
+    .tool-btn-pri:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .tool-btn-white {
+        background: #fff;
+        color: #475569;
+        border: 1.5px solid #e2e8f0;
+    }
+
+    .tool-btn-white:hover {
+        border-color: var(--pri, #0072CE);
+        color: var(--pri, #0072CE);
+        background: #f8fafc;
+    }
+
+    .tool-dropdown-content a:hover {
+        background: #f8fafc;
+        color: var(--pri, #0072CE) !important;
+    }
+</style>
+<script>
+    document.addEventListener('click', function(e) {
+    if (!e.target.closest('.arione-dropdown-tool')) {
+        document.querySelectorAll('.tool-dropdown-content').forEach(d => d.style.display = 'none');
+    }
+});
+</script>
+{% endmacro %}
+
+{# --- 5. ÍCONES DE NAVEGAÇÃO CONTEXTUAL --- #}
+
+{# Ícone de Informação (i) - Bolinha com Tooltip #}
+{% macro info_icon(texto) %}
+<i class="fas fa-info-circle fe-info-icon arione-info-icon" title="{{ texto }}" style="cursor: help;"></i>
+{% endmacro %}
+
+{# Ícone de Lupa (Pesquisa) - Atalho para Cadastro Mestre #}
+{% macro master_icon(target, label='Ver Cadastro', onclick_custom='') %}
+<i class="fas fa-search fe-master-icon arione-master-icon"
+    onclick="{% if onclick_custom %}{{ onclick_custom }}{% else %}abrirModalMaster('{{ target }}'){% endif %}"
+    title="{{ label }}"></i>
+{% endmacro %}
+
+{# Ícone de Mais (+) - Atalho para Cadastro Rápido #}
+{% macro plus_icon(target, label='Adicionar Novo', onclick_custom='') %}
+<i class="fas fa-plus-circle fe-plus-icon arione-plus-icon"
+    onclick="{% if onclick_custom %}{{ onclick_custom }}{% else %}abrirModalMaster('{{ target }}'){% endif %}"
+    title="{{ label }}"></i>
+{% endmacro %}
+
+
+{% macro feedback_status_arione() %}
+{# ✅ FEEDBACK DE STATUS PADRÃO ARIONE (Golden Standard) #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="arione-status-zone" style="margin: 10px 0; width: 100%; animation: feFadeUp 0.5s ease;">
+    {% for category, message in messages %}
+    <div class="arione-status-banner status-{{ category }}" style="background: {{ 'rgba(22, 101, 52, 0.08)' if category == 'success' else 'rgba(153, 27, 27, 0.08)' }}; 
+                        border: 1px solid {{ '#166534' if category == 'success' else '#991b1b' }}; 
+                        border-left: 5px solid {{ '#166534' if category == 'success' else '#991b1b' }};
+                        border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div
+            style="display: flex; align-items: center; gap: 10px; color: {{ '#166534' if category == 'success' else '#991b1b' }}; font-weight: 600; font-size: 13px;">
+            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }}"></i>
+            <span>{{ message }}</span>
+        </div>
+        <button type="button" onclick="this.parentElement.style.display='none'"
+            style="background:none; border:none; color:inherit; opacity:0.5; cursor:pointer; font-size:10px;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% endmacro %}
+
+{% macro cabecalho_simples_arione(titulo, subtitulo, icone='fa-cog', form_id='', onclick_save='', cor_tema='#7A255F',
+func_fechar='') %}
+<div class="fe-header fe-header-simples" data-form-id="{{ form_id }}"
+    style="position: sticky; top: 0; z-index: 1000; background: linear-gradient(135deg, {{ cor_tema }} 0%, {{ cor_tema }}cc 100%); 
+            margin: -20px -24px 20px -24px; border-radius: 12px 12px 0 0; box-shadow: 0 8px 32px rgba(0,0,0,0.15); 
+            padding: 15px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="fe-header-icon"
+            style="background: rgba(255, 255, 255, 0.2); width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+            <i class="fas {{ icone }}" style="color: #fff; font-size: 16px;"></i>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+            <h2 class="fe-header-title"
+                style="margin: 0; font-size: 16px; font-weight: 800; color: #fff; line-height: 1.1;">{{ titulo }}</h2>
+            <span
+                style="color: rgba(255, 255, 255, 0.8); font-size: 10px; font-weight: 600; text-transform: uppercase;">{{
+                subtitulo }}</span>
+        </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+        {# BOTÃO SALVAR #}
+        {% if onclick_save %}
+        <button type="button" class="fe-btn-header-action fe-btn-highlight"
+            style="background: #fff; border: none; padding: 6px 16px; border-radius: 8px; color: {{ cor_tema }}; font-weight: 800; font-size: 11px; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15);"
+            onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'"
+            onclick="{{ onclick_save }}">
+            <i class="fas fa-save"></i> SALVAR
+        </button>
+        {% endif %}
+
+        {# BOTÃO FECHAR #}
+        <button type="button"
+            onclick="{% if func_fechar %}{{ func_fechar }}{% else %}if(typeof fecharModalGlobal === 'function'){ fecharModalGlobal(); } else { window.close(); }{% endif %}"
+            class="fe-btn-header-action"
+            style="background: rgba(0,0,0,0.1); width: 32px; height: 32px; border-radius: 8px; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+            onmouseover="this.style.background='rgba(255,0,0,0.4)'"
+            onmouseout="this.style.background='rgba(0,0,0,0.1)'">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+{% endmacro %}
+
+{# Macro info_icon duplicado removido para manter integridade #}
+
+{# Macro master_icon duplicado removido para manter integridade (unificado na linha 451) #}
+
+{# 💎 RODAPÉ DE MARCA (QUIET LUXURY - SELO DE ENGENHARIA ARIONE) #}
+{% macro selo_arione() %}
+<div class="arione-signature-seal"
+    style="margin-top: 80px; padding: 40px 0; text-align: center; border-top: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; clear: both;">
+    <p
+        style="font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; margin: 0;">
+        © 2026 <span style="font-weight: 900; color: #7A255F; letter-spacing: 0;">Ari<span
+                style="color:#1e293b">One</span></span> Operational Suite • <span
+            style="font-style: italic; opacity: 0.7;">All Rights Reserved</span>
+    </p>
+    <div
+        style="font-size: 9px; color: #94a3b8; opacity: 0.9; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px;">
+        v1.05.03 <span style="color: #FF5722; font-weight: 900;">DEV</span>
+    </div>
+</div>
+{% endmacro %}

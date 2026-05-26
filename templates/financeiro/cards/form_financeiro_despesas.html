@@ -1,0 +1,104 @@
+{# =============================================================================
+   Arquivo  : form_financeiro_despesas.html
+   Caminho  : templates/financeiro/cards/form_financeiro_despesas.html
+   Função   : Formulário para Lançamento de Despesas (Contas a Pagar)
+ ============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+{% block content %}
+<div class="ctx-fin-wrap">
+    <style>
+        :root { --fin-pri: #C0392B; --fin-acc: #E74C3C; }
+        .ctx-fin-header { background: linear-gradient(135deg, var(--fin-pri), #922B21); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-fin-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+
+        .fin-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .fin-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .fin-group { display: flex; flex-direction: column; gap: 5px; }
+        .fin-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .fin-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600; outline: none; }
+        .fin-input:focus { border-color: var(--fin-pri); }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Contas a Pagar",
+        subtitulo="Financeiro > Lançamento e Quitação de Despesas e Compras",
+        icone="fa-arrow-circle-up",
+        cor_tema="#C0392B",
+        func_fechar="window.history.back()",
+        form_id="form-despesas",
+        onclick_novo="if(typeof arioneResetForm === 'function') arioneResetForm('form-despesas')",
+        onclick_save="if(typeof arioneToast === 'function') arioneToast('Despesa salva com sucesso!', 'success')",
+        onclick_search="if(typeof arioneToast === 'function') arioneToast('Pesquisa ativa', 'info')",
+        onclick_filter="if(typeof arioneToast === 'function') arioneToast('Filtros avançados em desenvolvimento', 'info')",
+        onclick_list="if(typeof arioneToast === 'function') arioneToast('Listagem em desenvolvimento', 'info')",
+        onclick_clonar="if(typeof clonarRegistroMaster === 'function') clonarRegistroMaster()",
+        onclick_export="if(typeof arioneToast === 'function') arioneToast('Exportando dados para CSV/Excel...', 'info')",
+        onclick_import="if(typeof arioneToast === 'function') arioneToast('Importação de XML/OFX em desenvolvimento...', 'info')",
+        onclick_print="window.print()",
+        onclick_email="if(typeof arioneToast === 'function') arioneToast('Enviando despesa por E-mail...', 'info')",
+        onclick_whatsapp="if(typeof arioneToast === 'function') arioneToast('Compartilhando despesa via WhatsApp...', 'info')",
+        status="Ativo",
+        ajuda="Formulário para lançamento e quitação de despesas e compras.",
+        tamanho="grande"
+    ) }}
+
+    <div class="ctx-fin-body">
+        <form id="form-despesas">
+            <div class="fin-section">
+                <div class="fin-row">
+                    <div class="fin-group" style="flex:2;">
+                        <label class="fin-label">Fornecedor / Favorecido <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" class="fin-input" placeholder="Busque o fornecedor ou credor...">
+                    </div>
+                    <div class="fin-group" style="flex:3;">
+                        <label class="fin-label">Descrição da Despesa <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" class="fin-input" placeholder="Ex: Pagamento Pedido de Insumos">
+                    </div>
+                </div>
+                <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">Valor (R$) <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" class="fin-input" placeholder="0,00" style="color:var(--fin-pri); font-weight:900; font-size:15px;">
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Vencimento <span style="color:#e74c3c;">*</span></label>
+                        <input type="date" class="fin-input">
+                    </div>
+                     <div class="fin-group">
+                        <label class="fin-label">Status</label>
+                        <select class="fin-input">
+                            <option>A Pagar</option>
+                            <option>Pago / Liquidado</option>
+                            <option>Atrasado</option>
+                            <option>Aprovado p/ Pagto</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fin-section">
+                 <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">Centro de Custo / DRE</label>
+                        <select class="fin-input">
+                            <option>03 - Despesas Administrativas</option>
+                            <option>04 - Despesas com Pessoal</option>
+                        </select>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Conta Bancária Saída</label>
+                        <select class="fin-input">
+                            <option>Caixa Principal</option>
+                            <option>Conta Bradesco 002</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    </div>
+</div>
+{% endblock %}

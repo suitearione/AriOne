@@ -1,0 +1,127 @@
+{# =============================================================================
+   Arquivo  : grid_expedicao.html
+   Caminho  : templates/operacoes/grids/grid_expedicao.html
+   Função   : Hub de Expedição e Logística (Checkout, Romaneios, Transportes).
+ ============================================================================= #}
+<div id="modal-overlay-exp" class="ge-modal-overlay" onclick="fecharModalExp()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" style="display:none;"></div>
+        <div class="ge-modal-body" id="modal-body-exp" style="padding:0;"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-shipping-fast"></i><span>Expedição & Logística</span></div>
+    <div class="ge-cards-container">
+
+        <!-- Transportadoras -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('cadastros.form_transportadora') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-truck ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-truck ge-card-icon"></i></div>
+            <span class="ge-card-label">Transportadoras</span>
+            <span class="ge-card-desc">Cadastro de Parceiros</span>
+        </div>
+
+        <!-- Entregadores -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('cadastros.form_entregador') }}'" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-motorcycle ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-motorcycle ge-card-icon"></i></div>
+            <span class="ge-card-label">Entregador</span>
+            <span class="ge-card-desc">Ponta Final e Aplicativos</span>
+        </div>
+
+        <!-- Checkout / Packing List -->
+        <div class="ge-card" onclick="abrirModalExp('checkout')" style="--card-cor:#2C3E50;--card-cor-bg:rgba(44,62,80,0.10);">
+            <i class="fas fa-barcode ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-barcode ge-card-icon"></i></div>
+            <span class="ge-card-label">Conferência</span>
+            <span class="ge-card-desc">Packing List & Checkout</span>
+        </div>
+
+        <!-- Romaneios -->
+        <div class="ge-card" onclick="abrirModalExp('romaneio')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-route ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-route ge-card-icon"></i></div>
+            <span class="ge-card-label">Romaneios</span>
+            <span class="ge-card-desc">Manifestos de Carga</span>
+        </div>
+
+        <!-- Rastreamento -->
+        <div class="ge-card" onclick="abrirModalExp('rastreamento')" style="--card-cor:#16A085;--card-cor-bg:rgba(22,160,133,0.10);">
+            <i class="fas fa-map-marker-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-map-marker-alt ge-card-icon"></i></div>
+            <span class="ge-card-label">Rastreamento</span>
+            <span class="ge-card-desc">Monitor de Entregas</span>
+        </div>
+
+    </div>
+</div>
+
+<style>
+/* Modal Overlay Standard AriOne */
+.ge-modal-overlay {
+    position: fixed; top: 0; right: 0; bottom: 0; left: var(--sidebar-width, 250px);
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px); display: none; z-index: 9999;
+    align-items: center; justify-content: center;
+}
+.ge-modal-overlay.ativo { display: flex; }
+.ge-modal {
+    width: 95%; max-width: 1100px; max-height: 95vh;
+    border-radius: 12px; overflow-y: auto; background: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlide 0.25s ease-out;
+}
+@keyframes modalSlide { from {opacity:0; transform:translateY(30px);} to {opacity:1; transform:translateY(0);} }
+
+/* Componentes de Grid Interno */
+.ge-grid-wrapper { padding: 25px; }
+.ge-section-title { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+.ge-cards-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+</style>
+
+<script>
+const endpointsExp = {
+    checkout:       '{{ url_for("operacoes.card_expedicao_checkout", modal=1) }}',
+    romaneio:       '{{ url_for("operacoes.card_expedicao_romaneio", modal=1) }}',
+    rastreamento:   '{{ url_for("operacoes.card_expedicao_rastreamento", modal=1) }}',
+    relatorios:     '{{ url_for("operacoes.card_expedicao_relatorios", modal=1) }}'
+};
+
+async function abrirModalExp(tipo) {
+    const url = endpointsExp[tipo];
+    if (!url) {
+        alert("Em breve...");
+        return;
+    }
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        const body = document.getElementById('modal-body-exp');
+        
+        body.innerHTML = html;
+
+        // Injeção de scripts para modais AJAX
+        body.querySelectorAll('script').forEach(script => {
+            const novo = document.createElement('script');
+            [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+            novo.appendChild(document.createTextNode(script.innerHTML));
+            script.parentNode.replaceChild(novo, script);
+        });
+
+        document.getElementById('modal-overlay-exp').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+
+    } catch (e) {
+        console.error("Erro ao carregar expedição:", e);
+    }
+}
+
+function fecharModalExp() {
+    document.getElementById('modal-overlay-exp').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModalExp(); });
+</script>

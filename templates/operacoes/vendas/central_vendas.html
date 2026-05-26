@@ -1,0 +1,332 @@
+{# =============================================================================
+   Caminho  : templates/operacoes/vendas/central_vendas.html
+   Função   : Strategic Sales Command (Torre de Controle & Tomada de Decisão)
+   Padrão   : Quiet Luxury (PAAv1)
+   ============================================================================= #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap cockpit-bg">
+    
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Central de Vendas",
+        subtitulo="Strategic Sales Command • Monitoramento de KPIs, Performance de Consultores e Saúde do Funil",
+        icone="fa-shield-halved",
+        cor_tema="#1e293b",
+        func_fechar="fecharModalVnd()" if is_modal else "window.location.href='/operacoes/abas'",
+        status="MODO ESTRATÉGICO ATIVO",
+        tamanho="grande",
+        ajuda="Esta central foca na análise de métricas e identificação de gargalos operacionais para suporte à decisão."
+    ) }}
+
+    <div class="cockpit-container">
+        
+        {# ══════════ ESTRATÉGIA: AUDITORIA E RELATÓRIOS ══════════ #}
+        <div class="cockpit-actions strategic-bar">
+            <div class="strat-tools">
+                <button class="strat-btn" onclick="window.location.href='/operacoes/vendas/funil'">
+                    <i class="fas fa-chart-pie"></i> Análise de Funil
+                </button>
+                <button class="strat-btn" onclick="window.location.href='/operacoes/cards/relatorios?modulo=vendas'">
+                    <i class="fas fa-print"></i> Relatórios Executivos
+                </button>
+                <button class="strat-btn" onclick="window.location.href='/operacoes/vendas/metas'">
+                    <i class="fas fa-tasks"></i> Gestão de Metas
+                </button>
+            </div>
+            
+            <div class="action-search">
+                <i class="fas fa-magnifying-glass-chart"></i>
+                <input type="text" placeholder="Auditar Pedido, Cliente ou Consultor..." onkeyup="filtrarCockpit(this.value)">
+            </div>
+
+            <div class="quick-ops-dropdown">
+                <button class="ops-trigger" title="Operações Rápidas">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="ops-menu">
+                    <a href="/operacoes/vendas/orcamento/form"><i class="fas fa-plus"></i> Novo Orçamento</a>
+                    <a href="/operacoes/vendas/pedido/form"><i class="fas fa-cart-plus"></i> Novo Pedido</a>
+                </div>
+            </div>
+        </div>
+
+        {# ══════════ DASHBOARD DE INTELIGÊNCIA ══════════ #}
+        <div class="cockpit-dashboard">
+            
+            {# Meta do Mês #}
+            <div class="dash-card dash-meta">
+                <div class="dash-card-header">
+                    <span class="dash-title">Saúde da Meta Mensal</span>
+                    <span class="dash-trend up"><i class="fas fa-caret-up"></i> {{ "{:.1f}".format(kpi.perc_meta or 0) }}%</span>
+                </div>
+                <div class="goal-track">
+                    <div class="goal-bar"><div class="goal-fill" style="width: {{ [kpi.perc_meta or 0, 100]|min }}%;"></div></div>
+                    <div class="goal-values">
+                        <div class="goal-v-item"><span>Atingido (Realizado)</span><strong>R$ {{ "{:,.2f}".format(kpi.vendas_mes or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong></div>
+                        <div class="goal-v-item" style="text-align: right;"><span>Falta Atingir</span><strong style="color: #E74C3C;">R$ {{ "{:,.2f}".format(kpi.falta_atingir or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #e2e8f0; font-size: 10px; color: #94a3b8;">
+                        <span>Meta Mensal: <strong style="color: #1e293b;">R$ {{ "{:,.2f}".format(kpi.meta_mes or 1200000).replace(',','v').replace('.',',').replace('v','.') }}</strong></span>
+                        <span>Meta Diária: <strong style="color: #64748b;">R$ {{ "{:,.2f}".format(kpi.meta_diaria or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong></span>
+                        <span>Hoje: <strong style="color: #10b981;">R$ {{ "{:,.2f}".format(kpi.vendas_hoje or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            {# Ticket Médio #}
+            <div class="dash-card dash-mini">
+                <div class="dash-info">
+                    <span class="dash-label">Ticket Médio</span>
+                    <span class="dash-value">R$ {{ "{:,.2f}".format(kpi.ticket_medio or 2644.00).replace(',','v').replace('.',',').replace('v','.') }}</span>
+                    <span class="dash-sub-label">Estável vs Mês Anterior</span>
+                </div>
+            </div>
+
+            {# Conversão #}
+            <div class="dash-card dash-mini">
+                <div class="dash-info">
+                    <span class="dash-label">Taxa de Conversão</span>
+                    <span class="dash-value" style="color: #0284c7;">{{ "{:.1f}".format(kpi.taxa_conversao or 50.0) }}%</span>
+                    <span class="dash-sub-label">Abaixo da Meta (65%)</span>
+                </div>
+            </div>
+
+            {# Top Consultores (Ranking de Eficiência) #}
+            <div class="dash-card dash-leaders">
+                <div class="dash-card-header">
+                    <span class="dash-title">Ranking de Eficiência</span>
+                </div>
+                <div class="mini-leader-list">
+                    {% for r in kpi.ranking[:2] %}
+                    <div class="mini-leader-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="ml-name">{{ r.nome }}</span>
+                            <span style="font-size: 10px; font-weight: 800; color: #1e293b;">R$ {{ "{:,.2f}".format(r.total).replace(',','v').replace('.',',').replace('v','.') }}</span>
+                        </div>
+                        <div class="ml-progress"><div class="mlp-fill" style="width: {{ r.perc }}%;"></div></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# Status Logístico (Risco de Entrega) #}
+            <div class="dash-card dash-log">
+                <div class="dash-card-header">
+                    <span class="dash-title">Integridade Logística</span>
+                </div>
+                <div class="log-stats-row">
+                    <div class="ls-item"><span>Em Fluxo</span><strong>{{ kpi.transito or 0 }}</strong></div>
+                    <div class="ls-item"><span style="color:#E74C3C;">Atrasos Críticos</span><strong>{{ "{:02d}".format(kpi.atrasos_criticos or 0) }}</strong></div>
+                </div>
+                <button class="ls-btn-strat" onclick="navegarLogistica()">Auditar Logística</button>
+            </div>
+
+        </div>
+
+        {# ══════════ GRIDS DE MONITORAMENTO (ALERTA DE GARGALOS) ══════════ #}
+        <div class="cv-main-grid">
+            
+            {# Orçamentos: Foco em Retenção/Conversão #}
+            <div class="cv-panel">
+                <div class="cv-panel-header" style="border-left: 4px solid #0284c7;">
+                    <div class="cv-panel-title">
+                        <i class="fas fa-hourglass-half" style="color: #0284c7;"></i>
+                        <span>Funil de Orçamentos (Em Aberto)</span>
+                        <span class="cv-panel-badge">{{ orçamentos_pendentes|length }}</span>
+                    </div>
+                </div>
+                <div class="cv-list-wrap">
+                    <table class="cv-table">
+                        <thead>
+                            <tr>
+                                 <th>NÚMERO</th>
+                                 <th>CLIENTE / CONSULTOR</th>
+                                 <th style="text-align: right;">VALOR</th>
+                                <th style="text-align: center;">AGING</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for orc in orçamentos_pendentes %}
+                            <tr class="cv-row" onclick="window.location.href='/operacoes/vendas/orcamento/edit/{{ orc.id }}'">
+                                 <td class="cv-id">{{ (orc.numero or orc.id)|string }}</td>
+                                 <td>
+                                     <div class="cv-main-text">{{ orc.cliente.nome|upper }}</div>
+                                     <div class="cv-sub-text">{{ (orc.vendedor.nome_exibivel or orc.vendedor.nome)|upper if orc.vendedor else '--' }}</div>
+                                 </td>
+                                 <td style="text-align: right; font-weight: 800; color: #1e293b;">
+                                     R$ {{ "{:,.2f}".format(orc.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}
+                                 </td>
+                                <td style="text-align: center;">
+                                    <span class="aging-tag {{ 'high' if loop.index > 2 else 'low' }}">
+                                        {{ loop.index }}d
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="cv-empty">Nenhum gargalo detectado no funil.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {# Pedidos: Foco em Entrega/Faturamento #}
+            <div class="cv-panel">
+                <div class="cv-panel-header" style="border-left: 4px solid #1e293b;">
+                    <div class="cv-panel-title">
+                        <i class="fas fa-box-open" style="color: #1e293b;"></i>
+                        <span>Carteira de Pedidos (Fluxo Operacional)</span>
+                        <span class="cv-panel-badge" style="background: #e2e8f0; color: #1e293b;">{{ pedidos_ativos|length }}</span>
+                    </div>
+                </div>
+                <div class="cv-list-wrap">
+                    <table class="cv-table">
+                        <thead>
+                            <tr>
+                                 <th>PEDIDO</th>
+                                 <th>CLIENTE / DATA</th>
+                                 <th style="text-align: right;">TOTAL</th>
+                                <th style="text-align: center;">STATUS ESTRATÉGICO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ped in pedidos_ativos %}
+                            <tr class="cv-row" onclick="window.location.href='/operacoes/vendas/pedido/edit/{{ ped.id }}'">
+                                 <td class="cv-id" style="color: #1e293b;">{{ (ped.numero or ped.id)|string }}</td>
+                                 <td>
+                                     <div class="cv-main-text">{{ ped.cliente.nome|upper }}</div>
+                                     <div class="cv-sub-text">
+                                         <i class="fas fa-calendar-day"></i> {{ ped.data_pedido.strftime('%d/%m/%Y') }}
+                                     </div>
+                                 </td>
+                                 <td style="text-align: right; font-weight: 800; color: #1e293b;">
+                                     R$ {{ "{:,.2f}".format(ped.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}
+                                 </td>
+                                <td style="text-align: center;">
+                                    {% set st = ped.status %}
+                                    <span class="strat-status {{ 'warn' if st == 'EM SEPARAÇÃO' else 'ok' if st == 'FATURADO' else 'info' }}">
+                                        {{ st }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="cv-empty">Toda a carteira está em dia.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Roboto+Mono:wght@500&display=swap');
+
+        :root {
+            --cv-pri: #1e293b;
+            --cv-sec: #334155;
+            --cv-bg: #f8fafc;
+            --cv-card: #ffffff;
+            --cv-text: #0f172a;
+            --cv-sub: #64748b;
+        }
+
+        .cockpit-bg { background: var(--cv-bg); min-height: 100vh; font-family: 'Outfit', sans-serif; color: var(--cv-text); }
+        .cockpit-container { padding: 20px; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+        /* Strategic Bar */
+        .strategic-bar { 
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            background: #fff; padding: 10px 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .strat-tools { display: flex; gap: 10px; }
+        .strat-btn { 
+            background: #f1f5f9; border: 1.5px solid #e2e8f0; padding: 8px 16px; border-radius: 10px;
+            font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .strat-btn:hover { background: #e2e8f0; color: #0f172a; border-color: #cbd5e1; }
+        
+        .action-search { flex: 1; position: relative; max-width: 400px; }
+        .action-search i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .action-search input { 
+            width: 100%; background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 8px 15px 8px 40px; 
+            border-radius: 10px; font-size: 13px; font-family: inherit; outline: none;
+        }
+
+        /* Quick Ops Dropdown */
+        .quick-ops-dropdown { position: relative; }
+        .ops-trigger { width: 36px; height: 36px; border-radius: 50%; border: none; background: #1e293b; color: #fff; cursor: pointer; }
+        .ops-menu { 
+            position: absolute; right: 0; top: 110%; background: #fff; border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 180px; display: none; z-index: 100;
+            border: 1px solid #f1f5f9; overflow: hidden;
+        }
+        .quick-ops-dropdown:hover .ops-menu { display: block; }
+        .ops-menu a { display: block; padding: 12px 15px; font-size: 12px; font-weight: 600; color: #475569; text-decoration: none; border-bottom: 1px solid #f8fafc; }
+        .ops-menu a:hover { background: #f1f5f9; color: #1e293b; }
+
+        /* Dashboard */
+        .cockpit-dashboard { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr 1.5fr; gap: 15px; }
+        .dash-card { background: #fff; border-radius: 20px; padding: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .dash-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .dash-title { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+        .dash-trend { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; }
+        .dash-trend.up { background: rgba(34,197,94,0.1); color: #16a34a; }
+
+        .dash-value { font-size: 22px; font-weight: 800; display: block; margin-top: 5px; }
+        .dash-sub-label { font-size: 10px; color: #94a3b8; font-weight: 600; }
+
+        /* Leader Progress */
+        .mini-leader-list { display: flex; flex-direction: column; gap: 10px; }
+        .mini-leader-item { display: flex; flex-direction: column; gap: 4px; }
+        .ml-name { font-size: 11px; font-weight: 700; color: #475569; }
+        .ml-progress { height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+        .mlp-fill { height: 100%; background: #1e293b; border-radius: 10px; }
+
+        /* Strategic Grid */
+        .cv-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; }
+        .cv-panel { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .cv-panel-header { padding: 18px 22px; border-bottom: 1px solid #f1f5f9; background: #fdfdfd; }
+        .cv-panel-title { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase; }
+        
+        .cv-list-wrap { max-height: 550px; overflow-y: auto; }
+        .cv-table { width: 100%; border-collapse: collapse; }
+        .cv-table th { position: sticky; top: 0; background: #fff; padding: 12px 22px; text-align: left; font-size: 10px; color: #94a3b8; font-weight: 800; border-bottom: 1px solid #f1f5f9; z-index: 5; }
+        
+        /* Aging & Status Tags */
+        .aging-tag { padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 800; }
+        .aging-tag.low { background: #f1f5f9; color: #64748b; }
+        .aging-tag.high { background: rgba(231,76,60,0.1); color: #E74C3C; }
+
+        .strat-status { padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+        .strat-status.warn { background: rgba(243,156,18,0.1); color: #F39C12; }
+        .strat-status.ok { background: rgba(39,174,96,0.1); color: #27AE60; }
+        .strat-status.info { background: rgba(2,132,199,0.1); color: #0284c7; }
+
+        .ls-btn-strat { width: 100%; padding: 8px; background: #1e293b; color: #fff; border: none; border-radius: 8px; font-size: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+
+        @media (max-width: 1400px) { .cockpit-dashboard { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } }
+    </style>
+
+    <script>
+        function filtrarCockpit(val) {
+            const term = val.toLowerCase();
+            document.querySelectorAll('.cv-row').forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+        function navegarLogistica() { arioneToast('Auditando Fluxo Logístico...', 'info'); }
+        function fecharModalVnd() {
+            if(window.parent && window.parent.fecharModalOpe) window.parent.fecharModalOpe();
+            else window.history.back();
+        }
+    </script>
+</div>
+{% endblock %}

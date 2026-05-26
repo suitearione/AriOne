@@ -1,0 +1,1345 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/form_investidor.html
+   Arquivo  : form_investidor.html
+   Função   : Formulário completo de cadastro e edição de investidor.
+   Descrição: Tema verde #27AE60 — alinhado à cor do card Investidores.
+              Suporta PF (CPF) e PJ (CNPJ) com alternância dinâmica.
+              Seções: identificação, contato, endereço (busca CEP),
+              e abas de investimento (aportes com cotação em tempo real via
+              AwesomeAPI), saldo atualizado, histórico de movimentações,
+              rentabilidade acordada e documentos.
+============================================================================= #}
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fe-wrap mod-investidor">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="fe-flash fe-flash-{{ cat }}">
+        <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+  <style>
+      .arione-page { padding: 0 !important; }
+      .fe-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
+  </style>
+
+    <form id="form-investidor" method="POST" enctype="multipart/form-data" novalidate>
+      {% from "macros/componentes.html" import cabecalho_mestre_arione, info_icon %}
+
+      {{ cabecalho_mestre_arione(
+          titulo='Gestão de Investidores',
+          subtitulo='Cadastros > Empresa > Aportes e Participações',
+          icone='fa-hand-holding-usd',
+          cor_tema='#27AE60',
+          func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='empresa') ~ "'",
+          form_id='form-investidor',
+          onclick_novo='submeterInvestidor()',
+          onclick_save='submeterInvestidor()',
+          onclick_search='focarPesquisaInvestidor()',
+          onclick_filter='abrirModalFiltrosAvancados()',
+          onclick_list='alternarVisaoFormLista()',
+          onclick_clonar='clonarInvestidorAtivo()',
+          onclick_export="arioneToast('Exportação em desenvolvimento para Investidores.','info')",
+          onclick_import="arioneToast('Importação em desenvolvimento para Investidores.','info')",
+          onclick_print="window.print()",
+          onclick_email="arioneEnviarEmailGenerico('Investidores')",
+          onclick_whatsapp="arioneEnviarWhatsAppGenerico('Investidores')",
+          status='Ativo',
+          ajuda='Gerencie os investidores e participações estratégicas da empresa, incluindo aportes, rentabilidade e documentos.',
+          tamanho='grande'
+      ) }}
+
+
+      <div id="area-formulario-investidor" style="padding: 12px 24px; background: #f4f6f9;">
+
+    {# ══════════ CARD 1 — IDENTIFICAÇÃO ══════════ #}
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-id-card"></i> Identificação</div>
+      <div class="fe-card-body">
+
+        {# Tipo PF / PJ #}
+        <div class="fe-row" style="margin-bottom:16px;">
+          <div class="fi-tipo-toggle">
+            <button type="button" class="fi-tipo-btn active" id="btn-pf" onclick="setTipo('pf')">
+              <i class="fas fa-user"></i> Pessoa Física
+            </button>
+            <button type="button" class="fi-tipo-btn" id="btn-pj" onclick="setTipo('pj')">
+              <i class="fas fa-building"></i> Pessoa Jurídica
+            </button>
+          </div>
+          <input type="hidden" name="tipo_pessoa" id="tipo_pessoa" value="pf">
+        </div>
+
+        {# PF #}
+        <div id="campos-pf">
+          <div class="fe-row">
+            <div class="fe-group fe-flex-3">
+              <label class="fe-label">Nome Completo <span class="fe-req">*</span></label>
+              <input class="fe-input" type="text" name="nome" id="campo-nome"
+                     placeholder="Nome completo do investidor" required>
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">CPF <span class="fe-req">*</span> {{ info_icon('CPF do investidor para validação.') }}</label>
+              <input class="fe-input mask-cpf" type="text" name="cpf" id="investidor_cpf"
+                     placeholder="000.000.000-00" maxlength="14" onblur="checkDuplicateField(this, 'Investidor', 'cpf')">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">RG</label>
+              <input class="fe-input" type="text" name="rg" placeholder="00.000.000-0">
+            </div>
+          </div>
+          <div class="fe-row">
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Data de Nascimento</label>
+              <input class="fe-input" type="date" name="data_nascimento">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Nacionalidade</label>
+              <input class="fe-input" type="text" name="nacionalidade" value="Brasileira">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Profissão</label>
+              <input class="fe-input" type="text" name="profissao" placeholder="Ex: Empresário">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Estado Civil</label>
+              <select class="fe-input" name="estado_civil">
+                {% for ec in ['Solteiro(a)','Casado(a)','Divorciado(a)','Viúvo(a)','União Estável'] %}
+                  <option>{{ ec }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {# PJ #}
+        <div id="campos-pj" style="display:none;">
+          <div class="fe-row">
+            <div class="fe-group fe-flex-3">
+              <label class="fe-label">Razão Social <span class="fe-req">*</span></label>
+              <input class="fe-input" type="text" name="razao_social" placeholder="Razão Social completa">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Nome Fantasia</label>
+              <input class="fe-input" type="text" name="nome_fantasia" placeholder="Nome Fantasia">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">CNPJ <span class="fe-req">*</span> {{ info_icon('CNPJ da empresa investidora.') }}</label>
+              <input class="fe-input mask-cnpj" type="text" name="cnpj" id="investidor_cnpj" placeholder="00.000.000/0000-00" maxlength="18" onblur="checkDuplicateField(this, 'Investidor', 'cnpj')">
+            </div>
+          </div>
+          <div class="fe-row">
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Inscrição Estadual</label>
+              <input class="fe-input" type="text" name="ie" placeholder="IE">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Responsável / Representante</label>
+              <input class="fe-input" type="text" name="responsavel" placeholder="Nome do representante legal">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">CPF do Responsável</label>
+              <input class="fe-input mask-cpf" type="text" name="cpf_responsavel" placeholder="000.000.000-00">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {# ══════════ CARD 2 — CONTATO ══════════ #}
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-phone"></i> Contato</div>
+      <div class="fe-card-body">
+        <div class="fe-row">
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Telefone</label>
+            <input class="fe-input mask-phone" type="text" name="telefone" placeholder="(00) 00000-0000">
+          </div>
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">WhatsApp</label>
+            <input class="fe-input mask-phone" type="text" name="whatsapp" placeholder="(00) 00000-0000">
+          </div>
+          <div class="fe-group fe-flex-3">
+            <label class="fe-label">E-mail {{ info_icon('E-mail principal do investidor.') }}</label>
+            <input class="fe-input" type="email" name="email" placeholder="investidor@email.com" oninput="this.value = this.value.toLowerCase()">
+          </div>
+          <div class="fe-group fe-flex-3">
+            <label class="fe-label">E-mail Alternativo {{ info_icon('E-mail secundário.') }}</label>
+            <input class="fe-input" type="email" name="email2" placeholder="outro@email.com" oninput="this.value = this.value.toLowerCase()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ══════════ CARD 3 — ENDEREÇO ══════════ #}
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-map-marker-alt"></i> Endereço</div>
+      <div class="fe-card-body">
+        <div class="fe-row">
+          <div class="fe-group" style="max-width:130px;">
+            <label class="fe-label">CEP</label>
+            <input class="fe-input mask-cep" type="text" name="cep" id="inv-cep"
+                   placeholder="00000-000" onblur="buscarCepInv(this)">
+          </div>
+          <div class="fe-group fe-flex-3">
+            <label class="fe-label">Logradouro</label>
+            <input class="fe-input" type="text" name="logradouro" id="inv-rua" placeholder="Rua, Av., etc.">
+          </div>
+          <div class="fe-group" style="max-width:90px;">
+            <label class="fe-label">Número</label>
+            <input class="fe-input" type="text" name="numero" id="inv-numero" placeholder="Nº">
+          </div>
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Complemento</label>
+            <input class="fe-input" type="text" name="complemento" placeholder="Apto, Sala...">
+          </div>
+        </div>
+        <div class="fe-row">
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Bairro</label>
+            <input class="fe-input" type="text" name="bairro" id="inv-bairro" placeholder="Bairro">
+          </div>
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Cidade</label>
+            <input class="fe-input" type="text" name="cidade" id="inv-cidade" placeholder="Cidade">
+          </div>
+          <div class="fe-group" style="max-width:70px;">
+            <label class="fe-label">UF</label>
+            <input class="fe-input" type="text" name="uf" id="inv-uf" placeholder="UF" maxlength="2" style="text-transform:uppercase;">
+          </div>
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">País</label>
+            <input class="fe-input" type="text" name="pais" value="Brasil">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ══════════ ABAS ══════════ #}
+    <div class="fe-tabs-wrap">
+      <div class="fe-tabs-nav">
+        <button type="button" class="fe-tab active" data-tab="investimento"><i class="fas fa-chart-line"></i> Investimento</button>
+        <button type="button" class="fe-tab" data-tab="aportes"><i class="fas fa-plus-circle"></i> Aportes & Resgates</button>
+        <button type="button" class="fe-tab" data-tab="rentabilidade"><i class="fas fa-percentage"></i> Rentabilidade</button>
+        <button type="button" class="fe-tab" data-tab="bancario"><i class="fas fa-university"></i> Dados Bancários</button>
+        <button type="button" class="fe-tab" data-tab="documentos"><i class="fas fa-folder-open"></i> Documentos</button>
+      </div>
+
+      {# ABA INVESTIMENTO — PAINEL PRINCIPAL #}
+      <div class="fe-tab-panel active" id="tab-investimento">
+
+        {# Seleção de Empresa #}
+        <div class="fe-addr-card" style="--addr-cor:#27AE60; margin-bottom:16px;">
+          <div class="fe-addr-title"><i class="fas fa-building"></i> Empresa do Investimento</div>
+          <div class="fe-row">
+            <div class="fe-group">
+              <label class="fe-label">Selecionar Empresa <span class="fe-req">*</span></label>
+              <select class="fe-input" name="empresa_id" id="sel-empresa">
+                <option value="">Selecione uma empresa...</option>
+                {% for emp in empresas_lista %}
+                  <option value="{{ emp.id }}" {% if (investidor_vinc and investidor_vinc.empresa_id == emp.id) or (empresa_id_pre == emp.id) %}selected{% endif %}>
+                    {{ emp.razao_social }} ({{ emp.cnpj or 'PF' }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {# Cotações em tempo real #}
+        <div class="fi-cotacoes-bar">
+          <div class="fi-cotacoes-title"><i class="fas fa-globe"></i> Cotações do dia</div>
+          <div class="fi-cotacoes-grid">
+            <div class="fi-cot-item" id="cot-usd">
+              <span class="fi-cot-moeda">🇺🇸 USD</span>
+              <span class="fi-cot-valor" id="val-usd">—</span>
+              <span class="fi-cot-var" id="var-usd"></span>
+            </div>
+            <div class="fi-cot-item" id="cot-eur">
+              <span class="fi-cot-moeda">🇪🇺 EUR</span>
+              <span class="fi-cot-valor" id="val-eur">—</span>
+              <span class="fi-cot-var" id="var-eur"></span>
+            </div>
+            <div class="fi-cot-item" id="cot-btc">
+              <span class="fi-cot-moeda">₿ BTC</span>
+              <span class="fi-cot-valor" id="val-btc">—</span>
+              <span class="fi-cot-var" id="var-btc"></span>
+            </div>
+            <div class="fi-cot-item" id="cot-gbp">
+              <span class="fi-cot-moeda">🇬🇧 GBP</span>
+              <span class="fi-cot-valor" id="val-gbp">—</span>
+              <span class="fi-cot-var" id="var-gbp"></span>
+            </div>
+          </div>
+          <div class="fi-cot-update">
+            <span id="cot-hora">Carregando cotações...</span>
+            <button type="button" class="fi-cot-refresh" onclick="carregarCotacoes()" title="Atualizar">
+              <i class="fas fa-sync-alt" id="icon-refresh"></i>
+            </button>
+          </div>
+        </div>
+
+        {# Resumo do Investimento #}
+        <div class="fe-addr-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); margin-top:16px;">
+
+          <div class="fi-kpi-card" style="--kpi-cor:#27AE60;">
+            <div class="fi-kpi-label"><i class="fas fa-arrow-down"></i> Total Aportado</div>
+            <div class="fi-kpi-value" id="kpi-total-aportado">R$ 0,00</div>
+            <div class="fi-kpi-sub">soma de todos os aportes</div>
+          </div>
+
+          <div class="fi-kpi-card" style="--kpi-cor:#0072CE;">
+            <div class="fi-kpi-label"><i class="fas fa-wallet"></i> Saldo Atual</div>
+            <div class="fi-kpi-value" id="kpi-saldo">R$ 0,00</div>
+            <div class="fi-kpi-sub">aportes − resgates</div>
+          </div>
+
+          <div class="fi-kpi-card" style="--kpi-cor:#E67E22;">
+            <div class="fi-kpi-label"><i class="fas fa-chart-line"></i> Rendimento Acumulado</div>
+            <div class="fi-kpi-value" id="kpi-rendimento">R$ 0,00</div>
+            <div class="fi-kpi-sub">baseado na taxa acordada</div>
+          </div>
+
+          <div class="fi-kpi-card" style="--kpi-cor:#8E44AD;">
+            <div class="fi-kpi-label"><i class="fas fa-calendar-check"></i> Próximo Vencimento</div>
+            <div class="fi-kpi-value" id="kpi-vencimento" style="font-size:15px;">—</div>
+            <div class="fi-kpi-sub">data de retorno acordada</div>
+          </div>
+
+        </div>
+
+        {# Dados gerais do investimento #}
+        <div class="fe-addr-card" style="--addr-cor:#27AE60; margin-top:16px;">
+          <div class="fe-addr-title"><i class="fas fa-handshake"></i> Acordo de Investimento</div>
+          <div class="fe-row">
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Participação na Empresa (%)</label>
+              <input class="fe-input" type="number" name="participacao" value="{{ investidor_vinc.participacao if investidor_vinc else '' }}" min="0" max="100" step="0.01" placeholder="0,00">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Tipo de Investimento</label>
+              <select class="fe-input" name="tipo_investimento">
+                <option value="">Selecione...</option>
+                {% for t in ['Participação Societária','Mútuo (Empréstimo)','Debênture','CRI/CRA','Equity','Contrato Específico','Outro'] %}
+                  <option {% if investidor_vinc and investidor_vinc.tipo_investimento==t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label"><i class="fas fa-calendar-plus" style="color:#27AE60;"></i> Data de Início</label>
+              <input class="fe-input" type="date" name="data_inicio" id="data-inicio" value="{{ investidor_vinc.data_inicio if investidor_vinc else '' }}" onchange="atualizarKPIs()">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label"><i class="fas fa-calendar-times" style="color:#e53e3e;"></i> Data de Vencimento</label>
+              <input class="fe-input" type="date" name="data_vencimento" id="data-vencimento" value="{{ investidor_vinc.data_vencimento if investidor_vinc else '' }}" onchange="atualizarKPIs()">
+            </div>
+          </div>
+          <div class="fe-row">
+            <div class="fe-group fe-flex-1">
+              <label class="fe-label">Status do Investimento</label>
+              <select class="fe-input" name="status_investimento">
+                {% for k,v in [('ativo','Ativo'),('encerrado','Encerrado'),('inadimplente','Inadimplente'),('renegociado','Renegociado')] %}
+                  <option value="{{ k }}" {% if investidor_vinc and investidor_vinc.status_investimento==k %}selected{% endif %}>{{ v }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Observações</label>
+              <input class="fe-input" type="text" name="obs_investimento" value="{{ investidor_vinc.obs_investimento if investidor_vinc else '' }}" placeholder="Notas sobre o acordo...">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {# ABA APORTES & RESGATES #}
+      <div class="fe-tab-panel" id="tab-aportes">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div style="font-size:13px; font-weight:600; color:#555;">
+            Registre cada aporte ou resgate com a cotação do dia.
+          </div>
+          <button type="button" class="fe-btn fe-btn-add" onclick="abrirAporte()">
+            <i class="fas fa-plus"></i> Novo Aporte / Resgate
+          </button>
+        </div>
+
+        {# Formulário inline de aporte #}
+        <div id="form-aporte-inline" style="display:none; margin-bottom:16px;" class="fe-addr-card" style="--addr-cor:#27AE60;">
+          <div class="fe-addr-title"><i class="fas fa-plus-circle"></i> Registrar Movimentação</div>
+          <div class="fe-row">
+            <div class="fe-group" style="max-width:140px;">
+              <label class="fe-label">Data</label>
+              <input class="fe-input" type="date" id="ap-data">
+            </div>
+            <div class="fe-group" style="max-width:140px;">
+              <label class="fe-label">Tipo</label>
+              <select class="fe-input" id="ap-tipo" onchange="toggleTipoAporte(this)">
+                <option value="aporte">Aporte (Entrada)</option>
+                <option value="resgate">Resgate (Saída)</option>
+                <option value="rendimento">Rendimento</option>
+              </select>
+            </div>
+            <div class="fe-group" style="max-width:140px;">
+              <label class="fe-label">Moeda</label>
+              <select class="fe-input" id="ap-moeda" onchange="preencherCotacao()">
+                <option value="BRL">R$ Real</option>
+                <option value="USD">$ Dólar (USD)</option>
+                <option value="EUR">€ Euro (EUR)</option>
+                <option value="BTC">₿ Bitcoin (BTC)</option>
+                <option value="OUTRO">Outro Ativo</option>
+              </select>
+            </div>
+            <div class="fe-group fe-flex-1">
+              <label class="fe-label">Valor</label>
+              <input class="fe-input" type="number" id="ap-valor" min="0" step="0.01" placeholder="0,00" oninput="calcularEmReais()">
+            </div>
+            <div class="fe-group" style="max-width:160px;" id="wrap-cotacao">
+              <label class="fe-label">Cotação do dia (R$)</label>
+              <input class="fe-input" type="number" id="ap-cotacao" step="0.0001" placeholder="1,0000" oninput="calcularEmReais()">
+            </div>
+            <div class="fe-group" style="max-width:160px;">
+              <label class="fe-label">Equivalente em R$</label>
+              <input class="fe-input" type="text" id="ap-em-reais" readonly style="background:#f9f9f9; font-weight:700; color:#27AE60;">
+            </div>
+          </div>
+          <div class="fe-row">
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Descrição / Referência</label>
+              <input class="fe-input" type="text" id="ap-desc" placeholder="Ex: Aporte inicial, Parcela 1/12...">
+            </div>
+            <div class="fe-group fe-flex-1">
+              <label class="fe-label">Comprovante</label>
+              <input class="fe-input" type="text" id="ap-comprovante" placeholder="Nº do comprovante ou TED">
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+            <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="cancelarAporte()">Cancelar</button>
+            <button type="button" class="fe-btn fe-btn-add" onclick="salvarAporte()">Registrar</button>
+          </div>
+        </div>
+
+        {# Tabela de movimentações #}
+        <div class="fe-info-box" id="info-aportes">
+          <i class="fas fa-info-circle"></i>
+          Nenhuma movimentação registrada ainda.
+        </div>
+        <div id="tabela-aportes-wrap" style="display:none;">
+          <table class="fe-table">
+            <thead>
+              <tr>
+                <th style="width:100px;">Data</th>
+                <th style="width:100px;">Tipo</th>
+                <th>Descrição</th>
+                <th style="width:80px;">Moeda</th>
+                <th style="width:120px;">Valor</th>
+                <th style="width:100px;">Cotação</th>
+                <th style="width:130px;">Em R$</th>
+                <th style="width:40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-aportes"></tbody>
+            <tfoot>
+              <tr style="background:#f0fff4; font-weight:700;">
+                <td colspan="4" style="text-align:right; color:#27AE60;">SALDO TOTAL (R$):</td>
+                <td colspan="3" id="tfoot-saldo" style="color:#27AE60; font-size:15px;">R$ 0,00</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      {# ABA RENTABILIDADE #}
+      <div class="fe-tab-panel" id="tab-rentabilidade">
+        <div class="fe-addr-grid">
+          <div class="fe-addr-card" style="--addr-cor:#27AE60;">
+            <div class="fe-addr-title"><i class="fas fa-percentage"></i> Taxa Acordada</div>
+            <div class="fe-row">
+              <div class="fe-group fe-flex-1">
+                <label class="fe-label">Indexador</label>
+                <select class="fe-input" name="indexador">
+                  {% for k,v in [('fixo','Taxa Fixa'),('cdi','% do CDI'),('ipca','IPCA +'),('igpm','IGP-M +'),('selic','Selic'),('dolar','Variação Dólar'),('livre','Livre Negociação')] %}
+                    <option value="{{ k }}" {% if investidor_vinc and investidor_vinc.indexador==k %}selected{% endif %}>{{ v }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="fe-row">
+              <div class="fe-group">
+                <label class="fe-label">Taxa (% a.m.)</label>
+                <input class="fe-input" type="number" name="taxa_mensal" value="{{ investidor_vinc.taxa_mensal if investidor_vinc else '' }}" step="0.01" placeholder="0,00" oninput="calcularProjecao()">
+              </div>
+              <div class="fe-group">
+                <label class="fe-label">Taxa (% a.a.)</label>
+                <input class="fe-input" type="number" name="taxa_anual" value="{{ investidor_vinc.taxa_anual if investidor_vinc else '' }}" step="0.01" placeholder="0,00" id="taxa-anual-display" readonly style="background:#f9f9f9;">
+              </div>
+            </div>
+            <div class="fe-row">
+              <div class="fe-group fe-flex-1">
+                <label class="fe-label">Forma de Pagamento</label>
+                <select class="fe-input" name="forma_pagamento">
+                  {% for k,v in [('mensal','Mensal'),('trimestral','Trimestral'),('semestral','Semestral'),('anual','Anual'),('vencimento','No Vencimento')] %}
+                    <option value="{{ k }}" {% if investidor_vinc and investidor_vinc.forma_pagamento==k %}selected{% endif %}>{{ v }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="fe-addr-card" style="--addr-cor:#2ecc71;">
+            <div class="fe-addr-title"><i class="fas fa-calculator"></i> Projeção de Rendimento</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div class="fi-proj-row">
+                <span>Saldo Atual</span>
+                <strong id="proj-saldo">R$ 0,00</strong>
+              </div>
+              <div class="fi-proj-row">
+                <span>Rendimento 30 dias</span>
+                <strong id="proj-30" style="color:#27AE60;">R$ 0,00</strong>
+              </div>
+              <div class="fi-proj-row">
+                <span>Rendimento 6 meses</span>
+                <strong id="proj-180" style="color:#27AE60;">R$ 0,00</strong>
+              </div>
+              <div class="fi-proj-row">
+                <span>Rendimento 12 meses</span>
+                <strong id="proj-360" style="color:#27AE60;">R$ 0,00</strong>
+              </div>
+              <div class="fi-proj-row" style="border-top:2px solid #27AE60; padding-top:10px; margin-top:4px;">
+                <span>Total no Vencimento</span>
+                <strong id="proj-venc" style="color:#276749; font-size:16px;">R$ 0,00</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fe-row" style="margin-top:14px;">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Observações sobre a Rentabilidade</label>
+            <textarea class="fe-input" name="obs_rentabilidade" rows="2"
+                      placeholder="Ex: Taxa negociada em reunião de 10/03/2026, revisada anualmente..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      {# ABA BANCÁRIO #}
+      <div class="fe-tab-panel" id="tab-bancario">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+          <button type="button" class="fe-btn fe-btn-add" onclick="adicionarContaInv()">
+            <i class="fas fa-plus"></i> Adicionar Conta
+          </button>
+        </div>
+        <div class="fe-info-box" id="info-contas-inv">
+          <i class="fas fa-info-circle"></i>
+          Conta(s) bancária(s) do investidor para pagamento de rendimentos e resgates.
+        </div>
+        <div id="form-conta-inv" style="display:none; margin-top:14px;" class="fe-addr-card" style="--addr-cor:#27AE60;">
+          <div class="fe-addr-title"><i class="fas fa-plus-circle"></i> Nova Conta</div>
+          <div class="fe-row">
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Banco</label>
+              <select class="fe-input" id="bci-banco">
+                <option value="">Selecione...</option>
+                {% for cod, nome in [
+                  ('001','BB — Banco do Brasil'),('033','Santander'),('041','Banrisul'),
+                  ('077','Inter'),('104','Caixa Econômica Federal'),('237','Bradesco'),
+                  ('260','Nubank'),('341','Itaú'),('336','C6 Bank'),('748','Sicredi'),('756','Sicoob'),
+                ] %}
+                  <option value="{{ cod }}">{{ cod }} — {{ nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="fe-group fe-flex-1">
+              <label class="fe-label">Tipo</label>
+              <select class="fe-input" id="bci-tipo">
+                <option>Conta Corrente</option><option>Poupança</option>
+                <option>Conta Pagamento</option>
+              </select>
+            </div>
+            <div class="fe-group fe-flex-1">
+              <label class="fe-label">Agência</label>
+              <input class="fe-input" type="text" id="bci-agencia" placeholder="0000">
+            </div>
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Conta</label>
+              <input class="fe-input" type="text" id="bci-conta" placeholder="00000-0">
+            </div>
+          </div>
+          <div class="fe-row">
+            <div class="fe-group fe-flex-2">
+              <label class="fe-label">Chave PIX</label>
+              <input class="fe-input" type="text" id="bci-pix" placeholder="CPF, e-mail ou telefone">
+            </div>
+            <div class="fe-group" style="max-width:130px; justify-content:flex-end; padding-top:22px;">
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; color:#555;">
+                <input type="checkbox" id="bci-principal" style="width:16px;height:16px;"> Principal
+              </label>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+            <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="cancelarContaInv()">Cancelar</button>
+            <button type="button" class="fe-btn fe-btn-add" onclick="salvarContaInv()">Salvar</button>
+          </div>
+        </div>
+        <div id="tabela-contas-inv" style="display:none; margin-top:16px;">
+          <table class="fe-table">
+            <thead><tr><th>Banco</th><th>Tipo</th><th>Agência</th><th>Conta</th><th>PIX</th><th>Principal</th><th style="width:40px;"></th></tr></thead>
+            <tbody id="tbody-contas-inv"></tbody>
+          </table>
+        </div>
+      </div>
+
+      {# ABA DOCUMENTOS #}
+      <div class="fe-tab-panel" id="tab-documentos">
+        <div class="fe-doc-upload-area" id="drop-area-inv"
+             ondragover="event.preventDefault(); this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="onDropInv(event)">
+          <i class="fas fa-cloud-upload-alt fe-doc-icon"></i>
+          <p class="fe-doc-hint">Arraste arquivos aqui ou</p>
+          <label class="fe-btn fe-btn-add" style="cursor:pointer;">
+            <i class="fas fa-plus"></i> Escolher Arquivos
+            <input type="file" name="documentos" id="input-docs-inv" multiple
+                   accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                   style="display:none;" onchange="previewDocsInv(this)">
+          </label>
+          <p class="fe-doc-hint-small">Contrato, Comprovantes, RG/CNPJ · PDF, Imagens · Máx. 10 MB</p>
+        </div>
+        <div style="margin-top:16px;">
+          <div style="font-size:11.5px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:.4px; margin-bottom:10px;">
+            <i class="fas fa-lightbulb" style="color:#E67E22;"></i> Documentos recomendados
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            {% for doc in ['Contrato de Investimento','Comprovante de Transferência','RG / CNH','CNPJ','Procuração','Acordo de Confidencialidade','Termo de Ciência de Risco'] %}
+            <span style="background:#e8f8f0; color:#27AE60; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600;">{{ doc }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div id="preview-docs-inv" style="display:none; margin-top:14px;">
+          <div style="font-size:11.5px; font-weight:700; color:#27AE60; margin-bottom:8px;"><i class="fas fa-paperclip"></i> Selecionados</div>
+          <div id="preview-lista-inv" class="fe-doc-lista"></div>
+        </div>
+      </div>
+
+    </div>{# /tabs #}
+
+    <div class="fe-footer-actions">
+      {% if request.args.get('modal') %}
+      <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="fecharModalEmp()">
+        <i class="fas fa-times"></i> Sair
+      </button>
+      {% else %}
+      <a href="{{ url_for('cadastros.abas', aba='empresa') }}" class="fe-btn fe-btn-ghost-dark">
+        <i class="fas fa-times"></i> Cancelar
+      </a>
+      {% endif %}
+      <button type="submit" class="fe-btn fe-btn-salvar-footer">
+        <i class="fas fa-save"></i> Salvar Investidor
+      </button>
+    </div>
+
+  </form>
+
+  {# ══════════ LISTA DE INVESTIDORES — abaixo do formulário ══════════ #}
+  <div class="fe-card" id="card-lista-investidores" style="margin-top:20px;">
+    <div class="fe-card-title" style="color:#27AE60; background:#f0fff4;">
+      <i class="fas fa-hand-holding-usd"></i> Investidores Cadastrados
+    </div>
+    <div class="fe-card-body" style="padding:0;">
+      <div style="padding:10px 15px; border-bottom:1px solid #eee;">
+          <input type="text" id="filtro-investidor" oninput="filtrarTabelaInvestidores()" placeholder="Pesquisar investidor por nome..."
+              style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13px; outline:none; font-weight:700;">
+      </div>
+      <table class="fe-table" id="tabela-investidores">
+        <thead>
+          <tr>
+            <th style="width:60px;">ID</th>
+            <th>Tipo</th>
+            <th>Investidor</th>
+            <th>Participação</th>
+            <th>Saldo Atual</th>
+            <th style="width:60px; text-align:center;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in lista_investidores %}
+          <tr>
+            <td><span class="fe-badge-id">#{{ inv.id }}</span></td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:#e2e8f0; color:#475569;">
+                {{ 'Pessoa Física' if inv.tipo_pessoa == 'PF' else 'Pessoa Jurídica' }}
+              </span>
+            </td>
+            <td><strong>{{ inv.nome or inv.razao_social }}</strong></td>
+            <td>
+              {% if inv.taxa_mensal %}
+                <strong style="color:#27AE60;">{{ inv.taxa_mensal }}% am</strong>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if inv.investimento_inicial %}
+                <strong>R$ {{ '%.2f'|format(inv.investimento_inicial|float) }}</strong>
+              {% else %}R$ 0,00{% endif %}
+            </td>
+            <td style="text-align:center;">
+              <div style="display:flex; justify-content:center; gap:5px;">
+                <button type="button" class="fe-acao fe-acao-edit" title="Editar" onclick="window.location.href='{{ url_for('cadastros.form_investidor') }}?id={{ inv.id }}'"><i class="fas fa-pen"></i></button>
+                <button type="button" class="fe-acao" style="background:rgba(231,76,60,0.1); color:#e74c3c;" title="Excluir" onclick="confirm('Excluir investidor {{ inv.nome or inv.razao_social }}?')"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# ══════════ LISTA DE INVESTIDORES — abaixo do formulário ══════════ #}
+  <div class="fe-card" style="margin-top:20px;">
+    <div class="fe-card-title" style="color:#27AE60; background:#f0fff4;">
+      <i class="fas fa-hand-holding-usd"></i> Investidores Cadastrados
+    </div>
+    <div class="fe-card-body" style="padding:0;">
+      <table class="fe-table" id="tabela-investidores-sec">
+        <thead>
+          <tr>
+            <th style="width:60px;">ID</th>
+            <th>Nome / Razão Social</th>
+            <th>CPF / CNPJ</th>
+            <th>Tipo</th>
+            <th>Investimento</th>
+            <th style="width:120px;">Status</th>
+            <th style="width:60px; text-align:center;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in lista_investidores %}
+          <tr>
+            <td><span class="fe-badge-id">#{{ inv.id }}</span></td>
+            <td><strong>{{ inv.nome or inv.razao_social or '—' }}</strong>
+              {% if inv.nome_fantasia %}<br><small style="color:#888;">{{ inv.nome_fantasia }}</small>{% endif %}
+            </td>
+            <td><code class="fe-code">{{ inv.cpf or inv.cnpj or '—' }}</code></td>
+            <td>{{ 'Pessoa Física' if inv.tipo_pessoa == 'pf' else 'Pessoa Jurídica' }}</td>
+            <td>{{ inv.tipo_investimento or '—' }}</td>
+            <td>
+              {% if inv.status_investimento == 'ativo' %}
+                <span style="background:#f0fff4; color:#276749; border:1px solid #c6f6d5; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">Ativo</span>
+              {% elif inv.status_investimento == 'encerrado' %}
+                <span style="background:#fff5f5; color:#c53030; border:1px solid #fed7d7; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">Encerrado</span>
+              {% else %}
+                <span style="background:#fffbeb; color:#92400e; border:1px solid #fde68a; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700;">{{ inv.status_investimento | title }}</span>
+              {% endif %}
+            </td>
+            <td style="text-align:center;">
+              <a href="{{ url_for('cadastros.form_investidor', id=inv.id) }}" class="fe-acao fe-acao-edit" title="Editar"><i class="fas fa-pen"></i></a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="padding:30px; text-align:center; color:#94a3b8; font-style:italic;">Nenhum investidor cadastrado.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<style>
+:root {
+  --pri:    #7A255F;  /* ROXO ARIONE — padronizado com Empresa */
+  --pri-l:  #8b336d;
+  --pri-bg: #fcfaff;
+  --border: #e2e8f0; --text:#2d3748; --muted:#64748b;
+  --bg:#f8fafc; --card:#ffffff; --radius:12px;
+  --shadow:0 4px 20px rgba(0,0,0,0.04); --tr:0.2s ease;
+}
+.fe-wrap{padding:20px 24px;background:var(--bg);min-height:100vh;}
+.fe-flash{padding:11px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px;}
+.fe-flash-danger{background:#fff5f5;color:#c53030;border:1px solid #fed7d7;}
+.fe-flash-success{background:#f0fff4;color:#276749;border:1px solid #c6f6d5;}
+.fe-header{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#27AE60,#2ecc71);padding:16px 22px;border-radius:var(--radius);margin-bottom:14px;box-shadow:0 4px 16px rgba(39,174,96,0.28);}
+.fe-header-left{display:flex;align-items:center;gap:14px;color:#fff;}
+.fe-header-icon{width:42px;height:42px;background:rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.fe-header-title{margin:0;font-size:17px;font-weight:700;color:#fff;}
+.fe-breadcrumb{display:flex;align-items:center;gap:5px;font-size:11.5px;color:rgba(255,255,255,0.75);margin-top:2px;}
+.fe-breadcrumb a{color:rgba(255,255,255,0.88);text-decoration:none;}
+.fe-breadcrumb i{font-size:8px;}
+.fe-header-actions{display:flex;gap:9px;}
+.fe-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 17px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:all var(--tr);white-space:nowrap;}
+.fe-btn-ghost{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.35);}
+.fe-btn-ghost:hover{background:rgba(255,255,255,0.27);color:#fff;}
+.fe-btn-salvar{background:#fff;color:var(--pri);}
+.fe-btn-salvar:hover{background:#e8f8f0;}
+.fe-btn-ghost-dark{background:#fff;color:var(--muted);border:1.5px solid var(--border);}
+.fe-btn-ghost-dark:hover{border-color:#2ecc71;color:var(--pri);}
+.fe-btn-salvar-footer{background:linear-gradient(135deg,#27AE60,#2ecc71);color:#fff;box-shadow:0 4px 12px rgba(39,174,96,0.28);}
+.fe-btn-salvar-footer:hover{opacity:.9;}
+.fe-btn-add{background:linear-gradient(135deg,#27AE60,#2ecc71);color:#fff;}
+.fe-btn-add:hover{opacity:.9;}
+.fe-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--border);overflow:hidden;}
+.fe-card-title{padding:11px 18px;font-size:13px;font-weight:700;color:var(--pri);border-bottom:1px solid var(--border);background:var(--pri-bg);display:flex;align-items:center;gap:8px;}
+.fe-card-body{padding:16px 18px;}
+.fe-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.fe-group{display:flex;flex-direction:column;flex:1;min-width:130px;}
+.fe-flex-1{flex:1;}.fe-flex-2{flex:2;}.fe-flex-3{flex:3;}
+.fe-label{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.fe-req{color:#e53e3e;}
+.fe-input{padding:9px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13.5px;color:var(--text);background:#fff;transition:border-color var(--tr),box-shadow var(--tr);width:100%;box-sizing:border-box;}
+.fe-input:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(39,174,96,.12);}
+.fe-input:hover{border-color:#2ecc71;}
+.fe-input.error{border-color:#e53e3e;}
+textarea.fe-input{resize:vertical;min-height:60px;}
+.fe-tabs-wrap{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--border);}
+.fe-tabs-nav{display:flex;gap:2px;padding:10px 14px 0;background:var(--pri-bg);border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--border);overflow-x:auto;}
+.fe-tab{padding:9px 16px;border:none;background:transparent;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:7px 7px 0 0;transition:all var(--tr);display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.fe-tab:hover{color:var(--pri);background:rgba(39,174,96,.05);}
+.fe-tab.active{color:var(--pri);border-bottom-color:var(--pri);background:#fff;}
+.fe-tab-panel{display:none;padding:18px;}
+.fe-tab-panel.active{display:block;}
+.fe-addr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;}
+.fe-addr-card{background:#fafafa;border:1.5px solid var(--border);border-radius:9px;padding:14px;border-top:3px solid var(--addr-cor,var(--pri));}
+.fe-addr-title{font-size:11.5px;font-weight:700;color:var(--addr-cor,var(--pri));margin-bottom:12px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.4px;}
+.fe-info-box{background:#e8f8f0;border:1px solid #a9dfbf;border-radius:8px;padding:14px 18px;color:#1a7940;font-size:13px;display:flex;align-items:center;gap:9px;}
+.fe-doc-upload-area{border:2px dashed var(--border);border-radius:10px;padding:32px 20px;text-align:center;background:#fafafa;transition:all var(--tr);}
+.fe-doc-upload-area.drag-over{border-color:var(--pri);background:var(--pri-bg);}
+.fe-doc-icon{font-size:40px;color:var(--pri);opacity:.5;display:block;margin-bottom:8px;}
+.fe-doc-hint{color:var(--muted);margin:6px 0;font-size:13px;}
+.fe-doc-hint-small{color:#aaa;font-size:11px;margin-top:8px;}
+.fe-doc-lista{display:flex;flex-direction:column;gap:8px;}
+.fe-doc-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;}
+.fe-doc-ext-icon{font-size:20px;}
+.fe-doc-ext-pdf{color:#e53e3e;}.fe-doc-ext-doc,.fe-doc-ext-docx{color:#2b6cb0;}
+.fe-doc-ext-png,.fe-doc-ext-jpg,.fe-doc-ext-jpeg{color:#d69e2e;}
+.fe-doc-nome{flex:1;font-size:13px;color:var(--text);word-break:break-all;}
+.fe-table{width:100%;border-collapse:collapse;font-size:13px;}
+.fe-table thead tr{background:var(--pri-bg);border-bottom:2px solid var(--pri);}
+.fe-table th{padding:10px 12px;text-align:left;font-weight:700;color:var(--pri);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;}
+.fe-table td{padding:10px 12px;border-bottom:1px solid #f0f0f0;color:var(--text);vertical-align:middle;}
+.fe-table tbody tr:hover{background:#e8f8f0;}
+.fe-table tfoot td{padding:10px 12px;}
+.fe-acao{width:28px;height:28px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all var(--tr);}
+.fe-acao-del{background:rgba(229,62,62,.1);color:#e53e3e;}.fe-acao-del:hover{background:#e53e3e;color:#fff;}
+.fe-footer-actions{display:flex;justify-content:flex-end;gap:10px;padding:12px 0 6px;}
+
+/* Tipo PF/PJ toggle */
+.fi-tipo-toggle{display:flex;gap:4px;background:#f0f0f0;padding:4px;border-radius:9px;}
+.fi-tipo-btn{padding:8px 20px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);background:transparent;transition:all var(--tr);display:flex;align-items:center;gap:7px;}
+.fi-tipo-btn.active{background:#fff;color:var(--pri);box-shadow:0 2px 8px rgba(0,0,0,0.10);}
+
+/* Cotações */
+.fi-cotacoes-bar{background:linear-gradient(135deg,#1a5c36,#27AE60);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.fi-cotacoes-title{font-size:12px;font-weight:700;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.fi-cotacoes-grid{display:flex;gap:16px;flex:1;flex-wrap:wrap;}
+.fi-cot-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);padding:7px 14px;border-radius:8px;}
+.fi-cot-moeda{font-size:12px;color:rgba(255,255,255,0.8);font-weight:600;}
+.fi-cot-valor{font-size:14px;font-weight:800;color:#fff;}
+.fi-cot-var{font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;}
+.fi-cot-var.pos{background:rgba(255,255,255,0.2);color:#afffcf;}
+.fi-cot-var.neg{background:rgba(255,100,100,0.3);color:#ffcece;}
+.fi-cot-update{display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,0.6);white-space:nowrap;}
+.fi-cot-refresh{background:rgba(255,255,255,0.15);border:none;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tr);}
+.fi-cot-refresh:hover{background:rgba(255,255,255,0.3);}
+
+/* KPI cards */
+.fi-kpi-card{background:var(--card);border-radius:10px;padding:16px 18px;border:1px solid var(--border);border-left:4px solid var(--kpi-cor,var(--pri));box-shadow:var(--shadow);}
+.fi-kpi-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.fi-kpi-label i{color:var(--kpi-cor,var(--pri));}
+.fi-kpi-value{font-size:20px;font-weight:800;color:var(--kpi-cor,var(--pri));margin-bottom:4px;}
+.fi-kpi-sub{font-size:11px;color:var(--muted);}
+
+/* Projeção */
+.fi-proj-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:13px;color:#555;}
+.fi-proj-row:last-child{border-bottom:none;}
+
+/* Tipo aporte badge */
+.badge-aporte  {background:#e8f8f0;color:#27AE60;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+.badge-resgate {background:#fff5f5;color:#e53e3e;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+.badge-rendimento{background:#fffbeb;color:#E67E22;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;}
+
+@media(max-width:768px){.fe-wrap{padding:12px;}.fe-row{flex-direction:column;}.fe-header{flex-direction:column;align-items:flex-start;gap:10px;}.fi-cotacoes-bar{flex-direction:column;}}
+.fe-wrap{ font-family: 'Inter', sans-serif; }
+.fe-wrap * { box-sizing: border-box; }
+.fe-wrap i, .fe-wrap .fas, .fe-wrap .far, .fe-wrap .fab { font-family: "Font Awesome 6 Free" !important; font-weight: 900; }
+</style>
+
+  </form>
+
+  {# ══════════ LISTA DE INVESTIDORES — abaixo do formulário ══════════ #}
+  <div class="fe-card" style="margin-top:20px;">
+    <div class="fe-card-title" style="color:#27AE60; background:#f0fff4;">
+      <i class="fas fa-hand-holding-usd"></i> Investidores Cadastrados
+    </div>
+    <div class="fe-card-body" style="padding:0;">
+      <table class="fe-table">
+        <thead>
+          <tr>
+            <th style="width:60px;">ID</th>
+            <th>Tipo</th>
+            <th>Investidor</th>
+            <th>Status</th>
+            <th>Saldo Atual</th>
+            <th style="width:100px; text-align:center;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in lista_investidores %}
+          <tr>
+            <td><span class="fe-badge-id">#{{ inv.id }}</span></td>
+            <td>
+              <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; background:#e2e8f0; color:#475569;">
+                {{ 'PF' if inv.tipo_pessoa == 'PF' else 'PJ' }}
+              </span>
+            </td>
+            <td><strong>{{ inv.nome or inv.razao_social }}</strong></td>
+            <td><span class="fe-badge-status fe-status-ativo">Ativo</span></td>
+            <td>
+                <strong>R$ {{ '%.2f'|format(inv.investimento_inicial|float) if inv.investimento_inicial else '0,00' }}</strong>
+            </td>
+            <td style="text-align:center;">
+              <div style="display:flex; justify-content:center; gap:5px;">
+                <button type="button" class="fe-acao fe-acao-edit" title="Editar" onclick="window.location.href='{{ url_for('cadastros.form_investidor') }}?id={{ inv.id }}'"><i class="fa-solid fa-edit"></i></button>
+                <button type="button" class="fe-acao" style="background:#fff; color:#64748b;" title="Imprimir" onclick="imprimirModal()"><i class="fa-solid fa-print"></i></button>
+                <button type="button" class="fe-acao" style="background:rgba(231,76,60,0.1); color:#e74c3c;" title="Excluir" onclick="confirmarExcluirInvestidor({{ inv.id }}, '{{ inv.nome or inv.razao_social }}')"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="padding:30px; text-align:center; color:#94a3b8; font-style:italic;">Nenhum investidor cadastrado.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+// ── Abas
+document.querySelectorAll('.fe-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.fe-tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.fe-tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Toggle PF/PJ
+function setTipo(tipo){
+  document.getElementById('tipo_pessoa').value=tipo;
+  document.getElementById('campos-pf').style.display=tipo==='pf'?'block':'none';
+  document.getElementById('campos-pj').style.display=tipo==='pj'?'block':'none';
+  document.getElementById('btn-pf').classList.toggle('active',tipo==='pf');
+  document.getElementById('btn-pj').classList.toggle('active',tipo==='pj');
+}
+// Inicializar estado correto na carga (respeita valor salvo)
+setTipo(document.getElementById('tipo_pessoa').value || 'pf');
+
+// ── CEP
+function buscarCepInv(input){
+  const cep=input.value.replace(/\D/g,'');
+  if(cep.length!==8) return;
+  input.disabled=true;input.style.opacity='.6';
+  fetch(`https://viacep.com.br/ws/${cep}/json/`)
+    .then(r=>r.json()).then(d=>{
+      if(!d.erro){_sv('inv-rua',d.logradouro);_sv('inv-bairro',d.bairro);_sv('inv-cidade',d.localidade);_sv('inv-uf',d.uf);document.getElementById('inv-numero')?.focus();}
+    }).catch(()=>{}).finally(()=>{input.disabled=false;input.style.opacity='1';});
+}
+function _sv(id,val){const el=document.getElementById(id);if(el)el.value=val||'';}
+
+// ── Máscaras
+document.querySelectorAll('.mask-cpf').forEach(el=>el.addEventListener('input',e=>{
+  let v=e.target.value.replace(/\D/g,'').slice(0,11);
+  v=v.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1-$2');
+  e.target.value=v;
+}));
+document.querySelectorAll('.mask-cnpj').forEach(el=>el.addEventListener('input',e=>{
+  let v=e.target.value.replace(/\D/g,'').slice(0,14);
+  v=v.replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');
+  e.target.value=v;
+}));
+document.querySelectorAll('.mask-phone').forEach(el=>el.addEventListener('input',e=>{
+  let v=e.target.value.replace(/\D/g,'').slice(0,11);
+  e.target.value=v.length>10?v.replace(/^(\d{2})(\d{5})(\d{4})$/,'($1) $2-$3'):v.replace(/^(\d{2})(\d{4})(\d{0,4})$/,'($1) $2-$3');
+}));
+document.querySelectorAll('.mask-cep').forEach(el=>el.addEventListener('input',e=>{
+  let v=e.target.value.replace(/\D/g,'').slice(0,8);
+  e.target.value=v.replace(/^(\d{5})(\d)/,'$1-$2');
+}));
+
+// ── Cotações em Tempo Real (AwesomeAPI)
+let cotacoes = { USD: 0, EUR: 0, BTC: 0, GBP: 0 };
+
+async function carregarCotacoes(){
+  const icon=document.getElementById('icon-refresh');
+  icon.classList.add('fa-spin');
+  document.getElementById('cot-hora').textContent='Atualizando...';
+  try {
+    const resp = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL,BTC-BRL,GBP-BRL');
+    const data = await resp.json();
+    const fmt  = (v,dec=2) => parseFloat(v).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+
+    const moedas = [
+      {key:'USDBRL', id:'usd', nome:'USD', dec:2},
+      {key:'EURBRL', id:'eur', nome:'EUR', dec:2},
+      {key:'BTCBRL', id:'btc', nome:'BTC', dec:0},
+      {key:'GBPBRL', id:'gbp', nome:'GBP', dec:2},
+    ];
+    moedas.forEach(m=>{
+      const d=data[m.key];
+      if(!d) return;
+      const bid=parseFloat(d.bid);
+      const pct=parseFloat(d.pctChange);
+      cotacoes[m.nome]=bid;
+      document.getElementById('val-'+m.id).textContent='R$ '+fmt(bid,m.dec);
+      const varEl=document.getElementById('var-'+m.id);
+      varEl.textContent=(pct>=0?'▲':'▼')+Math.abs(pct).toFixed(2)+'%';
+      varEl.className='fi-cot-var '+(pct>=0?'pos':'neg');
+    });
+    const agora=new Date();
+    document.getElementById('cot-hora').textContent='Atualizado às '+agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  } catch(e){
+    document.getElementById('cot-hora').textContent='Erro ao carregar cotações';
+  }
+  icon.classList.remove('fa-spin');
+}
+carregarCotacoes();
+
+// ── Preenche cotação ao mudar moeda
+function preencherCotacao(){
+  const moeda=document.getElementById('ap-moeda').value;
+  const wrap=document.getElementById('wrap-cotacao');
+  if(moeda==='BRL'){wrap.style.display='none';document.getElementById('ap-cotacao').value='1';}
+  else{wrap.style.display='flex';document.getElementById('ap-cotacao').value=cotacoes[moeda]||'';}
+  calcularEmReais();
+}
+
+function calcularEmReais(){
+  const valor=parseFloat(document.getElementById('ap-valor').value)||0;
+  const cotacao=parseFloat(document.getElementById('ap-cotacao').value)||1;
+  const emReais=valor*cotacao;
+  document.getElementById('ap-em-reais').value='R$ '+emReais.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ── Aportes & Resgates
+const aportesBuf=[];
+
+function abrirAporte(){
+  document.getElementById('form-aporte-inline').style.display='block';
+  document.getElementById('info-aportes').style.display='none';
+  document.getElementById('ap-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('ap-cotacao').value='1';
+  document.getElementById('wrap-cotacao').style.display='none';
+}
+function cancelarAporte(){document.getElementById('form-aporte-inline').style.display='none';}
+
+function salvarAporte(){
+  const valor=parseFloat(document.getElementById('ap-valor').value)||0;
+  if(!valor){document.getElementById('ap-valor').classList.add('error');return;}
+  const tipo=document.getElementById('ap-tipo').value;
+  const moeda=document.getElementById('ap-moeda').value;
+  const cotacao=parseFloat(document.getElementById('ap-cotacao').value)||1;
+  const emReais=tipo==='resgate'?-(valor*cotacao):(valor*cotacao);
+  aportesBuf.push({
+    data:document.getElementById('ap-data').value,
+    tipo, moeda, valor, cotacao, emReais,
+    desc:document.getElementById('ap-desc').value,
+    comprovante:document.getElementById('ap-comprovante').value,
+  });
+  renderAportes();cancelarAporte();
+}
+
+function renderAportes(){
+  const tbody=document.getElementById('tbody-aportes'),wrap=document.getElementById('tabela-aportes-wrap');
+  if(!aportesBuf.length){wrap.style.display='none';document.getElementById('info-aportes').style.display='flex';return;}
+  wrap.style.display='block';
+  const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtData=d=>d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'—';
+  let saldo=0;
+  tbody.innerHTML=aportesBuf.map((a,i)=>{
+    saldo+=a.emReais;
+    const badgeClass=a.tipo==='aporte'?'badge-aporte':a.tipo==='resgate'?'badge-resgate':'badge-rendimento';
+    const sinal=a.emReais>=0?'+':'';
+    return `<tr>
+      <td>${fmtData(a.data)}</td>
+      <td><span class="${badgeClass}">${a.tipo}</span></td>
+      <td>${a.desc||'—'}</td>
+      <td>${a.moeda}</td>
+      <td>${fmt(a.valor)}</td>
+      <td>${a.moeda==='BRL'?'—':'R$ '+fmt(a.cotacao)}</td>
+      <td style="font-weight:700;color:${a.emReais>=0?'#27AE60':'#e53e3e'}">${sinal}R$ ${fmt(Math.abs(a.emReais))}</td>
+      <td><button type="button" class="fe-acao fe-acao-del" onclick="removerAporte(${i})"><i class="fas fa-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tfoot-saldo').textContent='R$ '+fmt(saldo);
+  // Atualiza KPIs
+  const totalAportado=aportesBuf.filter(a=>a.tipo==='aporte').reduce((s,a)=>s+a.emReais,0);
+  document.getElementById('kpi-total-aportado').textContent='R$ '+fmt(totalAportado);
+  document.getElementById('kpi-saldo').textContent='R$ '+fmt(saldo);
+  document.getElementById('proj-saldo').textContent='R$ '+fmt(saldo);
+  atualizarKPIs();
+}
+function removerAporte(i){aportesBuf.splice(i,1);renderAportes();}
+
+// ── Projeção de Rendimento
+function calcularProjecao(){
+  const taxaMensal=parseFloat(document.querySelector('[name=taxa_mensal]')?.value)||0;
+  const taxaAnual=((1+taxaMensal/100)**12-1)*100;
+  const taEl=document.getElementById('taxa-anual-display');
+  if(taEl) taEl.value=taxaAnual.toFixed(2);
+
+  const saldoEl=document.getElementById('kpi-saldo');
+  const saldo=parseFloat(saldoEl?.textContent.replace(/[^0-9,]/g,'').replace(',','.'))||0;
+  const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const r30  = saldo*taxaMensal/100;
+  const r180 = saldo*((1+taxaMensal/100)**6-1);
+  const r360 = saldo*((1+taxaMensal/100)**12-1);
+
+  document.getElementById('proj-30').textContent  ='R$ '+fmt(r30);
+  document.getElementById('proj-180').textContent ='R$ '+fmt(r180);
+  document.getElementById('proj-360').textContent ='R$ '+fmt(r360);
+
+  atualizarKPIs();
+}
+
+function atualizarKPIs(){
+  const venc=document.getElementById('data-vencimento')?.value;
+  if(venc) document.getElementById('kpi-vencimento').textContent=new Date(venc+'T00:00:00').toLocaleDateString('pt-BR');
+}
+
+// ── Contas Bancárias Investidor
+const contasInvBuf=[];
+function adicionarContaInv(){document.getElementById('form-conta-inv').style.display='block';document.getElementById('info-contas-inv').style.display='none';}
+function cancelarContaInv(){document.getElementById('form-conta-inv').style.display='none';}
+function salvarContaInv(){
+  const banco=document.getElementById('bci-banco');
+  if(!banco.value){banco.classList.add('error');return;}
+  const principal=document.getElementById('bci-principal').checked;
+  if(principal) contasInvBuf.forEach(c=>c.principal=false);
+  contasInvBuf.push({banco:banco.options[banco.selectedIndex].text,tipo:document.getElementById('bci-tipo').value,agencia:document.getElementById('bci-agencia').value,conta:document.getElementById('bci-conta').value,pix:document.getElementById('bci-pix').value,principal});
+  renderContasInv();cancelarContaInv();
+}
+function renderContasInv(){
+  const tbody=document.getElementById('tbody-contas-inv'),wrap=document.getElementById('tabela-contas-inv');
+  if(!contasInvBuf.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  tbody.innerHTML=contasInvBuf.map((c,i)=>`<tr><td>${c.banco}</td><td>${c.tipo}</td><td>${c.agencia||'—'}</td><td>${c.conta||'—'}</td><td>${c.pix||'—'}</td><td>${c.principal?'<span style="color:#27AE60;font-weight:700;">✓</span>':'—'}</td><td><button type="button" class="fe-acao fe-acao-del" onclick="removerContaInv(${i})"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+}
+function removerContaInv(i){contasInvBuf.splice(i,1);renderContasInv();}
+
+// ── Documentos
+const _docsBufInv=new DataTransfer();
+function adicionarArquivoInv(f){_docsBufInv.items.add(f);document.getElementById('input-docs-inv').files=_docsBufInv.files;renderDocsInv();}
+function removerArquivoInv(nome){const nova=new DataTransfer();[..._docsBufInv.files].filter(x=>x.name!==nome).forEach(x=>nova.items.add(x));_docsBufInv.items.clear();[...nova.files].forEach(x=>_docsBufInv.items.add(x));document.getElementById('input-docs-inv').files=_docsBufInv.files;renderDocsInv();}
+function previewDocsInv(input){[...input.files].forEach(f=>adicionarArquivoInv(f));}
+function renderDocsInv(){const lista=document.getElementById('preview-lista-inv'),wrap=document.getElementById('preview-docs-inv');if(!_docsBufInv.files.length){wrap.style.display='none';lista.innerHTML='';return;}wrap.style.display='block';lista.innerHTML=[..._docsBufInv.files].map(f=>`<div class="fe-doc-item"><i class="fas fa-file fe-doc-ext-icon"></i><span class="fe-doc-nome">${f.name}</span><span style="font-size:11px;color:#aaa;">${(f.size/1024).toFixed(1)} KB</span><button type="button" onclick="removerArquivoInv('${f.name}')" style="margin-left:auto;background:#fff5f5;color:#e53e3e;border:none;width:24px;height:24px;border-radius:5px;cursor:pointer;flex-shrink:0;"><i class="fas fa-times"></i></button></div>`).join('');}
+function onDropInv(e){e.preventDefault();document.getElementById('drop-area-inv').classList.remove('drag-over');[...e.dataTransfer.files].forEach(f=>adicionarArquivoInv(f));}
+function buscarCepInv(input){
+  const cep=input.value.replace(/\D/g,'');if(cep.length!==8)return;
+  input.disabled=true;input.style.opacity='.6';
+  fetch(`https://viacep.com.br/ws/${cep}/json/`).then(r=>r.json()).then(d=>{
+    if(!d.erro){_sv('inv-rua',d.logradouro);_sv('inv-bairro',d.bairro);_sv('inv-cidade',d.localidade);_sv('inv-uf',d.uf);document.getElementById('inv-numero')?.focus();}
+  }).catch(()=>{}).finally(()=>{input.disabled=false;input.style.opacity='1';});
+}
+function _sv(id,val){const el=document.getElementById(id);if(el)el.value=val||'';}
+
+// ── Validação
+async function submeterInvestidor() {
+    const form = document.getElementById('form-investidor');
+    let ok = true;
+    form.querySelectorAll('[required]').forEach(el => {
+        el.classList.remove('error');
+        if (!el.value.trim()) {
+            el.classList.add('error'); ok = false;
+        }
+    });
+
+    if (!ok) {
+        const p = form.querySelector('.error');
+        if (p) p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        arioneToast('Preencha os campos obrigatórios!', 'warning');
+        return;
+    }
+
+    const formData = new FormData(form);
+    const idVal = form.querySelector('[name="id"]')?.value || '';
+    const urlPost = '/cadastros/investidores/form' + (idVal ? '/' + idVal : '');
+
+    try {
+        const response = await fetch(urlPost, {
+            method: 'POST',
+            body: formData
+        });
+        if (response.ok) {
+            arioneToast('Dados do investidor salvos com sucesso!', 'success');
+            setTimeout(() => window.location.href='{{ url_for('cadastros.form_investidor') }}', 1000);
+        } else {
+            arioneToast('Erro ao salvar investidor.', 'danger');
+        }
+    } catch (e) {
+        console.error("Erro ao salvar investidor:", e);
+        arioneToast('Erro crítico ao salvar investidor.', 'danger');
+    }
+}
+
+async function confirmarExcluirInvestidor(id, nome) {
+    if(!confirm('Deseja realmente excluir o investidor "' + nome + '"?')) return;
+    try {
+        const response = await fetch('/cadastros/investidores/excluir/' + id);
+        if(response.ok) { window.location.href='{{ url_for('cadastros.form_investidor') }}'; }
+    } catch(e) { console.error(e); }
+}
+
+// Taxa mensal → atualiza projeção
+document.querySelector('[name=taxa_mensal]')?.addEventListener('input',calcularProjecao);
+
+function focarPesquisaInvestidor() {
+    const input = document.getElementById('filtro-investidor');
+    if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => input.focus(), 350);
+        arioneToast('🔍 Campo de pesquisa ativado', 'info');
+    } else {
+        arioneToast('Campo de pesquisa não encontrado.', 'warning');
+    }
+}
+
+function abrirModalFiltrosAvancados() {
+    let modal = document.getElementById('modal-filtros-investidores');
+    if (modal) {
+        modal.style.display = 'flex';
+        return;
+    }
+
+    modal = document.createElement('div');
+    modal.id = 'modal-filtros-investidores';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:10000;';
+    modal.innerHTML = `
+        <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:#27AE60; font-size:18px; font-weight:700;">Filtros Avançados</h3>
+                <button onclick="document.getElementById('modal-filtros-investidores').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#999;">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Nome</label>
+                    <input type="text" id="filtro-nome-investidor" placeholder="Ex: João Silva" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">CPF/CNPJ</label>
+                    <input type="text" id="filtro-doc-investidor" placeholder="Ex: 123.456.789-00" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Participação</label>
+                    <select id="filtro-part-investidor" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                        <option value="">Todos</option>
+                        <option value="maior">Maior que 50%</option>
+                        <option value="menor">Menor que 50%</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:24px;">
+                <button onclick="aplicarFiltrosInvestidores()" style="flex:1; background:#27AE60; color:#fff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Aplicar</button>
+                <button onclick="limparFiltrosInvestidores()" style="flex:1; background:#f1f5f9; color:#64748b; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Limpar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function aplicarFiltrosInvestidores() {
+    const filtroNome = document.getElementById('filtro-nome-investidor').value.toLowerCase();
+    const filtroDoc = document.getElementById('filtro-doc-investidor').value.toLowerCase();
+    const filtroPart = document.getElementById('filtro-part-investidor').value;
+
+    const table = document.getElementById('tabela-investidores');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) {
+        const tds = tr[i].getElementsByTagName('td');
+        if (tds.length < 3) continue;
+
+        const nome = (tds[0].textContent || '').toLowerCase();
+        const doc = (tds[1].textContent || '').toLowerCase();
+        const partText = (tds[2].textContent || '').replace('%', '').trim();
+        const part = parseFloat(partText) || 0;
+
+        let mostrar = true;
+
+        if (filtroNome && !nome.includes(filtroNome)) mostrar = false;
+        if (filtroDoc && !doc.includes(filtroDoc)) mostrar = false;
+        if (filtroPart === 'maior' && part <= 50) mostrar = false;
+        if (filtroPart === 'menor' && part >= 50) mostrar = false;
+
+        tr[i].style.display = mostrar ? '' : 'none';
+    }
+
+    document.getElementById('modal-filtros-investidores').style.display = 'none';
+    arioneToast('Filtros aplicados com sucesso', 'success');
+}
+
+function limparFiltrosInvestidores() {
+    document.getElementById('filtro-nome-investidor').value = '';
+    document.getElementById('filtro-doc-investidor').value = '';
+    document.getElementById('filtro-part-investidor').value = '';
+
+    const table = document.getElementById('tabela-investidores');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+    for (let i = 1; i < tr.length; i++) {
+        tr[i].style.display = '';
+    }
+
+    document.getElementById('modal-filtros-investidores').style.display = 'none';
+    arioneToast('Filtros limpos', 'info');
+}
+
+function alternarVisaoFormLista() {
+    const cardForm = document.getElementById('area-formulario-investidor');
+    const lista = document.getElementById('card-lista-investidores');
+    if (!cardForm || !lista) { arioneToast('Nenhum container localizado', 'warning'); return; }
+    if (cardForm.style.display === 'none') {
+        cardForm.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        arioneToast('Visualizando Formulário + Lista', 'info');
+    } else {
+        cardForm.style.display = 'none';
+        lista.scrollIntoView({ behavior: 'smooth' });
+        arioneToast('Visualizando Lista de Registros', 'info');
+    }
+}
+
+function clonarInvestidorAtivo() {
+    const form = document.getElementById('form-investidor');
+    const idInput = form ? form.querySelector('[name="id"]') : null;
+    if (!idInput || !idInput.value || idInput.value === 'new' || idInput.value === '0') {
+        arioneToast('Apenas registros salvos podem ser clonados.', 'info');
+        return;
+    }
+    if (!confirm('🛡️ AriOne: Deseja clonar este registro para criar um novo item idêntico?')) return;
+    idInput.value = 'new';
+    const nome = form.querySelector('[name="nome"]') || form.querySelector('[name="razao_social"]');
+    if (nome && !nome.value.startsWith('CÓPIA - ')) nome.value = 'CÓPIA - ' + nome.value;
+    arioneToast('✅ Modo Clonagem Ativado! Ajuste os dados e salve como novo.', 'success');
+}
+
+function filtrarTabelaInvestidores() {
+    const input = document.getElementById('filtro-investidor');
+    if (!input) return;
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('tabela-investidores');
+    if (!table) return;
+    table.querySelectorAll('tbody tr').forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

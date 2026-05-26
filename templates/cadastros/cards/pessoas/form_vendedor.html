@@ -1,0 +1,367 @@
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% block content %}
+<div class="fe-wrap" style="{{ 'padding:0; background:transparent; min-height:auto;' if request.args.get('modal') else '' }}">
+
+    <style>
+        /* ── PAAv1: QUIET LUXURY CSS ── */
+        .fe-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .gf-input { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 12px; color: #1e293b; background: #fff; transition: all 0.2s; width: 100%; box-sizing: border-box; outline: none; }
+        .gf-input:focus { border-color: #2980B9; box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.1); }
+        
+        .fe-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 12px; }
+        .fe-card-title { padding: 11px 18px; font-size: 13px; font-weight: 700; color: #2980B9; border-bottom: 1px solid #f1f5f9; background: rgba(41, 128, 185, 0.02); display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .fe-card-body { padding: 18px 22px; }
+
+        .ge-table th { padding: 10px 15px; background: #f8fafc; color: #64748b; font-weight: 700; text-align: left; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+        
+        .vendedor-avatar {
+            width: 50px; height: 50px; border-radius: 50%; border: 2px solid #e2e8f0; object-fit: cover;
+        }
+    </style>
+
+    {% from "macros/componentes.html" import cabecalho_mestre_arione, info_icon, master_icon %}
+    
+    {# ── CABEÇALHO MESTRE STICKY ── #}
+    {{ cabecalho_mestre_arione(
+        titulo='Gestão de Consultores',
+        subtitulo='Pessoas > Comercial > Equipe de Vendas',
+        icone='fa-user-tie',
+        form_id='area-formulario-vendedor',
+        list_id='grid-vendedores',
+        rota_novo='#',
+        onclick_novo="resetFormVendedor()",
+        onclick_save="salvarVendedor()",
+        onclick_filter="abrirModalFiltrosAvancados()",
+        onclick_search="focarPesquisaVendedor()",
+        sub_key="CADASTROS — Comercial",
+        tela="Consultores",
+        cor_tema='#2980B9',
+        aba_retorno='comercial',
+        blueprint_retorno='cadastros',
+        func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='comercial') ~ "'",
+        tamanho='medio'
+    ) }}
+
+
+    <script>
+        async function salvarVendedor() {
+            const form = document.getElementById('form-vendedor');
+            if(!form.checkValidity()){ form.reportValidity(); return; }
+
+            const btn = document.getElementById('btn-salvar-area-formulario-vendedor');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+
+            try {
+                const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                if (response.ok) {
+                    arioneToast('Consultor salvo com sucesso!', 'success');
+                    setTimeout(() => window.location.href = "{{ url_for('cadastros.form_vendedor') }}", 800);
+                } else {
+                    const data = await response.json();
+                    arioneToast(data.error || 'Erro ao salvar consultor.', 'danger');
+                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-double"></i> Confirmar e Salvar';
+                }
+            } catch(e) {
+                arioneToast('Erro de conexão.', 'danger');
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-double"></i> Confirmar e Salvar';
+            }
+        }
+        function resetFormVendedor() { window.location.href = "{{ url_for('cadastros.form_vendedor') }}"; }
+
+        function abrirModalFiltrosAvancados() {
+            const bar = document.getElementById('filter-bar-vendedores');
+            bar.style.display = bar.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function focarPesquisaVendedor() {
+            const input = document.getElementById('input-busca-vendedores');
+            const container = document.getElementById('container-busca-vendedores');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                input.focus();
+            } else {
+                container.style.display = 'none';
+                input.value = '';
+                filtrarTabelaVendedores();
+            }
+        }
+
+        function filtrarTabelaVendedores() {
+            const query = document.getElementById('input-busca-vendedores').value.toLowerCase();
+            const rows = document.querySelectorAll('#grid-vendedores tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? "" : "none";
+            });
+        }
+
+        // ── Lógica de Tags Dinâmicas de Canais (Quiet Luxury) ──
+        let canaisAtuais = [];
+
+        function inicializarCanaisTags() {
+            const canaisIniciais = [
+                {% set canais_selecionados = (vendedor.canais_venda or '').split(', ') if vendedor and vendedor.canais_venda else [] %}
+                {% for c in canais_selecionados %}
+                    "{{ c }}"{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ];
+            canaisIniciais.forEach(c => { if(c.trim()) adicionarCanalTag(c.trim(), true); });
+            atualizarVisibilidadePlaceholder();
+        }
+
+        function adicionarCanalTag(nomeCanal = null, isInit = false) {
+            const select = document.getElementById('select-canal-add');
+            const nome = nomeCanal || select.value;
+            if (!nome) return;
+
+            if (canaisAtuais.includes(nome)) {
+                if (!isInit) arioneToast('Este canal já foi adicionado!', 'warning');
+                return;
+            }
+
+            canaisAtuais.push(nome);
+
+            // Cria a tag visual
+            const tagContainer = document.getElementById('canais-tags-container');
+            const tag = document.createElement('div');
+            tag.className = 'canal-tag-item';
+            tag.setAttribute('data-canal', nome);
+            tag.style.cssText = 'background: #e0f2fe; color: #0369a1; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 8px; border: 1px solid #bae6fd; box-shadow: 0 2px 4px rgba(0,0,0,0.02);';
+            tag.innerHTML = `
+                <span><i class="fas fa-check-circle" style="opacity:0.7;"></i> ${nome}</span>
+                <i class="fas fa-times" onclick="removerCanalTag('${nome}')" style="cursor: pointer; opacity: 0.6; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6"></i>
+            `;
+            tagContainer.appendChild(tag);
+
+            // Cria o input hidden correspondente
+            const hiddenContainer = document.getElementById('canais-hidden-container');
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'canais_venda[]';
+            hidden.value = nome;
+            hidden.id = 'hidden_canal_' + nome.replace(/[^a-zA-Z0-9]/g, '_');
+            hiddenContainer.appendChild(hidden);
+
+            if (!isInit) {
+                select.value = '';
+                arioneToast(`Canal "${nome}" adicionado!`, 'success');
+            }
+            atualizarVisibilidadePlaceholder();
+        }
+
+        function removerCanalTag(nome) {
+            canaisAtuais = canaisAtuais.filter(c => c !== nome);
+            
+            // Remove a tag visual
+            const tag = document.querySelector(`.canal-tag-item[data-canal="${nome}"]`);
+            if (tag) tag.remove();
+
+            // Remove o input hidden
+            const hidden = document.getElementById('hidden_canal_' + nome.replace(/[^a-zA-Z0-9]/g, '_'));
+            if (hidden) hidden.remove();
+
+            atualizarVisibilidadePlaceholder();
+        }
+
+        function atualizarVisibilidadePlaceholder() {
+            const placeholder = document.getElementById('canais-empty-placeholder');
+            if (placeholder) {
+                placeholder.style.display = canaisAtuais.length === 0 ? 'block' : 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarCanaisTags();
+            if (typeof $ !== 'undefined' && $.fn.mask) {
+                $('.mask-money').mask('#.##0,00', {reverse: true});
+            }
+        });
+    </script>
+
+    <div class="fe-page-content" style="background: #fcfaf8; min-height: 100vh; padding: 0;">
+        <form method="POST" action="{{ url_for('cadastros.form_vendedor', id=vendedor.id if vendedor else None) }}" id="form-vendedor" novalidate>
+            <div id="area-formulario-vendedor">
+                <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+                    
+                    <div class="fe-card">
+                        <div class="fe-card-title">
+                            <i class="fas fa-user-plus"></i> Dados do Consultor
+                        </div>
+                        <div class="fe-card-body">
+                            <div class="fe-row" style="display: flex; gap: 20px; margin-bottom: 15px;">
+                                <div class="fe-group" style="flex: 2;">
+                                    <label class="fe-label">Funcionário Vinculado <span class="gf-req">*</span></label>
+                                    <select name="funcionario_id" class="gf-input" required {% if vendedor %}disabled{% endif %}>
+                                        <option value="">Selecione um funcionário...</option>
+                                        {% if vendedor %}
+                                            <option value="{{ vendedor.funcionario_id }}" selected>{{ vendedor.funcionario.nome|upper }}</option>
+                                        {% endif %}
+                                        {% for func in funcionarios %}
+                                            <option value="{{ func.id }}">{{ func.nome|upper }} ({{ func.cargo.nome if func.cargo else 'Sem Cargo' }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if vendedor %}<input type="hidden" name="funcionario_id" value="{{ vendedor.funcionario_id }}">{% endif %}
+                                </div>
+                                <div class="fe-group" style="flex: 2;">
+                                    <label class="fe-label">Nome Comercial / Exibível (Luxury Name)</label>
+                                    <input type="text" name="nome_exibivel" class="gf-input" value="{{ vendedor.nome_exibivel or '' }}" placeholder="EX: CONSULTOR {{ current_user.nome|upper if not vendedor else '' }}">
+                                </div>
+                                <div class="fe-group" style="flex: 1;">
+                                    <label class="fe-label">Situação</label>
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px;">
+                                        <input type="checkbox" name="ativo" id="ativo" {% if not vendedor or vendedor.ativo %}checked{% endif %} style="width: 18px; height: 18px;">
+                                        <label for="ativo" style="font-size: 12px; font-weight: 700; color: #1e293b;">Consultor Ativo</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="fe-row" style="display: flex; gap: 25px; margin-top: 15px; align-items: flex-start;">
+                                {# LADO ESQUERDO: Canais de Venda Atendidos (flex: 7) #}
+                                <div class="fe-group" style="flex: 7;">
+                                    <label class="fe-label"><i class="fas fa-headset"></i> Canais de Venda Atendidos (ChatOne)</label>
+                                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                                        <select id="select-canal-add" class="gf-input" style="flex: 1;">
+                                            <option value="">Selecione um canal digital...</option>
+                                            {% for canal in canais_digitais %}
+                                                <option value="{{ canal.nome }}">{{ canal.nome }} ({{ canal.tipo }})</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="button" onclick="adicionarCanalTag()" class="gf-btn" style="background: #0284c7; color: #fff; padding: 0 20px; border-radius: 7px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                            <i class="fas fa-plus"></i> Adicionar
+                                        </button>
+                                    </div>
+
+                                    {# Container visual das tags #}
+                                    <div id="canais-tags-container" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; min-height: 45px; align-items: center;">
+                                        <span id="canais-empty-placeholder" style="color: #94a3b8; font-size: 11px; font-style: italic; display: none;">Nenhum canal adicionado. Selecione acima e clique em Adicionar.</span>
+                                    </div>
+                                    <span style="font-size: 10px; color: #94a3b8; margin-top: 6px; display: block;">Os canais adicionados aparecerão como etiquetas acima. Clique no 'X' para remover.</span>
+
+                                    {# Container dos inputs hidden para submissão do formulário #}
+                                    <div id="canais-hidden-container" style="display: none;"></div>
+                                </div>
+
+                                {# LADO DIREITO: Parâmetros Comerciais e Identidade (flex: 5) #}
+                                <div style="flex: 5; display: flex; flex-direction: column; gap: 15px; background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                    <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 5px;">
+                                        <i class="fas fa-sliders-h"></i> Parâmetros Comerciais
+                                    </div>
+                                    <div style="display: flex; gap: 15px;">
+                                        <div class="fe-group" style="flex: 1;">
+                                            <label class="fe-label">Comissão Padrão (%)</label>
+                                            <input type="text" name="comissao_padrao" class="gf-input mask-money" value="{{ "{:,.2f}".format(vendedor.comissao_padrao or 0) }}" placeholder="0,00">
+                                        </div>
+                                        <div class="fe-group" style="flex: 1;">
+                                            <label class="fe-label">Meta Mensal (R$)</label>
+                                            <input type="text" name="meta_mensal" class="gf-input mask-money" value="{{ "{:,.2f}".format(vendedor.meta_mensal or 0) }}" placeholder="0,00">
+                                        </div>
+                                    </div>
+                                    <div class="fe-group">
+                                        <label class="fe-label">Cor de Identidade</label>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <input type="color" name="cor_identidade" class="gf-input" value="{{ vendedor.cor_identidade if vendedor else '#2980B9' }}" style="width: 60px; height: 38px; padding: 2px; cursor: pointer;">
+                                            <span style="font-size: 11px; color: #64748b; font-weight: 700;">Cor de destaque em relatórios e agendas</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+
+        {# ── BARRA DE FILTROS AVANÇADOS ── #}
+        <div id="filter-bar-vendedores" style="display: none; background: #fff; border: 2px solid #2980B9; padding: 15px 25px; border-radius: 12px; max-width: 1000px; margin: 15px auto; box-shadow: 0 10px 25px rgba(41, 128, 185, 0.1); box-sizing: border-box;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: #2980B9; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;">
+                <i class="fas fa-filter"></i> <span style="font-size: 11px; font-weight: 800; text-transform: uppercase;">Filtros de Consultores</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="fe-group">
+                    <label class="fe-label">Status do Consultor</label>
+                    <select class="gf-input" onchange="filtrarTabelaVendedores()">
+                        <option value="">Todos os Status</option>
+                        <option value="ATIVO">Apenas Ativos</option>
+                        <option value="INATIVO">Apenas Inativos</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {# ── LISTA DE CONSULTORES ── #}
+        {% if vendedores_lista %}
+        <div id="grid-vendedores" class="fe-form-stage" style="max-width: 1000px; margin: 40px auto; padding: 0 24px;">
+            <div class="fe-card">
+                <div class="fe-card-title" style="color: #475569; background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                    <span><i class="fas fa-list"></i> Equipe de Consultores ({{ vendedores_lista|length }})</span>
+                    <div id="container-busca-vendedores" style="display: none; width: 300px;">
+                        <input type="text" id="input-busca-vendedores" class="gf-input" style="padding: 5px 10px;" placeholder="Pesquisar consultor..." onkeyup="filtrarTabelaVendedores()">
+                    </div>
+                </div>
+                <div class="fe-card-body" style="padding: 0;">
+                    <table class="ge-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">Foto</th>
+                                <th>Nome do Consultor / Nome Comercial</th>
+                                <th>Comissão</th>
+                                <th>Meta Mensal</th>
+                                <th>Canais Atendidos</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in vendedores_lista %}
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 10px 15px;">
+                                    {% if v.funcionario.foto %}
+                                        <img src="{{ url_for('static', filename='img/funcionarios/' + v.funcionario.foto) }}" class="vendedor-avatar">
+                                    {% else %}
+                                        <div class="vendedor-avatar" style="background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #cbd5e0;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 10px 15px;">
+                                    <div style="font-weight: 800; color: #1e293b;">{{ v.nome_exibivel|upper if v.nome_exibivel else v.funcionario.nome|upper }}</div>
+                                    <div style="font-size: 11px; color: #64748b;">{{ v.funcionario.nome|upper if v.nome_exibivel else (v.funcionario.cargo.nome if v.funcionario.cargo else 'Consultor') }}</div>
+                                </td>
+                                <td style="padding: 10px 15px; font-weight: 700;">{{ "{:,.2f}".format(v.comissao_padrao or 0) }}%</td>
+                                <td style="padding: 10px 15px; font-weight: 700; color: #27AE60;">R$ {{ "{:,.2f}".format(v.meta_mensal or 0) }}</td>
+                                <td style="padding: 10px 15px;">
+                                    <div style="font-size: 11px; font-weight: 700; color: #0284c7;">
+                                        {% if v.canais_venda %}
+                                            {% for c in v.canais_venda.split(', ') %}
+                                                <span style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; display: inline-block; margin: 1px 0;">{{ c }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span style="color: #94a3b8; font-style: italic;">Nenhum canal vinculado</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 10px 15px; text-align: center;">
+                                    {% if v.ativo %}
+                                        <span style="background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;">ATIVO</span>
+                                    {% else %}
+                                        <span style="background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;">INATIVO</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 10px 15px; text-align: right;">
+                                    <a href="{{ url_for('cadastros.form_vendedor', id=v.id) }}" style="color: #2980B9; margin-right: 15px;"><i class="fas fa-edit"></i></a>
+                                    <a href="{{ url_for('cadastros.excluir_vendedor', id=v.id) }}" style="color: #ef4444;" onclick="return confirm('Deseja realmente remover este consultor?')"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

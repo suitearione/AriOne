@@ -1,0 +1,232 @@
+{# =============================================================================
+Caminho : templates/gestao/cards/comercial/form_parcerias.html
+Arquivo : form_parcerias.html
+Função  : Formulário Dinâmico para cadastro de Parceiros. (Padrão Comercial Flex)
+============================================================================= #}
+
+
+
+<form 
+    class="ge-form" 
+    id="form-parcerias"
+    method="POST" 
+    action="#">
+
+
+
+    <!-- ── BARRA DE OPÇÕES ── -->
+    <div style="background: #f8fafc; border-bottom: 2px solid #edf2f7; padding: 12px 18px; display: flex; gap: 8px; margin-bottom:20px; border-radius: 8px;">
+        <button type="button" class="gf-btn" style="background:#7A255F; color:#fff; border:none; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-plus"></i> Novo</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-edit"></i> Editar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-search"></i> Consultar</button>
+        <button type="button" class="gf-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-print"></i> Imprimir</button>
+    </div>
+
+    {# 🪪 BLOCO 1: IDENTIFICAÇÃO BÁSICA E TRIBUTÁRIA #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-handshake"></i> Dados do Parceiro
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+        
+        <div class="gf-row">
+            <div class="gf-group gf-flex-1">
+                <label 
+                    class="gf-label" 
+                    for="tipo_pessoa">Entidade <span class="gf-req">*</span>
+                </label>
+                <select 
+                    id="tipo_pessoa" 
+                    name="tipo_pessoa" 
+                    class="gf-input" 
+                    onchange="toggleParceiro.set(this.value)">
+                    <option value="PF">Pessoa Física</option>
+                    <option value="PJ" selected>Pessoa Jurídica</option>
+                </select>
+            </div>
+
+            <div class="gf-group gf-flex-1" id="campo_cnpj" style="display: flex;">
+                <label class="gf-label" for="input_cnpj">CNPJ <span class="gf-req">*</span></label>
+                <input type="text" id="input_cnpj" name="cnpj" class="gf-input" placeholder="00.000.000/0000-00">
+            </div>
+
+            <div class="gf-group gf-flex-1" id="campo_cpf" style="display: none;">
+                <label class="gf-label" for="input_cpf">CPF <span class="gf-req">*</span></label>
+                <input type="text" id="input_cpf" name="cpf" class="gf-input" placeholder="000.000.000-00">
+            </div>
+
+            <div class="gf-group gf-flex-1" id="campo_ie" style="display: flex;">
+                <label class="gf-label" for="input_ie">Cód. Setor / IE</label>
+                <input type="text" id="input_ie" name="ie" class="gf-input" placeholder="Opcional">
+            </div>
+
+            <div class="gf-group gf-flex-1" id="campo_rg_pf" style="display: none;">
+                <label class="gf-label" for="input_rg">Doc. Oficial</label>
+                <input type="text" id="input_rg" name="rg" class="gf-input" placeholder="Opcional">
+            </div>
+        </div>
+
+        <div class="gf-row">
+            <div class="gf-group gf-flex-2">
+                <label class="gf-label" id="label_razao" for="input_razao">Razão Social <span class="gf-req">*</span></label>
+                <input type="text" id="input_razao" name="razao_social" class="gf-input" required placeholder="Nome formal">
+            </div>
+            <div class="gf-group gf-flex-2">
+                <label class="gf-label" id="label_fantasia" for="input_fantasia">Nome Fantasia / Projeto</label>
+                <input type="text" id="input_fantasia" name="nome_fantasia" class="gf-input" placeholder="Como atuamos?">
+            </div>
+        </div>
+    </div>
+
+
+    {# 📬 BLOCO 2: COMUNICAÇÃO #}
+    <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13px; color: #7A255F; font-weight: 700; display:flex; align-items: center; gap:8px;">
+            <i class="fas fa-bullhorn"></i> Meios de Contato
+        </h4>
+        <hr style="border: 0; border-top: 1px solid #f1e4ef; margin: 8px 0 16px 0;">
+
+        <div class="gf-row">
+            <div class="gf-group gf-flex-2">
+                <label class="gf-label" for="input_email">E-mail Principal <span class="gf-req">*</span></label>
+                <input type="email" id="input_email" name="email" class="gf-input" required placeholder="parceiro@exemplo.com">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label" for="input_whatsapp">Telefone Link <span class="gf-req">*</span></label>
+                <input type="text" id="input_whatsapp" name="whatsapp" class="gf-input" required placeholder="(00) 90000-0000">
+            </div>
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label" for="indicador">Indicação</label>
+                <select id="indicador" name="indicador" class="gf-input">
+                    <option value="">Busca Orgânica</option>
+                    <option value="1">Gestoria</option>
+                    <option value="2">Mídia / Rede</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+
+    {# 📝 BLOCO 4: OBSERVAÇÕES E SALVAMENTO #}
+    <div style="margin-bottom: 20px;">
+        <div class="gf-row" style="margin-bottom: 5px;">
+            <div class="gf-group gf-flex-1">
+                <label class="gf-label" for="anotacoes_gerais">Termo de Acordo / Notas</label>
+                <textarea id="anotacoes_gerais" name="anotacoes_gerais" class="gf-input" rows="3" style="resize: vertical; padding: 10px;" placeholder="Minutas contratuais da parceria e condições..."></textarea>
+            </div>
+        </div>
+    </div>
+    
+    <div class="gf-actions">
+        <button type="button" class="gf-btn gf-btn-limpar" onclick="limparFichaParcerias()">
+            <i class="fas fa-eraser"></i> Limpar Ficha
+        </button>
+        <button type="submit" class="gf-btn gf-btn-consultar">
+            <i class="fas fa-save"></i> Salvar Cadastro
+        </button>
+    </div>
+
+</form>
+
+    <!-- ── ÚLTIMOS LANÇAMENTOS ── -->
+    <div style="margin-top:25px; padding:0; overflow:hidden; border: 1.5px solid #edf2f7; border-radius: 10px;">
+        <div style="background:#7A255F; color:#fff; padding:10px 18px; font-size:11px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+            <span><i class="fas fa-list"></i> ÚLTIMAS PARCERIAS REGISTRADAS</span>
+            <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px;">Acordos Comerciais</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <thead>
+                    <tr>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Documento</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Razão Social / Parceiro</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Categoria de Aliança</th>
+                        <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Status Cadastral</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-weight:800; font-size:10px;">CNPJ Válido</span></td>
+                        <td style="padding:12px 15px; color:#1e293b;"><strong>Mídia Startups BR Corp</strong></td>
+                        <td style="padding:12px 15px; color:#1e293b;">Parceiro de Mídia / Co-marketing</td>
+                        <td style="padding:12px 15px; color:#1e293b;"><span style="background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:20px; font-weight:700; font-size:10px;">Vigente</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<style>
+/* ── Layout ── */
+.ge-form{display:flex;flex-direction:column;gap:0;}
+.gf-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+.gf-group{display:flex;flex-direction:column;gap:4px;min-width:120px;}
+.gf-flex-1{flex:1;}.gf-flex-2{flex:2;}.gf-flex-3{flex:3;}
+/* ── Labels ── */
+.gf-label{font-size:10.5px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.4px;}
+.gf-req{color:#e53e3e;}
+/* ── Inputs ── */
+.gf-input{padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;color:#2d3748;background:#fff;transition:all .17s;width:100%;box-sizing:border-box;}
+.gf-input:focus{outline:none;border-color:#7A255F;box-shadow:0 0 0 3px rgba(122,37,95,.1);}
+.gf-input:hover{border-color:#b794c0;}
+/* ── Info do período selecionado ── */
+
+/* ── Divisores ── */
+.gf-divisor{font-size:10.5px;font-weight:700;color:#7A255F;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:7px;padding:10px 0 8px;border-bottom:2px solid #f0e6f5;margin-bottom:14px;}
+/* ── Botões ── */
+.gf-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0;}
+.gf-btn{padding:9px 18px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .17s;}
+.gf-btn-cancelar{background:#edf2f7;color:#4a5568;}
+.gf-btn-cancelar:hover{background:#e2e8f0;}
+.gf-btn-limpar{background:#fff;color:#718096;border:1.5px solid #e2e8f0;}
+.gf-btn-limpar:hover{border-color:#7A255F;color:#7A255F;}
+.gf-btn-consultar{background:linear-gradient(135deg,#7A255F,#a8357f);color:#fff;}
+.gf-btn-consultar:hover{opacity:.9;}
+</style>
+
+<script>
+    // =================================================================
+    // Utilitário PF / PJ para Parceria
+    // =================================================================
+    const toggleParceiro = arioneTogglePFPJ({
+        idTipoPessoa: 'tipo_pessoa',            
+        campoPJ: ['campo_cnpj', 'campo_ie'],    
+        campoPF: ['campo_cpf', 'campo_rg_pf'], 
+        labelMap: {
+            'label_razao': { PJ: 'Nome Entidade *', PF: 'Nome Gestor(a) *' },
+            'label_fantasia': { PJ: 'Projeto / Rede', PF: 'Apelido do Promotor' },
+        },
+        requiredPJ: ['input_cnpj'],
+        requiredPF: ['input_cpf'],
+        ctx: document.getElementById('form-parcerias'),
+    });
+
+    // Isolador DOM (DOMContentLoaded Substituído por IIFE no Roda-pé)
+
+
+
+    // Inicialização idêntica a form_orcamentos para suporte a modais injetados!
+    (function() {
+        const rootForm = document.getElementById('form-parcerias');
+        if (rootForm) {
+            const t = rootForm.querySelector('#tipo_pessoa'); if (t) toggleParceiro.set(t.value);
+            if (typeof initMascaras === 'function') initMascaras(rootForm);
+        }
+    })();
+
+    // Rotina de Limpeza Profunda 
+    function limparFichaParcerias() {
+        const form = document.getElementById('form-parcerias');
+        if(!form) return;
+        form.reset();
+        
+
+        
+        // Reset Forçado de UI - PF / PJ
+        const ts = form.querySelector('#tipo_pessoa');
+        if(ts) {
+            ts.value = 'PJ'; // O padrao selecionado em html eh PJ
+            toggleParceiro.set('PJ');
+        }
+    }
+</script>

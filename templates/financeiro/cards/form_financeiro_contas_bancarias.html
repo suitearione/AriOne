@@ -1,0 +1,451 @@
+<!-- templates/financeiro/cards/form_financeiro_contas_bancarias.html -->
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+{{ comp.cabecalho_mestre_arione(
+    titulo="Contas Bancárias",
+    subtitulo="Financeiro > Bancos > Contas Bancárias",
+    icone="fa-piggy-bank",
+    cor_tema="#7A255F",
+    func_fechar="voltarParaGridBancos()",
+    form_id="formContasBancarias",
+    onclick_novo="novaContaBancariaMaster()",
+    onclick_save="document.getElementById('formContasBancarias').dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))",
+    onclick_search="pesquisarContasMaster()",
+    onclick_filter="filtrarContasMaster()",
+    onclick_list="listarContasMaster()",
+    onclick_clonar="clonarContaMaster()",
+    onclick_export="exportarContasMaster()",
+    onclick_import="importarContasMaster()",
+    onclick_print="window.print()",
+    onclick_email="emailContasMaster()",
+    onclick_whatsapp="whatsappContasMaster()",
+    status="Ativo",
+    ajuda="Cadastro e gestão de contas correntes, poupança e investimentos vinculadas às instituições bancárias.",
+    tamanho="medio"
+) }}
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; width: 100%;">
+    <div class="bnk-container" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease; animation: fadeIn 0.5s ease-out;">
+        <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <i class="fas fa-piggy-bank" style="color: #7A255F; margin-right: 10px;"></i>
+                    <span>Dados da Conta Bancária</span>
+                </div>
+                <span style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">ATIVO</span>
+            </div>
+            <div class="op-card-body" style="padding: 25px;">
+                <form id="formContasBancarias" onsubmit="salvarContaBancariaMaster(event)">
+                    <input type="hidden" name="id" id="conta_id" value="new">
+                    
+                    <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                        <div class="op-group" style="flex: 2; min-width: 250px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">BANCO (BUSCAR POR NOME OU CÓDIGO) *</label>
+                            <input class="op-input" type="text" name="banco" id="banco_busca" placeholder="EX: 001 OU BANCO DO BRASIL..." list="lista-bancos-cadastrados-empresa" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="selecionarBancoMestre(this.value)" onkeyup="selecionarBancoMestre(this.value)">
+                            <datalist id="lista-bancos-cadastrados-empresa">
+                                <!-- Preenchido dinamicamente via JS com os bancos cadastrados da empresa -->
+                            </datalist>
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 120px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CÓDIGO (FEBRABAN)</label>
+                            <input class="op-input" type="text" name="cod" placeholder="EX: 001, 341..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onkeyup="buscarBancoFebrabanContas(this.value)">
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 150px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">AGÊNCIA *</label>
+                            <input class="op-input" type="text" name="agencia" placeholder="EX: 1234-5" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;">
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 150px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CONTA *</label>
+                            <input class="op-input" type="text" name="conta" placeholder="EX: 98765-4" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;">
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 150px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CHAVE PIX</label>
+                            <input class="op-input" type="text" name="chave_pix" placeholder="EX: CNPJ, EMAIL, CELULAR..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;">
+                        </div>
+                    </div>
+
+                    <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                        <div class="op-group" style="flex: 1; min-width: 180px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">TIPO DE CONTA</label>
+                            <select name="tipo" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #334155; background: #fff; transition: 0.2s;">
+                                <option value="CORRENTE">CONTA CORRENTE</option>
+                                <option value="POUPANCA">CONTA POUPANÇA</option>
+                                <option value="INVESTIMENTO">CONTA INVESTIMENTO</option>
+                                <option value="DIGITAL">CONTA DIGITAL</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 180px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">MODALIDADE DO BANCO</label>
+                            <select name="modalidade_banco" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #334155; background: #fff; transition: 0.2s;">
+                                <option value="FISICO">🏛️ BANCO FÍSICO (TRADICIONAL)</option>
+                                <option value="DIGITAL">📱 BANCO DIGITAL / FINTECH</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 150px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">STATUS</label>
+                            <select name="status" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #334155; background: #fff; transition: 0.2s;">
+                                <option value="ATIVO">🟢 ATIVO</option>
+                                <option value="INATIVO">🔴 INATIVO</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 150px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">SALDO INICIAL (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="saldo" placeholder="0.00" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Listagem de Contas Bancárias Cadastradas -->
+        <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden; margin-top: 25px;">
+            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <i class="fas fa-list" style="color: #7A255F; margin-right: 10px;"></i>
+                    <span>Contas Bancárias Cadastradas no Sistema</span>
+                </div>
+                <span id="totalContasBancarias" style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">0 REGISTROS</span>
+            </div>
+            <div class="op-card-body" style="padding: 0; overflow-x: auto;">
+                <table class="op-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-weight: 600; font-size: 11px;">
+                            <th style="padding: 14px 25px;">BANCO</th>
+                            <th style="padding: 14px 15px;">AGÊNCIA / CONTA</th>
+                            <th style="padding: 14px 15px;">CHAVE PIX</th>
+                            <th style="padding: 14px 15px;">TIPO</th>
+                            <th style="padding: 14px 15px;">MODALIDADE</th>
+                            <th style="padding: 14px 15px;">SALDO (R$)</th>
+                            <th style="padding: 14px 15px;">STATUS</th>
+                            <th style="padding: 14px 25px; text-align: right;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyContasBancarias">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function getBancosCadastradosEmpresa() {
+    return JSON.parse(localStorage.getItem('arione_bancos_cadastrados')) || [
+        { id: 1, cod: "001", banco: "BANCO DO BRASIL S.A.", ispb: "00000000", modalidade_banco: "FISICO", status: "ATIVO" },
+        { id: 2, cod: "341", banco: "ITAÚ UNIBANCO S.A.", ispb: "60701190", modalidade_banco: "FISICO", status: "ATIVO" },
+        { id: 3, cod: "260", banco: "NU PAGAMENTOS S.A. (NUBANK)", ispb: "18236120", modalidade_banco: "DIGITAL", status: "ATIVO" }
+    ];
+}
+
+function carregarDatalistBancosEmpresa() {
+    const datalist = document.getElementById('lista-bancos-cadastrados-empresa');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    const bancos = getBancosCadastradosEmpresa().filter(b => b.status === 'ATIVO');
+    bancos.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = `${b.cod} - ${b.banco}`;
+        datalist.appendChild(opt);
+    });
+}
+
+function selecionarBancoMestre(val) {
+    if (!val) return;
+    const form = document.getElementById('formContasBancarias');
+    const inpCod = form.querySelector('[name="cod"]');
+    const inpNome = form.querySelector('[name="banco"]');
+    const inpMod = form.querySelector('[name="modalidade_banco"]');
+
+    if (val.includes(' - ')) {
+        const partes = val.split(' - ');
+        const cod = partes[0].trim();
+        const nome = partes.slice(1).join(' - ').trim();
+        if (inpCod) inpCod.value = cod;
+        if (inpNome) inpNome.value = nome;
+        
+        // Busca modalidade no cadastro de bancos da empresa
+        const b = getBancosCadastradosEmpresa().find(item => item.cod === cod);
+        if (b && inpMod) inpMod.value = b.modalidade_banco || 'FISICO';
+
+        if (typeof arioneToast === 'function') arioneToast(`Banco selecionado: ${nome} (${cod})`, 'success');
+    } else if (val.trim().length === 3 && !isNaN(val.trim())) {
+        buscarBancoFebrabanContas(val.trim());
+    }
+}
+
+function buscarBancoFebrabanContas(cod) {
+    if (!cod || cod.trim().length < 3) return;
+    const codClean = cod.trim();
+    const form = document.getElementById('formContasBancarias');
+    const inpNome = form.querySelector('[name="banco"]');
+    const inpCod = form.querySelector('[name="cod"]');
+    const inpMod = form.querySelector('[name="modalidade_banco"]');
+
+    const bancos = getBancosCadastradosEmpresa();
+    const b = bancos.find(item => item.cod === codClean);
+
+    if (b) {
+        inpNome.value = `${b.cod} - ${b.banco}`;
+        if (inpCod) inpCod.value = b.cod;
+        if (inpMod) inpMod.value = b.modalidade_banco || 'FISICO';
+        if (typeof arioneToast === 'function') arioneToast(`Banco localizado no cadastro da empresa: ${b.banco}`, 'success');
+    } else {
+        if (typeof arioneToast === 'function') arioneToast(`Banco código ${codClean} não encontrado no Cadastro de Bancos da Empresa.`, 'warning');
+    }
+}
+
+// Gestão de Listagem e Persistência Local
+let contasCadastradas = JSON.parse(localStorage.getItem('arione_contas_bancarias_cad')) || [
+    { id: 1, cod: "001", banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", chave_pix: "00.000.000/0001-00", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 15420.50 },
+    { id: 2, cod: "341", banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", chave_pix: "financeiro@arione.com.br", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 8250.00 },
+    { id: 3, cod: "260", banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", chave_pix: "11999998888", tipo: "POUPANCA", modalidade_banco: "DIGITAL", status: "ATIVO", saldo: 3400.75 }
+];
+
+function salvarContasNoStorage() {
+    localStorage.setItem('arione_contas_bancarias_cad', JSON.stringify(contasCadastradas));
+}
+
+function carregarContasBancarias(filtro = '') {
+    const tbody = document.getElementById('tbodyContasBancarias');
+    const totalSpan = document.getElementById('totalContasBancarias');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    let lista = contasCadastradas;
+    if (filtro) {
+        lista = lista.filter(c => c.banco.toLowerCase().includes(filtro.toLowerCase()) || c.agencia.includes(filtro) || c.conta.includes(filtro));
+    }
+
+    totalSpan.textContent = `${lista.length} REGISTROS`;
+
+    if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding: 25px; text-align: center; color: #94a3b8;">Nenhuma conta bancária cadastrada ou localizada.</td></tr>`;
+        return;
+    }
+
+    lista.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid #f1f5f9";
+        tr.style.transition = "background 0.2s";
+        tr.onmouseover = () => tr.style.background = "#f8fafc";
+        tr.onmouseout = () => tr.style.background = "transparent";
+
+        const modBadge = c.modalidade_banco === 'DIGITAL' 
+            ? '<span style="background: #ede9fe; color: #7c3aed; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 10px;">📱 DIGITAL</span>'
+            : '<span style="background: #e0f2fe; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 10px;">🏛️ FÍSICO</span>';
+
+        const statusBadge = c.status === 'ATIVO'
+            ? '<span style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 10px;">🟢 ATIVO</span>'
+            : '<span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 10px;">🔴 INATIVO</span>';
+
+        const saldoFormatado = parseFloat(c.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        tr.innerHTML = `
+            <td style="padding: 14px 25px; font-weight: 600; color: #7A255F;">${c.banco}</td>
+            <td style="padding: 14px 15px; font-weight: 500; color: #334155;">Ag: ${c.agencia} / Cc: ${c.conta}</td>
+            <td style="padding: 14px 15px; font-weight: 500; color: #334155;">${c.chave_pix || '---'}</td>
+            <td style="padding: 14px 15px; color: #64748b;">${c.tipo}</td>
+            <td style="padding: 14px 15px;">${modBadge}</td>
+            <td style="padding: 14px 15px; font-weight: 600; color: #0f766e;">${saldoFormatado}</td>
+            <td style="padding: 14px 15px;">${statusBadge}</td>
+            <td style="padding: 14px 25px; text-align: right;">
+                <button type="button" onclick="editarContaMaster(${c.id})" style="background: #f1f5f9; color: #7A255F; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; margin-right: 5px; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button type="button" onclick="excluirContaMaster(${c.id})" style="background: #fee2e2; color: #ef4444; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px; transition: 0.2s;" onmouseover="this.style.background='#fca5a5'" onmouseout="this.style.background='#fee2e2'">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function salvarContaBancariaMaster(e) {
+    e.preventDefault();
+    const form = document.getElementById('formContasBancarias');
+    const idVal = form.querySelector('[name="id"]').value;
+    const bancoVal = form.querySelector('[name="banco"]').value.toUpperCase();
+    const codVal = form.querySelector('[name="cod"]').value;
+    const agenciaVal = form.querySelector('[name="agencia"]').value;
+    const contaVal = form.querySelector('[name="conta"]').value;
+    const chavePixVal = form.querySelector('[name="chave_pix"]').value;
+    const tipoVal = form.querySelector('[name="tipo"]').value;
+    const modalidadeVal = form.querySelector('[name="modalidade_banco"]').value;
+    const statusVal = form.querySelector('[name="status"]').value;
+    const saldoVal = parseFloat(form.querySelector('[name="saldo"]').value || 0);
+
+    if (idVal === 'new') {
+        const novoId = contasCadastradas.length > 0 ? Math.max(...contasCadastradas.map(c => c.id)) + 1 : 1;
+        contasCadastradas.push({
+            id: novoId, cod: codVal, banco: bancoVal, agencia: agenciaVal, conta: contaVal, chave_pix: chavePixVal, tipo: tipoVal, modalidade_banco: modalidadeVal, status: statusVal, saldo: saldoVal
+        });
+        if (typeof arioneToast === 'function') arioneToast("Conta bancária cadastrada com sucesso!", "success");
+    } else {
+        const c = contasCadastradas.find(item => item.id == idVal);
+        if (c) {
+            c.cod = codVal; c.banco = bancoVal; c.agencia = agenciaVal; c.conta = contaVal; c.chave_pix = chavePixVal; c.tipo = tipoVal; c.modalidade_banco = modalidadeVal; c.status = statusVal; c.saldo = saldoVal;
+        }
+        if (typeof arioneToast === 'function') arioneToast("Conta bancária atualizada com sucesso!", "success");
+    }
+
+    salvarContasNoStorage();
+    carregarContasBancarias();
+    form.reset();
+    form.querySelector('[name="id"]').value = 'new';
+}
+
+function editarContaMaster(id) {
+    const c = contasCadastradas.find(item => item.id == id);
+    if (!c) return;
+    const form = document.getElementById('formContasBancarias');
+    form.querySelector('[name="id"]').value = c.id;
+    form.querySelector('[name="banco"]').value = c.banco;
+    form.querySelector('[name="cod"]').value = c.cod || '';
+    form.querySelector('[name="agencia"]').value = c.agencia || '';
+    form.querySelector('[name="conta"]').value = c.conta || '';
+    form.querySelector('[name="chave_pix"]').value = c.chave_pix || '';
+    form.querySelector('[name="tipo"]').value = c.tipo || 'CORRENTE';
+    form.querySelector('[name="modalidade_banco"]').value = c.modalidade_banco || 'FISICO';
+    form.querySelector('[name="status"]').value = c.status || 'ATIVO';
+    form.querySelector('[name="saldo"]').value = c.saldo || 0;
+    form.scrollIntoView({ behavior: 'smooth' });
+    if (typeof arioneToast === 'function') arioneToast(`Editando conta: ${c.banco}`, "info");
+}
+
+function excluirContaMaster(id) {
+    if (confirm("Tem certeza que deseja excluir esta conta bancária?")) {
+        contasCadastradas = contasCadastradas.filter(item => item.id != id);
+        salvarContasNoStorage();
+        carregarContasBancarias();
+        if (typeof arioneToast === 'function') arioneToast("Conta bancária excluída com sucesso!", "success");
+    }
+}
+
+// Funções dos Botões do Cabeçalho Mestre
+function novaContaBancariaMaster() {
+    const form = document.getElementById('formContasBancarias');
+    form.reset();
+    form.querySelector('[name="id"]').value = 'new';
+    form.scrollIntoView({ behavior: 'smooth' });
+    if (typeof arioneToast === 'function') arioneToast("Formulário limpo para nova conta bancária", "info");
+}
+
+function pesquisarContasMaster() {
+    const termo = prompt("Digite o banco, agência ou conta para pesquisar:");
+    if (termo !== null) {
+        carregarContasBancarias(termo);
+        if (typeof arioneToast === 'function') arioneToast(`Filtrando por: ${termo}`, "info");
+    }
+}
+
+function filtrarContasMaster() {
+    const mod = prompt("Filtrar por Modalidade (FISICO ou DIGITAL):");
+    if (mod) {
+        const tbody = document.getElementById('tbodyContasBancarias');
+        const filtrado = contasCadastradas.filter(c => c.modalidade_banco.toUpperCase() === mod.toUpperCase());
+        tbody.innerHTML = '';
+        filtrado.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="7" style="padding: 14px 25px;">${c.banco} - Ag: ${c.agencia} / Cc: ${c.conta} (${c.modalidade_banco})</td>`;
+            tbody.appendChild(tr);
+        });
+        if (typeof arioneToast === 'function') arioneToast(`Filtro aplicado: ${mod.toUpperCase()}`, "info");
+    }
+}
+
+function listarContasMaster() {
+    carregarContasBancarias();
+    if (typeof arioneToast === 'function') arioneToast("Listagem completa de contas recarregada", "success");
+}
+
+function clonarContaMaster() {
+    const form = document.getElementById('formContasBancarias');
+    const bancoVal = form.querySelector('[name="banco"]').value;
+    if (!bancoVal) {
+        if (typeof arioneToast === 'function') arioneToast("Selecione ou preencha uma conta para clonar", "warning");
+        return;
+    }
+    form.querySelector('[name="id"]').value = 'new';
+    form.querySelector('[name="conta"]').value = form.querySelector('[name="conta"]').value + '-C';
+    if (typeof arioneToast === 'function') arioneToast("Conta clonada! Modifique o número da conta e clique em Salvar.", "info");
+}
+
+function exportarContasMaster() {
+    let csv = "ID,BANCO,AGENCIA,CONTA,TIPO,MODALIDADE,SALDO,STATUS\n";
+    contasCadastradas.forEach(c => {
+        csv += `${c.id},"${c.banco}",${c.agencia},${c.conta},${c.tipo},${c.modalidade_banco},${c.saldo},${c.status}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'contas_bancarias.csv');
+    a.click();
+    if (typeof arioneToast === 'function') arioneToast("Exportação CSV concluída com sucesso!", "success");
+}
+
+function importarContasMaster() {
+    const form = document.getElementById('formContasBancarias');
+    const contaAtiva = form.querySelector('[name="conta"]').value;
+    if (!contaAtiva) {
+        if (typeof arioneToast === 'function') arioneToast("Por favor, preencha ou selecione uma conta (com número de conta) antes de importar o arquivo OFX/Extrato.", "warning");
+        return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.ofx,.csv,.txt';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const conteudo = evt.target.result;
+                const contaClean = contaAtiva.replace(/[^0-9]/g, '');
+                
+                // Verifica se a conta (com ou sem hífen) existe no arquivo
+                if (!conteudo.includes(contaAtiva) && !conteudo.includes(contaClean)) {
+                    if (typeof arioneToast === 'function') arioneToast("ALERTA DE SEGURANÇA: O arquivo importado NÃO pertence à conta bancária selecionada (" + contaAtiva + ")!", "error");
+                    alert("ALERTA DE SEGURANÇA:\n\nO número da conta bancária ativa (" + contaAtiva + ") não foi localizado no arquivo importado.\nPara sua segurança, a importação foi bloqueada para evitar mistura de dados (ex: PF e PJ).");
+                    return;
+                }
+
+                if (typeof arioneToast === 'function') arioneToast(`Arquivo ${file.name} validado e importado com sucesso para a conta ${contaAtiva}!`, "success");
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function emailContasMaster() {
+    const dest = prompt("Informe o e-mail do destinatário para envio da relação de contas:");
+    if (dest) {
+        if (typeof arioneToast === 'function') arioneToast(`Relação de contas enviada para ${dest}`, "success");
+    }
+}
+
+function whatsappContasMaster() {
+    const fone = prompt("Informe o WhatsApp (com DDD) para compartilhar a lista de contas:");
+    if (fone) {
+        window.open(`https://api.whatsapp.com/send?phone=${fone}&text=Confira%20a%20lista%20de%20contas%20bancárias%20cadastradas%20no%20sistema%20AriOne.`, '_blank');
+        if (typeof arioneToast === 'function') arioneToast("Redirecionando para o WhatsApp...", "success");
+    }
+}
+
+function voltarParaGridBancos() {
+    if (typeof fecharModalBnk === 'function') fecharModalBnk();
+    if (!window.location.search.includes('aba=bancos')) { window.location.href = "{{ url_for('financeiro.abas', aba='bancos') }}"; }
+}
+
+// Inicializa a tabela ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+    carregarDatalistBancosEmpresa();
+    carregarContasBancarias();
+});
+</script>
+{% endblock %}

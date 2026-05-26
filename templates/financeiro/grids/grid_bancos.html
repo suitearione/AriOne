@@ -1,0 +1,76 @@
+<!-- templates/financeiro/grids/grid_bancos.html -->
+<div id="modal-overlay-bnk" class="ge-modal-overlay" onclick="fecharModalBnk()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-bnk" class="ge-modal-icon"></i><span id="modal-titulo-bnk">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalBnk()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-bnk"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-university"></i><span>Bancos</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_bancos') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-university ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-university ge-card-icon"></i></div>
+            <span class="ge-card-label">Bancos</span><span class="ge-card-desc">Instituições bancárias</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_contas_bancarias') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-piggy-bank ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-piggy-bank ge-card-icon"></i></div>
+            <span class="ge-card-label">Contas</span><span class="ge-card-desc">Contas bancárias</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_extratos') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-file-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-file-alt ge-card-icon"></i></div>
+            <span class="ge-card-label">Extratos</span><span class="ge-card-desc">Extratos bancários</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_conciliacao') }}'" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-balance-scale ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-balance-scale icon"></i></div>
+            <span class="ge-card-label">Conciliação</span><span class="ge-card-desc">Conciliação bancária</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const modaisBnk = {
+    bancos:      {titulo:'Bancos',              icone:'fas fa-university',    campos:[['Banco *','banco','text'],['Código','cod','text'],['ISPB','ispb','text']]},
+    contas:      {titulo:'Contas Bancárias',    icone:'fas fa-piggy-bank',    campos:[['Banco *','banco','text'],['Agência *','agencia','text'],['Conta *','conta','text'],['Tipo','tipo','text'],['Saldo Inicial (R$)','saldo','number']]},
+    extratos:    {titulo:'Extratos',            icone:'fas fa-file-alt',      campos:[['Conta *','conta','text'],['Período *','periodo','text'],['Data Início','inicio','date'],['Data Fim','fim','date']]},
+    conciliacao: {titulo:'Conciliação Bancária',icone:'fas fa-balance-scale', campos:[['Conta *','conta','text'],['Competência *','comp','text'],['Saldo Extrato (R$)','extrato','number'],['Saldo Sistema (R$)','sistema','number']]},
+};
+
+function abrirModalBnk(tipo) {
+    const m = modaisBnk[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-bnk').textContent = m.titulo;
+    document.getElementById('modal-icon-bnk').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-bnk').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalBnk()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-bnk').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalBnk() { document.getElementById('modal-overlay-bnk').classList.remove('ativo'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalBnk(); });
+</script>
+
+<style>
+    .ge-cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: flex-start !important;
+        padding: 10px 0;
+    }
+    .ge-card {
+        width: 180px;
+        margin: 0 !important;
+    }
+</style>

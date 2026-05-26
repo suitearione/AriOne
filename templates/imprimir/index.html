@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fe-container" style="padding: 40px; background: #f8fafc; min-height: 100vh;">
+    
+    {# ── CABEÇALHO DA PÁGINA (PADRÃO CENTRAL DE RELATÓRIOS) ── #}
+    <div class="gateway-header" style="margin: -40px 0 0 0; border-radius: 14px 14px 0 0; padding: 15px 30px; background: linear-gradient(90deg, #7A255F 0%, #2980B9 20%, #7F8C8D 40%, #E67E22 60%, #0072CE 80%, #27AE60 100%);">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-print" style="font-size: 1.4rem; color: #fff; opacity: 0.9;"></i>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div class="gateway-title" style="gap:0; color: #fff; font-size: 1.2rem;">Central de Impressão</div>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;">
+                        <i class="fas fa-layer-group" style="margin-right: 5px;"></i> AriOne Integridade > Módulos > Gateway de Relatórios
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span class="fe-badge" style="background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 15px; border-radius: 20px; font-weight: 800; font-size: 10px; backdrop-filter: blur(5px);">
+                {{ modules|length }} Gateways Ativos
+            </span>
+        </div>
+    </div>
+
+    {# ── GRID DE MÓDULOS (PADRÃO CENTRAL DE RELATÓRIOS) ── #}
+    <div style="padding: 30px; background: #fff; border-radius: 0 0 14px 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; border-top: none;">
+        <div class="gateway-grid">
+            {% for mod in modules %}
+            <div class="gateway-item" 
+                 onclick="abrirModalGlobal('{{ url_for(mod.route) }}')"
+                 style="--c: {{ mod.color }}; --c-bg: {{ mod.color }}15;">
+                
+                <div class="gateway-icon">
+                    <i class="fas {{ mod.icon }}"></i>
+                </div>
+                
+                <div class="gateway-label-group">
+                    <span class="gateway-label">{{ mod.label }}</span>
+                    <span class="gateway-desc">Relatórios & Impressões</span>
+                </div>
+
+                <div style="margin-left: auto; width: 32px; height: 32px; background: rgba(0,0,0,0.03); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: {{ mod.color }}; opacity: 0.5; transition: 0.3s;" class="print-indicator">
+                    <i class="fas fa-print" style="font-size: 12px;"></i>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<style>
+/* ── ESTILO PADRÃO CENTRAL DE RELATÓRIOS ── */
+.gateway-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.gateway-title { 
+    font-weight: 800; 
+    font-size: 1.1rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+}
+
+.gateway-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.gateway-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 22px 30px;
+    background: #fff;
+    border: 1.5px solid #edf2f7;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    gap: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.gateway-item:hover {
+    transform: translateX(10px);
+    border-color: var(--c);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    background: color-mix(in srgb, var(--c), white 97%);
+}
+
+.gateway-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--c-bg, rgba(0,0,0,0.04));
+    color: var(--c, #7A255F);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.gateway-item:hover .gateway-icon {
+    background: var(--c);
+    color: #fff;
+    transform: scale(1.1) rotate(5deg);
+}
+
+.gateway-item:hover .print-indicator {
+    background: var(--c);
+    color: #fff;
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.gateway-label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.gateway-label { 
+    font-size: 18px; 
+    font-weight: 900; 
+    color: #1e293b; 
+    letter-spacing: -0.5px; 
+    line-height: 1.2; 
+    text-transform: uppercase;
+}
+
+.gateway-desc { 
+    font-size: 10px; 
+    color: #64748b; 
+    text-transform: uppercase; 
+    font-weight: 800; 
+    letter-spacing: 1px; 
+}
+
+/* DARK MODE OVERRIDES */
+body.dark-mode .fe-container { background: #0f172a !important; }
+
+body.dark-mode .fe-sidebar-style-header {
+    background: rgb(15, 23, 42) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .gateway-grid + div, 
+body.dark-mode div:has(> .gateway-grid) {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .gateway-item {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .gateway-label { color: #f1f5f9; }
+body.dark-mode .gateway-desc { color: #94a3b8; }
+
+body.dark-mode .gateway-item:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+@media (max-width: 992px) {
+    .gateway-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

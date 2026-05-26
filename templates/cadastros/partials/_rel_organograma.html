@@ -1,0 +1,59 @@
+{# ── ORGANOGRAMA V2 (PARTIAL) ── #}
+<div class="fe-rel-tree-container">
+    <div class="fe-tree-v2">
+        <ul>
+            {% for s in rel_data.setores %}
+            <li>
+                <div class="fe-node-v2">
+                    <div class="fe-node-tag">{{ s.codigo }}</div>
+                    <div class="fe-node-label">{{ s.nome }}</div>
+                    <div class="fe-node-info">{{ s.subsetores|length }} subsetores</div>
+                </div>
+                {% if s.subsetores %}
+                <ul>
+                    {% for sub in s.subsetores %}
+                    <li>
+                        <div class="fe-node-v2 sub">
+                            <div class="fe-node-label">{{ sub.nome }}</div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<style>
+/* ── ORGANOGRAMA V2 ── */
+.fe-tree-v2 ul { padding-top: 30px; position: relative; display: flex; justify-content: center; }
+.fe-tree-v2 li { text-align: center; list-style-type: none; position: relative; padding: 30px 15px 0 15px; }
+.fe-tree-v2 li::before, .fe-tree-v2 li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #cbd5e0; width: 50%; height: 30px; }
+.fe-tree-v2 li::after { right: auto; left: 50%; border-left: 2px solid #cbd5e0; }
+.fe-tree-v2 li:only-child::after, .fe-tree-v2 li:only-child::before { display: none; }
+.fe-tree-v2 li:only-child { padding-top: 0; }
+.fe-tree-v2 li:first-child::before, .fe-tree-v2 li:last-child::after { border: 0 none; }
+.fe-tree-v2 li:last-child::before { border-right: 2px solid #cbd5e0; border-radius: 0 15px 0 0; }
+.fe-tree-v2 li:first-child::after { border-radius: 15px 0 0 0; }
+.fe-tree-v2 ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #cbd5e0; width: 0; height: 30px; }
+
+.fe-node-v2 {
+    background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; width: 160px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: inline-block; transition: all 0.3s;
+}
+.fe-node-v2:hover { transform: translateY(-5px); border-color: var(--pri); box-shadow: 0 15px 30px rgba(122, 37, 95, 0.1); }
+.fe-node-tag { padding: 5px; font-size: 10px; font-weight: 800; color: var(--pri); background: #fdf5fa; border-radius: 10px 10px 0 0; }
+.fe-node-label { padding: 15px 10px; font-size: 13px; font-weight: 800; color: #2d3748; }
+.fe-node-info { padding: 6px; font-size: 10px; color: #a0aec0; border-top: 1px solid #f1f5f9; }
+.fe-node-v2.sub { width: 140px; border-style: dashed; }
+
+.fe-rel-tree-container { 
+    width: 100%; 
+    overflow-x: auto; 
+    padding: 20px 0;
+    cursor: grab;
+}
+.fe-rel-tree-container:active { cursor: grabbing; }
+</style>

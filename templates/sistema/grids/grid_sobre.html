@@ -1,0 +1,319 @@
+{# =============================================================================
+   Caminho do arquivo: templates/sistema/grids/grid_sobre.html
+   Nome do Arquivo   : grid_sobre.html
+   Função do Arquivo : Painel Institucional e Versões (Aba Sobre AriOne).
+============================================================================= #}
+<div class="ge-grid-wrapper" 
+     style="padding: 10px 20px; 
+            overflow: visible !important;">
+
+    <div class="ge-section-title" 
+         style="display: flex; 
+                align-items: center; 
+                gap: 12px; 
+                margin-bottom: 25px; 
+                padding-bottom: 12px; 
+                border-bottom: 2px solid #7A255F;">
+        <i class="fas fa-info-circle" 
+           style="color: #7A255F; 
+                  font-size: 20px;"></i>
+        <span style="font-size: 17px; 
+                     font-weight: 800; 
+                     color: #1e293b; 
+                     text-transform: uppercase; 
+                     letter-spacing: 0.5px;">
+            Sobre AriOne Enterprise
+        </span>
+    </div>
+
+    <div class="ge-cards-container" 
+         style="display: flex; 
+                flex-wrap: wrap; 
+                gap: 20px;">
+        
+        <!-- VERSÃO ATUAL -->
+        {% if versao_atual %}
+        <div class="ge-card ge-card-premium" 
+             style="--card-cor:#27AE60; 
+                    --card-cor-bg:rgba(39,174,96,0.06); 
+                    padding: 30px 20px;">
+            <i class="fas fa-rocket ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" 
+                 style="width: 48px; 
+                        height: 48px; 
+                        margin-bottom: 15px; 
+                        background: #fff; 
+                        border: 2px solid #27AE60; 
+                        box-shadow: 0 4px 12px rgba(39,174,96,0.15);">
+                <i class="fas fa-rocket ge-card-icon" 
+                   style="color: #27AE60;"></i>
+            </div>
+            <span class="ge-card-label" 
+                  style="font-size: 15px; 
+                         font-weight: 800; 
+                         color: #2d3748;">
+                v{{ versao_atual.numero }}
+            </span>
+            <span class="ge-card-desc" 
+                  style="font-size: 11px; 
+                         opacity: 0.8; 
+                         font-weight: 700; 
+                         text-transform: uppercase;">
+                Produção / Atual
+            </span>
+        </div>
+        {% endif %}
+
+        <!-- INSTITUCIONAL -->
+        <div class="ge-card ge-card-premium" id="card-sobre-institucional"
+             onclick="window.abrirModalSobre('institucional')" 
+             style="--card-cor:#1e293b; 
+                    --card-cor-bg:rgba(30,41,59,0.04); 
+                    padding: 30px 20px;
+                    position: relative;">
+            
+            <i class="fas fa-building-columns ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" 
+                 style="width: 48px; 
+                        height: 48px; 
+                        margin-bottom: 15px; 
+                        background: #fff; 
+                        border: 2px solid #1e293b; 
+                        box-shadow: 0 4px 12px rgba(30,41,59,0.15);">
+                <i class="fas fa-landmark ge-card-icon" 
+                   style="color: #1e293b;"></i>
+            </div>
+            <span class="ge-card-label" 
+                  style="font-size: 15px; 
+                         font-weight: 800; 
+                         color: #2d3748;">
+                Institucional
+            </span>
+            <span class="ge-card-desc" 
+                  style="font-size: 11px; 
+                         opacity: 0.8; 
+                         font-weight: 700; 
+                         text-transform: uppercase;">
+                Missão & Visão
+            </span>
+        </div>
+
+        <!-- CRÉDITOS -->
+        <div class="ge-card ge-card-premium" id="card-sobre-creditos"
+             onclick="window.abrirModalSobre('creditos')" 
+             style="--card-cor:#7A255F; 
+                    --card-cor-bg:rgba(122,37,95,0.04); 
+                    padding: 30px 20px;
+                    position: relative;">
+
+            <i class="fas fa-award ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" 
+                 style="width: 48px; 
+                        height: 48px; 
+                        margin-bottom: 15px; 
+                        background: #fff; 
+                        border: 2px solid #7A255F; 
+                        box-shadow: 0 4px 12px rgba(122,37,95,0.15);">
+                <i class="fas fa-award ge-card-icon" 
+                   style="color: #7A255F;"></i>
+            </div>
+            <span class="ge-card-label" 
+                  style="font-size: 15px; 
+                         font-weight: 800; 
+                         color: #2d3748;">
+                Créditos
+            </span>
+            <span class="ge-card-desc" 
+                  style="font-size: 11px; 
+                         opacity: 0.8; 
+                         font-weight: 700; 
+                         text-transform: uppercase;">
+                Equipe AriOne
+            </span>
+        </div>
+
+        <!-- ROADMAP -->
+        {% if is_ari_dev %}
+        <div class="ge-card ge-card-premium" id="card-sobre-roadmap"
+             onclick="window.abrirModalSobre('roadmap')" 
+             style="--card-cor:#2980B9; 
+                    --card-cor-bg:rgba(41,128,185,0.04); 
+                    padding: 30px 20px;
+                    position: relative;">
+            <i class="fas fa-map-signs ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" 
+                 style="width: 48px; 
+                        height: 48px; 
+                        margin-bottom: 15px; 
+                        background: #fff; 
+                        border: 2px solid #2980B9; 
+                        box-shadow: 0 4px 12px rgba(41,128,185,0.15); 
+                        position: relative;">
+                <div style="position: absolute; 
+                            top: -6px; 
+                            right: -6px; 
+                            background: #2980B9; 
+                            color: #fff; 
+                            font-size: 8px; 
+                            font-weight: 900; 
+                            padding: 1px 4px; 
+                            border-radius: 3px; 
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+                            border: 1px solid #fff;">
+                    DEV
+                </div>
+                <i class="fas fa-map-signs ge-card-icon" 
+                   style="color: #2980B9;"></i>
+            </div>
+            <span class="ge-card-label" 
+                  style="font-size: 15px; 
+                         font-weight: 800; 
+                         color: #2d3748;">
+                Roadmap
+            </span>
+            <span class="ge-card-desc" 
+                  style="font-size: 11px; 
+                         opacity: 0.8; 
+                         font-weight: 700; 
+                         text-transform: uppercase;">
+                Futuras Entregas
+            </span>
+        </div>
+        {% endif %}
+
+        <!-- HUB DE LICENCIAMENTO (SINCRONIZADO) -->
+        {% if is_ari_dev %}
+        <div class="ge-card ge-card-premium" id="card-sobre-hub"
+             onclick="window.abrirModalSobre('parceiros')" 
+             style="--card-cor:#5E193E; 
+                    --card-cor-bg:rgba(94,25,62,0.04); 
+                    padding: 30px 20px;
+                    position: relative;">
+
+            <i class="fas fa-handshake ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap" 
+                 style="width: 48px; 
+                        height: 48px; 
+                        margin-bottom: 15px; 
+                        background: #fff; 
+                        border: 2px solid #5E193E; 
+                        box-shadow: 0 4px 12px rgba(94,25,62,0.15);">
+                <i class="fas fa-handshake ge-card-icon" 
+                   style="color: #5E193E;"></i>
+            </div>
+            <span class="ge-card-label" 
+                  style="font-size: 15px; 
+                         font-weight: 800; 
+                         color: #2d3748;">
+                Hub de Licenciamento
+            </span>
+            <span class="ge-card-desc" 
+                  style="font-size: 11px; 
+                         opacity: 0.8; 
+                         font-weight: 700; 
+                         text-transform: uppercase;">
+                Gestão & Licença
+            </span>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+<style>
+    .ge-card {
+        position: relative;
+        transition: all 0.3s ease;
+        border: 1.5px solid transparent;
+    }
+
+    /* Badge de Conclusão AriOne (Selo de Ouro Oficial) */
+    .ge-card-done-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        color: #7A255F;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        z-index: 10;
+        border: 1.5px solid #fff;
+        animation: badgeShine 3s infinite;
+    }
+
+    @keyframes badgeShine {
+        0% { transform: scale(1); filter: brightness(1); }
+        50% { transform: scale(1.1); filter: brightness(1.3); }
+        100% { transform: scale(1); filter: brightness(1); }
+    }
+</style>
+
+<script>
+    /**
+     * Motor de Sincronização AriOne (Engineering Matrix Sync)
+     * Monitora o localStorage para aplicar selos dinamicamente.
+     */
+    function syncSobreSeals() {
+        const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+        
+        const mappings = {
+            'card-sobre-institucional': "SISTEMA___Sobre_AriOne_Institucional",
+            'card-sobre-creditos':      "SISTEMA___Sobre_AriOne_Creditos",
+            'card-sobre-roadmap':       "SISTEMA___Sobre_AriOne_Roadmap",
+            'card-sobre-hub':           "SISTEMA___Sobre_AriOne_Hub_de_Licenciamento"
+        };
+
+        Object.entries(mappings).forEach(([cardId, sId]) => {
+            const key = 'arione_dev_p2_' + sId;
+            const isPronto = localStorage.getItem(key) === 'true';
+            const card = document.getElementById(cardId);
+            
+            if (card) {
+                let badge = card.querySelector('.ge-card-done-badge');
+                if (isPronto) {
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'ge-card-done-badge';
+                        badge.innerHTML = '<i class="fas fa-award"></i>';
+                        badge.title = "AriOne Golden Standard";
+                        card.appendChild(badge);
+                    }
+                    card.style.border = "1.5px solid #FFD700";
+                    card.style.boxShadow = "0 0 15px rgba(255, 215, 0, 0.15)";
+                } else {
+                    if (badge) badge.remove();
+                    card.style.border = "1.5px solid transparent";
+                    card.style.boxShadow = "none";
+                }
+            }
+        });
+    }
+
+    /**
+     * Motor de Modal AriOne - Aba Sobre
+     */
+    window.abrirModalSobre = function(tipo) {
+        const urlMap = {
+            'institucional': "{{ url_for('sistema.card_institucional') }}",
+            'creditos': "{{ url_for('sistema.card_creditos') }}",
+            'roadmap': "{{ url_for('sistema.card_roadmap') }}",
+            'parceiros': "{{ url_for('sistema.card_central_parceiros') }}"
+        };
+        const url = urlMap[tipo];
+        if (url && typeof window.abrirModalGlobal === 'function') {
+            window.abrirModalGlobal(url);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        syncSobreSeals();
+        setInterval(syncSobreSeals, 2000); // Sincronização em tempo real (2s)
+    });
+</script>

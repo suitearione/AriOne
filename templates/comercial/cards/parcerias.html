@@ -1,0 +1,114 @@
+{# =============================================================================
+   Arquivo  : parcerias.html
+   Caminho  : templates/comercial/cards/parcerias.html
+   Função   : Gestão de Acordos e Parcerias Comerciais
+   Padrão   : Quiet Luxury / Golden Standard
+   ============================================================================= #}
+
+{% import 'macros/componentes.html' as comp %}
+
+<div id="parc-form-area" class="arione-fade-in" style="padding: 10px;">
+    
+    {# ══ CABEÇALHO MESTRE (Luxo Silencioso) ══ #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Acordos Comerciais",
+        subtitulo="Comercial > Alianças e Contratos Estratégicos",
+        cor_tema="#27AE60",
+        id_form="parc-form",
+        func_novo="novoRegistroParc()",
+        func_busca="focarBuscaParc()",
+        func_filtro="toggleFiltroParc()",
+        func_fechar="fecharModalCom()"
+    ) }}
+
+    <div class="fp-card" style="margin-top: 15px; border-top: 4px solid #27AE60;">
+        <div class="fp-card-body">
+            <form id="parc-form" method="POST" autocomplete="off">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    
+                    <div class="gf-group" style="grid-column: span 2;">
+                        <label class="fp-label">TÍTULO DO ACORDO / PARCERIA *</label>
+                        <input type="text" id="parc-nome" name="nome" class="fp-input" placeholder="Ex: CONTRATO DE REVENDAS NORDESTE" required>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">TIPO DE ACORDO</label>
+                        <select name="tipo" class="fp-input">
+                            <option value="REVENDA">REVENDA</option>
+                            <option value="DISTRIBUICAO">DISTRIBUIÇÃO</option>
+                            <option value="CO-BRANDING">CO-BRANDING</option>
+                            <option value="OUTROS">OUTROS</option>
+                        </select>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">PARCEIRO (EMPRESA/PESSOA) 🔍</label>
+                        <div style="position: relative;">
+                            <input type="text" name="parceiro" class="fp-input" placeholder="Buscar parceiro...">
+                            <i class="fas fa-search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #27AE60; cursor: pointer;"></i>
+                        </div>
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">DATA DE INÍCIO</label>
+                        <input type="date" name="data_inicio" class="fp-input">
+                    </div>
+
+                    <div class="gf-group">
+                        <label class="fp-label">STATUS DO CONTRATO</label>
+                        <select name="status" class="fp-input">
+                            <option value="ATIVO">ATIVO</option>
+                            <option value="NEGOCIACAO">EM NEGOCIAÇÃO</option>
+                            <option value="SUSPENSO">SUSPENSO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <button type="button" class="fp-btn-outline" onclick="fecharModalCom()">CANCELAR</button>
+                    <button type="submit" class="fp-btn-primary" style="background: #27AE60; border-color: #27AE60;">
+                        <i class="fas fa-save"></i> SALVAR ACORDO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Listagem #}
+    <div class="fp-card" style="margin-top: 15px;">
+        <div class="fp-card-title">Acordos Vigentes</div>
+        <div class="fp-card-body" style="padding:0;">
+            <table class="fp-table">
+                <thead>
+                    <tr><th>Título do Acordo</th><th>Parceiro</th><th>Início</th><th>Tipo</th><th style="width:80px;">Ações</th></tr>
+                </thead>
+                <tbody>
+                    {% for parc in parcerias %}
+                    <tr>
+                        <td><strong>{{ parc.titulo }}</strong></td>
+                        <td>{{ parc.descricao.split('Parceiro: ')[1] if 'Parceiro: ' in parc.descricao else 'N/A' }}</td>
+                        <td>{{ parc.data_inicio.strftime('%d/%m/%Y') if parc.data_inicio else 'N/A' }}</td>
+                        <td><span style="font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px;">{{ parc.descricao.split(' | ')[0].split(': ')[1] if 'Tipo: ' in parc.descricao else 'OUTROS' }}</span></td>
+                        <td style="text-align:center;">
+                            <button class="fp-btn-icon"><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding: 20px; color: #aaa;">Nenhum acordo cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function novoRegistroParc() {
+        document.getElementById('parc-form').reset();
+        document.getElementById('parc-nome').focus();
+    }
+    function focarBuscaParc() { alert('Busca rápida de contratos'); }
+    function toggleFiltroParc() { alert('Filtros de parcerias'); }
+</script>

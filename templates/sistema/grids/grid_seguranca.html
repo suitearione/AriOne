@@ -1,0 +1,34 @@
+{# =============================================================================
+   Caminho  : templates/sistema/grids/grid_seguranca.html
+   Arquivo  : grid_seguranca.html
+   Função   : Painel de segurança e compliance do sistema.
+   Descrição: Cards para manutenção, limpeza e proteção de dados.
+============================================================================= #}
+<div class="ge-grid-wrapper" style="padding: 10px 20px;">
+    <div class="ge-section-title">
+        <i class="fas fa-shield-alt"></i>
+        <span>Compliance & Proteção de Dados</span>
+    </div>
+
+    <div class="ge-cards-container">
+        <!-- MANUTENÇÃO -->
+        <div class="ge-card" onclick="alert('Iniciando rotinas de manutenção...')" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-tools ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-tools ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Manutenção</span>
+            <span class="ge-card-desc">Otimizar Tabelas</span>
+        </div>
+
+        <!-- LIMPEZA MASTER -->
+        <div class="ge-card" onclick="alert('Limpando arquivos temporários...')" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,0.10);">
+            <i class="fas fa-broom ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-broom ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Limpeza Master</span>
+            <span class="ge-card-desc">Logs Temporários</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,447 @@
+{# =============================================================================
+   Arquivo  : form_operacoes_relatorios.html
+   Caminho  : templates/operacoes/cards/form_operacoes_relatorios.html
+   Função   : Gateway de Seleção Dinâmico de Operações (Nível 2).
+   Lógica   : Adapta cards baseado no parâmetro 'modulo' [compras, vendas, estoque, producao, expedicao].
+   Padrão   : DNA Cadastros (Quiet Luxury).
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-sub {
+            padding: 15px 25px;
+            /* Super Gradiente Cadastros: 9+ Cores */
+            background: linear-gradient(90deg, #E67E22 0%, #D35400 11%, #0072CE 22%, #2980B9 33%, #27AE60 44%, #16A085 55%, #8E44AD 66%, #7A255F 77%, #34495E 88%, #2C3E50 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 22px 30px;
+            background: #fff;
+            border: 1.5px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gateway-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: color-mix(in srgb, var(--c), white 97%);
+            border-color: var(--c);
+        }
+
+        .gateway-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--c-bg, rgba(0,0,0,0.04));
+            color: var(--c, #E67E22);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .gateway-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .gateway-label { font-size: 18px; font-weight: 900; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; }
+        .gateway-desc { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+
+        /* Estilo do Botão Voltar (Glass Effect) */
+        .btn-voltar-glass {
+            background: rgba(255,255,255,0.2); 
+            border:none; 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 8px; 
+            color:#fff; 
+            cursor:pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-voltar-glass:hover { background: rgba(255,255,255,0.3); transform: translateX(-3px); }
+
+        /* Estilos Debug Floating */
+        .debug-floating-card {
+            display:none; position:absolute; top:110px; left:50%; transform:translateX(-50%); width:320px; 
+            background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25); z-index:1000; 
+            border:2px solid #E67E22; overflow:hidden; animation: slideInDebug 0.3s ease;
+        }
+        .debug-header { background:#E67E22; color:#fff; padding:12px 15px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:space-between; }
+        .debug-body { padding:15px; }
+        .debug-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: #475569; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 4px; }
+        .debug-item:hover { background: rgba(230,126,34,0.08); color: #E67E22; transform: translateX(5px); }
+        @keyframes slideInDebug { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    </style>
+
+    <div class="gateway-header-sub">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayOperacoes()"><i class="fas fa-arrow-left"></i></button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-tasks" style="font-size: 1.4rem; color: #03A9F4;"></i>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div class="gateway-title" style="gap:0; color: #03A9F4;">
+                        Central de Relatórios: 
+                        {% if modulo == 'compras' %}Compras
+                        {% elif modulo == 'vendas' %}Vendas
+                        {% elif modulo == 'estoque' %}Estoque
+                        {% elif modulo == 'producao' %}Produção
+                        {% elif modulo == 'expedicao' %}Expedição
+                        {% else %}Operações
+                        {% endif %}
+                    </div>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;">
+                        <i class="fas fa-print" style="margin-right: 5px;"></i>
+                        {% if modulo == 'compras' %}Suprimentos & Pedidos
+                        {% elif modulo == 'vendas' %}Comercial & Varejo
+                        {% elif modulo == 'estoque' %}Inventário & Giro
+                        {% elif modulo == 'producao' %}PCP & Fábrica
+                        {% elif modulo == 'expedicao' %}Logística & Entregas
+                        {% else %}Controle Operacional & Cadeia de Suprimentos
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">CARDs</span>
+            <button type="button" onclick="toggleDebugOperacoes()" class="btn-voltar-glass" title="Auditoria de Integridade (Audit)"><i class="fas fa-microscope"></i></button>
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayOperacoes()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            {% if modulo == 'compras' %}
+                <!-- Orçamentos -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardOperacional('orcamentos')">
+                    <div class="gateway-icon"><i class="fas fa-file-invoice"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Orçamentos de Compras</span>
+                        <span class="gateway-desc">Cotações & Intenções</span>
+                    </div>
+                </div>
+                <!-- Pedidos -->
+                <div class="gateway-item" style="--c:#D35400; --c-bg:rgba(211,84,0,0.08);" onclick="navegarCardOperacional('pedidos')">
+                    <div class="gateway-icon"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Pedidos de Compra</span>
+                        <span class="gateway-desc">Suprimentos Ativos</span>
+                    </div>
+                </div>
+                <!-- Consignadas -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardOperacional('consignadas')">
+                    <div class="gateway-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Entradas Consignadas</span>
+                        <span class="gateway-desc">Entrada de Terceiros</span>
+                    </div>
+                </div>
+                <!-- Devoluções -->
+                <div class="gateway-item" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarCardOperacional('devolucoes')">
+                    <div class="gateway-icon"><i class="fas fa-undo"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Devoluções Fornecedor</span>
+                        <span class="gateway-desc">Estornos e Créditos</span>
+                    </div>
+                </div>
+                <!-- Serviços -->
+                <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarCardOperacional('servicos')">
+                    <div class="gateway-icon"><i class="fas fa-tools"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Serviços & Fretes</span>
+                        <span class="gateway-desc">Contratações Operacionais</span>
+                    </div>
+                </div>
+                <!-- Preços -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardOperacional('precos')">
+                    <div class="gateway-icon"><i class="fas fa-tag"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Tabelas de Preços</span>
+                        <span class="gateway-desc">Gestão de Markup e Custo</span>
+                    </div>
+                </div>
+                <!-- Em Aberto -->
+                <div class="gateway-item" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarCardOperacional('em_aberto')">
+                    <div class="gateway-icon"><i class="fas fa-clock"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Monitor de Pedidos</span>
+                        <span class="gateway-desc">Pendências de Entrega</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'vendas' %}
+                <!-- Orçamentos -->
+                <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarCardOperacional('orcamentos_vendas')">
+                    <div class="gateway-icon"><i class="fas fa-file-signature"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Orçamentos de Venda</span>
+                        <span class="gateway-desc">Propostas Comerciais</span>
+                    </div>
+                </div>
+                <!-- Pedidos -->
+                <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarCardOperacional('pedidos_vendas')">
+                    <div class="gateway-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Pedidos de Venda</span>
+                        <span class="gateway-desc">Fluxo de Faturamento</span>
+                    </div>
+                </div>
+                <!-- Consignadas -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardOperacional('consignadas_vendas')">
+                    <div class="gateway-icon"><i class="fas fa-box-open"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Saídas Consignadas</span>
+                        <span class="gateway-desc">Saídas de Terceiros</span>
+                    </div>
+                </div>
+                <!-- Devoluções -->
+                <div class="gateway-item" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarCardOperacional('devolucoes_vendas')">
+                    <div class="gateway-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Devoluções de Clientes</span>
+                        <span class="gateway-desc">Retornos Fiscais</span>
+                    </div>
+                </div>
+                <!-- Rastreamento -->
+                <div class="gateway-item" style="--c:#D35400; --c-bg:rgba(211,84,0,0.08);" onclick="navegarCardOperacional('rastreamento')">
+                    <div class="gateway-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Rastreamento Vendas</span>
+                        <span class="gateway-desc">Status logístico das entregas</span>
+                    </div>
+                </div>
+                <!-- Serviços -->
+                <div class="gateway-item" style="--c:#16A085; --c-bg:rgba(22,160,133,0.08);" onclick="navegarCardOperacional('servicos_vendas')">
+                    <div class="gateway-icon"><i class="fas fa-concierge-bell"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Taxas e Serviços</span>
+                        <span class="gateway-desc">Serviços Comerciais</span>
+                    </div>
+                </div>
+                <!-- Cupons -->
+                <div class="gateway-item" style="--c:#F39C12; --c-bg:rgba(243,156,18,0.08);" onclick="navegarCardOperacional('cupons')">
+                    <div class="gateway-icon"><i class="fas fa-ticket-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Cupons e Notas</span>
+                        <span class="gateway-desc">PAF-ECF / NFC-e / NF-e</span>
+                    </div>
+                </div>
+                <!-- Comissões -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardOperacional('comissoes')">
+                    <div class="gateway-icon"><i class="fas fa-coins"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Comissões Vendedores</span>
+                        <span class="gateway-desc">Análise de Performance</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'estoque' %}
+                <!-- Consultas -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardOperacional('consultas_estoque')">
+                    <div class="gateway-icon"><i class="fas fa-search"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Consulta de Saldos</span>
+                        <span class="gateway-desc">Status de Estoque Real</span>
+                    </div>
+                </div>
+                <!-- Movimentações -->
+                <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarCardOperacional('movimentacoes')">
+                    <div class="gateway-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Movimentações WMS</span>
+                        <span class="gateway-desc">Kardex de Entradas e Saídas</span>
+                    </div>
+                </div>
+                <!-- Inventário -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardOperacional('inventario')">
+                    <div class="gateway-icon"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Inventário Geral</span>
+                        <span class="gateway-desc">Auditoria e Ajustes</span>
+                    </div>
+                </div>
+                <!-- Locais & Mapa -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardOperacional('locais')">
+                    <div class="gateway-icon"><i class="fas fa-map"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Locais e Endereços</span>
+                        <span class="gateway-desc">Mapa de Armazenagem</span>
+                    </div>
+                </div>
+                <!-- Estocagem -->
+                <div class="gateway-item" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarCardOperacional('estocagem')">
+                    <div class="gateway-icon"><i class="fas fa-dolly"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Regras de Estocagem</span>
+                        <span class="gateway-desc">Parâmetros de Alocação</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'producao' %}
+                <!-- Ordens de Produção -->
+                <div class="gateway-item" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarCardOperacional('op')">
+                    <div class="gateway-icon"><i class="fas fa-file-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Ordens de Produção</span>
+                        <span class="gateway-desc">Controle de Cargas Fabris</span>
+                    </div>
+                </div>
+                <!-- Retorno Oficinas -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardOperacional('retorno_oficina')">
+                    <div class="gateway-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Retorno de Oficinas</span>
+                        <span class="gateway-desc">Qualidade e Finalização</span>
+                    </div>
+                </div>
+                <!-- Insumos -->
+                <div class="gateway-item" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarCardOperacional('insumos_prod')">
+                    <div class="gateway-icon"><i class="fas fa-flask"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Controle de Insumos</span>
+                        <span class="gateway-desc">Consumo e Matéria Prima</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'expedicao' %}
+                <!-- Transportadoras -->
+                <div class="gateway-item" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarCardOperacional('transportadoras')">
+                    <div class="gateway-icon"><i class="fas fa-truck"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Gestão de Transporte</span>
+                        <span class="gateway-desc">Parceiros e Fretes</span>
+                    </div>
+                </div>
+                <!-- Conferência -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardOperacional('conferencia')">
+                    <div class="gateway-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Conferência Picking</span>
+                        <span class="gateway-desc">Separação e Packing</span>
+                    </div>
+                </div>
+                <!-- Romaneios -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardOperacional('romaneios')">
+                    <div class="gateway-icon"><i class="fas fa-file-invoice"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Romaneios de Carga</span>
+                        <span class="gateway-desc">Controle de Embarque</span>
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- PAINEL DE VALIDAÇÃO TÉCNICA (DNA CADASTROS) -->
+    <div id="debug-operacoes-card" class="debug-floating-card">
+        <div class="debug-header">
+            <span><i class="fas fa-microscope" style="margin-right:8px;"></i> AUDITORIA DE INTEGRIDADE (AUDIT) - {{ modulo|upper }}</span>
+            <i class="fas fa-times" onclick="toggleDebugOperacoes()" style="cursor:pointer; opacity:0.8;"></i>
+        </div>
+        <div class="debug-body">
+            <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">Checklist de Relatórios</div>
+            <div id="debug-list-operacoes">
+                <!-- Preenchido via script -->
+            </div>
+            <div style="margin: 10px 0; border-top: 1.5px dashed #e2e8f0;"></div>
+            <div class="debug-item" onclick="toggleDebugOperacoes()" style="color:#7A255F; background:rgba(122,37,95,0.05);">
+                <i class="fas fa-times-circle"></i> <span style="font-weight:800;">Fechar Validação</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function navegarCardOperacional(tipo) {
+    console.log("Navegando para ferramenta operacional:", tipo);
+    alert("O painel operacional para " + tipo.toUpperCase() + " está sendo processado.");
+}
+
+function voltarParaGatewayOperacoes() {
+    const url = "{{ url_for('operacoes.gateway_modulos_operacoes') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        
+        // Loader Padrão Ouro
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; gap:20px; color:#E67E22;">
+                <i class="fas fa-spinner fa-spin" style="font-size:40px;"></i>
+                <span style="font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Carregando Inteligência...</span>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+    }
+}
+
+function toggleDebugOperacoes() {
+    const card = document.getElementById('debug-operacoes-card');
+    if (card) {
+        const isOpen = card.style.display === 'block';
+        card.style.display = isOpen ? 'none' : 'block';
+        
+        if (!isOpen) {
+            // Preenche a lista de debug baseada nos cards visíveis
+            const items = document.querySelectorAll('.gateway-item');
+            const list = document.getElementById('debug-list-operacoes');
+            list.innerHTML = '';
+            items.forEach((item, idx) => {
+                const label = item.querySelector('.gateway-label').textContent.trim();
+                const icon = item.querySelector('.gateway-icon i').className;
+                list.innerHTML += `<div class="debug-item" onclick="alert('Teste Técnico: ${label}')"><i class="${icon}"></i> <span>${idx + 1}. ${label}</span></div>`;
+            });
+        }
+    }
+}
+</script>

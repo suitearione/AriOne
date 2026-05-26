@@ -1,0 +1,112 @@
+{# =========================================================
+   ARI.ONE • LAYOUTS DE FORMULÁRIOS
+   Arquivo: layouts_form.html
+   ========================================================= #}
+
+{# =========================================================
+   🟢 FORMULÁRIO GRANDE (95%) — AJUSTADO
+   ========================================================= #}
+{% macro form_g(titulo, subtitulo, form_id, rota_base, id_registro) %}
+<div class="arione-container"
+     style="max-width: 950px;
+            margin: 20px auto;
+            width: 100%;">
+
+    <form id="{{ form_id }}"
+          method="POST"
+          action="{{ url_for(rota_base, id=id_registro) }}">
+
+        <input type="hidden"
+               name="empresa_id"
+               value="{{ session.get('empresa_id', 1) }}">
+
+        {# Cabeçalho padrão #}
+        {% from "macros/componentes.html" import cabecalho_formulario %}
+        {{ cabecalho_formulario(titulo, subtitulo, form_id, id_registro, rota_base) }}
+
+        {# Corpo do formulário #}
+        <div class="form-body"
+             style="background: #ffffff;
+                    padding: 25px;
+                    border-radius: 0 0 8px 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.10);">
+
+            {# Conteúdo interno livre (abas, grids, seções, etc.) #}
+            <div class="form-content" style="width: 100%;">
+
+                {{ caller() }}
+
+            </div>
+
+        </div>
+    </form>
+</div>
+{% endmacro %}
+
+
+{# =========================================================
+   🟡 FORMULÁRIO MÉDIO (750px)
+   ========================================================= #}
+{% macro form_m(titulo, subtitulo, form_id, rota_base, id_registro) %}
+<div class="arione-container"
+     style="max-width: 1200px;
+            margin: 25px auto;
+            width: calc (100% - 40px);">
+       
+    <form id="{{ form_id }}"
+          method="POST"
+          action="{{ url_for(rota_base, id=id_registro) }}">
+
+        <input type="hidden"
+               name="empresa_id"
+               value="{{ session.get('empresa_id', 1) }}">
+
+        {% from "macros/componentes.html" import cabecalho_formulario %}
+        {{ cabecalho_formulario(titulo, subtitulo, form_id, id_registro, rota_base) }}
+
+        <div class="form-body"
+             style="background: #ffffff;
+                    padding: 25px;
+                    border-radius: 0 0 8px 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.10);">
+
+            {{ caller() }}
+
+        </div>
+    </form>
+</div>
+{% endmacro %}
+
+
+{# =========================================================
+   🔴 FORMULÁRIO PEQUENO (480px)
+   ========================================================= #}
+{% macro form_p(titulo, subtitulo, form_id, rota_base, id_registro) %}
+<div class="arione-container"
+     style="max-width: 480px;
+            margin: 20px auto;
+            width: 100%;">
+
+    <form id="{{ form_id }}"
+          method="POST"
+          action="{{ url_for(rota_base, id=id_registro) }}">
+
+        <input type="hidden"
+               name="empresa_id"
+               value="{{ session.get('empresa_id', 1) }}">
+
+        {% from "macros/componentes.html" import cabecalho_formulario %}
+        {{ cabecalho_formulario(titulo, subtitulo, form_id, id_registro, rota_base) }}
+
+        <div class="form-body"
+             style="background: #ffffff;
+                    padding: 25px;
+                    border-radius: 0 0 8px 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.10);">
+
+            {{ caller() }}
+
+        </div>
+    </form>
+</div>
+{% endmacro %}

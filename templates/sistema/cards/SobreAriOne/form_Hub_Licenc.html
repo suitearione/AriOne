@@ -1,0 +1,484 @@
+{# =============================================================================
+   Caminho do arquivo: templates/sistema/cards/SobreAriOne/form_Hub_Licenc.html
+   Nome do Arquivo   : form_Hub_Licenc.html
+   Função do Arquivo : Hub de Licenciamento - Registro e Gestão de Tenants.
+   Estética          : Quiet Luxury / Golden Standard AriOne
+   ============================================================================= #}
+
+{% import 'macros/componentes.html' as comp %}
+
+<style>
+    /* ✅ FORÇA A EXPANSÃO DO MODAL PARA PADRÃO ENTERPRISE */
+    .arione-modal-window { 
+        max-width: 1150px !important; 
+        width: 95% !important; 
+        transition: all 0.4s ease;
+    }
+    
+    .lic-matrix-container {
+        margin-top: 20px;
+        border: 1.5px solid #edf2f7;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .fe-table-matrix { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .fe-table-matrix th { 
+        background: #f8fafc; 
+        padding: 15px 20px; 
+        text-align: left; 
+        font-size: 10px; 
+        font-weight: 900; 
+        color: #64748b; 
+        text-transform: uppercase; 
+        border-bottom: 2px solid #edf2f7;
+    }
+    .fe-table-matrix td { padding: 12px 20px; border-bottom: 1px solid #f1f5f9; font-size: 12px; transition: all 0.2s ease; }
+    
+    /* Zebra & Hierarchy Colors */
+    .core-row-lic { background: #f8fafc; }
+    .sub-row-lic { background: #ffffff; }
+    .tela-row-lic { background: #ffffff; }
+    .tela-row-lic:nth-of-type(odd) { background: #fafbfc; }
+
+    /* Hover effects */
+    .core-row-lic:hover { background: #f1f5f9 !important; }
+    .sub-row-lic:hover { background: #f8fafc !important; }
+    .tela-row-lic:hover { background: rgba(122, 37, 95, 0.04) !important; }
+
+    /* Column Widths */
+    .col-hierarquia { width: auto; }
+    .col-stats { width: 110px; text-align: center; }
+    .col-check { width: 80px; text-align: center; }
+
+    /* Badge DEV */
+    .status-badge-dev {
+        font-size: 9px;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 5px;
+        text-transform: uppercase;
+        background: rgba(39, 174, 96, 0.1);
+        color: #27AE60;
+    }
+
+    /* Checkbox Golden Standard */
+    .q-check-box { display: block; position: relative; width: 20px; height: 20px; cursor: pointer; margin: 0 auto; }
+    .q-check-box input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+    .q-mark { position: absolute; top: 0; left: 0; height: 20px; width: 20px; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 6px; transition: 0.2s; }
+    .q-check-box input:checked ~ .q-mark { background: #2ecc71; border-color: #27ae60; }
+    .q-mark:after { content: ""; position: absolute; display: none; left: 5px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+    .q-check-box input:checked ~ .q-mark:after { display: block; }
+</style>
+
+<div id="hub-licenciamento-area" class="arione-fade-in" style="padding: 10px;">
+    
+    {# ✅ FEEDBACK DE STATUS #}
+    {{ comp.feedback_status_arione() }}
+
+    {# ══ CABEÇALHO MESTRE (Hub de Licenciamento) ══ #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Novo Licenciamento",
+        subtitulo="Sistema > Hub de Licenciamento > Governança Enterprise",
+        cor_tema="#7A255F",
+        form_id="form-licenciamento",
+        onclick_novo="novoLicenciamento()",
+        onclick_save="salvarLicenciamento()",
+        func_fechar="voltarCentralParceiros()",
+        aba_retorno="?aba=sistema"
+    ) }}
+
+    <div class="ge-form-container" style="margin-top: 15px; background: #fff; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; padding: 25px;">
+        <form id="form-licenciamento" method="POST" autocomplete="off">
+            
+            {# SEÇÃO 1: IDENTIFICAÇÃO #}
+            <div class="ge-form-section-title" style="margin-bottom: 20px; color: #7A255F;">Identificação & Contato Master</div>
+            
+            <div class="ge-form-row">
+                <div class="ge-form-group" style="flex: 2;">
+                    <label class="fp-label">RAZÃO SOCIAL / NOME DO PARCEIRO *</label>
+                    <input type="text" id="lic-nome" name="nome" class="fp-input" placeholder="Ex: AriOne Partners Global" required>
+                </div>
+                <div class="ge-form-group" style="flex: 1;">
+                    <label class="fp-label">CNPJ / CPF</label>
+                    <input type="text" id="lic-cnpj" name="cnpj" class="fp-input mask-cnpj" placeholder="00.000.000/0000-00">
+                </div>
+            </div>
+
+            <div class="ge-form-row">
+                <div class="ge-form-group" style="flex: 1;">
+                    <label class="fp-label">CONTATO PRINCIPAL</label>
+                    <input type="text" id="lic-contato" name="contato_master" class="fp-input" placeholder="Nome do Gestor">
+                </div>
+                <div class="ge-form-group" style="flex: 1;">
+                    <label class="fp-label">E-MAIL ESTRATÉGICO</label>
+                    <input type="email" id="lic-email" name="email" class="fp-input" placeholder="gestao@parceiro.com.br">
+                </div>
+                <div class="ge-form-group" style="flex: 1;">
+                    <label class="fp-label">WHATSAPP DO GESTOR</label>
+                    <div style="position: relative;">
+                        <input type="text" id="lic-whatsapp" name="whatsapp" class="fp-input mask-celular" placeholder="(00) 0 0000-0000">
+                        <i class="fab fa-whatsapp" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #25D366; font-size: 16px;"></i>
+                    </div>
+                </div>
+            </div>
+
+            {# SEÇÃO 2: GEOPOLÍTICA #}
+            <div class="ge-form-section-title" style="margin-top: 25px; margin-bottom: 20px; color: #7A255F;">Geopolítica & Status</div>
+            
+            <div class="ge-form-row">
+                <div class="ge-form-group" style="flex: 1.5;">
+                    <label class="fp-label">CIDADE</label>
+                    <input type="text" id="lic-cidade" name="cidade" class="fp-input" placeholder="Ex: São Paulo">
+                </div>
+                <div class="ge-form-group" style="flex: 0.5;">
+                    <label class="fp-label">ESTADO (UF)</label>
+                    <input type="text" id="lic-uf" name="uf" class="fp-input" placeholder="SP" maxlength="2" style="text-transform: uppercase;">
+                </div>
+                <div class="ge-form-group" style="flex: 1;">
+                    <label class="fp-label">PAÍS</label>
+                    <input type="text" id="lic-pais" name="pais" class="fp-input" value="Brasil">
+                </div>
+                <div class="ge-form-group" style="flex: 1;">
+                    <label class="fp-label">STATUS DO CONTRATO</label>
+                    <select id="lic-status" name="status" class="fp-input">
+                        <option value="ATIVO">ATIVO</option>
+                        <option value="NEGOCIACAO">EM NEGOCIAÇÃO</option>
+                        <option value="AGUARDANDO_ASSINATURA">AGUARDANDO ASSINATURA</option>
+                        <option value="SUSPENSO">SUSPENSO</option>
+                        <option value="BLOQUEADO">BLOQUEADO</option>
+                    </select>
+                </div>
+            </div>
+
+            {# SEÇÃO 3: FINANCEIRO #}
+            <div class="ge-form-section-title" style="margin-top: 25px; margin-bottom: 20px; color: #7A255F;">Engenharia Financeira & Licenciamento</div>
+            
+            <div class="ge-form-row">
+                <div class="ge-form-group">
+                    <label class="fp-label">TIPO DE COBRANÇA</label>
+                    <select id="lic-tipo-cobranca" name="tipo_cobranca" class="fp-input">
+                        <option value="MENSAL">MENSALIDADE FIXA</option>
+                        <option value="ANUAL">ANUIDADE RECORRENTE</option>
+                        <option value="VITALICIA">LICENÇA VITALÍCIA</option>
+                    </select>
+                </div>
+                <div class="ge-form-group">
+                    <label class="fp-label">INÍCIO DA COBRANÇA</label>
+                    <input type="date" id="lic-inicio-cobranca" name="inicio_cobranca" class="fp-input">
+                </div>
+                <div class="ge-form-group" style="flex: 1.5;">
+                    <label class="fp-label">ASSINATURA DIGITAL (URL)</label>
+                    <div style="position: relative;">
+                        <input type="text" id="lic-assinatura" name="assinatura_url" class="fp-input" placeholder="Link do Docusign/Clicksign">
+                        <i class="fas fa-signature" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #7A255F; opacity: 0.6;"></i>
+                    </div>
+                </div>
+            </div>
+
+            {# SEÇÃO 4: MATRIZ #}
+            <div class="ge-form-section-title" style="margin-top: 35px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <span>MAPEAMENTO DE LICENCIAMENTO (GRID MASTER)</span>
+                <span style="font-size: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; background: #f1f5f9; padding: 4px 12px; border-radius: 20px;">Sincronizado com Engenharia</span>
+            </div>
+
+            <div class="lic-matrix-container">
+                <table class="fe-table-matrix" id="lic-matrix-table">
+                                       <th class="col-hierarquia">
+                                <div style="font-size: 11px; color: #1e293b; font-weight: 900;">Hierarquia AriOne</div>
+                                <div style="display: flex; margin-top: 8px; font-size: 8.5px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <span style="width: 80px;">Módulo</span>
+                                    <span style="width: 100px;">Produto</span>
+                                    <span>Card</span>
+                                </div>
+                            </th>
+                            <th class="col-stats">CONTRATADOS</th>
+                            <th class="col-stats" style="color: #2ecc71;">LICENCIADOS</th>
+                            <th class="col-stats" style="color: #e74c3c;">À LICENCIAR</th>
+                            <th class="col-check">CHECK</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lic-matrix-body">
+                        <!-- Gerado dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 40px; display: flex; justify-content: flex-end; gap: 15px; border-top: 1.5px solid #edf2f7; padding-top: 25px;">
+                <button type="button" class="fp-btn-outline" onclick="voltarCentralParceiros()" style="padding: 12px 30px; font-weight: 700;">CANCELAR</button>
+                <button type="button" class="fp-btn-primary" onclick="salvarLicenciamento()"
+                        style="background: linear-gradient(135deg, #7A255F 0%, #B33D7D 100%); 
+                                padding: 12px 40px; border-radius: 8px; font-weight: 800; color: #fff; box-shadow: 0 8px 20px rgba(122, 37, 95, 0.3);">
+                    <i class="fas fa-save" style="margin-right: 10px;"></i> SALVAR LICENCIAMENTO
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# ══ LISTAGEM ══ #}
+    <div class="ge-form-container" style="margin-top: 25px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="font-size: 15px; font-weight: 800; color: #1e293b;">Licenças Enterprise Ativas</div>
+        </div>
+        <table class="fp-table" style="width: 100%;">
+            <thead>
+                <tr style="text-align: left; background: #f8fafc; font-size: 10px; color: #64748b; text-transform: uppercase;">
+                    <th style="padding: 12px;">Parceiro</th>
+                    <th style="padding: 12px;">Localidade</th>
+                    <th style="padding: 12px;">Contato Master</th>
+                    <th style="padding: 12px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if not licencas %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8; font-style: italic;">Nenhuma licença ativa.</td>
+                </tr>
+                {% else %}
+                    {% for lic in licencas[:5] %} {# Mostra apenas as 5 últimas aqui #}
+                    <tr>
+                        <td style="padding: 12px; font-weight: 700; color: #1e293b;">{{ lic.nome_parceiro }}</td>
+                        <td style="padding: 12px; color: #64748b;">{{ lic.cidade or '-' }} / {{ lic.uf or '-' }}</td>
+                        <td style="padding: 12px; color: #64748b;">{{ lic.contato_master or '-' }}</td>
+                        <td style="padding: 12px;">
+                            <span class="status-badge-dev" style="background: rgba(39, 174, 96, 0.1); color: #27AE60;">{{ lic.status }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    // ✅ SINCRONIZAÇÃO MASTER ATÔMICA: VEM DIRETO DO BACKEND (Engenharia AriOne)
+    const matrizFiel = {{ matriz_mestre | tojson }};
+
+    function updateLicDynamicSums() {
+        // Atualiza somas de Módulos (Core)
+        document.querySelectorAll('.core-row-lic').forEach(cr => {
+            const cIdx = cr.getAttribute('data-c-idx');
+            const totalInCore = parseInt(cr.getAttribute('data-total-cards') || 0);
+            const checkedInCore = document.querySelectorAll(`.lic-check.core-chk-${cIdx}:checked`).length;
+            
+            const licCell = document.getElementById(`lic-sum-core-${cIdx}`);
+            const remCell = document.getElementById(`lic-rem-core-${cIdx}`);
+            
+            if (licCell) licCell.textContent = checkedInCore;
+            if (remCell) {
+                const rem = totalInCore - checkedInCore;
+                remCell.textContent = rem;
+                remCell.style.color = rem === 0 ? '#2ecc71' : '#e74c3c';
+            }
+        });
+
+        // Atualiza somas de Produtos (Sub)
+        document.querySelectorAll('.sub-row-lic').forEach(sr => {
+            const mIdx = sr.getAttribute('data-m-idx');
+            const totalInSub = parseInt(sr.getAttribute('data-total-cards') || 0);
+            const checkedInSub = document.querySelectorAll(`.lic-check.sub-chk-${mIdx}:checked`).length;
+            
+            const licCell = document.getElementById(`lic-sum-sub-${mIdx}`);
+            const remCell = document.getElementById(`lic-rem-sub-${mIdx}`);
+            
+            if (licCell) licCell.textContent = checkedInSub;
+            if (remCell) {
+                const rem = totalInSub - checkedInSub;
+                remCell.textContent = rem;
+                remCell.style.color = rem === 0 ? '#2ecc71' : '#e74c3c';
+            }
+
+            // Atualiza visual dos cards filhos desse sub-módulo
+            document.querySelectorAll(`.s-lic-${mIdx}`).forEach(tr => {
+                const chk = tr.querySelector('.lic-check');
+                const licVal = tr.querySelector('.card-lic-val');
+                const remVal = tr.querySelector('.card-rem-val');
+                if(chk && licVal && remVal) {
+                    licVal.textContent = chk.checked ? '1' : '0';
+                    remVal.textContent = chk.checked ? '0' : '1';
+                    remVal.style.color = chk.checked ? '#2ecc71' : '#e74c3c';
+                }
+            });
+        });
+    }
+
+    function buildLicensingMatrix() {
+        const body = document.getElementById('lic-matrix-body');
+        let html = '';
+        
+        let cIdx = 0;
+
+        for (const [coreName, coreData] of Object.entries(matrizFiel)) {
+            let totalCardsInCore = 0;
+            let readyInCore = 0;
+            for (const sub of Object.values(coreData.setores || {})) {
+                for (const card of Object.values(sub.cards || {})) {
+                    totalCardsInCore++;
+                    if (card.pronto) readyInCore++;
+                }
+            }
+
+            html += `<tr class="core-row-lic" data-c-idx="${cIdx}" data-total-cards="${totalCardsInCore}" onclick="toggleLicM('${cIdx}')" style="font-weight: 800; cursor: pointer;">
+                        <td style="padding: 12px 20px;">
+                            <i class="${coreData.icon || 'fas fa-folder'}" style="color:#7A255F; margin-right: 12px;"></i>
+                            <span style="text-transform: uppercase; color: #1e293b;">${coreName}</span>
+                        </td>
+                        <td align="center" style="font-weight: 800; color: #64748b;">${totalCardsInCore}</td>
+                        <td align="center" style="font-weight: 800; color: #2ecc71;" id="lic-sum-core-${cIdx}">${readyInCore}</td>
+                        <td align="center" style="font-weight: 800; color: #e74c3c;" id="lic-rem-core-${cIdx}">${totalCardsInCore - readyInCore}</td>
+                        <td align="center">
+                            <label class="q-check-box">
+                                <input type="checkbox" onclick="event.stopPropagation(); checkAllInCore('${cIdx}', this)" ${readyInCore === totalCardsInCore ? 'checked' : ''}>
+                                <span class="q-mark"></span>
+                            </label>
+                        </td>
+                    </tr>`;
+            
+            let subIdx = 0;
+            for (const [subName, subData] of Object.entries(coreData.setores || {})) {
+                let totalInSub = 0;
+                let readyInSub = 0;
+                for (const card of Object.values(subData.cards || {})) {
+                    totalInSub++;
+                    if (card.pronto) readyInSub++;
+                }
+                const currentMIdx = `${cIdx}_${subIdx}`;
+
+                html += `<tr class="sub-row-lic c-lic-${cIdx}" data-m-idx="${currentMIdx}" data-total-cards="${totalInSub}" style="display:none; cursor: pointer;" onclick="toggleLicS('${currentMIdx}')">
+                            <td style="padding-left: 45px; font-weight: 700; color: #475569;">
+                                <i class="fas fa-chevron-right" id="icon-lic-${currentMIdx}" style="font-size: 9px; margin-right: 10px; color: #cbd5e1; transition: 0.3s;"></i>
+                                ${subName}
+                            </td>
+                            <td align="center" style="font-weight: 700; color: #94a3b8;">${totalInSub}</td>
+                            <td align="center" style="font-weight: 700; color: #2ecc71;" id="lic-sum-sub-${currentMIdx}">${readyInSub}</td>
+                            <td align="center" style="font-weight: 700; color: #e74c3c;" id="lic-rem-sub-${currentMIdx}">${totalInSub - readyInSub}</td>
+                            <td align="center">
+                                <label class="q-check-box">
+                                    <input type="checkbox" onclick="event.stopPropagation(); checkAllInSub('${currentMIdx}', this)" ${readyInSub === totalInSub ? 'checked' : ''}>
+                                    <span class="q-mark"></span>
+                                </label>
+                            </td>
+                        </tr>`;
+                
+                for (const [cardName, cardData] of Object.entries(subData.cards || {})) {
+                    const isReady = cardData.pronto === 1;
+                    html += `<tr class="tela-row-lic s-lic-${currentMIdx} c-lic-${cIdx}" style="display:none;">
+                                <td style="padding-left: 85px; color: #64748b; font-size: 11px;">
+                                    <i class="fas fa-file-alt" style="margin-right:8px; opacity:0.3;"></i> ${cardName}
+                                </td>
+                                <td align="center" style="color: #cbd5e1; font-weight: 600;">1</td>
+                                <td align="center" class="card-lic-val" style="color: #2ecc71; font-weight: 700; opacity: 0.6;">${isReady ? '1' : '0'}</td>
+                                <td align="center" class="card-rem-val" style="color: ${isReady ? '#2ecc71' : '#e74c3c'}; font-weight: 700; opacity: 0.6;">${isReady ? '0' : '1'}</td>
+                                <td align="center">
+                                    <label class="q-check-box">
+                                        <input type="checkbox" name="permissao_${coreName}_${subName}_${cardName}" 
+                                               class="lic-check core-chk-${cIdx} sub-chk-${currentMIdx}" 
+                                               onclick="event.stopPropagation(); updateLicDynamicSums()"
+                                               ${isReady ? 'checked' : ''}>
+                                        <span class="q-mark"></span>
+                                    </label>
+                                </td>
+                            </tr>`;
+                }
+                subIdx++;
+            }
+            cIdx++;
+        }
+        body.innerHTML = html;
+        updateLicDynamicSums();
+    }
+
+    function toggleLicM(idx) {
+        const els = document.querySelectorAll('.c-lic-' + idx);
+        const isOpen = els[0].style.display !== 'none';
+        els.forEach(e => e.style.display = isOpen ? 'none' : 'table-row');
+        if (isOpen) {
+            // Se fechar o módulo, fecha os sub-módulos também
+            document.querySelectorAll(`[class*="s-lic-${idx}_"]`).forEach(e => e.style.display = 'none');
+            document.querySelectorAll(`[id*="icon-lic-${idx}_"]`).forEach(i => i.style.transform = 'rotate(0deg)');
+        }
+    }
+
+    function toggleLicS(idx) {
+        const els = document.querySelectorAll('.s-lic-' + idx);
+        const isOpen = els[0].style.display !== 'none';
+        els.forEach(e => e.style.display = isOpen ? 'none' : 'table-row');
+        const icon = document.getElementById('icon-lic-' + idx);
+        if (icon) icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+    }
+
+    function checkAllInCore(idx, chk) {
+        document.querySelectorAll('.core-chk-' + idx).forEach(c => c.checked = chk.checked);
+        updateLicDynamicSums();
+    }
+
+    function checkAllInSub(idx, chk) {
+        document.querySelectorAll('.sub-chk-' + idx).forEach(c => c.checked = chk.checked);
+        updateLicDynamicSums();
+    }
+
+    function voltarCentralParceiros() {
+        if (typeof window.abrirModalGlobal === 'function') {
+            window.abrirModalGlobal("{{ url_for('sistema.card_central_parceiros') }}");
+        }
+    }
+
+    function salvarLicenciamento() {
+        const form = document.getElementById('form-licenciamento');
+        const formData = new FormData(form);
+        const nome = document.getElementById('lic-nome').value;
+        
+        if(!nome) { 
+            if (typeof window.arioneToast === 'function') {
+                window.arioneToast('Por favor, informe o Nome do Parceiro.', 'warning');
+            } else {
+                alert('Por favor, informe o Nome do Parceiro.');
+            }
+            return; 
+        }
+
+        if (typeof window.arioneToast === 'function') {
+            window.arioneToast(`⏳ Ativando Hub de Licenciamento para: ${nome}...`, 'info');
+        }
+
+        fetch("{{ url_for('sistema.hub_licenc') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (typeof window.arioneToast === 'function') {
+                    window.arioneToast(data.message, 'success');
+                }
+                setTimeout(() => {
+                    voltarCentralParceiros();
+                }, 1500);
+            } else {
+                if (typeof window.arioneToast === 'function') {
+                    window.arioneToast(data.message, 'danger');
+                } else {
+                    alert('Erro: ' + data.message);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erro no Licenciamento:', error);
+            if (typeof window.arioneToast === 'function') {
+                window.arioneToast('Erro técnico ao processar licenciamento.', 'danger');
+            }
+        });
+    }
+
+    function novoLicenciamento() {
+        document.getElementById('form-licenciamento').reset();
+        document.getElementById('lic-nome').focus();
+        updateLicDynamicSums();
+    }
+
+    buildLicensingMatrix();
+</script>

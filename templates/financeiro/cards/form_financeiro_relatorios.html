@@ -1,0 +1,351 @@
+{# =============================================================================
+   Arquivo  : form_financeiro_relatorios.html
+   Caminho  : templates/financeiro/cards/form_financeiro_relatorios.html
+   Função   : Gateway de Seleção Dinâmico de Relatórios Financeiros (Nível 2).
+   Lógica   : Adapta cards baseado no parâmetro 'modulo' [contas, caixas, bancos, gerencial].
+   Padrão   : DNA Cadastros (Quiet Luxury).
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-sub {
+            padding: 15px 25px;
+            /* Super Gradiente Cadastros: Mix Regional */
+            background: linear-gradient(90deg, #27AE60 0%, #16A085 11%, #2980B9 22%, #0072CE 33%, #7A255F 44%, #8E44AD 55%, #C0392B 66%, #E67E22 77%, #D35400 88%, #2C3E50 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 22px 30px;
+            background: #fff;
+            border: 1.5px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gateway-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: color-mix(in srgb, var(--c), white 97%);
+            border-color: var(--c);
+        }
+
+        .gateway-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--c-bg, rgba(0,0,0,0.04));
+            color: var(--c, #27AE60);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .gateway-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .gateway-label { font-size: 18px; font-weight: 900; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; }
+        .gateway-desc { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+
+        /* Estilo Botão Voltar Glass */
+        .btn-voltar-glass {
+            background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn-voltar-glass:hover { background: rgba(255,255,255,0.3); transform: translateX(-3px); }
+
+        /* Debug Floating Card */
+        .debug-floating-card {
+            display:none; position:absolute; top:110px; left:50%; transform:translateX(-50%); width:320px; 
+            background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25); z-index:1000; 
+            border:2px solid #27AE60; overflow:hidden; animation: slideInDebug 0.3s ease;
+        }
+        .debug-header { background:#27AE60; color:#fff; padding:12px 15px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:space-between; }
+        .debug-body { padding:15px; }
+        .debug-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: #475569; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 4px; }
+        .debug-item:hover { background: rgba(39,174,96,0.08); color: #27AE60; transform: translateX(5px); }
+        @keyframes slideInDebug { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    </style>
+
+    <div class="gateway-header-sub">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayFinanceiro()"><i class="fas fa-arrow-left"></i></button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-wallet" style="font-size: 1.4rem; color: #00E676;"></i>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div class="gateway-title" style="gap:0; color: #00E676;">
+                        Central de Relatórios: 
+                        {% if modulo == 'contas' %}Contas
+                        {% elif modulo == 'caixas' %}Caixas
+                        {% elif modulo == 'bancos' %}Bancos
+                        {% elif modulo == 'gerencial' %}Gerencial
+                        {% else %}Financeiro
+                        {% endif %}
+                    </div>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;">
+                        <i class="fas fa-print" style="margin-right: 5px;"></i>
+                        {% if modulo == 'contas' %}Pagar & Receber
+                        {% elif modulo == 'caixas' %}Fluxo de PDV
+                        {% elif modulo == 'bancos' %}Conciliação
+                        {% elif modulo == 'gerencial' %}DRE & Fluxo de Caixa
+                        {% else %}Fluxo de Caixa & Sustentabilidade
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">CARDs</span>
+            <button type="button" onclick="toggleDebugFinanceiro()" class="btn-voltar-glass" title="Auditoria de Integridade (Audit)"><i class="fas fa-microscope"></i></button>
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayFinanceiro()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            {% if modulo == 'contas' %}
+                <!-- A Receber -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardFin('a_receber')">
+                    <div class="gateway-icon"><i class="fas fa-arrow-circle-down"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">A Receber</span>
+                        <span class="gateway-desc">Gestão de Recebíveis</span>
+                    </div>
+                </div>
+                <!-- A Pagar -->
+                <div class="gateway-item" style="--c:#C0392B; --c-bg:rgba(192,57,43,0.08);" onclick="navegarCardFin('a_pagar')">
+                    <div class="gateway-icon"><i class="fas fa-arrow-circle-up"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">A Pagar</span>
+                        <span class="gateway-desc">Gestão de Pagamentos</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'caixas' %}
+                <!-- Caixas -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardFin('caixas')">
+                    <div class="gateway-icon"><i class="fas fa-cash-register"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Caixas</span>
+                        <span class="gateway-desc">Controle de PDV</span>
+                    </div>
+                </div>
+                <!-- Fluxo de Caixa -->
+                <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarCardFin('fluxo')">
+                    <div class="gateway-icon"><i class="fas fa-water"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Fluxo de Caixa</span>
+                        <span class="gateway-desc">Projeção e Realizado</span>
+                    </div>
+                </div>
+                <!-- Gráficos de Fluxo de Caixa -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardFin('fluxo-caixa-graficos')">
+                    <div class="gateway-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Gráficos Fluxo</span>
+                        <span class="gateway-desc">Evolução Semanal/Mensal/Anual</span>
+                    </div>
+                </div>
+                <!-- Movimentações -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardFin('movimentacoes')">
+                    <div class="gateway-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Movimentações</span>
+                        <span class="gateway-desc">Entradas e Saídas</span>
+                    </div>
+                </div>
+                <!-- Forma de Pagamentos -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardFin('formapagamentos')">
+                    <div class="gateway-icon"><i class="fas fa-credit-card"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">F. Pagamentos</span>
+                        <span class="gateway-desc">Cartões e convênios</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'bancos' %}
+                <!-- Bancos -->
+                <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarCardFin('bancos')">
+                    <div class="gateway-icon"><i class="fas fa-university"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Bancos</span>
+                        <span class="gateway-desc">Instituições parceiras</span>
+                    </div>
+                </div>
+                <!-- Contas -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardFin('contas_banco')">
+                    <div class="gateway-icon"><i class="fas fa-piggy-bank"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Contas</span>
+                        <span class="gateway-desc">Saldos Bancários</span>
+                    </div>
+                </div>
+                <!-- Extratos -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardFin('extratos')">
+                    <div class="gateway-icon"><i class="fas fa-file-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Extratos</span>
+                        <span class="gateway-desc">Listagem de débitos</span>
+                    </div>
+                </div>
+                <!-- Conciliação -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardFin('conciliacao')">
+                    <div class="gateway-icon"><i class="fas fa-balance-scale"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Conciliação</span>
+                        <span class="gateway-desc">Auditoria vs Bancos</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'gerencial' %}
+                <!-- Plano de Contas -->
+                <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarCardFin('plano_contas')">
+                    <div class="gateway-icon"><i class="fas fa-sitemap"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Plano Contas</span>
+                        <span class="gateway-desc">Estrutura Contábil</span>
+                    </div>
+                </div>
+                <!-- Centros de Custos -->
+                <div class="gateway-item" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarCardFin('centros_custo')">
+                    <div class="gateway-icon"><i class="fas fa-layer-group"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Centros Custo</span>
+                        <span class="gateway-desc">Rateio e Gestão</span>
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- PAINEL DEBUG FINANCEIRO -->
+    <div id="debug-financeiro-card" class="debug-floating-card">
+        <div class="debug-header">
+            <span><i class="fas fa-microscope" style="margin-right:8px;"></i> AUDITORIA DE INTEGRIDADE (AUDIT) - {{ modulo|upper }}</span>
+            <i class="fas fa-times" onclick="toggleDebugFinanceiro()" style="cursor:pointer; opacity:0.8;"></i>
+        </div>
+        <div class="debug-body">
+            <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">Checklist Financeiro</div>
+            <div id="debug-list-financeiro"></div>
+            <div style="margin: 10px 0; border-top: 1.5px dashed #e2e8f0;"></div>
+            <div class="debug-item" onclick="toggleDebugFinanceiro()" style="color:#7A255F; background:rgba(122,37,95,0.05);">
+                <i class="fas fa-times-circle"></i> <span style="font-weight:800;">Fechar Validação</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function navegarCardFin(tipo) {
+    let url = "";
+    let titulo = "";
+
+    if (tipo === 'centros_custo') {
+        url = "{{ url_for('financeiro.form_centro_custo') }}";
+        titulo = "Centros de Custo";
+    } else if (tipo === 'formapagamentos') {
+        url = "{{ url_for('financeiro.card_formas_pagamento') }}";
+        titulo = "Formas de Pagamento";
+    } else if (tipo === 'contas_banco') {
+        url = "{{ url_for('financeiro.card_contas_bancarias') }}";
+        titulo = "Contas Bancárias";
+    } else if (tipo === 'fluxo-caixa-graficos') {
+        url = "{{ url_for('financeiro.card_fluxo_caixa_graficos') }}";
+        titulo = "Gráficos de Fluxo de Caixa";
+    } else {
+        alert("O painel financeiro para " + tipo.toUpperCase() + " está sendo processado.");
+        return;
+    }
+
+    if (typeof abrirCardFinanceiro === 'function') {
+        abrirCardFinanceiro(url, titulo);
+    } else if (typeof abrirModalGlobal === 'function') {
+        abrirModalGlobal(url, titulo);
+    } else {
+        window.location.href = url;
+    }
+}
+
+function voltarParaGatewayFinanceiro() {
+    const url = "{{ url_for('financeiro.gateway_modulos_financeiro') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        
+        // Loader Padrão Ouro
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; gap:20px; color:#27AE60;">
+                <i class="fas fa-spinner fa-spin" style="font-size:40px;"></i>
+                <span style="font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Carregando Inteligência...</span>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+    }
+}
+
+function toggleDebugFinanceiro() {
+    const card = document.getElementById('debug-financeiro-card');
+    if (card) {
+        const isOpen = card.style.display === 'block';
+        card.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+            const items = document.querySelectorAll('.gateway-item');
+            const list = document.getElementById('debug-list-financeiro');
+            list.innerHTML = '';
+            items.forEach((item, idx) => {
+                const label = item.querySelector('.gateway-label').textContent.trim();
+                const icon = item.querySelector('.gateway-icon i').className;
+                list.innerHTML += `<div class="debug-item" onclick="alert('Teste Técnico: ${label}')"><i class="${icon}"></i> <span>${idx + 1}. ${label}</span></div>`;
+            });
+        }
+    }
+}
+</script>

@@ -1,0 +1,319 @@
+/* Caminho: static/css/sidebar.css */
+
+/* ─── ESTRUTURA ─────────────────────────────────────────── */
+.arione-sidebar {
+    width: 230px;
+    background-color: #7A255F;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    overflow: hidden;
+    /* Travado para usar scroll interno */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ─── LOGO ──────────────────────────────────────────────── */
+.menu-logo-container {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    background-color: #7A255F;
+    box-sizing: border-box;
+    z-index: 1001;
+    padding: 30px 0 10px 0;
+    /* Descê-la mais */
+    text-align: center;
+}
+
+.logo-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    outline: none;
+}
+
+.menu-logo-img {
+    max-width: 160px;
+    /* Compactá-la */
+    max-height: 70px;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto 15px auto;
+    transition: transform 0.3s ease;
+}
+
+.menu-logo-img:hover {
+    transform: scale(1.05);
+}
+
+.version-badge {
+    font-size: 9px;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 6px;
+    margin-bottom: 15px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    z-index: 10;
+    opacity: 0.8;
+}
+
+.logo-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+    /* Ari mais leve */
+    letter-spacing: -1px;
+    color: #00B7EE;
+    /* Ciano Identidade AriOne */
+    margin-top: -12px;
+    line-height: 1.1;
+    text-transform: none;
+}
+
+.logo-title span {
+    font-weight: 800;
+    /* One bem forte */
+    color: #ffffff;
+}
+
+.logo-subtitle {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-top: 2px;
+    width: 100%;
+    padding: 0 10px;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    opacity: 1;
+}
+
+/* ─── SCROLL CONTAINER ──────────────────────────────────── */
+.menu-scroll-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 0 20px 0;
+}
+
+/* Scrollbar Estilo AriOne Premium */
+.menu-scroll-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.menu-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.menu-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.menu-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── LISTA ─────────────────────────────────────────────── */
+.menu-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-item {
+    margin: 2px 0;
+}
+
+/* ─── RÓTULO DE SEÇÃO (RELEVO) ────────────────────────── */
+.menu-section-label {
+    padding: 12px 10px 6px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #00B7EE;
+    /* Cor vibrante da Identidade AriOne (Verde Água/Ciano) */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+    opacity: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-top: 5px;
+}
+
+/* ─── LINK NORMAL ───────────────────────────────────────── */
+.menu-link,
+.menu-link *,
+.menu-link:hover,
+.menu-link:active,
+.menu-link:focus {
+    text-decoration: none !important;
+    outline: none !important;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    padding: 8px 18px;
+    color: rgba(255, 255, 255, 0.80);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    position: relative;
+}
+
+.menu-link:hover {
+    background-color: rgba(255, 255, 255, 0.10);
+    color: #ffffff;
+    border-left-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ─── LINK ATIVO ────────────────────────────────────────── */
+.menu-link-ativo {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    border-left: 3px solid #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.menu-link-ativo .menu-icon {
+    opacity: 1 !important;
+}
+
+/* ─── ÍCONES ─────────────────────────────────────────────── */
+.menu-icon {
+    width: 24px;
+    margin-right: 12px;
+    font-size: 16px;
+    text-align: center;
+    transition: none;
+    opacity: 0.7;
+}
+
+/* ─── CORES DOS ÍCONES (VIVACIDADE ARI-ONE) ─── */
+.icon-cadastros  { color: #BDBDBD; opacity: 0.9; }
+.icon-operacoes  { color: #03A9F4; opacity: 1; text-shadow: 0 0 5px rgba(3,169,244,0.2); }
+.icon-financeiro { color: #00E676; opacity: 1; text-shadow: 0 0 5px rgba(0,230,118,0.2); }
+.icon-gestao     { color: #CE93D8; opacity: 1; text-shadow: 0 0 5px rgba(206,147,216,0.2); }
+.icon-fiscal     { color: #FFB74D; opacity: 1; text-shadow: 0 0 5px rgba(255,183,77,0.2); }
+.icon-patrimonio { color: #BCAAA4; opacity: 1; text-shadow: 0 0 5px rgba(188,170,164,0.2); }
+.icon-relatorios { color: #82B1FF; opacity: 1; }
+.icon-digital    { color: #42A5F5; opacity: 1; text-shadow: 0 0 5px rgba(66,165,245,0.2); }
+.icon-sistema    { color: #90A4AE; opacity: 1; text-shadow: 0 0 5px rgba(144,164,174,0.2); }
+
+/* ─── DINAMISMO DE COR NO ATIVO ────────────────────────── */
+.menu-link-ativo {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+/* Bordas Laterais Coloridas */
+.menu-item:has(.icon-cadastros) .menu-link-ativo {
+    border-left-color: #34495E !important;
+}
+
+.menu-item:has(.icon-operacoes) .menu-link-ativo {
+    border-left-color: #2980B9 !important;
+}
+
+.menu-item:has(.icon-financeiro) .menu-link-ativo {
+    border-left-color: #27AE60 !important;
+}
+
+.menu-item:has(.icon-gestao) .menu-link-ativo {
+    border-left-color: #8E44AD !important;
+}
+
+.menu-item:has(.icon-fiscal) .menu-link-ativo {
+    border-left-color: #D35400 !important;
+}
+
+.menu-item:has(.icon-patrimonio) .menu-link-ativo {
+    border-left-color: #6D4C41 !important;
+}
+
+.menu-item:has(.icon-relatorios) .menu-link-ativo {
+    border-left-color: #3F51B5 !important;
+}
+
+.menu-item:has(.icon-digital) .menu-link-ativo {
+    border-left-color: #16A085 !important;
+}
+
+.menu-item:has(.icon-sistema) .menu-link-ativo {
+    border-left-color: #7A255F !important;
+}
+
+/* Ícones com Brilho de Identidade (Glow) no Estado Ativo */
+.menu-link-ativo .icon-cadastros {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.menu-link-ativo .icon-operacoes {
+    color: #00B7EE !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(0, 183, 238, 0.5);
+}
+
+.menu-link-ativo .icon-financeiro {
+    color: #2ECC71 !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+}
+
+.menu-link-ativo .icon-gestao {
+    color: #A29BFE !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(162, 155, 254, 0.5);
+}
+
+.menu-link-ativo .icon-fiscal {
+    color: #F39C12 !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+}
+
+.menu-link-ativo .icon-patrimonio {
+    color: #E67E22 !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(230, 126, 34, 0.5);
+}
+
+.menu-link-ativo .icon-relatorios {
+    color: #81ECEC !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(129, 236, 236, 0.5);
+}
+
+.menu-link-ativo .icon-digital {
+    color: #55EFC4 !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(85, 239, 196, 0.5);
+}
+
+.menu-link-ativo .icon-sistema {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}

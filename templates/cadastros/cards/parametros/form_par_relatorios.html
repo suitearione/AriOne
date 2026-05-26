@@ -1,0 +1,88 @@
+{# =============================================================================
+   Arquivo  : form_par_relatorios.html
+   Caminho  : templates/cadastros/cards/parametros/form_par_relatorios.html
+   Cor Tema : #2D3748 (BI / Inteligência)
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% block content %}
+{% import "macros/componentes.html" as comp %}
+<div class="ctx-cfg-wrap" id="ctx-cfg-bi">
+    <style>
+        :root { --cfg-pri: #2D3748; --cfg-sec: rgba(45, 55, 72, 0.1); }
+        .ctx-cfg-header { background: linear-gradient(135deg, #2D3748, #1A202C); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-cfg-body { padding: 25px; background: #fff; }
+        .cfg-section { border: 1.5px solid #edf2f7; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .cfg-title { font-size: 11px; font-weight: 800; color: var(--cfg-pri); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .cfg-row-flex { display: flex; flex-wrap: wrap; gap: 20px; }
+        .cfg-label-check { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #4a5568; cursor: pointer; }
+        .cfg-input-bi { padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 13px; }
+    </style>
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros de Relatórios",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-chart-pie",
+        form_id="form-par-relatorios",
+        onclick_save="arioneSalvarDocumento('parametros_relatorios', this, 'form-par-relatorios')",
+        cor_tema="#2D3748",
+        func_fechar="fecharModalGlobal()",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+
+    <div class="ctx-cfg-body">
+        <form method="POST" id="form-par-relatorios" action="{{ url_for('cadastros.salvar_parametros') }}">
+            <input type="hidden" name="grupo_config" value="relatorios">
+            <div class="cfg-section">
+                <div class="cfg-title"><i class="fas fa-filter"></i> Interface de Filtragem (Padrão)</div>
+                <div class="cfg-row-flex">
+                    <div style="flex:1;">
+                        <label class="cfg-label" style="display:block;margin-bottom:5px;">Período Dinâmico</label>
+                        <select class="cfg-input-bi" style="width:100%;">
+                            <option>Mês Atual</option>
+                            <option>Últimos 7 dias</option>
+                            <option>Personalizado</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label class="cfg-label" style="display:block;margin-bottom:5px;">Agrupar Por</label>
+                        <select class="cfg-input-bi" style="width:100%;">
+                            <option>Vendedor</option>
+                            <option>Marca / Categoria</option>
+                            <option>Região</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cfg-section">
+                <div class="cfg-title"><i class="fas fa-file-export"></i> Formatos de Saída</div>
+                <div class="cfg-row-flex">
+                    <label class="cfg-label-check"><input type="checkbox" checked> Visualizar em Tela</label>
+                    <label class="cfg-label-check"><input type="checkbox" checked> Gerar PDF (Lâmina)</label>
+                    <label class="cfg-label-check"><input type="checkbox"> Exportar Excel/CSV</label>
+                </div>
+            </div>
+
+            <div class="cfg-section">
+                <div class="cfg-title"><i class="fas fa-lightbulb"></i> Inteligência (BI)</div>
+                <div class="cfg-row-flex">
+                    <label class="cfg-label-check" title="Comparar com o ano anterior"><input type="checkbox"> Comparativo YoY (Year-over-Year)</label>
+                    <label class="cfg-label-check"><input type="checkbox"> Quebra de Página por Grupo</label>
+                    <label class="cfg-label-check"><input type="checkbox"> Detalhamento (Item a Item)</label>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="ge-btn-cancelar" onclick="fecharModalParam()">Sair</button>
+                <button type="submit" class="ge-btn-salvar" style="background: var(--cfg-pri); border-radius:8px; padding:10px 25px; color:#fff; font-weight:700; border:none; cursor:pointer;">
+                    <i class="fas fa-save"></i> Salvar Preferências
+                </button>
+            </div>
+        </form>
+    </div>
+    </div>
+</div>
+{% endblock %}

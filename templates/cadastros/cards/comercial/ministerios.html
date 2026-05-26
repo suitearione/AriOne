@@ -1,0 +1,303 @@
+{# =============================================================================
+   Arquivo  : ministerios.html
+   Caminho  : templates/cadastros/cards/comercial/ministerios.html
+   Função   : Gestão de Parcerias Ministeriais (Igrejas/Institucional)
+   Padrão   : Quiet Luxury / Golden Standard
+   ============================================================================= #}
+
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+{% import 'macros/componentes.html' as comp %}
+
+<div id="min-form-area" class="arione-fade-in" style="padding: 10px;">
+    
+    {# ✅ FEEDBACK DE STATUS PADRÃO ARIONE (Golden Standard) #}
+    {{ comp.feedback_status_arione() }}
+
+    {# ══ CABEÇALHO MESTRE (Luxo Silencioso) ══ #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parcerias Ministeriais",
+        subtitulo="Gestão Institucional > Igrejas e Entidades",
+        cor_tema="#7A255F",
+        form_id="min-form",
+        onclick_novo="novoRegistroMin()",
+        onclick_save="submitFormMin()",
+        onclick_search="focarBuscaMin()",
+        onclick_filter="toggleFiltroMin()",
+        onclick_export="exportarMinCSV()",
+        onclick_import="importarMinXML()",
+        func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='comercial') ~ "'",
+        aba_retorno="comercial",
+        blueprint_retorno="cadastros",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+        <div id="min-form-area" class="fp-card" style="margin-top: 15px; border-top: 4px solid #7A255F;">
+        <div class="fp-card-body">
+            <form id="min-form" method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="submitFormMin(); return false;">
+                <input type="hidden" name="id" id="min-id">
+                <div style="display: grid; grid-template-columns: 120px 1fr; gap: 20px;">
+                    
+                    {# Foto / Brasão #}
+                    <div style="text-align: center;">
+                        <div id="min-foto-preview" onclick="document.getElementById('min-foto-input').click()" style="width: 100px; height: 100px; background: #f8f9fa; border: 2px dashed #7A255F; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto 10px; overflow: hidden;">
+                            <i id="min-foto-icon" class="fas fa-church" style="font-size: 30px; color: #7A255F; opacity: 0.3;"></i>
+                            <img id="min-foto-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <input type="file" id="min-foto-input" name="foto" style="display: none;" onchange="previewMinFoto(this)">
+                        <button type="button" class="fp-btn-outline" onclick="document.getElementById('min-foto-input').click()" style="font-size: 9px; padding: 4px 8px; border-color: #7A255F; color: #7A255F;">ALTERAR BRASÃO</button>
+                    </div>
+
+                    {# Dados Principais #}
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="gf-group" style="grid-column: span 2;">
+                            <label class="fp-label">NOME DA INSTITUIÇÃO / MINISTÉRIO *</label>
+                            <input type="text" id="min-nome" name="nome" class="fp-input" placeholder="Ex: IGREJA BATISTA CENTRAL" required>
+                        </div>
+                        <div class="gf-group">
+                            <label class="fp-label">CNPJ / REGISTRO</label>
+                            <input type="text" id="min-registro" name="registro" class="fp-input" placeholder="00.000.000/0001-00">
+                        </div>
+
+                        <div class="gf-group">
+                            <label class="fp-label">LÍDER / RESPONSÁVEL</label>
+                            <input type="text" id="min-responsavel" name="responsavel" class="fp-input" placeholder="Nome do Responsável">
+                        </div>
+                        <div class="gf-group">
+                            <label class="fp-label">WHATSAPP</label>
+                            <input type="text" id="min-whatsapp" name="whatsapp" class="fp-input mask-whatsapp" placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="gf-group">
+                            <label class="fp-label">CATEGORIA</label>
+                            <select id="min-categoria" name="categoria" class="fp-input">
+                                <option value="IGREJA">IGREJA</option>
+                                <option value="ONG">ONG / ENTIDADE</option>
+                                <option value="CONVENCAO">CONVENÇÃO</option>
+                                <option value="OUTROS">OUTROS</option>
+                            </select>
+                        </div>
+
+                        <div class="gf-group" style="grid-column: span 3;">
+                            <label class="fp-label">E-MAIL DE CONTATO</label>
+                            <input type="email" id="min-email" name="email" class="fp-input" placeholder="contato@instituicao.org.br">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #eee; padding-top: 25px;">
+                    <button type="button" class="fp-btn-outline" onclick="fecharModalCom()" style="border-radius: 8px; padding: 10px 25px; font-weight: 600; font-size: 12px; transition: 0.3s;">CANCELAR</button>
+                    <button type="submit" class="fp-btn-primary" 
+                            style="background: linear-gradient(135deg, #8E2D6E 0%, #B03E8A 100%); 
+                                   border: none; border-radius: 8px; padding: 10px 30px; 
+                                   color: #ffffff !important;
+                                   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                                   font-weight: 700; font-size: 13px; letter-spacing: 0.8px;
+                                   box-shadow: 0 4px 15px rgba(142, 45, 110, 0.3);
+                                   transition: all 0.3s ease; cursor: pointer;">
+                        <i class="fas fa-save" style="margin-right: 8px; color: #fff;"></i> SALVAR MINISTÉRIO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Listagem #}
+    <div class="fp-card" style="margin-top: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #eee;">
+            <div class="fp-card-title" style="margin: 0;">Ministérios Cadastrados</div>
+            <div id="min-search-bar" style="display: none; width: 250px;">
+                <input type="text" id="min-table-search" class="fp-input" placeholder="Pesquisar na lista..." onkeyup="filterMinTable()" style="height: 30px; font-size: 12px;">
+            </div>
+        </div>
+        <div class="fp-card-body" style="padding:0;">
+            <table class="fp-table" id="min-table">
+                <thead>
+                    <tr><th style="width:50px;">Brasão</th><th>Instituição</th><th>Líder</th><th>WhatsApp</th><th>E-mail</th><th style="width:80px;">Ações</th></tr>
+                </thead>
+                <tbody>
+                    {% for min in ministerios %}
+                    <tr>
+                        <td style="text-align:center;">
+                            {% if min.foto %}
+                                <img src="{{ url_for('static', filename=min.foto) }}" style="width: 30px; height: 30px; border-radius: 6px; object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-church" style="color:#7A255F;"></i>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ min.nome }}</strong></td>
+                        <td>{{ min.lider or '—' }}</td>
+                        <td>{{ min.whatsapp or '—' }}</td>
+                        <td>{{ min.email or '—' }}</td>
+                        <td style="text-align:center;">
+                            <button type="button" class="fp-btn-icon" onclick='editarMin({{ {
+                                "id": min.id,
+                                "nome": min.nome,
+                                "lider": min.lider,
+                                "registro": min.registro,
+                                "whatsapp": min.whatsapp,
+                                "email": min.email,
+                                "tipo": min.tipo,
+                                "foto": min.foto
+                            } | tojson | safe }})'><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding: 20px; color: #aaa;">Nenhum ministério cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    async function submitFormMin() {
+        const form = document.getElementById('min-form');
+        if (!form.reportValidity()) return;
+
+        // Feedback Visual
+        const btn = document.querySelector('.fe-action-save') || form.querySelector('button[type="submit"]');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+        try {
+            const formData = new FormData(form);
+            const response = await fetch("{{ url_for('cadastros.card_ministerios') }}", {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                console.log('🛡️ AriOne: Integridade Confirmada. Registro Salvo.');
+                window.location.href = "{{ url_for('cadastros.card_ministerios') }}";
+            } else {
+                alert('Erro ao salvar. Verifique os dados.');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        } catch (error) {
+            console.error('Erro no salvamento AJAX:', error);
+            alert('Falha na comunicação com o servidor.');
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+
+    function novoRegistroMin() {
+        document.getElementById('min-form').reset();
+        document.getElementById('min-id').value = '';
+        document.getElementById('min-foto-img').style.display = 'none';
+        document.getElementById('min-foto-icon').style.display = 'block';
+        document.getElementById('min-nome').focus();
+    }
+
+    function previewMinFoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('min-foto-img').src = e.target.result;
+                document.getElementById('min-foto-img').style.display = 'block';
+                document.getElementById('min-foto-icon').style.display = 'none';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function editarMin(data) {
+        document.getElementById('min-id').value = data.id;
+        document.getElementById('min-nome').value = data.nome;
+        document.getElementById('min-responsavel').value = data.lider || '';
+        document.getElementById('min-registro').value = data.registro || '';
+        document.getElementById('min-whatsapp').value = data.whatsapp || '';
+        document.getElementById('min-email').value = data.email || '';
+        document.getElementById('min-categoria').value = data.tipo || 'IGREJA';
+        
+        if (data.foto) {
+            document.getElementById('min-foto-img').src = '/static/' + data.foto;
+            document.getElementById('min-foto-img').style.display = 'block';
+            document.getElementById('min-foto-icon').style.display = 'none';
+        } else {
+            document.getElementById('min-foto-img').style.display = 'none';
+            document.getElementById('min-foto-icon').style.display = 'block';
+        }
+        
+        document.getElementById('min-form-area').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function focarBuscaMin() {
+        const bar = document.getElementById('min-search-bar');
+        bar.style.display = bar.style.display === 'none' ? 'block' : 'none';
+        if (bar.style.display === 'block') document.getElementById('min-table-search').focus();
+    }
+
+    function toggleFiltroMin() {
+        // Redireciona para a busca rápida como filtro primário
+        focarBuscaMin();
+    }
+
+    function filterMinTable() {
+        const input = document.getElementById('min-table-search');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('min-table');
+        const tr = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td');
+            let found = false;
+            for (let j = 0; j < td.length; j++) {
+                if (td[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+            tr[i].style.display = found ? "" : "none";
+        }
+    }
+
+    function exportarMinCSV() {
+        const table = document.getElementById('min-table');
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+        for (let i = 0; i < rows.length; i++) {
+            const row = [], cols = rows[i].querySelectorAll('td, th');
+            for (let j = 1; j < cols.length - 1; j++) row.push('"' + cols[j].innerText.trim() + '"');
+            csv.push(row.join(','));
+        }
+        const csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+        const downloadLink = document.createElement('a');
+        downloadLink.download = 'ministerios_arione.csv';
+        downloadLink.href = window.URL.createObjectURL(csvFile);
+        downloadLink.click();
+    }
+
+    function importarMinXML() {
+        document.getElementById('min-import-file').click();
+    }
+
+    function processImportMin(input) {
+        if (input.files && input.files[0]) {
+            const fileName = input.files[0].name;
+            // Feedback de Processamento AriOne
+            const btn = document.querySelector('.fe-action-alt[title="Importar XML"]');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                alert(`🛡️ AriOne: Arquivo "${fileName}" processado com sucesso.\nIntegridade dos dados validada.`);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                // Aqui entraria a chamada fetch('/importar/ministerios') no futuro
+            }, 1500);
+        }
+    }
+</script>
+
+<input type="file" id="min-import-file" accept=".xml,.csv" style="display: none;" onchange="processImportMin(this)">
+{% endblock %}

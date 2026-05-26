@@ -1,0 +1,490 @@
+<!-- templates/patrimonio/grids/grid_veiculos.html -->
+<div class="patr-section">
+
+    <!-- Formulário de Cadastro -->
+    <div class="op-card" style="border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.05);border:1px solid rgba(226,232,240,0.8);background:#fff;overflow:hidden;margin-bottom:25px;">
+        <div class="op-card-title" style="padding:16px 25px;border-bottom:1px solid #f1f5f9;font-weight:600;color:#334155;font-size:13px;background:#fcfdfe;display:flex;justify-content:space-between;align-items:center;">
+            <div><i class="fas fa-car" style="color:#0072CE;margin-right:10px;"></i><span>Dados do Veículo / Controle de Frota</span></div>
+            <span id="badge-veiculo-status" style="background:#e2e8f0;color:#64748b;font-size:10px;padding:4px 12px;border-radius:12px;font-weight:600;">ATIVO</span>
+        </div>
+        <div class="op-card-body" style="padding:25px;">
+            <!-- ABAS INTERNAS DO FORMULÁRIO -->
+            <div style="display:flex;gap:10px;margin-bottom:25px;border-bottom:2px solid #e2e8f0;padding-bottom:10px;">
+                <button type="button" onclick="alternarAbaFormVeiculo('dados')" id="btn-aba-veiculo-dados" style="background:#0072CE;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,114,206,0.2);">
+                    <i class="fas fa-car"></i> DADOS DO VEÍCULO
+                </button>
+                <button type="button" onclick="alternarAbaFormVeiculo('fiscal')" id="btn-aba-veiculo-fiscal" style="background:#f1f5f9;color:#64748b;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;">
+                    <i class="fas fa-balance-scale"></i> FISCAL & DEPRECIAÇÃO
+                </button>
+                <button type="button" onclick="alternarAbaFormVeiculo('historico')" id="btn-aba-veiculo-historico" style="background:#f1f5f9;color:#64748b;border:none;padding:8px 18px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;">
+                    <i class="fas fa-history"></i> HISTÓRICO
+                </button>
+            </div>
+
+            <form id="formVeiculos" onsubmit="salvarVeiculo(event)">
+                <input type="hidden" name="id" id="veiculo_id" value="new">
+                
+                <!-- ================= ABA 1: DADOS DO VEÍCULO ================= -->
+                <div id="veiculo-aba-dados">
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">1. Identificação Principal</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">MARCA / MODELO *</label>
+                            <input class="op-input" type="text" name="marca_modelo" id="vei_marca_modelo" placeholder="EX: TOYOTA HILUX / FIAT STRADA" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">PLACA *</label>
+                            <input class="op-input" type="text" name="placa" placeholder="EX: ABC-1234 / ABC1D23" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:700;color:#0f766e;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CATEGORIA *</label>
+                            <select name="categoria" id="vei_cat" class="op-input" required style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;transition:0.2s;">
+                                <option value="">SELECIONE...</option>
+                                <option value="PASSEIO">🚗 VEÍCULO DE PASSEIO</option>
+                                <option value="UTILITARIO">🛻 UTILITÁRIO / PICKUP</option>
+                                <option value="CAMINHAO">🚛 CAMINHÃO / CARRETA</option>
+                                <option value="MOTOCICLETA">🏍️ MOTOCICLETA</option>
+                                <option value="MAQUINA_PESADA">🚜 MÁQUINA PESADA / TRATOR</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">STATUS DA FROTA</label>
+                            <select name="status_frota" class="op-input" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#334155;background:#fff;">
+                                <option value="CIRCULANDO">🟢 CIRCULANDO</option>
+                                <option value="MANUTENCAO">🟡 EM MANUTENÇÃO</option>
+                                <option value="SINISTRO">🔴 SINISTRO / BATEU</option>
+                                <option value="VENDIDO">⚫ VENDIDO / LEILÃO</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">2. Especificações e Valores FIPE</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:120px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">ANO / MODELO</label>
+                            <input class="op-input" type="text" name="ano" placeholder="EX: 2023/2024" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:120px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">COR</label>
+                            <input class="op-input" type="text" name="cor" placeholder="EX: BRANCO" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">RENAVAM</label>
+                            <input class="op-input" type="text" name="renavam" placeholder="EX: 00987654321" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:700;color:#0f766e;margin-bottom:6px;display:block;">VALOR TABELA FIPE (R$) *</label>
+                            <input class="op-input" type="number" step="0.01" name="valor" placeholder="0,00" required style="width:100%;border:1px solid #0f766e;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;color:#0f766e;background:#f0fdf4;transition:0.2s;">
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">3. Operação, Seguros e Responsabilidade</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">QUILOMETRAGEM (KM)</label>
+                            <input class="op-input" type="number" name="km" placeholder="0" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:160px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VENC. CRLV / IPVA</label>
+                            <input class="op-input" type="date" name="venc_ipva" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">SEGURADORA / APÓLICE</label>
+                            <input class="op-input" type="text" name="seguradora" placeholder="EX: PORTO SEGURO - APÓLICE Nº 12345" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:160px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VENCIMENTO SEGURO</label>
+                            <input class="op-input" type="date" name="venc_seguro" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                    </div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:2;min-width:200px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">MOTORISTA RESPONSÁVEL</label>
+                            <input class="op-input" type="text" name="responsavel" placeholder="NOME DO MOTORISTA / CONDUTOR" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;outline:none;background:#fff;transition:0.2s;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ABA 2: FISCAL & DEPRECIAÇÃO ================= -->
+                <div id="veiculo-aba-fiscal" style="display:none;">
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">4. Dados de Aquisição</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DE AQUISIÇÃO</label>
+                            <input class="op-input" type="date" name="data_aquisicao" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VALOR DE AQUISIÇÃO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="valor_aquisicao" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DE VENDA</label>
+                            <input class="op-input" type="date" name="data_venda" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">5. Depreciação e Impostos</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;background:#f8fafc;padding:15px;border-radius:12px;border:1px solid #e2e8f0;">
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">DATA DEPRECIAÇÃO</label>
+                            <input class="op-input" type="date" name="data_depreciacao" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">TAXA DEPRECIAÇÃO (%)</label>
+                            <input class="op-input" type="number" step="0.01" name="taxa_depreciacao" placeholder="EX: 20.00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:140px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">VALOR DEPRECIADO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="valor_depreciado" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">6. Manutenção e Intervenções</div>
+                    <div class="op-row" style="gap:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;">
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">IMPOSTOS / IPVA ANUAL (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="impostos_anuais" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:1;min-width:150px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">CUSTO MANUTENÇÃO (R$)</label>
+                            <input class="op-input" type="number" step="0.01" name="custo_manutencao" placeholder="0,00" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;color:#334155;">
+                        </div>
+                        <div class="op-group" style="flex:2;min-width:250px;">
+                            <label class="op-label" style="font-size:11px;font-weight:600;color:#64748b;margin-bottom:6px;display:block;">HISTÓRICO DE REPAROS E MANUTENÇÕES</label>
+                            <input class="op-input" type="text" name="historico_reformas" placeholder="EX: TROCA DE PNEUS E REVISÃO DE 30K EM 2025" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;font-size:12px;text-transform:uppercase;font-weight:500;color:#334155;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ABA 3: HISTÓRICO DE MOVIMENTAÇÕES (SOMENTE LEITURA) ================= -->
+                <div id="veiculo-aba-historico" style="display:none;">
+                    <div style="font-size:11px;font-weight:700;color:#0072CE;margin-bottom:12px;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:5px;">Rastreamento Histórico de Movimentações e Auditoria</div>
+                    <div id="container-historico-mov-veiculo" style="background:#f8fafc;border:1px solid #e2e8f0;padding:25px;border-radius:12px;min-height:180px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                        <i class="fas fa-history" style="font-size:32px;color:#cbd5e1;margin-bottom:12px;"></i>
+                        <div style="font-size:13px;font-weight:600;color:#64748b;text-align:center;">Nenhum veículo selecionado. Clique em [Editar] na tabela abaixo para carregar o histórico completo desta frota.</div>
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:5px;">
+                    <button type="button" onclick="limparFormVeiculo()" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;">
+                        <i class="fas fa-times"></i> LIMPAR
+                    </button>
+                    <button type="submit" id="btn-salvar-veiculo" style="background:#0072CE;color:#fff;border:none;padding:10px 24px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,114,206,0.2);transition:0.2s;">
+                        <i class="fas fa-save"></i> SALVAR VEÍCULO
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Listagem -->
+    <div class="op-card" style="border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.05);border:1px solid rgba(226,232,240,0.8);background:#fff;overflow:hidden;">
+        <div class="op-card-title" style="padding:16px 25px;border-bottom:1px solid #f1f5f9;font-weight:600;color:#334155;font-size:13px;background:#fcfdfe;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;"><i class="fas fa-list" style="color:#0072CE;margin-right:10px;"></i><span>Frota de Veículos Cadastrada</span></div>
+            <div style="display:flex;align-items:center;gap:15px;">
+                <input type="text" id="input-busca-veiculos" placeholder="🔍 Pesquisar na lista..." oninput="filtrarTabelaVeiculos(this.value)" style="border:1px solid #cbd5e1;border-radius:8px;padding:6px 12px;font-size:11px;outline:none;width:200px;transition:0.2s;">
+                <span id="count-veiculos" style="background:#e2e8f0;color:#64748b;font-size:10px;padding:4px 12px;border-radius:12px;font-weight:600;">0 REGISTROS</span>
+            </div>
+        </div>
+        <div class="op-card-body" style="padding:0;overflow-x:auto;">
+            <table class="op-table" style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                    <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:600;font-size:11px;">
+                        <th style="padding:14px 25px;">VEÍCULO / MODELO</th>
+                        <th style="padding:14px 15px;">PLACA</th>
+                        <th style="padding:14px 15px;">CATEGORIA</th>
+                        <th style="padding:14px 15px;">KM ATUAL</th>
+                        <th style="padding:14px 15px;">VALOR FIPE</th>
+                        <th style="padding:14px 15px;">VENC. IPVA</th>
+                        <th style="padding:14px 15px;">VENC. SEGURO</th>
+                        <th style="padding:14px 15px;">MOTORISTA</th>
+                        <th style="padding:14px 15px;">STATUS</th>
+                        <th style="padding:14px 25px;text-align:right;">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-veiculos">
+                    <tr><td colspan="10" style="padding:30px;text-align:center;color:#94a3b8;font-size:12px;">Nenhum veículo cadastrado. Utilize o formulário acima.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+const COR_VEICULO = '#f59e0b';
+let veiculosCad = [];
+
+async function carregarVeiculosAPI() {
+    try {
+        const res = await fetch('/patrimonio/api/ativos/listar?categoria=VEICULO');
+        const data = await res.json();
+        veiculosCad = data.map(item => ({
+            id: item.id,
+            status_frota: item.status,
+            valor_aquisicao: item.valor_aquisicao,
+            valor_contabil_atual: item.valor_contabil_atual,
+            ...item
+        }));
+        renderVeiculos();
+    } catch (e) {
+        console.error("Erro ao carregar veículos do banco:", e);
+    }
+}
+
+function alternarAbaFormVeiculo(aba) {
+    const divDados = document.getElementById('veiculo-aba-dados');
+    const divFiscal = document.getElementById('veiculo-aba-fiscal');
+    const divHist = document.getElementById('veiculo-aba-historico');
+    const btnDados = document.getElementById('btn-aba-veiculo-dados');
+    const btnFiscal = document.getElementById('btn-aba-veiculo-fiscal');
+    const btnHist = document.getElementById('btn-aba-veiculo-historico');
+    const btnSalvar = document.getElementById('btn-salvar-veiculo');
+    if (!divDados || !divFiscal || !divHist) return;
+    
+    // Reseta botoes
+    [btnDados, btnFiscal, btnHist].forEach(b => {
+        b.style.background = '#f1f5f9'; b.style.color = '#64748b'; b.style.boxShadow = 'none';
+    });
+    
+    if (aba === 'dados') {
+        divDados.style.display = 'block'; divFiscal.style.display = 'none'; divHist.style.display = 'none';
+        btnDados.style.background = COR_VEICULO; btnDados.style.color = '#fff'; btnDados.style.boxShadow = '0 2px 8px rgba(245,158,11,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'inline-block';
+    } else if (aba === 'fiscal') {
+        divDados.style.display = 'none'; divFiscal.style.display = 'block'; divHist.style.display = 'none';
+        btnFiscal.style.background = COR_VEICULO; btnFiscal.style.color = '#fff'; btnFiscal.style.boxShadow = '0 2px 8px rgba(245,158,11,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'inline-block';
+    } else {
+        divDados.style.display = 'none'; divFiscal.style.display = 'none'; divHist.style.display = 'block';
+        btnHist.style.background = COR_VEICULO; btnHist.style.color = '#fff'; btnHist.style.boxShadow = '0 2px 8px rgba(245,158,11,0.2)';
+        if (btnSalvar) btnSalvar.style.display = 'none';
+    }
+}
+
+function gerarHistoricoMovVeiculo(v) {
+    const cont = document.getElementById('container-historico-mov-veiculo'); if (!cont) return;
+    if (!v || v.id === 'new') {
+        cont.innerHTML = `<i class="fas fa-history" style="font-size:32px;color:#cbd5e1;margin-bottom:12px;"></i>
+            <div style="font-size:13px;font-weight:600;color:#64748b;text-align:center;">Nenhuma movimentação registrada. Salve o veículo para iniciar o rastreamento histórico.</div>`;
+        return;
+    }
+
+    const valAq = parseFloat(v.valor_aquisicao || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const valDep = parseFloat(v.valor_depreciado || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const valAtu = parseFloat(v.valor_contabil_atual || v.valor || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const impAno = parseFloat(v.impostos_anuais || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+    const custMan = parseFloat(v.custo_manutencao || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+
+    let html = `<div style="width:100%;display:flex;flex-direction:column;gap:15px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #cbd5e1;padding-bottom:10px;">
+            <span style="font-size:14px;font-weight:800;color:#334155;">Linha do Tempo: Frota ${v.marca_modelo}</span>
+            <span style="background:#e2e8f0;color:#475569;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:700;">ID Rastreamento: #PAA-${v.id}</span>
+        </div>`;
+
+    // 1. AQUISIÇÃO
+    html += `<div style="background:#fff;border-left:4px solid ${COR_VEICULO};padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:${COR_VEICULO};text-transform:uppercase;">[ INCLUSÃO NA FROTA ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Placa: ${v.placa||'---'} | Data da Compra: ${v.data_aquisicao ? v.data_aquisicao.split('-').reverse().join('/') : '---'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">VALOR DE AQUISIÇÃO</div>
+            <div style="font-size:15px;font-weight:800;color:${COR_VEICULO};">${valAq}</div>
+        </div>
+    </div>`;
+
+    // 2. DEPRECIAÇÃO
+    html += `<div style="background:#fff;border-left:4px solid #0f766e;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#0f766e;text-transform:uppercase;">[ DEPRECIAÇÃO & VALOR DE MERCADO ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Taxa Anual: ${v.taxa_depreciacao||'0'}% | Data Depreciação: ${v.data_depreciacao ? v.data_depreciacao.split('-').reverse().join('/') : '---'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">VALOR ATUALIZADO (LÍQUIDO)</div>
+            <div style="font-size:15px;font-weight:800;color:#0f766e;">${valAtu}</div>
+        </div>
+    </div>`;
+
+    // 3. MANUTENÇÃO E IMPOSTOS
+    html += `<div style="background:#fff;border-left:4px solid #d97706;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;">[ MANUTENÇÃO, IMPOSTOS & SEGURO ]</div>
+            <div style="font-size:13px;font-weight:600;color:#334155;margin-top:2px;">Revisões/Sinistros: ${v.historico_reformas||'Sem histórico de manutenção pesada.'}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px;color:#64748b;font-weight:600;">CUSTOS DA FROTA (ANUais)</div>
+            <div style="font-size:14px;font-weight:700;color:#d97706;">IPVA: ${impAno} | Manut: ${custMan}</div>
+        </div>
+    </div>`;
+
+    // 4. ALIENAÇÃO / BAIXA FISCAL
+    if (v.status_frota === 'VENDIDO' || v.status === 'VENDIDO') {
+        html += `<div style="background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid #ea580c;padding:15px 20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+            <div style="font-size:11px;font-weight:800;color:#9a3412;text-transform:uppercase;">[ DESMOBILIZAÇÃO / ALIENAÇÃO FISCAL ]</div>
+            <div style="font-size:13px;font-weight:700;color:#334155;margin-top:4px;line-height:1.4;">${v.observacoes || 'Veículo alienado e baixado do patrimônio.'}</div>
+        </div>`;
+    }
+
+    html += `</div>`;
+    cont.innerHTML = html;
+}
+
+function filtrarTabelaVeiculos(termo) {
+    const tbody = document.getElementById('tbody-veiculos'); if (!tbody) return;
+    const linhas = tbody.querySelectorAll('tr');
+    linhas.forEach(tr => {
+        if (tr.textContent.toUpperCase().includes(termo.toUpperCase())) tr.style.display = '';
+        else tr.style.display = 'none';
+    });
+}
+
+function renderVeiculos() {
+    const tbody = document.getElementById('tbody-veiculos');
+    const cnt = document.getElementById('count-veiculos');
+    if (!tbody) return;
+    cnt.textContent = `${veiculosCad.length} REGISTROS`;
+    if (!veiculosCad.length) {
+        tbody.innerHTML = `<tr><td colspan="10" style="padding:30px;text-align:center;color:#94a3b8;">Nenhum veículo cadastrado no banco de dados.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = veiculosCad.map(v => {
+        const statusBadge = v.status_frota === 'CIRCULANDO'
+            ? `<span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🟢 CIRCULANDO</span>`
+            : v.status_frota === 'MANUTENCAO'
+                ? `<span style="background:#fef08a;color:#854d0e;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🟡 MANUTENÇÃO</span>`
+                : v.status_frota === 'SINISTRO'
+                    ? `<span style="background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">🔴 SINISTRO</span>`
+                    : `<span style="background:#1e293b;color:#f8fafc;padding:3px 10px;border-radius:6px;font-weight:700;font-size:10px;">⚫ VENDIDO</span>`;
+        const valFmt = parseFloat(v.valor_contabil_atual||v.valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+        const ipvaFmt = v.venc_ipva ? v.venc_ipva.split('-').reverse().join('/') : '---';
+        const segFmt = v.venc_seguro ? v.venc_seguro.split('-').reverse().join('/') : '---';
+        return `<tr style="border-bottom:1px solid #f1f5f9;transition:background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <td style="padding:14px 25px;font-weight:600;color:${COR_VEICULO};">${v.marca_modelo}</td>
+            <td style="padding:14px 15px;font-weight:700;color:#0f766e;">${v.placa||'---'}</td>
+            <td style="padding:14px 15px;color:#64748b;">${v.subcategoria||v.categoria||'---'}</td>
+            <td style="padding:14px 15px;color:#334155;">${v.km||'0'} km</td>
+            <td style="padding:14px 15px;font-weight:600;color:#0f766e;">${valFmt}</td>
+            <td style="padding:14px 15px;color:#64748b;">${ipvaFmt}</td>
+            <td style="padding:14px 15px;color:#64748b;">${segFmt}</td>
+            <td style="padding:14px 15px;color:#334155;font-weight:500;">${v.responsavel||'---'}</td>
+            <td style="padding:14px 15px;">${statusBadge}</td>
+            <td style="padding:14px 25px;text-align:right;">
+                <button onclick="editarVeiculo(${v.id})" style="background:#f1f5f9;color:${COR_VEICULO};border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;margin-right:5px;"><i class="fas fa-edit"></i> Editar</button>
+                <button onclick="excluirVeiculo(${v.id})" style="background:#fee2e2;color:#ef4444;border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function salvarVeiculo(e) {
+    e.preventDefault();
+    const f = document.getElementById('formVeiculos');
+    const idVal = f.querySelector('[name=id]').value;
+    const obj = {
+        id: idVal,
+        categoria: 'VEICULO',
+        descricao: f.querySelector('[name=marca_modelo]').value.toUpperCase(),
+        marca_modelo: f.querySelector('[name=marca_modelo]').value.toUpperCase(),
+        tag_patrimonial: f.querySelector('[name=placa]').value.toUpperCase(),
+        placa: f.querySelector('[name=placa]').value.toUpperCase(),
+        subcategoria: f.querySelector('[name=categoria]').value,
+        status_frota: f.querySelector('[name=status_frota]').value,
+        status: f.querySelector('[name=status_frota]').value === 'VENDIDO' ? 'VENDIDO' : 'ATIVO',
+        ano: f.querySelector('[name=ano]').value,
+        cor: f.querySelector('[name=cor]').value.toUpperCase(),
+        renavam: f.querySelector('[name=renavam]').value,
+        valor: f.querySelector('[name=valor]').value,
+        km: f.querySelector('[name=km]').value,
+        venc_ipva: f.querySelector('[name=venc_ipva]').value,
+        seguradora: f.querySelector('[name=seguradora]').value.toUpperCase(),
+        venc_seguro: f.querySelector('[name=venc_seguro]').value,
+        responsavel: f.querySelector('[name=responsavel]').value.toUpperCase(),
+        data_aquisicao: f.querySelector('[name=data_aquisicao]').value,
+        valor_aquisicao: f.querySelector('[name=valor_aquisicao]').value,
+        data_depreciacao: f.querySelector('[name=data_depreciacao]').value,
+        taxa_depreciacao: f.querySelector('[name=taxa_depreciacao]').value,
+        valor_depreciado: f.querySelector('[name=valor_depreciado]').value,
+        data_venda: f.querySelector('[name=data_venda]').value,
+        impostos_anuais: f.querySelector('[name=impostos_anuais]').value,
+        custo_manutencao: f.querySelector('[name=custo_manutencao]').value,
+        historico_reformas: f.querySelector('[name=historico_reformas]').value.toUpperCase(),
+        observacoes: f.querySelector('[name=observacoes]') ? f.querySelector('[name=observacoes]').value.toUpperCase() : ""
+    };
+    
+    try {
+        const res = await fetch('/patrimonio/api/ativos/salvar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(obj)
+        });
+        const data = await res.json();
+        if(data.success) {
+            if (typeof arioneToast === 'function') arioneToast(data.message, 'success');
+            await carregarVeiculosAPI();
+            limparFormVeiculo();
+        } else {
+            if (typeof arioneToast === 'function') arioneToast('Erro: ' + data.error, 'error');
+        }
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+function editarVeiculo(id) {
+    const v = veiculosCad.find(x => x.id == id); if (!v) return;
+    const f = document.getElementById('formVeiculos');
+    f.querySelector('[name=id]').value = v.id;
+    f.querySelector('[name=marca_modelo]').value = v.marca_modelo||v.descricao||'';
+    f.querySelector('[name=placa]').value = v.placa||v.tag_patrimonial||'';
+    f.querySelector('[name=categoria]').value = v.subcategoria||v.categoria||'';
+    f.querySelector('[name=status_frota]').value = v.status_frota||'CIRCULANDO';
+    f.querySelector('[name=ano]').value = v.ano||'';
+    f.querySelector('[name=cor]').value = v.cor||'';
+    f.querySelector('[name=renavam]').value = v.renavam||'';
+    f.querySelector('[name=valor]').value = v.valor||'';
+    f.querySelector('[name=km]').value = v.km||'';
+    f.querySelector('[name=venc_ipva]').value = v.venc_ipva||'';
+    f.querySelector('[name=seguradora]').value = v.seguradora||'';
+    f.querySelector('[name=venc_seguro]').value = v.venc_seguro||'';
+    f.querySelector('[name=responsavel]').value = v.responsavel||'';
+    f.querySelector('[name=data_aquisicao]').value = v.data_aquisicao||'';
+    f.querySelector('[name=valor_aquisicao]').value = v.valor_aquisicao||'';
+    f.querySelector('[name=data_depreciacao]').value = v.data_depreciacao||'';
+    f.querySelector('[name=taxa_depreciacao]').value = v.taxa_depreciacao||'';
+    f.querySelector('[name=valor_depreciado]').value = v.valor_depreciado||'';
+    f.querySelector('[name=data_venda]').value = v.data_venda||'';
+    f.querySelector('[name=impostos_anuais]').value = v.impostos_anuais||'';
+    f.querySelector('[name=custo_manutencao]').value = v.custo_manutencao||'';
+    f.querySelector('[name=historico_reformas]').value = v.historico_reformas||'';
+    
+    // Alimenta a aba de historico
+    gerarHistoricoMovVeiculo(v);
+
+    alternarAbaFormVeiculo('dados');
+    f.scrollIntoView({behavior:'smooth'});
+    if (typeof arioneToast === 'function') arioneToast(`Editando: ${v.marca_modelo||v.descricao}`, 'info');
+}
+
+async function excluirVeiculo(id, force) {
+    if (!force) {
+        const conf = await arioneConfirm('Excluir este veículo do banco de dados?');
+        if (!conf) return;
+    }
+    try {
+        const res = await fetch(`/patrimonio/api/ativos/excluir/${id}`, {method: 'POST'});
+        const data = await res.json();
+        if(data.success) {
+            if (typeof arioneToast === 'function') arioneToast('Veículo excluído.', 'success');
+            await carregarVeiculosAPI();
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function limparFormVeiculo() {
+    const f = document.getElementById('formVeiculos'); f.reset(); f.querySelector('[name=id]').value='new';
+    gerarHistoricoMovVeiculo({id:'new'});
+    alternarAbaFormVeiculo('dados');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    carregarVeiculosAPI();
+    gerarHistoricoMovVeiculo({id:'new'});
+});
+</script>

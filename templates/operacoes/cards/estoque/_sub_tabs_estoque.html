@@ -1,0 +1,43 @@
+{# Sub-abas comuns para o módulo de estoque #}
+<div class="ope-tabs-nav">
+    <div class="ope-tab active" data-ope-tab="lotes">Lotes & Serial</div>
+    <div class="ope-tab" data-ope-tab="reservas">Reservas</div>
+    <div class="ope-tab" data-ope-tab="custos">Hist. Custos</div>
+    <div class="ope-tab" data-ope-tab="arquivos">Fotos/Docs</div>
+</div>
+
+<div class="ope-tab-panel active" id="ope-tab-lotes">
+    <table style="width:100%; font-size:11px; border-collapse:collapse;">
+        <thead>
+            <tr style="text-align:left; color:#64748b; border-bottom:2px solid #edf2f7;">
+                <th style="padding:10px;">Lote/Série</th>
+                <th>Validade</th>
+                <th>Local</th>
+                <th style="text-align:right; padding-right:10px;">Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding:10px;">L-2024-859</td>
+                <td>12/12/2026</td>
+                <td>Galpão A-01</td>
+                <td style="text-align:right; padding-right:10px; font-weight:700;">45 un</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="ope-tab-panel" id="ope-tab-reservas">
+    <div style="padding:10px; font-size:11px; color:#64748b;">Nenhuma reserva ativa para este item.</div>
+</div>
+
+<div class="ope-tab-panel" id="ope-tab-custos">
+    <div style="padding:10px; font-size:11px; color:#64748b;">Carregando histórico de custos...</div>
+</div>
+
+<div class="ope-tab-panel" id="ope-tab-arquivos">
+    <div style="border:2px dashed #e2e8f0; border-radius:8px; padding:20px; text-align:center; color:#94a3b8;">
+        <i class="fas fa-cloud-upload-alt" style="font-size:24px; margin-bottom:10px; display:block;"></i>
+        <span style="font-size:11px;">Arraste fotos ou manuais aqui</span>
+    </div>
+</div>

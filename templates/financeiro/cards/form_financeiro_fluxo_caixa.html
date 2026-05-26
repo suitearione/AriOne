@@ -1,0 +1,201 @@
+<!-- templates/financeiro/cards/form_financeiro_fluxo_caixa.html -->
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+{{ comp.cabecalho_mestre_arione(
+    titulo="Fluxo de Caixa Consolidado",
+    subtitulo="Financeiro > Relatórios Gerenciais > Análise de DRE e Saldo",
+    icone="fa-water",
+    cor_tema="#27AE60",
+    func_fechar="voltarParaGridFluxoCaixa()",
+    form_id="formFluxoCaixa",
+    onclick_novo="",
+    onclick_save="",
+    onclick_search="",
+    onclick_filter="",
+    onclick_list="",
+    onclick_clonar="",
+    onclick_export="",
+    onclick_import="",
+    onclick_print="",
+    onclick_email="",
+    onclick_whatsapp="",
+    status="Ativo",
+    ajuda="Acompanhe as receitas, despesas e saldo líquido consolidado mensal e anual com gráficos interativos.",
+    tamanho="medio"
+) }}
+
+<style>
+/* QUIET LUXURY TYPOGRAPHY & LAYOUT */
+.flx-panel {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.flx-header-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+}
+.flx-summary-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.flx-summary-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+.flx-summary-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+}
+.flx-val-receita { color: #27AE60; }
+.flx-val-despesa { color: #E53E3E; }
+.flx-val-saldo   { color: #2980B9; }
+
+.flx-chart-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+.flx-chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.flx-chart-container {
+    height: 300px;
+    position: relative;
+}
+</style>
+
+<div class="flx-panel">
+    <div class="flx-header-summary">
+        <div class="flx-summary-card" style="border-top: 3px solid #27AE60;">
+            <div class="flx-summary-title">Receitas (Mês Atual)</div>
+            <div class="flx-summary-val flx-val-receita">R$ {{ '%.2f'|format(receitas_mes) }}</div>
+        </div>
+        <div class="flx-summary-card" style="border-top: 3px solid #E53E3E;">
+            <div class="flx-summary-title">Despesas (Mês Atual)</div>
+            <div class="flx-summary-val flx-val-despesa">R$ {{ '%.2f'|format(despesas_mes) }}</div>
+        </div>
+        <div class="flx-summary-card" style="border-top: 3px solid #2980B9;">
+            <div class="flx-summary-title">Saldo Líquido (Mês Atual)</div>
+            <div class="flx-summary-val flx-val-saldo">R$ {{ '%.2f'|format(saldo_mes) }}</div>
+        </div>
+    </div>
+
+    <div class="flx-chart-box">
+        <div class="flx-chart-title"><i class="fas fa-chart-bar" style="color:#2980B9;"></i> Evolução do Fluxo de Caixa Anual</div>
+        <div class="flx-chart-container">
+            <canvas id="chartFluxoCaixaModal"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+function voltarParaGridFluxoCaixa() {
+    if (typeof fecharModalCxa === 'function') fecharModalCxa();
+    if (!window.location.search.includes('aba=fluxo_caixa')) { window.location.href = "{{ url_for('financeiro.abas', aba='fluxo_caixa') }}"; }
+}
+
+function atualizarDadosFluxo() {
+    if (typeof arioneToast === 'function') arioneToast('Atualizando dados do fluxo...', 'info');
+    window.location.reload();
+}
+
+function salvarSnapshotFluxo() {
+    if (typeof arioneToast === 'function') arioneToast('Salvando snapshot do fluxo...', 'info');
+}
+
+function focarPesquisaFluxo() {
+    if (typeof arioneToast === 'function') arioneToast('Pesquisa ativa no fluxo de caixa', 'info');
+}
+
+function abrirModalFiltrosFluxo() {
+    if (typeof arioneToast === 'function') arioneToast('Filtros avançados em desenvolvimento', 'info');
+}
+
+function alternarVisaoFormLista() {
+    if (typeof arioneToast === 'function') arioneToast('Alternando visão formulário/lista', 'info');
+}
+
+function clonarSnapshotFluxo() {
+    if (typeof arioneToast === 'function') arioneToast('Clonando snapshot do fluxo...', 'info');
+}
+
+function exportarFluxoCSV() {
+    if (typeof arioneToast === 'function') arioneToast('Exportando fluxo para CSV/Excel...', 'info');
+}
+
+function abrirModalImportacaoFluxo() {
+    if (typeof arioneToast === 'function') arioneToast('Importação indisponível nesta visão', 'info');
+}
+
+function imprimirFluxo() {
+    window.print();
+}
+
+function enviarFluxoEmail() {
+    if (typeof arioneToast === 'function') arioneToast('Enviando fluxo por E-mail...', 'info');
+}
+
+function enviarFluxoWhatsApp() {
+    if (typeof arioneToast === 'function') arioneToast('Compartilhando fluxo via WhatsApp...', 'info');
+}
+
+(function(){
+    const meses = {{ grafico_meses | tojson }};
+    const receitas = {{ grafico_receitas | tojson }};
+    const despesas = {{ grafico_despesas | tojson }};
+
+    const canvas = document.getElementById('chartFluxoCaixaModal');
+    if(!canvas) return;
+
+    new Chart(canvas.getContext('2d'),{
+        type:'bar',
+        data:{
+            labels:meses,
+            datasets:[
+                {label:'Receitas',data:receitas,backgroundColor:'rgba(39,174,96,0.8)',borderColor:'#27AE60',borderWidth:1,borderRadius:6},
+                {label:'Despesas',data:despesas,backgroundColor:'rgba(229,62,62,0.8)',borderColor:'#E53E3E',borderWidth:1,borderRadius:6}
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:true, position:'top', labels:{font:{size:11, weight:'500'}}},
+                tooltip:{callbacks:{label:ctx=>' R$ '+ctx.parsed.y.toLocaleString('pt-BR',{minimumFractionDigits:2})}}
+            },
+            scales:{
+                x:{grid:{display:false},ticks:{font:{size:11}}},
+                y:{grid:{color:'#f1f5f9'},ticks:{font:{size:11},callback:v=>'R$ '+v.toLocaleString('pt-BR')}}
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

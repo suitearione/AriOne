@@ -1,0 +1,149 @@
+<!-- templates/cadastros/grids/grid_parametros.html -->
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title">
+        <i class="fas fa-cogs"></i>
+        <span>Parâmetros</span>
+    </div>
+
+    <div class="ge-cards-container">
+        
+        <!-- Compras -->
+        <div class="ge-card" id="card-par-compras" onclick="window.location.href='{{ url_for('cadastros.card_parametros_compra') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-shopping-cart ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-shopping-cart ge-card-icon"></i></div>
+            <span class="ge-card-label">Compras</span>
+            <span class="ge-card-desc">Parâmetros de compra</span>
+        </div>
+
+        <!-- Vendas -->
+        <div class="ge-card" id="card-par-vendas" onclick="window.location.href='{{ url_for('cadastros.card_parametros_venda') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-chart-line ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-chart-line ge-card-icon"></i></div>
+            <span class="ge-card-label">Vendas</span>
+            <span class="ge-card-desc">Parâmetros de venda</span>
+        </div>
+
+        <!-- Produção -->
+        <div class="ge-card" id="card-par-producao" onclick="window.location.href='{{ url_for('cadastros.card_parametros_producao') }}'" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-industry ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-industry ge-card-icon"></i></div>
+            <span class="ge-card-label">Produção</span>
+            <span class="ge-card-desc">Parâmetros produtivos</span>
+        </div>
+
+        <!-- Fiscal -->
+        <div class="ge-card" id="card-par-fiscal" onclick="window.location.href='{{ url_for('cadastros.card_parametros_fiscal') }}'" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-file-invoice ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-file-invoice ge-card-icon"></i></div>
+            <span class="ge-card-label">Fiscal</span>
+            <span class="ge-card-desc">Parâmetros fiscais</span>
+        </div>
+
+        <!-- Financeiro -->
+        <div class="ge-card" id="card-par-financeiro" onclick="window.location.href='{{ url_for('cadastros.card_parametros_financeiro') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-hand-holding-usd ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-hand-holding-usd ge-card-icon"></i></div>
+            <span class="ge-card-label">Financeiro</span>
+            <span class="ge-card-desc">Regras e Moedas</span>
+        </div>
+
+        <!-- Comercial -->
+        <div class="ge-card" id="card-par-comercial" onclick="window.location.href='{{ url_for('cadastros.card_parametros_comercial') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-briefcase ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-briefcase ge-card-icon"></i></div>
+            <span class="ge-card-label">Comercial</span>
+            <span class="ge-card-desc">Parâmetros comerciais</span>
+        </div>
+
+        <!-- Produtos -->
+        <div class="ge-card" id="card-par-produtos" onclick="window.location.href='{{ url_for('cadastros.card_parametros_produto') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-boxes ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-boxes ge-card-icon"></i></div>
+            <span class="ge-card-label">Produtos</span>
+            <span class="ge-card-desc">Parâmetros de Produtos</span>
+        </div>
+
+        <!-- Identidade Visual -->
+        <div class="ge-card" id="card-par-branding" onclick="window.location.href='{{ url_for('cadastros.form_branding') }}'" style="--card-cor:#FFD700;--card-cor-bg:rgba(255,215,0,0.10);">
+            <i class="fas fa-palette ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-palette ge-card-icon"></i></div>
+            <span class="ge-card-label">Identidade Visual</span>
+            <span class="ge-card-desc">Logo & White Label</span>
+        </div>
+
+        <!-- Status / Workflow -->
+        <div class="ge-card" id="card-par-status" onclick="window.location.href='{{ url_for('cadastros.card_status_workflow') }}'" style="--card-cor:#9B59B6;--card-cor-bg:rgba(155,89,182,0.10);">
+            <i class="fas fa-project-diagram ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-project-diagram ge-card-icon"></i></div>
+            <span class="ge-card-label">Status / Workflow</span>
+            <span class="ge-card-desc">Etapas dos Documentos</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const endpointsPar = {
+    compras:     '{{ url_for("cadastros.card_parametros_compra") }}',
+    vendas:      '{{ url_for("cadastros.card_parametros_venda") }}',
+    producao:    '{{ url_for("cadastros.card_parametros_producao") }}',
+    fiscal:      '{{ url_for("cadastros.card_parametros_fiscal") }}',
+    financeiro:  '{{ url_for("cadastros.card_parametros_financeiro") }}',
+    comercial:   '{{ url_for("cadastros.card_parametros_comercial") }}',
+    produtos:    '{{ url_for("cadastros.card_parametros_produto") }}',
+    branding:    '{{ url_for("cadastros.form_branding") }}',
+    status:      '{{ url_for("cadastros.card_status_workflow") }}'
+};
+
+function abrirModalPar(tipo) {
+    const url = endpointsPar[tipo];
+    if (url) window.location.href = url;
+}
+
+{% if is_ari_dev %}
+function updateGridSealsPar() {
+    const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    
+    const mappings = {
+        'card-par-compras':     { sub: "CADASTROS — Parâmetros", tela: "Compras" },
+        'card-par-vendas':      { sub: "CADASTROS — Parâmetros", tela: "Vendas" },
+        'card-par-producao':    { sub: "CADASTROS — Parâmetros", tela: "Produção" },
+        'card-par-fiscal':      { sub: "CADASTROS — Parâmetros", tela: "Fiscal" },
+        'card-par-financeiro':  { sub: "CADASTROS — Parâmetros", tela: "Financeiro" },
+        'card-par-comercial':   { sub: "CADASTROS — Parâmetros", tela: "Comercial" },
+        'card-par-produtos':    { sub: "CADASTROS — Parâmetros", tela: "Produtos" },
+        'card-par-branding':    { sub: "CADASTROS — Parâmetros", tela: "Identidade Visual" },
+        'card-par-status':      { sub: "CADASTROS — Parâmetros", tela: "Status / Workflow" }
+    };
+
+    Object.entries(mappings).forEach(([cardId, info]) => {
+        const sId = getSafeId(info.sub + "_" + info.tela);
+        const isPronto = localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+        const card = document.getElementById(cardId);
+        
+        if (card) {
+            let badge = card.querySelector('.ge-card-done-badge');
+            if (isPronto) {
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'ge-card-done-badge';
+                    badge.innerHTML = '<i class="fas fa-award"></i>';
+                    badge.title = "AriOne Golden Standard";
+                    card.appendChild(badge);
+                    card.style.borderColor = "#FFD700";
+                }
+            } else if (badge) {
+                badge.remove();
+                card.style.borderColor = "";
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateGridSealsPar();
+    setInterval(updateGridSealsPar, 2000);
+});
+{% endif %}
+</script>

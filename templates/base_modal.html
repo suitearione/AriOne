@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AriOne - Operational Panel</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/componentes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/arione-premium-forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fp-standard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/arione-utils.js') }}?v={{ range(1, 9999) | random }}"></script>
+    
+    <style>
+        body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font-family: 'Outfit', sans-serif; }
+        .arione-modal-wrapper-content {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            background: #F8FAFC;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="arione-modal-wrapper-content">
+        {% block content %}{% endblock %}
+        
+        {% if show_selo != False %}
+            {% include 'partials/_selo_arione.html' ignore missing %}
+        {% endif %}
+    </div>
+</body>
+</html>

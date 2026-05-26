@@ -1,0 +1,144 @@
+{# =============================================================================
+   Caminho  : templates/operacoes/grids/grid_compras.html
+   Arquivo  : grid_compras.html
+   Função   : Grid do módulo de Compras com Modais AJAX Premium.
+   Solicitação: Remover Fornecedores (já existe em Cadastros).
+============================================================================= #}
+
+<!-- Estrutura do Modal Unificado para Operações de Compra -->
+<div id="modal-overlay-ope" class="ge-modal-overlay" onclick="fecharModalOpe()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" style="display:none;"></div> <!-- Header vem de dentro do formulário premium -->
+        <div class="ge-modal-body" id="modal-body-ope" style="padding:0;"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Operações de Compra</span>
+    </div>
+
+    <div class="ge-cards-container">
+
+        <!-- Orçamentos -->
+        <div class="ge-card" onclick="abrirModalOpe('orcamentos')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-file-invoice ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-file-invoice ge-card-icon"></i></div>
+            <span class="ge-card-label">Orçamentos</span>
+            <span class="ge-card-desc">Cotações & Intenções</span>
+        </div>
+
+        <!-- Pedidos -->
+        <div class="ge-card" onclick="abrirModalOpe('pedidos')" style="--card-cor:#2C3E50;--card-cor-bg:rgba(44,62,80,0.10);">
+            <i class="fas fa-clipboard-check ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-clipboard-check ge-card-icon"></i></div>
+            <span class="ge-card-label">Pedidos</span>
+            <span class="ge-card-desc">Compromissos Firmados</span>
+        </div>
+
+        <!-- Consignadas -->
+        <div class="ge-card" onclick="abrirModalOpe('consignatas')" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-box-open ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-box-open ge-card-icon"></i></div>
+            <span class="ge-card-label">Consignadas</span>
+            <span class="ge-card-desc">Entrada de Terceiros</span>
+        </div>
+
+        <!-- Devoluções -->
+        <div class="ge-card" onclick="abrirModalOpe('devolucoes')" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
+            <i class="fas fa-undo ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-undo ge-card-icon"></i></div>
+            <span class="ge-card-label">Devoluções</span>
+            <span class="ge-card-desc">Estornos e Créditos</span>
+        </div>
+
+        <!-- Compras de Serviços -->
+        <div class="ge-card" onclick="abrirModalOpe('servicos')" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-tools ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-tools ge-card-icon"></i></div>
+            <span class="ge-card-label">Serviços</span>
+            <span class="ge-card-desc">Contratações & Fretes</span>
+        </div>
+
+        <!-- Gestão de Preços -->
+        <div class="ge-card" onclick="abrirModalOpe('precos')" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,0.10);">
+            <i class="fas fa-tag ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-tag ge-card-icon"></i></div>
+            <span class="ge-card-label">Preços</span>
+            <span class="ge-card-desc">Tabelas & Markup</span>
+        </div>
+
+        <!-- Em Aberto (Timeline) -->
+        <div class="ge-card" onclick="abrirModalOpe('em_aberto')" style="--card-cor:#455A64;--card-cor-bg:rgba(69,90,100,0.10);">
+            <i class="fas fa-clock ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-clock ge-card-icon"></i></div>
+            <span class="ge-card-label">Em Aberto</span>
+            <span class="ge-card-desc">Monitor de Pendências</span>
+        </div>
+
+    </div>
+</div>
+
+<style>
+/* Modal Overlay Standard */
+.ge-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px); display: none; z-index: 9999;
+    align-items: center; justify-content: center;
+}
+.ge-modal-overlay.ativo { display: flex; }
+.ge-modal {
+    width: 98%; max-width: 1500px; max-height: 96vh;
+    border-radius: 12px; overflow-y: auto; background: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: modalSlide 0.25s ease-out;
+}
+@keyframes modalSlide { from {opacity:0; transform:translateY(30px);} to {opacity:1; transform:translateY(0);} }
+</style>
+
+<script>
+const endpointsOpe = {
+    orcamentos:  '{{ url_for("operacoes.card_compras_orcamento", modal=1) }}',
+    pedidos:     '{{ url_for("operacoes.card_compras_pedido", modal=1) }}',
+    consignatas: '{{ url_for("operacoes.card_compras_consignados", modal=1) }}',
+    devolucoes:  '{{ url_for("operacoes.card_compras_devolucoes", modal=1) }}',
+    servicos:    '{{ url_for("operacoes.card_compras_servicos", modal=1) }}',
+    precos:      '{{ url_for("operacoes.card_compras_precos", modal=1) }}',
+    em_aberto:   '{{ url_for("operacoes.card_compras_emaberto", modal=1) }}'
+};
+
+async function abrirModalOpe(tipo) {
+    const url = endpointsOpe[tipo];
+    if (!url) return;
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        const body = document.getElementById('modal-body-ope');
+        
+        body.innerHTML = html;
+
+        // Injeção segura de scripts
+        body.querySelectorAll('script').forEach(script => {
+            const novo = document.createElement('script');
+            [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+            novo.appendChild(document.createTextNode(script.innerHTML));
+            script.parentNode.replaceChild(novo, script);
+        });
+
+        document.getElementById('modal-overlay-ope').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+
+    } catch (e) {
+        console.error("Erro ao carregar operações de compra:", e);
+    }
+}
+
+function fecharModalOpe() {
+    document.getElementById('modal-overlay-ope').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModalOpe(); });
+</script>

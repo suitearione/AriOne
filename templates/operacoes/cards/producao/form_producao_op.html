@@ -1,0 +1,298 @@
+{# =============================================================================
+   Arquivo  : form_producao_op.html
+   Caminho  : templates/operacoes/cards/producao/form_producao_op.html
+   Função   : Gestão de Ordens de Produção (OP) e Plano PCA.
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% block content %}
+<div class="ctx-prd-wrap">
+    <style>
+        :root { 
+            --prd-pri: #E67E22; 
+            --prd-acc: #D35400; 
+            --prd-success: #27AE60; 
+            --prd-danger: #E74C3C; 
+            --prd-info: #2980B9;
+        }
+        .ctx-prd-header { background: linear-gradient(135deg, var(--prd-pri), #A04000); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-prd-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        /* Ocultar elementos base caso vazem por erro de renderização */
+        .arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
+        .arione-main-wrapper { margin-left: 0 !important; }
+        
+        /* Toolbar CRUD */
+        .prd-toolbar { background: #f8fafc; border-bottom: 1.5px solid #edf2f7; padding: 10px 22px; display: flex; gap: 10px; }
+        .btn-crud { background: #fff; border: 1.5px solid #e2e8f0; padding: 6px 15px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; }
+        .btn-crud:hover { border-color: var(--prd-acc); color: var(--prd-acc); }
+        .btn-crud.active { background: var(--prd-acc); color: #fff; border-color: var(--prd-acc); }
+
+        .prd-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; position: relative; }
+        .prd-title { font-size: 11px; font-weight: 800; color: var(--prd-pri); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .prd-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .prd-group { display: flex; flex-direction: column; gap: 5px; }
+        .prd-label { font-size: 11px; font-weight: 700; color: #64748b; }
+        .prd-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
+        
+        /* Status & Prioridade */
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+        .prioridade-critica { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .prioridade-alta { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+        
+        /* Abas Inferiores */
+        .prd-tabs-nav { display: flex; gap: 5px; border-bottom: 2px solid #f1f5f9; margin-top: 15px; }
+        .prd-tab { padding: 12px 20px; cursor: pointer; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; }
+        .prd-tab.active { color: var(--prd-acc); border-bottom-color: var(--prd-acc); }
+        .prd-tab-panel { display: none; padding-top: 20px; animation: fadeIn 0.3s; }
+        .prd-tab-panel.active { display: block; }
+        
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(5px);} to {opacity: 1; transform: translateY(0);} }
+
+        /* Checklist */
+        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        .checklist-item:last-child { border-bottom: none; }
+    </style>
+
+    <!-- 🏛️ PADRÃO DE CABEÇALHO MESTRE ARIONE (Section 7) -->
+    <div class="ctx-prd-header" style="position: sticky; top: 0; z-index: 1000; background: linear-gradient(135deg, var(--prd-pri) 0%, #A04000 100%);">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-industry" style="color: #fff;"></i></div>
+            <div>
+                <div style="font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Ordem de Produção (OP)</div>
+                <div style="font-size: 0.75rem; opacity: 0.8; font-weight: 600;">Chão de Fábrica Digital - AriOne Manufacturing</div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items: center;">
+            <!-- 1. Novo (+) -->
+            <button type="button" class="btn-crud-icon" title="Nova Ordem de Produção" onclick="window.location.reload()" style="background:#fff; color:var(--prd-pri); width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-plus"></i>
+            </button>
+            
+            <!-- 2. Salvar (Disquete) -->
+            <button type="button" class="btn-crud-icon" title="Salvar e Iniciar" onclick="alert('OP Iniciada!')" style="background:rgba(255,255,255,0.1); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-save"></i>
+            </button>
+
+            <!-- 3. Ações Extras (...) -->
+            <div style="position: relative; display: inline-block;">
+                <button type="button" class="btn-crud-icon" title="Ações Extras" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="background:rgba(255,255,255,0.1); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; width: 180px; padding: 5px 0; margin-top: 5px;">
+                    <button type="button" onclick="imprimirOP()" style="width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-print"></i> Imprimir Etiqueta
+                    </button>
+                    <button type="button" onclick="cancelarOP()" style="width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; font-size: 11px; font-weight: 700; color: var(--prd-danger); cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-trash"></i> Cancelar OP
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Voltar (Seta) -->
+            <button type="button" class="btn-crud-icon" title="Voltar" onclick="fecharModalPrd()" style="background:rgba(255,255,255,0.1); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+
+            <!-- 5. Sair (X) -->
+            <button type="button" class="btn-crud-icon" title="Sair / Fechar" onclick="fecharModalPrd()" style="background:rgba(244, 67, 54, 0.2); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="ctx-prd-body">
+        <form>
+            <!-- Cabeçalho Técnico -->
+            <div class="prd-section">
+                <div class="prd-row">
+                    <div class="prd-group" style="flex:1.5;">
+                        <label class="prd-label" title="Pilar A: Selecione o produto acabado a ser produzido nesta OP.">
+                            Produto Acabado (SKU/Ref)
+                            <i class="fas fa-search" onclick="abrirNavegacao('cadastros.abas', 'catalogos')" style="margin-left: 5px; cursor: pointer; color: var(--prd-pri);" title="Ir para Catálogo de Produtos"></i>
+                        </label>
+                        <input list="lista-produtos-op" name="produto_id_search" class="prd-input" placeholder="BUSCAR PRODUTO...">
+                        <datalist id="lista-produtos-op">
+                            {% for p in produtos %}
+                                <option data-id="{{ p.id }}" value="{{ p.nome }}">{{ p.sku or p.referencia }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="prd-group">
+                        <label class="prd-label">Lote de Produção</label>
+                        <input type="text" class="prd-input" value="LOT-2026-04-123" readonly style="background:#f8fafc; font-weight:800; color:var(--prd-acc);">
+                    </div>
+                    <div class="prd-group">
+                        <label class="prd-label">Prioridade</label>
+                        <select class="prd-input" style="font-weight:700;">
+                            <option class="prioridade-alta">ALTA</option>
+                            <option class="prioridade-critica">CRÍTICA / URGENTE</option>
+                            <option selected>MÉDIA</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="prd-row">
+                    <div class="prd-group">
+                        <label class="prd-label">Quantidade Planejada</label>
+                        <input type="number" class="prd-input" value="500">
+                    </div>
+                    <div class="prd-group">
+                        <label class="prd-label">Status da OP</label>
+                        <div class="fp-input-wrapper">
+                            <input class="prd-input" list="lista-status-prd" name="status_busca" id="status_busca" value="{{ status_lista[0].nome if status_lista else 'PLANEJADA' }}" style="width: 100%; color: #fff; font-weight: 800; background: {{ status_lista[0].cor if status_lista else '#E67E22' }}; border-radius: 8px; text-align: center; border: none; height: 38px; text-transform: uppercase;"
+                                   onchange="atualizarStatusOP(); const opt = document.querySelector('#lista-status-prd option[value=\'' + this.value + '\']'); if(opt) this.style.background = opt.dataset.cor;">
+                            <datalist id="lista-status-prd">
+                                {% for s in status_lista %}
+                                    <option value="{{ s.nome }}" data-cor="{{ s.cor }}">{{ s.nome }}</option>
+                                {% endfor %}
+                                <option value="PLANEJADA" data-cor="#E67E22">PLANEJADA</option>
+                                <option value="CONFIRMADA" data-cor="#27AE60">CONFIRMADA (RESERVA MP)</option>
+                                <option value="EM PRODUÇÃO" data-cor="#2980B9">EM PRODUÇÃO</option>
+                                <option value="FINALIZADA" data-cor="#16A085">FINALIZADA</option>
+                                <option value="CANCELADA" data-cor="#E74C3C">CANCELADA</option>
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="prd-group">
+                        <label class="prd-label">Data Prometida (Entrega)</label>
+                        <input type="date" class="prd-input" value="2026-04-20">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subcard PCA (Planejamento) -->
+            <div class="prd-section" style="background:#f0f9ff; border-color:#bae6fd;">
+                <div class="prd-title" style="color:var(--prd-info); font-size: 13px; font-weight: 900; border-bottom: 2px solid var(--prd-info); padding-bottom: 8px;"><i class="fas fa-calendar-check"></i> Plano PCA (Capacidade & Prazos)</div>
+                <div class="prd-row">
+                    <div class="prd-group">
+                        <label class="prd-label">Posto de Trabalho</label>
+                        <select class="prd-input"><option>Corte Automático - Setor A</option></select>
+                    </div>
+                    <div class="prd-group">
+                        <label class="prd-label">Carga Horária Est. (h)</label>
+                        <div style="font-size:18px; font-weight:900; color:var(--prd-info);">42.5 h</div>
+                    </div>
+                    <div class="prd-group">
+                        <label class="prd-label">Previsão Início</label>
+                        <input type="date" class="prd-input" value="{{ today }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abas Técnicas Inferiores -->
+            <div class="prd-tabs-nav">
+                <div class="prd-tab {% if aba_ativa == 'dados' %}active{% endif %}" data-prd-tab="materiais">🧵 Materiais (BOM)</div>
+                <div class="prd-tab {% if aba_ativa == 'pca' %}active{% endif %}" data-prd-tab="roteiro">🔁 Roteiro / PCA</div>
+                <div class="prd-tab" data-prd-tab="qualidade">🧪 Qualidade</div>
+                <div class="prd-tab" data-prd-tab="custos">💰 Custos OP</div>
+            </div>
+
+            <!-- Painéis das Abas -->
+            <div class="prd-tab-panel {% if aba_ativa == 'dados' %}active{% endif %}" id="prd-tab-materiais">
+                <div style="background:#fff; border:1.5px solid #edf2f7; border-radius:10px;">
+                    <div style="padding:10px 15px; background:#f8fafc; border-bottom:1px solid #edf2f7; font-size:11px; font-weight:800; color:#64748b; display:flex; justify-content:space-between;">
+                        <span>INSUMO / MATÉRIA-PRIMA</span>
+                        <span>QTD REQUERIDA / SALDO</span>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox" checked>
+                        <div style="flex:1;"><strong>TECIDO PIQUET ALGODÃO - BRANCO</strong><br><small>Ref: TX-001</small></div>
+                        <div style="text-align:right;">120.00 mts <br> <span style="color:var(--prd-success); font-weight:700;">OK</span></div>
+                    </div>
+                    <div class="checklist-item">
+                        <input type="checkbox">
+                        <div style="flex:1;"><strong>BOTÃO MADRIPÉROLA 2 FUROS</strong><br><small>Ref: ACC-45</small></div>
+                        <div style="text-align:right;">1.500 un <br> <span style="color:var(--prd-danger); font-weight:700;">FALTA</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prd-tab-panel {% if aba_ativa == 'pca' %}active{% endif %}" id="prd-tab-roteiro">
+                <table style="width:100%; font-size:12px; border-collapse:collapse;">
+                    <thead>
+                        <tr style="text-align:left; color:#64748b; border-bottom:2px solid #edf2f7;">
+                            <th style="padding:10px;">Sequência</th>
+                            <th>Operação</th>
+                            <th>Posto / Setor</th>
+                            <th>Tempo Est.</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:10px;">01</td>
+                            <td><strong>CORTE DE ENCAIXE</strong></td>
+                            <td>Setor de Corte</td>
+                            <td>08:00 h</td>
+                            <td><span class="status-pill" style="background:#dcfce7; color:#166534;">Finalizado</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding:10px;">02</td>
+                            <td><strong>COSTURA (OFICINA)</strong></td>
+                            <td>Oficina Externa B</td>
+                            <td>24:00 h</td>
+                            <td><span class="status-pill" style="background:#fef9c3; color:#854d0e;">Em Curso</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="prd-tab-panel" id="prd-tab-qualidade">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                    <div style="border:1.5px dashed #cbd5e1; height:150px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;">
+                        <i class="fas fa-camera fa-2x"></i>
+                        <span style="font-size:11px; margin-top:10px;">Anexar Foto de Inspeção</span>
+                    </div>
+                    <div style="background:#f8fafc; padding:15px; border-radius:10px;">
+                        <label class="prd-label">Laudo do Inspetor</label>
+                        <textarea class="prd-input" rows="4" style="width:100%;" placeholder="Observações de qualidade..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prd-tab-panel" id="prd-tab-custos">
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border-radius:8px;">
+                        <span style="font-size:12px; font-weight:700;">Custo Matéria-Prima (Checklist)</span>
+                        <span style="font-weight:800;">R$ 12.450,00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border-radius:8px;">
+                        <span style="font-size:12px; font-weight:700;">Mão de Obra (Roteiro)</span>
+                        <span style="font-weight:800;">R$ 4.200,00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:15px; background:var(--prd-pri); color:#fff; border-radius:8px; margin-top:10px;">
+                        <span style="font-size:14px; font-weight:800;">CUSTO TOTAL ESTIMADO OP</span>
+                        <span style="font-size:20px; font-weight:900;">R$ 16.650,00</span>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Gerenciador de Abas
+    document.querySelectorAll('.prd-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const wrap = tab.closest('.ctx-prd-wrap');
+            wrap.querySelectorAll('.prd-tab').forEach(t => t.classList.remove('active'));
+            wrap.querySelectorAll('.prd-tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            wrap.querySelector('#prd-tab-' + tab.dataset.prdTab).classList.add('active');
+        });
+    });
+
+    function atualizarStatusOP() {
+        const statusInput = document.getElementById('status_busca');
+        const status = statusInput.value;
+        
+        // Se status for CONFIRMADA, atualiza saldo_reservado das matérias-primas
+        if (status === 'CONFIRMADA') {
+            const qtdPlanejada = parseFloat(document.querySelector('input[type="number"]').value) || 0;
+            // Aqui seria chamada AJAX para atualizar saldo_reservado no backend
+            console.log(`Atualizando saldo_reservado: +${qtdPlanejada} para as matérias-primas da OP`);
+            alert('✅ OP Confirmada - Matéria-Prima Reservada!');
+        }
+    }
+</script>
+{% endblock %}

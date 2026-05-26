@@ -1,0 +1,243 @@
+{# =============================================================================
+   Arquivo  : form_financeiro_fluxo_caixa_graficos.html
+   Caminho  : templates/financeiro/cards/form_financeiro_fluxo_caixa_graficos.html
+   Função   : Exibe gráficos de evolução do fluxo de caixa com diferentes granularidades
+   ============================================================================= #}
+
+<div class="op-card" style="background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+    <div style="padding: 25px 30px; background: linear-gradient(135deg, #0072CE 0%, #27AE60 100%); color: #fff;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <i class="fas fa-chart-line" style="font-size: 1.8rem;"></i>
+                <div>
+                    <div style="font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px;">Evolução do Fluxo de Caixa</div>
+                    <div style="font-size: 0.85rem; opacity: 0.9; font-weight: 600; margin-top: 4px;">Análise por período</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="alternarGrafico('semanal')" class="btn-grafico-periodo active" data-periodo="semanal" style="padding: 8px 16px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-calendar-week" style="margin-right: 6px;"></i>Semanal
+                </button>
+                <button type="button" onclick="alternarGrafico('mensal')" class="btn-grafico-periodo" data-periodo="mensal" style="padding: 8px 16px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-calendar-alt" style="margin-right: 6px;"></i>Mensal
+                </button>
+                <button type="button" onclick="alternarGrafico('anual')" class="btn-grafico-periodo" data-periodo="anual" style="padding: 8px 16px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: #fff; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-calendar" style="margin-right: 6px;"></i>Anual
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding: 30px;">
+        <!-- Gráfico Semanal -->
+        <div id="grafico-semanal" class="grafico-container" style="display: block;">
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+                    <i class="fas fa-calendar-week" style="color: #0072CE; margin-right: 8px;"></i>
+                    Fluxo de Caixa Semanal (Últimos 7 dias)
+                </h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0 0 0;">Receitas e despesas por dia da semana</p>
+            </div>
+            <div style="height: 350px; position: relative;">
+                <canvas id="chartSemanal"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico Mensal -->
+        <div id="grafico-mensal" class="grafico-container" style="display: none;">
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+                    <i class="fas fa-calendar-alt" style="color: #27AE60; margin-right: 8px;"></i>
+                    Fluxo de Caixa Mensal (Dia a dia)
+                </h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0 0 0;">Receitas e despesas por dia do mês atual</p>
+            </div>
+            <div style="height: 350px; position: relative;">
+                <canvas id="chartMensal"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico Anual -->
+        <div id="grafico-anual" class="grafico-container" style="display: none;">
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+                    <i class="fas fa-calendar" style="color: #E67E22; margin-right: 8px;"></i>
+                    Fluxo de Caixa Anual (Mês a mês)
+                </h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin: 5px 0 0 0;">Receitas e despesas por mês do ano</p>
+            </div>
+            <div style="height: 350px; position: relative;">
+                <canvas id="chartAnual"></canvas>
+            </div>
+        </div>
+
+        <!-- Resumo -->
+        <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Total Receitas</div>
+                    <div id="total-receitas" style="font-size: 1.5rem; font-weight: 800; color: #27AE60;">R$ 0,00</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Total Despesas</div>
+                    <div id="total-despesas" style="font-size: 1.5rem; font-weight: 800; color: #C0392B;">R$ 0,00</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Saldo Líquido</div>
+                    <div id="saldo-liquido" style="font-size: 1.5rem; font-weight: 800; color: #0072CE;">R$ 0,00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-grafico-periodo:hover {
+    background: rgba(255,255,255,0.3) !important;
+}
+.btn-grafico-periodo.active {
+    background: #fff !important;
+    color: #0072CE !important;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// Dados dos gráficos
+const dadosSemanal = {
+    labels: {{ dias_semana | tojson }},
+    receitas: {{ receitas_semanal | tojson }},
+    despesas: {{ despesas_semanal | tojson }}
+};
+
+const dadosMensal = {
+    labels: {{ dias_mensal | tojson }},
+    receitas: {{ receitas_mensal | tojson }},
+    despesas: {{ despesas_mensal | tojson }}
+};
+
+const dadosAnual = {
+    labels: {{ meses_anual | tojson }},
+    receitas: {{ receitas_anual | tojson }},
+    despesas: {{ despesas_anual | tojson }}
+};
+
+// Função para criar gráfico
+function criarGrafico(canvasId, labels, receitas, despesas, corReceita, corDespesa) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const temDados = receitas.some(v => v > 0) || despesas.some(v => v > 0);
+    
+    if (!temDados) {
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('Sem dados para exibir', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return null;
+    }
+    
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Receitas',
+                    data: receitas,
+                    backgroundColor: corReceita,
+                    borderColor: corReceita.replace('0.75', '1'),
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                },
+                {
+                    label: 'Despesas',
+                    data: despesas,
+                    backgroundColor: corDespesa,
+                    borderColor: corDespesa.replace('0.70', '1'),
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: { size: 12, weight: '600' },
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ' R$ ' + ctx.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11, weight: '500' } }
+                },
+                y: {
+                    grid: { color: '#f0f0f0' },
+                    ticks: {
+                        font: { size: 11, weight: '500' },
+                        callback: v => 'R$ ' + v.toLocaleString('pt-BR')
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Criar gráficos
+let chartSemanal = criarGrafico('chartSemanal', dadosSemanal.labels, dadosSemanal.receitas, dadosSemanal.despesas, 'rgba(0,114,206,0.75)', 'rgba(192,57,43,0.70)');
+let chartMensal = criarGrafico('chartMensal', dadosMensal.labels, dadosMensal.receitas, dadosMensal.despesas, 'rgba(39,174,96,0.75)', 'rgba(192,57,43,0.70)');
+let chartAnual = criarGrafico('chartAnual', dadosAnual.labels, dadosAnual.receitas, dadosAnual.despesas, 'rgba(230,126,34,0.75)', 'rgba(192,57,43,0.70)');
+
+// Alternar entre gráficos
+function alternarGrafico(periodo) {
+    // Atualizar botões
+    document.querySelectorAll('.btn-grafico-periodo').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.periodo === periodo) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Mostrar gráfico correspondente
+    document.querySelectorAll('.grafico-container').forEach(container => {
+        container.style.display = 'none';
+    });
+    document.getElementById('grafico-' + periodo).style.display = 'block';
+    
+    // Atualizar resumo
+    atualizarResumo(periodo);
+}
+
+// Atualizar resumo
+function atualizarResumo(periodo) {
+    let dados;
+    if (periodo === 'semanal') dados = dadosSemanal;
+    else if (periodo === 'mensal') dados = dadosMensal;
+    else dados = dadosAnual;
+    
+    const totalReceitas = dados.receitas.reduce((a, b) => a + b, 0);
+    const totalDespesas = dados.despesas.reduce((a, b) => a + b, 0);
+    const saldoLiquido = totalReceitas - totalDespesas;
+    
+    document.getElementById('total-receitas').textContent = 'R$ ' + totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    document.getElementById('total-despesas').textContent = 'R$ ' + totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    
+    const saldoEl = document.getElementById('saldo-liquido');
+    saldoEl.textContent = 'R$ ' + saldoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    saldoEl.style.color = saldoLiquido >= 0 ? '#27AE60' : '#C0392B';
+}
+
+// Inicializar com gráfico semanal
+atualizarResumo('semanal');
+</script>

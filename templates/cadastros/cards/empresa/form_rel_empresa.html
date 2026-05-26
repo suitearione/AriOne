@@ -1,0 +1,315 @@
+{# =============================================================================
+   Arquivo  : form_rel_empresa.html
+   Caminho  : templates/cadastros/cards/empresa/form_rel_empresa.html
+   Cor Tema : #3F51B5 (Indigo Empresa)
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% block content %}
+<div class="ctx-rel-wrap" id="ctx-rel-empresa">
+    <style>
+        :root { --rel-pri: #3F51B5; --rel-sec: rgba(63, 81, 181, 0.1); }
+        .ctx-rel-header { background: linear-gradient(135deg, #3F51B5, #303F9F); color: #fff; padding: 20px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-rel-body { padding: 25px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        /* KPI Small Cards */
+        .rel-kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .rel-kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 12px; }
+        .rel-kpi-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--rel-sec); color: var(--rel-pri); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .rel-kpi-val { font-size: 18px; font-weight: 800; color: #1e293b; display: block; }
+        .rel-kpi-lab { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+
+        .rel-section { margin-bottom: 25px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 15px; }
+        .rel-title { font-size: 12px; font-weight: 800; color: var(--rel-pri); text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .rel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+        .rel-group { display: flex; flex-direction: column; gap: 6px; }
+        .rel-label { font-size: 11px; font-weight: 700; color: #475569; }
+        .rel-input { padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
+        .rel-input:focus { border-color: var(--rel-pri); outline: none; }
+        
+        .rel-opt-row { display: flex; flex-wrap: wrap; gap: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; }
+        .rel-check { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; }
+        .rel-label { font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.4px; }
+        .rel-input { padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 12px; transition: border-color 0.2s; width: 100%; }
+        .rel-input:focus { border-color: var(--rel-pri); outline: none; box-shadow: 0 0 0 3px rgba(63,81,181,0.1); }
+        .rel-input.error { border-color: #e53e3e; }
+
+    <div class="ctx-rel-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.2); width:45px; height:45px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <div style="font-weight: 800; font-size: 1.2rem;">Relatórios de Empresa</div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">Análise Estrutural & Dossiês</div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <!-- INTERNAL USE ONLY (Diagnóstico) -->
+            {% if config.IS_DEV or sistema_nome == 'AriOneDEV' %}
+            <button type="button" onclick="toggleDebugFloating()" 
+                    title="VALIDAÇÃO TÉCNICA - INTERNAL USE ONLY"
+                    style="background: rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); width: 32px; height: 32px; border-radius: 8px; color:rgba(255,255,255,0.8); cursor:pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.2s;">
+                <i class="fas fa-microscope"></i>
+            </button>
+            {% endif %}
+
+            <button onclick="fecharModalEmpresa()" style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:34px; height:34px; border-radius:8px; cursor:pointer;">✕</button>
+        </div>
+    </div>
+
+    <!-- INTERNAL USE ONLY - Floating Debug Card -->
+    {% if config.IS_DEV or sistema_nome == 'AriOneDEV' %}
+    <div id="debug-floating-card" style="display:none; position:absolute; top:110px; left:50%; transform:translateX(-50%); width:300px; background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25); z-index:1000; border:2px solid #6366f1; overflow:hidden; animation: slideInDebug 0.3s ease;">
+        <div style="background:#6366f1; color:#fff; padding:12px 15px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:space-between;">
+            <span><i class="fas fa-microscope" style="margin-right:8px;"></i> AUDITORIA DE INTEGRIDADE (AUDIT)</span>
+            <i class="fas fa-times" onclick="toggleDebugFloating()" style="cursor:pointer; opacity:0.8;"></i>
+        </div>
+        <div style="padding:15px;">
+            <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">Checklist de Persistência</div>
+            <div class="debug-list">
+                <div class="debug-item" onclick="navegarParaRelatorio('empresa_dados')">
+                    <i class="fas fa-id-card"></i> <span>1. Dados da Empresa</span>
+                </div>
+                <div class="debug-item" onclick="location.href='{{ url_for('cadastros.relatorios_cadastros', tipo='setores') }}'">
+                    <i class="fas fa-sitemap"></i> <span>2. Setores</span>
+                </div>
+                <div class="debug-item" onclick="location.href='{{ url_for('cadastros.relatorios_cadastros', tipo='departamentos') }}'">
+                    <i class="fas fa-network-wired"></i> <span>3. Departamentos</span>
+                </div>
+                <!-- ... outros itens se necessário ... -->
+                
+                <div style="margin: 10px 0; border-top: 1.5px dashed #e2e8f0;"></div>
+
+                <div class="debug-item" onclick="voltarParaSubGateway()" style="color:#2980B9; background:rgba(41,128,185,0.05);">
+                    <i class="fas fa-reply-all"></i> <span style="font-weight:800;">Retornar à Central (Cards)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes slideInDebug {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .debug-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: #475569; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 4px; }
+        .debug-item:hover { background: rgba(99,102,241,0.08); color: #6366f1; transform: translateX(5px); }
+        .debug-item i { width: 16px; text-align: center; font-size: 14px; opacity: 0.7; }
+    </style>
+    {% endif %}
+
+    <div class="ctx-rel-body">
+        <!-- KPIs Rápidos -->
+        <div class="rel-kpi-grid">
+            <div class="rel-kpi-card">
+                <div class="rel-kpi-icon"><i class="fas fa-building"></i></div>
+                <div>
+                    <span class="rel-kpi-val">{{ empresas_lista|length if empresas_lista else '0' }}</span>
+                    <span class="rel-kpi-lab">Total Unidades</span>
+                </div>
+            </div>
+            <div class="rel-kpi-card">
+                <div class="rel-kpi-icon" style="color:#27ae60; background:rgba(39,174,96,0.1);"><i class="fas fa-check-circle"></i></div>
+                <div>
+                    <span class="rel-kpi-val">{{ empresas_lista|selectattr('ativa')|list|length if empresas_lista else '0' }}</span>
+                    <span class="rel-kpi-lab">Ativas</span>
+                </div>
+            </div>
+            <div class="rel-kpi-card">
+                <div class="rel-kpi-icon" style="color:#e74c3c; background:rgba(231,76,60,0.1);"><i class="fas fa-times-circle"></i></div>
+                <div>
+                    <span class="rel-kpi-val">{{ empresas_lista|rejectattr('ativa')|list|length if empresas_lista else '0' }}</span>
+                    <span class="rel-kpi-lab">Encerradas</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOOLBAR DE AÇÕES -->
+        <div style="background: #f8fafc; border-bottom: 2px solid #edf2f7; padding: 12px 18px; display: flex; gap: 8px; margin-bottom:25px; border-radius: 8px;">
+            <button type="button" class="fe-btn" style="background:#3F51B5; color:#fff; border:none; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-plus"></i> Novo</button>
+            <button type="button" class="fe-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-edit"></i> Editar</button>
+            <button type="button" class="fe-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-search"></i> Consultar</button>
+            <button type="button" class="fe-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700;"><i class="fas fa-print"></i> Imprimir</button>
+        </div>
+
+        <form method="POST" target="_blank" id="form-rel-empresa">
+            
+            <!-- ESCOLHA DO RELATÓRIO -->
+            <div class="rel-section">
+                <div class="rel-title"><i class="fas fa-list-alt"></i> Qual relatório gerar?</div>
+                <div class="rel-grid">
+                    <div class="rel-group">
+                        <label class="rel-label">Módulo de Extração</label>
+                        <select class="rel-input" id="rel_tipo" name="rel_tipo" onchange="aplicarFiltrosEmpresa()">
+                            <option value="" selected disabled>-- Selecione o Relatório --</option>
+                            <option value="dossie">Dossiê Estrutural e Censitário</option>
+                            <option value="societario">Quadro Societário e Participações</option>
+                            <option value="encerradas">Relação de Unidades Encerradas</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAINEL DE FILTROS (Oculto) -->
+            <div id="filtros_container_empresa" style="display:none; transition:all 0.3s;">
+                <!-- Filtros Principais -->
+                <div class="rel-section">
+                    <div class="rel-title"><i class="fas fa-filter"></i> Filtros de Seleção</div>
+                    <div class="rel-grid" id="grid_filtros_empresa">
+                        <div class="rel-group">
+                            <label class="rel-label">Empresa Específica</label>
+                            <select class="rel-input" name="empresa_id">
+                                <option value="">Todas as Empresas</option>
+                                {% for emp in empresas_lista %}
+                                <option value="{{ emp.id }}">{{ emp.razao_social }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="rel-group">
+                            <label class="rel-label">Status da Empresa</label>
+                            <select class="rel-input" name="status">
+                                <option value="ativas">Somente Ativas</option>
+                                <option value="encerradas">Somente Encerradas</option>
+                                <option value="todas">Todas as Unidades</option>
+                            </select>
+                        </div>
+                        <div class="rel-group">
+                            <label class="rel-label">Regime Tributário</label>
+                            <select class="rel-input" name="regime">
+                                <option value="">Todos</option>
+                                <option>Simples Nacional</option>
+                                <option>Lucro Presumido</option>
+                                <option>Lucro Real</option>
+                            </select>
+                        </div>
+                        <div class="rel-group">
+                            <label class="rel-label">Agrupar por</label>
+                            <select class="rel-input" name="agrupamento">
+                                <option value="nenhum">Sem agrupamento</option>
+                                <option value="setor">Setor de Atividade</option>
+                                <option value="uf">Estado (UF)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Período -->
+                <div class="rel-section">
+                    <div class="rel-title"><i class="fas fa-calendar-alt"></i> Período de Abertura</div>
+                    <div class="rel-grid">
+                        <div class="rel-group">
+                            <label class="rel-label">Início</label>
+                            <input type="date" class="rel-input" name="data_ini">
+                        </div>
+                        <div class="rel-group">
+                            <label class="rel-label">Fim</label>
+                            <input type="date" class="rel-input" name="data_fim">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opções de Exportação -->
+                <div class="rel-section" style="border:none;">
+                    <div class="rel-title"><i class="fas fa-file-export"></i> Formato & Detalhes</div>
+                    <div class="rel-opt-row">
+                        <label class="rel-check"><input type="radio" name="formato" value="pdf" checked> PDF (Dossiê)</label>
+                        <label class="rel-check"><input type="radio" name="formato" value="excel"> Planilha (Excel)</label>
+                        <label class="rel-check" style="margin-left: 20px;"><input type="checkbox" name="detalhado"> Incluir Sócios e Contatos</label>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 5px; border-top:1px solid #e2e8f0; padding-top:15px;">
+                    <button type="button" class="fe-btn" style="background:#fff; color:#64748b; border: 1.5px solid #e2e8f0; padding: 12px 20px; border-radius: 10px; font-weight:700; cursor:pointer;" onclick="fecharModalEmpresa()">
+                        <i class="fas fa-times"></i> Sair
+                    </button>
+                    <button type="button" class="fe-btn" style="background:#fff; color:#64748b; border: 1.5px solid #e2e8f0; padding: 12px 20px; border-radius: 10px; font-weight:700; cursor:pointer;" onclick="document.getElementById('form-rel-empresa').reset()">
+                        <i class="fas fa-eraser"></i> Limpar
+                    </button>
+                    <button type="submit" class="fe-btn" style="background: var(--rel-pri); color:#fff; padding: 12px 30px; border-radius: 10px; font-weight:700; border:none; cursor:pointer; display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-cogs"></i> Processar Relatório
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function aplicarFiltrosEmpresa() {
+    const tipo = document.getElementById('rel_tipo').value;
+    const container = document.getElementById('filtros_container_empresa');
+    
+    if(!tipo) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+}
+
+function fecharModalEmpresa() {
+    // Em vez de fechar, volta para o Gateway de Estrutura e Capital
+    if (typeof voltarParaSubGateway === 'function') {
+        voltarParaSubGateway();
+    } else {
+        // Fallback caso a função de navegação falhe
+        const overlay = document.getElementById('arione-modal-global');
+        if (overlay) overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+/**
+ * Funções de Debug / Validação Tácnica
+ */
+function toggleDebugFloating() {
+    const card = document.getElementById('debug-floating-card');
+    if (card) {
+        card.style.display = (card.style.display === 'none' || card.style.display === '') ? 'block' : 'none';
+    }
+}
+
+function voltarParaSubGateway() {
+    const url = "{{ url_for('cadastros.gateway_relatorios') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJETA SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+    }
+}
+
+function navegarParaRelatorio(tipo) {
+    let url = "";
+    if (tipo === 'empresa_dados') {
+        url = "{{ url_for('cadastros.card_rel_empresa', modal=1) }}";
+    }
+    if (url) {
+        const content = document.getElementById('arione-modal-content');
+        content.style.opacity = '0.4';
+        fetch(url).then(r => r.text()).then(h => {
+            content.innerHTML = h;
+            content.style.opacity = '1';
+            content.querySelectorAll('script').forEach(s => {
+                const n = document.createElement('script');
+                Array.from(s.attributes).forEach(a => n.setAttribute(a.name, a.value));
+                n.appendChild(document.createTextNode(s.innerHTML));
+                s.parentNode.replaceChild(n, s);
+            });
+        });
+    }
+}
+</script>
+{% endblock %}

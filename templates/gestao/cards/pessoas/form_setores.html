@@ -1,0 +1,113 @@
+{# =============================================================================
+Caminho : templates/gestao/cards/pessoas/form_setores.html
+Arquivo : form_setores.html
+Função  : Cadastro de Setores (Padrão Sócios)
+============================================================================= #}
+
+<div class="fe-wrap" style="padding:0; min-height:auto; background:transparent;">
+    <form id="form-novo-setor" method="POST">
+        {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+        <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0 24px; margin: 0; border-bottom: 2px solid #e2e8f0;">
+            {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+            {{ cabecalho_mestre_arione(
+                titulo='Gestão de Setores',
+                subtitulo='Macro Estrutura Corporativa',
+                icone='fa-sitemap',
+                form_id='form-novo-setor',
+                onclick_save='submeterNovoSetor()',
+                cor_tema='#2980B9'
+            ) }}
+        </div>
+        <div style="height:4px; background:#2980B9; border-radius:0 0 12px 12px; margin:0;"></div>
+
+        <div style="padding: 12px 24px;">
+
+        {# ══════════ CARD PRINCIPAL ══════════ #}
+        <div class="fe-card" style="border-left: 4px solid #2980B9;">
+            <div class="fe-card-title" style="color:#2980B9; background:rgba(41,128,185,0.05);">
+                <i class="fas fa-id-card"></i> Identificação do Setor
+            </div>
+            <div class="fe-card-body">
+                <div class="fe-row">
+                    <div class="fe-group" style="max-width:150px;">
+                        <label class="fe-label">Código</label>
+                        <input class="fe-input" type="text" name="codigo" readonly placeholder="(Automático)" style="background:#f8fafc; cursor:not-allowed;">
+                    </div>
+                    <div class="fe-group fe-flex-3">
+                        <label class="fe-label">Nome do Setor <span class="fe-req">*</span></label>
+                        <input class="fe-input" type="text" name="nome" required placeholder="Ex: Financeiro, Produção...">
+                    </div>
+                    <div class="fe-group fe-flex-1" style="max-width:120px;">
+                        <label class="fe-label">Sigla</label>
+                        <input class="fe-input" type="text" name="sigla" placeholder="Ex: FIN">
+                    </div>
+                </div>
+                
+                <div class="fe-row" style="justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="document.getElementById('form-novo-setor').reset()">Limpar</button>
+                    <button type="button" class="fe-btn fe-btn-salvar-footer" style="background: #2980B9; color: #fff;" onclick="submeterNovoSetor()">
+                        <i class="fas fa-save"></i> Salvar Setor
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# ══════════ LISTAGEM ══════════ #}
+        <div class="fe-card" style="margin-top:12px; border-left: 4px solid #3399ee;">
+            <div class="fe-card-title" style="color:#3399ee; background:rgba(51,153,238,0.05);">
+                <i class="fas fa-list-ul"></i> Setores Cadastrados
+            </div>
+            <div class="fe-card-body" style="padding:0;">
+                <table class="fe-table-listing">
+                    <thead>
+                        <tr>
+                            <th style="width:100px;">Código</th>
+                            <th>Nome do Setor</th>
+                            <th style="width:80px;">Sigla</th>
+                            <th style="width:120px; text-align:center;">Departamentos</th>
+                            <th style="width:60px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in setores %}
+                        <tr>
+                            <td><span style="font-weight: 700; color: #2980B9;">#{{ s.codigo }}</span></td>
+                            <td><strong style="font-size: 13px;">{{ s.nome }}</strong></td>
+                            <td><code style="font-family: monospace; font-weight: 700;">{{ s.sigla or '--' }}</code></td>
+                            <td style="text-align:center;">
+                                <span class="fe-badge-count" style="background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:10px; font-size:10px; font-weight: 700;">{{ s.subsetores|length }}</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px;" title="Editar"><i class="fas fa-pen"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding:30px; text-align:center; color:#94a3b8; font-style:italic;">Nenhum setor cadastrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+async function submeterNovoSetor() {
+    const form = document.getElementById('form-novo-setor');
+    const formData = new FormData(form);
+    if (!formData.get('nome')) { 
+        form.querySelector('[name="nome"]').classList.add('error');
+        return; 
+    }
+    try {
+        const response = await fetch('/cadastros/funcionarios/org/setor/add', {
+            method: 'POST', body: new URLSearchParams(formData)
+        });
+        if(response.ok) { abrirModalEmp('setores'); }
+    } catch(e) { console.error(e); }
+}
+</script>

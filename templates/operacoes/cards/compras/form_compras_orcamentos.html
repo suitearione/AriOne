@@ -1,0 +1,428 @@
+{# =============================================================================
+   Caminho  : templates/operacoes/cards/compras/form_compras_orcamentos.html
+   Função   : Orçamento de Compras (PADRÃO HCM GOLDEN STANDARD)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-compras" style="background: #f4f6f9;">
+
+    {# CABEÇALHO MESTRE (PADRÃO OURO) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Orçamento de Compras",
+        subtitulo="Operacional > Compras > Orçamentos",
+        icone="fa-file-invoice",
+        form_id="form-orcamento-compra",
+        onclick_save="arioneSalvarDocumento('Orçamento de Compra', this, 'form-orcamento-compra')",
+        onclick_clonar="arioneClonarRegistro('form-orcamento-compra')",
+        onclick_novo="arioneResetForm('form-orcamento-compra')",
+        onclick_search="focusSearchMaster()",
+        cor_tema="#2980B9",
+        func_fechar="fecharModalGlobal()",
+        aba_retorno="compras",
+        blueprint_retorno="operacoes",
+        status=status_lista[0].nome if status_lista else "EM EDIÇÃO",
+        ajuda="O formulário de Orçamentos de Compra (Cotações) permite registrar negociações com fornecedores antes da oficialização do pedido. Você pode comparar preços e prazos para otimizar o custo de aquisição."
+    ) }}
+
+    {# CONSOLE DE EMERGÊNCIA #}
+    <div id="debug-console" style="position:fixed; bottom:0; left:0; background:rgba(0,0,0,0.8); color:#0f0; font-family:monospace; font-size:10px; padding:5px; z-index:99999; max-height:60px; overflow:auto; width:100%; pointer-events:none;">
+        🟡 Inicializando Compras Golden Standard...
+    </div>
+
+    <form id="form-orcamento-compra" method="POST" novalidate>
+
+        {# CARD 1: IDENTIFICAÇÃO #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-file-contract"></i> Identificação da Cotação
+            </div>
+            <div class="fp-card-body">
+                {# LINHA 1: FORNECEDOR > TIPO > PERFIL #}
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-2">
+                        <label class="fp-label">FORNECEDOR 
+                            {{ comp.info_icon("Selecione o fornecedor para esta cotação") }}
+                            {{ comp.master_icon("fornecedores") }}
+                            {{ comp.plus_icon("fornecedores") }}
+                        </label>
+                        <input type="hidden" name="fornecedor_id" id="fornecedor_id">
+                        <input class="fp-input" list="lista-fornecedores" name="fornecedor_nome" id="fornecedor_busca" placeholder="Pesquisar..." style="font-weight: 700; border: 1px solid #27AE60;"
+                               oninput="this.value = this.value.toUpperCase(); 
+                                        const opt = document.querySelector('#lista-fornecedores option[value=\'' + this.value.replace(/'/g, '\\\'') + '\']'); 
+                                        if(opt) { 
+                                            document.getElementById('fornecedor_id').value = opt.dataset.id; 
+                                            document.getElementById('fornecedor_tipo_display').value = opt.dataset.tipo || 'PJ'; 
+                                        }">
+                        
+                        <datalist id="lista-fornecedores">
+                            {% for f in fornecedores %}
+                                {% set t = 'PJ' if f.tipo_pessoa == 'J' else 'PF' %}
+                                <option value="[{{ t }}] {{ f.razao_social|upper }}" data-id="{{ f.id }}" data-tipo="{{ t }}">[{{ t }}] {{ f.cnpj_cpf }} - {{ f.categoria|upper if f.categoria else 'GERAL' }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">TIPO</label>
+                        <input class="fp-input" id="fornecedor_tipo_display" readonly tabindex="-1" style="background: #f8fafc; text-align: center; font-weight: 800; color: #2980B9;">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">PERFIL DE COMPRA</label>
+                        <select class="fp-input" name="perfil_compra" style="font-weight: 800; color: #2980B9;">
+                            <option value="padrao">PADRÃO</option>
+                            <option value="importacao">IMPORTAÇÃO</option>
+                            <option value="servicos">SERVIÇOS</option>
+                        </select>
+                    </div>
+                    <div class="fp-group" style="width: 160px;">
+                        <label class="fp-label">STATUS</label>
+                        <div class="fp-input-wrapper">
+                            <input class="fp-input" list="lista-status-comp" name="status_busca" id="status_busca" value="{{ status_lista[0].nome if status_lista else 'COTANDO' }}" style="width: 100%; color: #fff; font-weight: 800; background: {{ status_lista[0].cor if status_lista else '#2980B9' }}; border-radius: 8px; text-align: center; border: none; height: 34px; text-transform: uppercase;"
+                                   onchange="const opt = document.querySelector('#lista-status-comp option[value=\'' + this.value + '\']'); if(opt) this.style.background = opt.dataset.cor;">
+                            <datalist id="lista-status-comp">
+                                {% for s in status_lista %}
+                                    <option value="{{ s.nome }}" data-cor="{{ s.cor }}">{{ s.nome }}</option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+
+                {# LINHA 2: NÚMERO > DATAS > COMPRADOR #}
+                <div class="fp-row">
+                    <div class="fp-group" style="width: 150px;">
+                        <label class="fp-label">Nº Cotação {{ comp.info_icon("Configurável em Parâmetros de Compras") }}</label>
+                        <input class="fp-input" type="text" name="numero" id="doc_numero" value="" placeholder="AGUARDANDO..." style="font-weight:900; color:#27AE60; border-left: 3px solid #27AE60;">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Data Solicitação</label>
+                        <input class="fp-input" type="date" name="data_emissao" value="{{ today }}">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Data Limite</label>
+                        <input class="fp-input" type="date" name="data_limite" value="{{ today }}">
+                    </div>
+                    <div class="fp-group fp-flex-2">
+                        <label class="fp-label">Comprador {{ comp.master_icon("usuarios") }}</label>
+                        <select class="fp-input" name="comprador_id">
+                            <option value="1">COMPRADOR MASTER</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 2: ITENS #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-boxes"></i> Insumos / Produtos
+            </div>
+            <div class="fp-card-body" style="padding: 0;">
+                <table class="ope-table" id="tabela-itens-orcamento-compra">
+                    <thead><tr>
+                        <th style="width: 180px;">Código</th><th>Insumo / Matéria Prima</th>
+                        <th style="width: 80px; text-align: center;">Qtd</th>
+                        <th style="width: 120px; text-align: right;">Unitário</th>
+                        <th style="width: 120px; text-align: right;">Total</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="text" class="fp-input" style="height: 32px; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700;" placeholder="SKU..." 
+                                       list="lista-skus" oninput="arioneFetchItemBySKU(this)" onblur="arioneFetchItemBySKU(this)">
+                                <datalist id="lista-skus">
+                                    {% for p in produtos %}<option value="{{ p.referencia or p.id }}">{{ p.descricao|upper }}</option>{% endfor %}
+                                </datalist>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input list="lista-produtos" class="fp-input" style="height: 32px;" placeholder="Buscar insumo...">
+                                    {{ comp.master_icon("produtos") }}
+                                    {{ comp.plus_icon("produtos") }}
+                                </div>
+                            </td>
+                            <td><input type="number" class="fp-input" style="height: 32px; text-align: center;" value="1" onfocus="this.select()" oninput="calcularTotaisCompra()"></td>
+                            <td><input type="text" class="fp-input" style="height: 32px; text-align: right;" value="0,00" onfocus="this.select()" oninput="this.value = arioneMaskMoney(this.value); calcularTotaisCompra()"></td>
+                            <td style="text-align: right; font-weight: 800; color: #27AE60;" class="col-total-linha">R$ 0,00</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" onclick="arioneAdicionarLinhaGrid('#tabela-itens-orcamento-compra', '#27AE60', 'calcularTotaisCompra')" 
+                        style="width: 100%; padding: 10px; background: none; border: none; border-top: 1px solid #f1f5f9; color: #64748b; font-size: 11px; font-weight: 700; cursor: pointer;">
+                    <i class="fas fa-plus-circle"></i> ADICIONAR ITEM (F2)
+                </button>
+            </div>
+        </div>
+
+        {# CARD 3: ABAS INFERIORES #}
+        <div class="fp-tabs-wrap">
+            <div class="fp-tabs-nav">
+                <button type="button" class="fp-tab active" onclick="switchOpeTab(this, 'tab-resumo')"><i class="fas fa-calculator"></i> Totais</button>
+                <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-condicoes')"><i class="fas fa-handshake"></i> Condições</button>
+                <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-fiscal')"><i class="fas fa-file-invoice-dollar"></i> Fiscal</button>
+                <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-obs')"><i class="fas fa-comment-dots"></i> Observações</button>
+            </div>
+
+            <div id="tab-resumo" class="fp-tab-panel active">
+                <div class="fp-row" style="align-items: flex-start;">
+                    <div class="fp-group fp-flex-1">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #64748b; padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                                <span>Total Mercadorias</span><span id="resumo-subtotal" style="font-weight: 700;">R$ 0,00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 5px; padding-top: 10px;">
+                                <span style="font-size: 12px; font-weight: 800; color: #1e293b;">VALOR TOTAL ESTIMADO</span>
+                                <span id="resumo-total-geral" style="font-size: 26px; font-weight: 900; color: #27AE60;">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-group fp-flex-1" style="display: flex; flex-direction: column; gap: 10px;">
+                        <button type="button" class="fp-btn" style="background: #2980B9; color: #fff; justify-content: center; width: 100%; border-radius: 10px; font-weight: 800; height: 48px; box-shadow: 0 4px 15px rgba(41, 128, 185, 0.2);" onclick="arioneConverterDocumento('OC-7829', this)">
+                            <i class="fas fa-check"></i> CONVERTER EM PEDIDO
+                        </button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <button type="button" class="fp-btn" style="background: #f1f5f9; color: #475569; justify-content: center;" onclick="arioneToast('Gerando PDF...', 'info')">
+                                <i class="fas fa-print"></i> PDF
+                            </button>
+                            <button type="button" class="fp-btn" style="background: #25D366; color: #fff; justify-content: center;" onclick="enviarWhatsApp()">
+                                <i class="fab fa-whatsapp"></i> WHATS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-condicoes" class="fp-tab-panel">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1"><label class="fp-label">Forma Pagto</label><select class="fp-input"><option>Boleto</option></select></div>
+                    <div class="fp-group fp-flex-1"><label class="fp-label">Condição</label><select class="fp-input"><option>30 Dias</option></select></div>
+                </div>
+            </div>
+
+            <div id="tab-fiscal" class="fp-tab-panel">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1"><label class="fp-label">Tipo de Frete</label><select class="fp-input"><option>FOB</option><option>CIF</option></select></div>
+                </div>
+            </div>
+
+            <div id="tab-obs" class="fp-tab-panel">
+                <textarea class="fp-input" style="height: 80px; width: 100%;" placeholder="Notas sobre a cotação..."></textarea>
+            </div>
+        </div>
+
+        {# ── FOOTER ACTIONS ── #}
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="button" class="fp-btn fp-btn-salvar-footer" onclick="arioneSalvarDocumento('orcamento_compra', this)">
+                <i class="fas fa-save"></i> SALVAR COTAÇÃO
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+    .ope-table { width: 100%; border-collapse: collapse; font-family: 'Outfit', sans-serif; }
+    .ope-table th { background: #f8fafc; color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 12px 15px; border-bottom: 2px solid #edf2f7; text-align: left; }
+    .ope-table td { padding: 10px 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #1e293b; }
+</style>
+
+<script>
+    console.log('💎 Form Compras Orçamentos HCM Ativado');
+
+                if (isAuto) {
+                    const ultimo = parseInt(data.ult_cotacao) || 0;
+                    const incremento = parseInt(data.incremento) || 1;
+                    const proximo = ultimo + incremento;
+                    const prefixo = data.pref_cot || '';
+                    
+                    docNumero.value = prefixo + proximo;
+                    docNumero.readOnly = true;
+                    docNumero.style.background = '#f1f5f9';
+                    docNumero.style.fontWeight = '900';
+                    docNumero.title = "Numeração Automática Ativa (Configurável em Parâmetros)";
+                } else {
+                    docNumero.value = '';
+                    docNumero.placeholder = 'DIGITE O NÚMERO...';
+                    docNumero.readOnly = false;
+                    docNumero.style.background = '#fff';
+                    docNumero.style.border = '2px solid #27AE60';
+                }
+
+                // Lógica de Datas Automáticas
+                const dataHoje = new Date();
+                const somarDias = (d, n) => {
+                    let r = new Date(d);
+                    r.setDate(r.getDate() + (parseInt(n) || 0));
+                    return r.toISOString().split('T')[0];
+                };
+
+                if (data.validade_cot_padrao) {
+                    const inputValidade = document.querySelector('input[name="data_validade"]');
+                    if (inputValidade) inputValidade.value = somarDias(dataHoje, data.validade_cot_padrao);
+                }
+
+                if (data.prazo_entrega_comp_padrao) {
+                    const inputEntrega = document.querySelector('input[name="data_entrega"]');
+                    if (inputEntrega) inputEntrega.value = somarDias(dataHoje, data.prazo_entrega_comp_padrao);
+                }
+            });
+    });
+
+    function switchOpeTab(btn, tabId) {
+        const container = btn.closest('.fp-tabs-wrap');
+        container.querySelectorAll('.fp-tab').forEach(t => t.classList.remove('active'));
+        container.querySelectorAll('.fp-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active'); document.getElementById(tabId).classList.add('active');
+    }
+
+    function enviarWhatsApp() { 
+        if (window.arioneWhatsApp) arioneWhatsApp('5562999999999', `Olá, segue Cotação OC-7281`);
+    }
+
+    async function arioneFetchItemBySKU(input) {
+        const sku = input.value.trim();
+        if (!sku) return;
+
+        const row = input.closest('tr');
+        if (!row) return;
+
+        // Seletores robustos por índice de coluna (0: SKU, 1: Desc, 3: Valor)
+        const cells = row.cells;
+        if (cells.length < 4) return;
+
+        const descInput = cells[1].querySelector('input');
+        const vlrInput = cells[3].querySelector('input');
+
+        try {
+            console.log(`🔍 AriOne: Buscando SKU: ${sku}`);
+            const response = await fetch(`/operacoes/api/produtos/get-by-sku?sku=${encodeURIComponent(sku)}`);
+            const data = await response.json();
+
+            if (data.ok) {
+                if (descInput) descInput.value = data.descricao;
+                if (vlrInput) vlrInput.value = data.valor_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                arioneToast('✨ Insumo identificado!', 'success');
+            } else {
+                arioneToast('🔍 SKU não localizado: ' + sku, 'warning');
+            }
+        } catch (err) {
+            console.error('❌ Erro ao buscar SKU:', err);
+            arioneToast('Erro ao consultar catálogo', 'danger');
+        }
+    }
+
+
+    function arioneInitForm() {
+        const consoleEl = document.getElementById('debug-console');
+        if(consoleEl) consoleEl.innerHTML = "🚀 Iniciando carga de parâmetros (Compras)...";
+
+        fetch('/cadastros/parametros/get?grupo=compras')
+            .then(res => res.json())
+            .then(params => {
+                if(consoleEl) consoleEl.innerHTML += "<br>✅ Dados: " + JSON.stringify(params).substring(0, 40);
+                
+                const docNumero = document.getElementById('doc_numero');
+                if (docNumero) {
+                    const isAuto = (params.usar_sequencia_automatica_orc === undefined) || 
+                                   (params.usar_sequencia_automatica_orc === '1') || 
+                                   (params.usar_sequencia_automatica_orc === 'on');
+                    if (isAuto) {
+                        const ultimo = parseInt(params.ult_cotacao) || 1000;
+                        const incremento = parseInt(params.incremento) || 1;
+                        const prefixo = params.pref_cot || '';
+                        docNumero.value = prefixo + (ultimo + incremento);
+                        docNumero.readOnly = true;
+                        docNumero.style.background = '#f8fafc';
+                        docNumero.style.fontWeight = '900';
+                    } else {
+                        docNumero.value = '';
+                        docNumero.readOnly = false;
+                        docNumero.style.background = '#fff';
+                    }
+                }
+
+                // Datas
+                const hoje = new Date();
+                const formata = (d) => d.toISOString().split('T')[0];
+                if (params.validade_cot_padrao) {
+                    const d = new Date(); d.setDate(hoje.getDate() + parseInt(params.validade_cot_padrao));
+                    const el = document.querySelector('input[name="data_limite"]');
+                    if (el) el.value = formata(d);
+                }
+            })
+            .catch(err => {
+                if(consoleEl) consoleEl.innerHTML += "<br>❌ Erro: " + err.message;
+                const docNumero = document.getElementById('doc_numero');
+                if (docNumero) docNumero.value = "ORC-1001";
+            });
+    }
+
+    arioneInitForm();
+
+    function calcularTotaisCompra() {
+        let total = 0;
+        const rows = document.querySelectorAll('#tabela-itens-orcamento-compra tbody tr');
+        rows.forEach(row => {
+            const qtd = parseFloat(row.cells[2].querySelector('input').value) || 0;
+            const vlr = parseMoney(row.cells[3].querySelector('input').value);
+            const subtotal = qtd * vlr;
+            total += subtotal;
+            row.cells[4].innerText = formatMoney(subtotal);
+        });
+        document.getElementById('resumo-subtotal').innerText = formatMoney(total);
+        document.getElementById('resumo-total-geral').innerText = formatMoney(total);
+    }
+
+    function parseMoney(val) {
+        if (!val) return 0;
+        return parseFloat(val.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+
+    function formatMoney(val) {
+        return 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+
+    function arioneMaskMoney(val) {
+        let v = val.replace(/\D/g, '');
+        v = (v / 100).toFixed(2) + '';
+        v = v.replace(".", ",");
+        v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return v;
+    }
+
+    function arioneAdicionarLinhaGrid(tableSelector, corTema, funcCalculo) {
+        const table = document.querySelector(tableSelector + ' tbody');
+        if (!table) return;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <input type="text" class="fp-input" style="height: 32px; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700;" placeholder="SKU..." 
+                        list="lista-skus" 
+                        oninput="arioneFetchItemBySKU(this)"
+                        onblur="arioneFetchItemBySKU(this)">
+            </td>
+            <td>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input list="lista-produtos" class="fp-input" style="height: 32px;" placeholder="Descrição...">
+                    <i class="fas fa-search arione-master-icon" onclick="abrirModalMaster('produtos')" title="Ver Produto"></i>
+                </div>
+            </td>
+            <td><input type="number" class="fp-input" style="height: 32px; text-align: center;" value="1" onfocus="this.select()" oninput="${funcCalculo}()"></td>
+            <td><input type="text" class="fp-input" style="height: 32px; text-align: right;" value="0,00" onfocus="this.select()" oninput="this.value = arioneMaskMoney(this.value); ${funcCalculo}()"></td>
+            <td style="text-align: right; font-weight: 800; color: ${corTema};">R$ 0,00</td>
+        `;
+        table.appendChild(row);
+        row.querySelector('input').focus();
+    }
+
+    // Disparo imediato
+    arioneInitForm();
+</script>
+{% endblock %}

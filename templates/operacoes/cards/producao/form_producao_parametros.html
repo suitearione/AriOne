@@ -1,0 +1,85 @@
+{# =============================================================================
+   Arquivo  : form_producao_parametros.html
+   Caminho  : templates/operacoes/cards/producao/form_producao_parametros.html
+   Função   : Configurações Gerais e Parâmetros de Produção.
+ ============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% block content %}
+<div class="ctx-prd-wrap">
+    <style>
+        :root { --prd-pri: #7A255F; --prd-acc: #9B3177; }
+        .ctx-prd-header { background: linear-gradient(135deg, var(--prd-pri), #5A1B45); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-prd-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        /* Ocultar elementos base caso vazem por erro de renderização */
+        .arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
+        .arione-main-wrapper { margin-left: 0 !important; }
+
+        .prd-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .prd-title { font-size: 11px; font-weight: 800; color: var(--prd-pri); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .prd-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .prd-group { display: flex; flex-direction: column; gap: 5px; }
+        .prd-label { font-size: 11px; font-weight: 700; color: #64748b; }
+        .prd-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
+        
+        /* Toggle */
+        .toggle-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .toggle-box { width: 40px; height: 20px; background: #cbd5e1; border-radius: 10px; position: relative; transition: 0.3s; }
+        .toggle-box::after { content: ''; width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.3s; }
+        .toggle-on .toggle-box { background: var(--prd-pri); }
+        .toggle-on .toggle-box::after { left: 22px; }
+    </style>
+
+    <div class="ctx-prd-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-sliders-h"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Parâmetros de Produção</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Configurações e Regras de Negócio</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.15) !important; color:#fff !important; border:1px solid rgba(255,255,255,0.2) !important; padding:8px 20px !important;" onclick="fecharModalPrd()">Sair</button>
+            <button class="ge-btn-salvar" style="background:#fff !important; color:var(--prd-pri) !important; border:none !important; padding:8px 24px !important; border-radius:6px !important; font-weight:700 !important; cursor:pointer;"><i class="fas fa-save"></i> Salvar Configurações</button>
+        </div>
+    </div>
+
+    <div class="ctx-prd-body">
+        <div class="prd-section">
+            <div class="prd-title"><i class="fas fa-cog"></i> Fluxo de Trabalho</div>
+            <div class="prd-row">
+                <div class="prd-group">
+                    <label class="prd-label">Reserva de Insumos</label>
+                    <select class="prd-input"><option>Na abertura da OP</option><option>Na liberação para corte</option></select>
+                </div>
+                <div class="prd-group">
+                    <label class="prd-label">Cálculo de Custo</label>
+                    <select class="prd-input"><option>Pelo Custo Médio</option><option>Pelo Último Preço</option></select>
+                </div>
+                <div class="prd-group">
+                    <label class="prd-label">Numeração de Lotes</label>
+                    <input type="text" class="prd-input" value="LOT-YYYY-MM-####">
+                </div>
+            </div>
+        </div>
+
+        <div class="prd-section">
+            <div class="prd-title"><i class="fas fa-check-double"></i> Regras de Qualidade</div>
+            <div class="prd-row">
+                <div class="toggle-wrap toggle-on">
+                    <div class="toggle-box"></div>
+                    <span class="prd-group"><span class="prd-label">Exigir foto na inspeção</span></span>
+                </div>
+                <div class="toggle-wrap">
+                    <div class="toggle-box"></div>
+                    <span class="prd-group"><span class="prd-label">Bloquear OP se houver falta de insumo</span></span>
+                </div>
+                <div class="toggle-wrap toggle-on">
+                    <div class="toggle-box"></div>
+                    <span class="prd-group"><span class="prd-label">Gerar NF-e de remessa automaticamente</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

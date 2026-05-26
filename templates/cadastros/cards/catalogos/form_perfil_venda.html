@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-perfil-venda" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .perfil-row:hover { background: #fffcf0 !important; cursor: pointer; }
+        
+        .status-badge-premium {
+            padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 900; text-transform: uppercase;
+        }
+        .status-ativa { background: #e6f9ef; color: #27AE60; }
+        .status-inativa { background: #fef2f2; color: #c62828; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Perfis de Venda',
+            subtitulo='Catálogos > Produtos > Gestão de Categorias Comerciais e Regras',
+            icone='fa-tags',
+            cor_tema='#7A255F',
+            tamanho='medio',
+            aba_retorno='catalogos',
+            form_id='perfil-form-area',
+            list_id='perfil-list-area',
+            onclick_novo="novoRegistroPerfil()",
+            onclick_save="forceSubmitPerfil()",
+            onclick_search="focarBuscaPerfil()",
+            onclick_filter="abrirModalFiltrosAvancados()",
+            onclick_clonar="arioneClonarRegistro('perfil-form-area')",
+            onclick_export="exportarPerfis()",
+            onclick_import="arioneToast('Importação em desenvolvimento para Perfis de Venda.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Perfis de Venda')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Perfis de Venda')",
+            status="Standard PAAv1.0"
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="perfil-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="perfil-form" method="POST" action="{{ url_for('cadastros.form_perfil_venda') }}">
+                <input type="hidden" name="id" id="perfil-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="perfil-form-titulo">CADASTRO DE PERFIL COMERCIAL</span></span>
+                        <button type="button" onclick="novoRegistroPerfil()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="fp-row" style="display: grid; grid-template-columns: 3fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Nome do Perfil <span style="color:#ef4444;">*</span></label>
+                                <input type="text" class="fp-input" name="nome" id="perfil-nome-input" placeholder="EX: ATACADO PREMIUM, EXPORTAÇÃO" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 900; font-size: 15px; color: #E67E22;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Status da Operação</label>
+                                <select class="fp-input" name="status" id="perfil-status-select" style="width: 100%; background: #fff; font-weight: 800;">
+                                    <option value="ATIVO">🟢 ATIVO</option>
+                                    <option value="INATIVO">🔴 INATIVO</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="fp-row">
+                            <div class="fp-group">
+                                <label class="fp-label">Diretrizes / Descrição Estratégica</label>
+                                <textarea class="fp-input" name="descricao" id="perfil-descricao-input" rows="3" placeholder="Observações internas sobre o perfil comercial e regras de preço associadas..." style="width: 100%; resize: none;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-perfil" onclick="forceSubmitPerfil()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR PERFIL
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="perfil-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-list-ul" style="color: #E67E22; margin-right: 8px;"></i> Perfis de Venda Ativos</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="perfil-search-input" oninput="filtrarTabelaPerfis()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="perfil-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ perfis|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center; padding-left: 20px;">ID</th>
+                            <th>NOME DO PERFIL COMERCIAL</th>
+                            <th>DESCRIÇÃO</th>
+                            <th style="text-align: center;">STATUS</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-perfis">
+                        {% for p in perfis %}
+                        <tr class="perfil-row" data-id="{{ p.id }}" data-nome="{{ p.nome|upper }}" data-descricao="{{ p.descricao or '' }}" data-ativo="{{ 'ATIVO' if p.ativa else 'INATIVO' }}" onclick="editarPerfil_ByRow(this)">
+                            <td style="text-align: center; padding-left: 20px; font-weight: 900; color: #64748b; font-size: 11px;">#{{ p.id }}</td>
+                            <td><div style="font-weight: 800; color: #E67E22; font-size: 14px;">{{ p.nome }}</div></td>
+                            <td><div style="font-size: 11px; color: #64748b; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ p.descricao or '—' }}</div></td>
+                            <td style="text-align: center;">
+                                <span class="status-badge-premium {{ 'status-ativa' if p.ativa else 'status-inativa' }}">
+                                    {{ 'ATIVO' if p.ativa else 'INATIVO' }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirPerfil('{{ p.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroPerfil = function() {
+                document.getElementById('perfil-form-titulo').textContent = 'NOVO PERFIL DE VENDA';
+                document.getElementById('perfil-id-hidden').value = '';
+                document.getElementById('perfil-form').reset();
+                document.getElementById('perfil-nome-input').focus();
+            };
+
+            window.fecharFormPerfil = function() { 
+                // Apenas limpa para novo estado
+                novoRegistroPerfil();
+            };
+
+            window.editarPerfil_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('perfil-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('perfil-id-hidden').value = id;
+                document.getElementById('perfil-nome-input').value = r.dataset.nome;
+                document.getElementById('perfil-status-select').value = r.dataset.ativo;
+                document.getElementById('perfil-descricao-input').value = r.dataset.descricao;
+                
+                document.getElementById('perfil-form').action = `/cadastros/cards/perfis-venda/${id}`;
+                window.scrollTo({top:0, behavior:'smooth'});
+                setTimeout(() => document.getElementById('perfil-nome-input').focus(), 300);
+            };
+
+            window.forceSubmitPerfil = async function() {
+                const form = document.getElementById('perfil-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-perfil');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Perfil salvo!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarTabelaPerfis = function() {
+                const f = document.getElementById('perfil-search-input').value.toUpperCase();
+                document.querySelectorAll('.perfil-row').forEach(r => {
+                    const txt = r.dataset.nome;
+                    r.style.display = txt.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.excluirPerfil = async function(id, btn) {
+                if(!confirm('Excluir perfil permanentemente?')) return;
+                const r = await fetch(`/cadastros/perfis-venda/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+
+            window.focarBuscaPerfil = function() { document.getElementById('perfil-search-input').focus(); };
+            window.exportarPerfis = function() { arioneExportar({url:'/cadastros/perfis-venda/dados-json', modulo:'Perfis de Venda'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

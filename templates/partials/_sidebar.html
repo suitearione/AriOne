@@ -1,0 +1,271 @@
+{# =============================================================================
+   Caminho  : templates/partials/_sidebar.html
+   Arquivo  : _sidebar.html
+   Função   : Menu lateral de navegação principal do sistema AriOne.
+   Descrição: Exibe logo da empresa (ou padrão AriOne), links para todos os
+              módulos e destaca o módulo ativo via request.endpoint.
+              Gestão aponta para gestao.abas (abas completas).
+              Login/logout e dashboard ficam fora deste menu.
+============================================================================= #}
+
+    <!-- LOGO -->
+    <div class="menu-logo-container">
+        <a href="{{ url_for('gestao.abas') }}" class="logo-link" style="display: flex; flex-direction: column; align-items: center; text-decoration: none;">
+            <img id="menuLogoPreview"
+                 src="{{ url_for('static', filename='img/logo/logo-arione-azul.png.png') }}"
+                 alt="AriOne"
+                 class="menu-logo-img"
+                 title="AriOne">
+            <div class="logo-title">Ari<span>One</span></div>
+            <span class="logo-subtitle">Tudo em Um</span>
+        </a>
+    </div>
+
+    <div class="menu-scroll-container">
+        <!-- RÓTULO DE SEÇÃO COM RELEVO -->
+        <div class="menu-section-label" style="margin-top: 30px;">
+            PRINCIPAIS
+            <div style="font-size: 10px; margin-top: 5px; opacity: 0.8;">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+
+        <ul class="menu-lista">
+
+            <li class="menu-item" style="margin: 0;">
+                <a href="{{ url_for('cadastros.abas') }}"
+                   class="menu-link {% if request.endpoint.startswith('cadastros.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-folder-open menu-icon icon-cadastros"></i>
+                    <span>CADASTROS</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{{ url_for('operacoes.abas') }}"
+                   class="menu-link {% if request.endpoint.startswith('operacoes.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-tasks menu-icon icon-operacoes"></i>
+                    <span>OPERAÇÕES</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{{ url_for('financeiro.abas') }}"
+                   class="menu-link {% if request.endpoint.startswith('financeiro.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-wallet menu-icon icon-financeiro"></i>
+                    <span>FINANCEIRO</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{{ url_for('gestao.abas') }}"
+                   class="menu-link {% if request.endpoint.startswith('gestao.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-chart-line menu-icon icon-gestao"></i>
+                    <span>GESTÃO</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{{ url_for('fiscal.abas') }}"
+                   class="menu-link {% if request.endpoint.startswith('fiscal.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-gavel menu-icon icon-fiscal"></i>
+                    <span>FISCAL</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{{ url_for('patrimonio.abas') }}"
+                   class="menu-link {% if request.endpoint.startswith('patrimonio.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-landmark menu-icon icon-patrimonio"></i>
+                    <span>PATRIMÔNIO</span>
+                </a>
+            </li>
+
+
+
+            <!-- ✅ Módulo DIGITAL -->
+            <li class="menu-item">
+                <a href="{{ url_for('digital.abas') }}"
+                   class="menu-link {% if 'digital' in request.endpoint %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-network-wired menu-icon icon-digital"></i>
+                    <span>DIGITAL</span>
+                </a>
+            </li>
+
+            <!-- ✅ Módulo SISTEMA -->
+            <li class="menu-item">    
+                <a href="{{ url_for('sistema.abas') }}"
+                   class="menu-link {% if request.endpoint.startswith('sistema.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-cogs menu-icon icon-sistema"></i>
+                    <span>SISTEMA</span>
+                </a>
+            </li>
+
+            <!-- ✅ Módulo IMPRIMIR -->
+            <li class="menu-item">    
+                <a href="{{ url_for('imprimir.index') }}"
+                   class="menu-link {% if request.endpoint.startswith('imprimir.') %}menu-link-ativo{% endif %}">
+                    <i class="fas fa-print menu-icon icon-imprimir"></i>
+                    <span>IMPRIMIR</span>
+                </a>
+            </li>
+
+
+
+            <!-- JS: atalhos de teclado físico -->
+            <script>
+            document.addEventListener('keydown', function(e) {
+                const tag = e.target.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                switch(e.key) {
+                    case 'F9': e.preventDefault(); window.location.href = "{{ url_for('gestao.abas', aba='pessoas', modal='pontos') }}"; break;
+                    case 'F10': e.preventDefault(); window.location.href = "{{ url_for('gestao.abas', aba='pessoas', modal='relatorios') }}"; break;
+                    case 'F3': e.preventDefault(); window.location.href = "{{ url_for('operacoes.card_vendas_pedido') }}"; break;
+                    case 'F4': e.preventDefault(); window.location.href = "{{ url_for('financeiro.card_receitas') }}"; break;
+                    case 'F6': e.preventDefault(); window.location.href = "{{ url_for('operacoes.card_compras_pedido') }}"; break;
+                    case 'F7': e.preventDefault(); window.location.href = "{{ url_for('financeiro.card_despesas') }}"; break;
+                }
+            });
+            </script>
+        </ul>
+    </div>
+
+    <style>
+        .menu-link:hover .menu-icon {
+            filter: brightness(1.2);
+            transform: scale(1.1);
+        }
+        
+        /* SIDEBAR DARK MODE OVERRIDES */
+        body.dark-mode .arione-sidebar,
+        body.dark-mode .menu-logo-container {
+            background: rgb(15, 23, 42) !important;
+        }
+        body.dark-mode .arione-sidebar {
+            border-right: 1px solid rgb(30, 41, 59) !important;
+        }
+        body.dark-mode .menu-link {
+            color: #94a3b8 !important;
+        }
+        body.dark-mode .menu-link:hover {
+            background: rgba(255,255,255,0.05) !important;
+            color: #f8fafc !important;
+        }
+        body.dark-mode .menu-link-ativo {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #fff !important;
+        }
+
+        /* ESTILOS DOS ATALHOS RÁPIDOS (QUIET LUXURY) */
+        .atalho-link {
+            padding: 6px 18px !important;
+            gap: 12px !important;
+            opacity: 0.8;
+        }
+        .atalho-link:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.05) !important;
+        }
+        .atalho-key {
+            font-size: 9px;
+            font-weight: 800;
+            color: #00B7EE;
+            border: 1px solid rgba(0, 183, 238, 0.3);
+            padding: 1px 4px;
+            border-radius: 4px;
+            min-width: 24px;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            background: rgba(0, 183, 238, 0.05);
+        }
+        .atalho-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+    </style>
+
+    
+
+
+    <!-- ── LOGO DA EMPRESA ATIVA (IDENTIDADE VISUAL) ── -->
+    {% set logo_emp = session.get('logo_empresa') %}
+    {% if not logo_emp and current_user.is_authenticated and current_user.empresa and current_user.empresa.logo %}
+        {% set logo_emp = 'img/logo/' + current_user.empresa.logo %}
+    {% endif %}
+
+    {% if logo_emp %}
+    <div class="sidebar-company-logo-footer" style="padding: 10px 0; text-align: center; margin: 10px 0;">
+        <img src="{{ url_for('static', filename=logo_emp) }}" 
+             alt="{{ session.get('nome_fantasia') or current_user.empresa.nome_fantasia or current_user.empresa.razao_social }}"
+             style="max-width: 90%; max-height: 55px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"
+             onerror="this.style.display='none'">
+        <div style="font-size: 10px; color: #fff; font-weight: 700; margin-top: 6px; opacity: 0.8; font-family: 'Outfit', sans-serif; text-transform: uppercase;">
+            {{ session.get('nome_fantasia') or current_user.empresa.nome_fantasia or current_user.empresa.razao_social }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── MONITOR DE INTEGRIDADE (ZONA INDUSTRIAL) ── -->
+    <div class="sidebar-integrity-monitor" 
+         onclick="abrirRelatorioIntegridade()"
+         style="margin: 15px 15px 10px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: all 0.3s;"
+         title="Clique para ver o Relatório PAA de Saúde do Sistema">
+        <div style="position: relative; width: 14px; height: 14px; flex-shrink: 0;">
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: {{ '#27AE60' if global_integrity > 80 else '#E67E22' if global_integrity > 50 else '#C0392B' }}; box-shadow: 0 0 10px {{ '#27AE6088' if global_integrity > 80 else '#E67E2288' if global_integrity > 50 else '#C0392B88' }};"></div>
+            <div class="pulse-led-sidebar" style="position: absolute; inset: -4px; border-radius: 50%; border: 2px solid {{ '#27AE60' if global_integrity > 80 else '#E67E22' if global_integrity > 50 else '#C0392B' }}; opacity: 0;"></div>
+        </div>
+        <div style="line-height: 1.1;">
+            <div style="font-size: 10px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">Integridade</div>
+            <div style="font-size: 9px; color: {{ '#27AE60' if global_integrity > 80 else '#E67E22' if global_integrity > 50 else '#C0392B' }}; font-weight: 700;">{{ global_integrity }}% Auditado</div>
+        </div>
+    </div>
+
+    <script>
+        function abrirRelatorioIntegridade() {
+            // Usa o modal global do AriOne
+            const modal = document.getElementById('arione-modal-global');
+            const content = document.getElementById('arione-modal-content');
+            
+            if (modal && content) {
+                modal.style.display = 'flex';
+                content.innerHTML = '<div style="padding:40px; text-align:center;"><i class="fas fa-circle-notch fa-spin" style="font-size:30px; color:#7A255F;"></i><p style="margin-top:15px; font-weight:700; color:#64748b;">Escaneando Banco de Dados...</p></div>';
+                
+                fetch('/gestao/auditoria/detalhes')
+                    .then(r => r.text())
+                    .then(html => {
+                        content.innerHTML = html;
+                    });
+            }
+        }
+    </script>
+
+
+
+    <!-- ── BOTÃO DE SAÍDA NO RODAPÉ DA SIDEBAR ── -->
+    <div class="sidebar-user-footer" 
+         style="padding: 10px; border-top: 1px solid rgba(0,0,0,0.4); box-shadow: 0 -1px 0 rgba(255,255,255,0.08); display: flex; justify-content: center; background: transparent;">
+        <a href="{{ url_for('auth.logout') }}" 
+           style="color: rgba(255,255,255,0.6); font-size: 18px; transition: all 0.3s ease;" 
+           title="Sair do Sistema"
+           onmouseover="this.style.color='#fff'; this.style.transform='scale(1.1)';"
+           onmouseout="this.style.color='rgba(255,255,255,0.6)'; this.style.transform='scale(1)';">
+            <i class="fas fa-power-off"></i>
+        </a>
+    </div>
+
+
+<style>
+    @keyframes pulseLedSidebar {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(2); opacity: 0; }
+        100% { transform: scale(1); opacity: 0; }
+    }
+    .pulse-led-sidebar {
+        animation: pulseLedSidebar 2.5s infinite;
+    }
+    .sidebar-integrity-monitor:hover {
+        background: rgba(255,255,255,0.05) !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+</style>

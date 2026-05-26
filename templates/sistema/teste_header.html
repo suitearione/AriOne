@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap" style="background: #f4f6f9; min-height: 100vh; padding: 20px;">
+
+    {# CHAMADA DO NOVO CABEÇALHO PADRÃO OURO #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Página de Teste - Padrão Ouro",
+        subtitulo="SISTEMA > DESENVOLVIMENTO > TESTE DE CABEÇALHO",
+        icone="fa-vial",
+        form_id="form-teste-header",
+        onclick_novo="arioneToast('Ação: Novo Registro', 'info')",
+        onclick_save="arioneToast('Ação: Salvar (+)', 'success')",
+        onclick_search="arioneToast('Ação: Pesquisa Rápida', 'info')",
+        onclick_filter="arioneToast('Ação: Filtros', 'info')",
+        onclick_list="arioneToast('Ação: Ver Lista', 'info')",
+        onclick_print="arioneToast('Ação: Impressora', 'info')",
+        onclick_whatsapp="arioneToast('Ação: WhatsApp', 'success')",
+        onclick_email="arioneToast('Ação: E-mail', 'info')",
+        onclick_export="arioneToast('Ação: Exportar', 'info')",
+        onclick_import="arioneToast('Ação: Importar', 'info')",
+        cor_tema="#7A255F",
+        func_fechar="window.history.back()",
+        status="EM AMBIENTE DE TESTE"
+    ) }}
+
+    <div class="fp-card" style="margin-top: 20px;">
+        <div class="fp-card-title">
+            <i class="fas fa-info-circle"></i> Orientações de Teste
+        </div>
+        <div class="fp-card-body">
+            <p>Este cabeçalho segue a nova especificação <strong>"Padrão Ouro"</strong> registrada no <code>paa.md</code>:</p>
+            <ul>
+                <li><strong>Lado Esquerdo:</strong> Identificação completa com Status Pill.</li>
+                <li><strong>Grupo Central (Glass):</strong> Apenas Lupa, Filtro e Lista são visíveis.</li>
+                <li><strong>Dropdown (...):</strong> Contém Importar, Exportar, E-mail, WhatsApp e Impressora.</li>
+                <li><strong>Extrema Direita:</strong> Botão Salvar (+) em destaque e Botão Fechar (X).</li>
+            </ul>
+            <hr>
+            <p style="color: #64748b; font-size: 13px;"><em>Nota: Clique nos ícones para disparar os Toasts de confirmação.</em></p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

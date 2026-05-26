@@ -1,0 +1,346 @@
+{# =============================================================================
+   Arquivo  : form_patrimonio_relatorios.html
+   Caminho  : templates/patrimonio/cards/form_patrimonio_relatorios.html
+   Função   : Gateway de Seleção Dinâmico de Relatórios de Patrimônio (Nível 2).
+   Lógica   : Adapta cards baseado no parâmetro 'modulo'.
+   Padrão   : DNA Cadastros (Quiet Luxury).
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-sub {
+            padding: 15px 25px;
+            /* Super Gradiente Cadastros: Mix Regional Patrimônio */
+            background: linear-gradient(90deg, #34495E 0%, #2C3E50 11%, #7F8C8D 22%, #95A5A6 33%, #2980B9 44%, #3498DB 55%, #16A085 66%, #27AE60 77%, #C0392B 88%, #2980B9 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 22px 30px;
+            background: #fff;
+            border: 1.5px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            gap: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gateway-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: color-mix(in srgb, var(--c), white 97%);
+            border-color: var(--c);
+        }
+
+        .gateway-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--c-bg, rgba(0,0,0,0.04));
+            color: var(--c, #34495E);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .gateway-label-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .gateway-label { font-size: 18px; font-weight: 900; color: #1e293b; letter-spacing: -0.5px; line-height: 1.2; text-transform: uppercase; }
+        .gateway-desc { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+
+        /* Botão Voltar Glass */
+        .btn-voltar-glass {
+            background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn-voltar-glass:hover { background: rgba(255,255,255,0.3); transform: translateX(-3px); }
+
+        /* Debug Floating Card */
+        .debug-floating-card {
+            display:none; position:absolute; top:110px; left:50%; transform:translateX(-50%); width:320px; 
+            background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25); z-index:1000; 
+            border:2px solid #34495E; overflow:hidden; animation: slideInDebug 0.3s ease;
+        }
+        .debug-header { background:#34495E; color:#fff; padding:12px 15px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:space-between; }
+        .debug-body { padding:15px; }
+        .debug-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: #475569; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 4px; }
+        .debug-item:hover { background: rgba(52,73,94,0.08); color: #34495E; transform: translateX(5px); }
+        @keyframes slideInDebug { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    </style>
+
+    <div class="gateway-header-sub">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayPatrimonio()"><i class="fas fa-arrow-left"></i></button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-landmark" style="font-size: 1.4rem; color: #BCAAA4;"></i>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div class="gateway-title" style="gap:0; color: #BCAAA4;">
+                        Central de Relatórios: 
+                        {% if modulo == 'imoveis' %}Imóveis
+                        {% elif modulo == 'maquinas' %}Máquinas
+                        {% elif modulo == 'equipamentos' %}Equipamentos
+                        {% elif modulo == 'veiculos' %}Veículos
+                        {% elif modulo == 'software' %}Softwares
+                        {% else %}Patrimônio
+                        {% endif %}
+                    </div>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;">
+                         <i class="fas fa-print" style="margin-right: 5px;"></i>
+                         {% if modulo == 'imoveis' %}Listagem & Doc
+                         {% elif modulo == 'maquinas' %}A. Industriais
+                         {% elif modulo == 'equipamentos' %}Inventário TI
+                         {% elif modulo == 'veiculos' %}Frota & Controle
+                         {% elif modulo == 'software' %}Ativos Digitais
+                         {% else %}Imobilizado & Manutenção de Ativos
+                         {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">CARDs</span>
+            <button type="button" onclick="toggleDebugPatrimonio()" class="btn-voltar-glass" title="Auditoria de Integridade (Audit)"><i class="fas fa-microscope"></i></button>
+            <button type="button" class="btn-voltar-glass" onclick="voltarParaGatewayPatrimonio()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            {% if modulo == 'imoveis' %}
+                <!-- Apartamentos -->
+                <div class="gateway-item" style="--c:#2C3E50; --c-bg:rgba(44,62,80,0.08);" onclick="navegarCardPatri('apartamentos')">
+                    <div class="gateway-icon"><i class="fas fa-building"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Apartamentos</span>
+                        <span class="gateway-desc">Imóveis Verticais</span>
+                    </div>
+                </div>
+                <!-- Casas -->
+                <div class="gateway-item" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarCardPatri('casas')">
+                    <div class="gateway-icon"><i class="fas fa-home"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Casas e Residências</span>
+                        <span class="gateway-desc">Imóveis Horizontais</span>
+                    </div>
+                </div>
+                <!-- Galpões -->
+                <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarCardPatri('galpoes')">
+                    <div class="gateway-icon"><i class="fas fa-warehouse"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Galpões & Indústrias</span>
+                        <span class="gateway-desc">Ativos Imobiliários Industriais</span>
+                    </div>
+                </div>
+                <!-- Terrenos -->
+                <div class="gateway-item" style="--c:#16A085; --c-bg:rgba(22,160,133,0.08);" onclick="navegarCardPatri('terrenos')">
+                    <div class="gateway-icon"><i class="fas fa-map-marked-alt"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Áreas & Terrenos</span>
+                        <span class="gateway-desc">Lotes e Patrimônio Territorial</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'maquinas' %}
+                <!-- Industriais -->
+                <div class="gateway-item" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarCardPatri('maquinas_industriais')">
+                    <div class="gateway-icon"><i class="fas fa-tools"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Maquinário Industrial</span>
+                        <span class="gateway-desc">Parque Fabril & Equipamentos</span>
+                    </div>
+                </div>
+                <!-- Agrícolas -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardPatri('maquinas_agricolas')">
+                    <div class="gateway-icon"><i class="fas fa-tractor"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Patrimônio Agrícola</span>
+                        <span class="gateway-desc">Tratores e Implementos do Campo</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'equipamentos' %}
+                <!-- Escritórios -->
+                <div class="gateway-item" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarCardPatri('equip_escritorios')">
+                    <div class="gateway-icon"><i class="fas fa-desktop"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Mobiliário & TI</span>
+                        <span class="gateway-desc">Equipamentos de Escritório</span>
+                    </div>
+                </div>
+                <!-- Produção -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardPatri('equip_producao')">
+                    <div class="gateway-icon"><i class="fas fa-screwdriver-wrench"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Equipamentos de Produção</span>
+                        <span class="gateway-desc">Ferramental e Suporte Fabril</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'veiculos' %}
+                <!-- Passeios -->
+                <div class="gateway-item" style="--c:#0072CE; --c-bg:rgba(0,114,206,0.08);" onclick="navegarCardPatri('veic_passeios')">
+                    <div class="gateway-icon"><i class="fas fa-car"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Frota de Passeio</span>
+                        <span class="gateway-desc">Veículos Administrativos</span>
+                    </div>
+                </div>
+                <!-- Utilitários -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardPatri('veic_utilitarios')">
+                    <div class="gateway-icon"><i class="fas fa-truck-pickup"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Frota de Carga</span>
+                        <span class="gateway-desc">Utilitários e Logística</span>
+                    </div>
+                </div>
+                <!-- Motocicletas -->
+                <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarCardPatri('veic_motos')">
+                    <div class="gateway-icon"><i class="fas fa-motorcycle"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Motocicletas</span>
+                        <span class="gateway-desc">Logística Ágil de Pequeno Porte</span>
+                    </div>
+                </div>
+
+            {% elif modulo == 'software' %}
+                <!-- SaaS & Assinaturas -->
+                <div class="gateway-item" style="--c:#3498DB; --c-bg:rgba(52,152,219,0.08);" onclick="navegarCardPatri('soft_saas')">
+                    <div class="gateway-icon"><i class="fas fa-cloud"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">SaaS & Assinaturas</span>
+                        <span class="gateway-desc">Licenciamento em Nuvem</span>
+                    </div>
+                </div>
+                <!-- Licenças Perpétuas -->
+                <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="navegarCardPatri('soft_perpetuo')">
+                    <div class="gateway-icon"><i class="fas fa-key"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Licenças On-Premises</span>
+                        <span class="gateway-desc">Software Permanente</span>
+                    </div>
+                </div>
+                <!-- Sistemas Próprios -->
+                <div class="gateway-item" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarCardPatri('soft_proprio')">
+                    <div class="gateway-icon"><i class="fas fa-code"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Sistemas Internos</span>
+                        <span class="gateway-desc">Propriedade Intelectual AriOne</span>
+                    </div>
+                </div>
+                <!-- Domínios & Hospedagem -->
+                <div class="gateway-item" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarCardPatri('soft_hosting')">
+                    <div class="gateway-icon"><i class="fas fa-globe"></i></div>
+                    <div class="gateway-label-group">
+                        <span class="gateway-label">Patrimônio Digital</span>
+                        <span class="gateway-desc">Domínios e Infraestrutura Web</span>
+                    </div>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- PAINEL DEBUG PATRIMÔNIO -->
+    <div id="debug-patrimonio-card" class="debug-floating-card">
+        <div class="debug-header">
+            <span><i class="fas fa-microscope" style="margin-right:8px;"></i> AUDITORIA DE INTEGRIDADE (AUDIT) - {{ modulo|upper }}</span>
+            <i class="fas fa-times" onclick="toggleDebugPatrimonio()" style="cursor:pointer; opacity:0.8;"></i>
+        </div>
+        <div class="debug-body">
+            <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">Checklist Patrimonial</div>
+            <div id="debug-list-patrimonio"></div>
+            <div style="margin: 10px 0; border-top: 1.5px dashed #e2e8f0;"></div>
+            <div class="debug-item" onclick="toggleDebugPatrimonio()" style="color:#7A255F; background:rgba(122,37,95,0.05);">
+                <i class="fas fa-times-circle"></i> <span style="font-weight:800;">Fechar Validação</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function navegarCardPatri(tipo) {
+    console.log("Navegando para ativo:", tipo);
+    alert("O inventário detalhado para " + tipo.toUpperCase() + " está sendo consolidado.");
+}
+
+function voltarParaGatewayPatrimonio() {
+    const url = "{{ url_for('patrimonio.gateway_modulos_patrimonio') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        
+        // Loader Padrão Ouro
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; gap:20px; color:#34495E;">
+                <i class="fas fa-spinner fa-spin" style="font-size:40px;"></i>
+                <span style="font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Consolidando Ativos...</span>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+    }
+}
+
+function toggleDebugPatrimonio() {
+    const card = document.getElementById('debug-patrimonio-card');
+    if (card) {
+        const isOpen = card.style.display === 'block';
+        card.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+            const items = document.querySelectorAll('.gateway-item');
+            const list = document.getElementById('debug-list-patrimonio');
+            list.innerHTML = '';
+            items.forEach((item, idx) => {
+                const label = item.querySelector('.gateway-label').textContent.trim();
+                const icon = item.querySelector('.gateway-icon i').className;
+                list.innerHTML += `<div class="debug-item" onclick="alert('Teste Técnico: ${label}')"><i class="${icon}"></i> <span>${idx + 1}. ${label}</span></div>`;
+            });
+        }
+    }
+}
+</script>

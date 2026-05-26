@@ -1,0 +1,167 @@
+<style>
+    .arione-sidebar-favorites {
+        width: 100px; 
+        position: fixed;
+        right: 0;
+        top: 75px; 
+        bottom: 0;
+        background: linear-gradient(180deg, #7A255F 70%, #00B7EE 140%) !important; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        padding-top: 0px; 
+        border-left: 2px solid rgba(255,255,255,0.2);
+        box-shadow: -2px 0 50px rgba(0,0,0,0.2);
+        z-index: 99;
+        transition: background 0.4s ease;
+    }
+
+    /* FAVORITOS DARK MODE OVERRIDES */
+    body.dark-mode .arione-sidebar-favorites {
+        background: linear-gradient(180deg, #312e81 0%, #0f172a 100%) !important;
+        border-left-color: #334155 !important;
+        box-shadow: -5px 0 30px rgba(0,0,0,0.5) !important;
+    }
+</style>
+
+<div class="arione-sidebar-favorites">
+
+    <div class="arione-fav-items-list" 
+         style="display: flex; 
+                flex-direction: column; 
+                gap: 8px; 
+                align-items: center; 
+                width: 100%;
+                /* Permite rolar os ícones se você adicionar muitos no futuro */
+                overflow-y: auto;">
+    
+    <div style="width: 100%; 
+            text-align: center; 
+            margin-top: 10px; 
+            margin-bottom: 10px;">
+            
+        <span style="color: oklab(97.844% 0.00306 0.00084); 
+                 font-size: 12px; 
+                 font-weight: 700; 
+                 text-transform: uppercase; 
+                 display: inline-block; 
+                 border-bottom: 1px solid #f8f8f8; 
+                 padding-bottom: 3px;
+                 letter-spacing: 0.5px;">
+          Favoritos  
+
+         </span>
+    </div>
+                
+                              
+        <a href="#"{#""{{ url_for('compra.pedido_compra')}}" #}
+
+           style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-users" style="font-size: 1.3rem;"></i>
+            </div>
+                                   
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Compras</span>
+        </a>    
+        
+        <a href="#"{#""{{ url_for('comercial.cadastro_fornecedor')}}" #}
+
+           style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-users" style="font-size: 1.3rem;"></i>
+            </div>
+                                   
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Fornecedor</span>
+        </a>    
+        
+        
+                <a href="#"{#""{{ url_for('comercial.cadastro_cliente')}}" #}
+
+           style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-users" style="font-size: 1.3rem;"></i>
+            </div>
+                                   
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Clientes</span>
+        </a>    
+
+        
+        <a href="#"{#"""{{ url_for('vendas.pedido_venda') }}" #}
+            style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-shopping-cart" style="font-size: 1.3rem;"></i>
+            </div>
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Vendas</span>
+        </a>
+
+        <a href="#"{#""{{ url_for('financeiro.contas_a_receber') }}" #}
+            style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-hand-holding-dollar" style="font-size: 1.3rem;"></i>
+            </div>
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">A receber</span>
+        </a>
+
+        <a href="#"{#""{{ url_for('financeiro.contas_a_pagar') }}" #}
+            style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-file-invoice-dollar" style="font-size: 1.3rem;"></i>
+            </div>
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">A pagar</span>
+        </a>
+
+        <a href="#"{#""{{ url_for('producao.ordens_producao') }}" #}
+            style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-clipboard-list" style="font-size: 1.3rem;"></i>
+            </div>
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Or.Pordução</span>
+        </a>
+
+        <a href="#"{#""{{ url_for('producao.envio_oficinas') }}" #}
+            style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-dolly-flatbed" style="font-size: 1.3rem;"></i>
+            </div>
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Env. Oficinas</span>
+        </a>
+
+        <a href="#"{#""{{ url_for('producao.retorno_oficinas') }}" #}
+            style="text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+            <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-file-import" style="font-size: 1.3rem;"></i>
+            </div>
+            <span style="color: #ffffff; font-size: 10px; font-weight: 700; text-transform: uppercase;">Ret. Oficinas</span>
+        </a>
+
+         <div style="/* Empurra o botão para a base da tela fixada */
+                margin-top: auto; 
+                margin-bottom: 25px; 
+                display: flex; 
+                justify-content: center; 
+                width: 100%;">
+
+        <button title="Adicionar Favorito"
+                style="width: 40px; 
+                       height: 40px; 
+                       border-radius: 40%; 
+                       border: 3px dashed #ffffff !important; 
+                       background: rgba(255, 255, 255, 0.2); 
+                       cursor: pointer; 
+                       display: flex; 
+                       align-items: center; 
+                       justify-content: center;
+                       outline: none;">
+                       
+            <i class="fas fa-plus" 
+               style="font-size: 22px !important; 
+                      color: #ffffff !important; 
+                      font-weight: 700 !important; 
+                      display: block !important;"></i>
+        </button>
+    </div>
+       
+    </div>
+
+   
+</div>

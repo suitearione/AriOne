@@ -1,0 +1,281 @@
+{# =============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+   Caminho  : templates/login/login.html
+   Arquivo  : login.html
+   Função   : Tela de login em duas etapas do sistema AriOne.
+   Descrição: Etapa 1 valida e-mail e senha via AJAX. Etapa 2 exibe o select
+              de empresas e submete o formulário para auth.login. Usa
+              empresa.id (Integer) como value — nunca cod_empresa.
+============================================================================= #}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AriOne - Único, tudo em um</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --pri: #7A255F;
+            --pri-d: #4A154B;
+            --pri-l: #913a76;
+            --bg: #f4f6f9;
+            --text: #2d3748;
+            --border: #e2e8f0;
+            --btn: linear-gradient(135deg, var(--pri), var(--pri-d));
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html {
+            width: 100vw; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #e0e6ed 0%, #f4f6f9 100%);
+            font-family: 'Inter', 'Segoe UI', sans-serif; overflow: hidden;
+        }
+        .login-container {
+            width: 900px; height: 550px; background: #fff; border-radius: 12px;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05);
+        }
+        .arione-bar {
+            width: 100%; height: 65px;
+            background: var(--btn);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 35px; color: #fff; flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(122,37,95,0.2);
+            z-index: 10;
+        }
+        .content-area { display: flex; flex: 1; overflow: hidden; }
+        .form-side {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 40px;
+            position: relative; overflow: hidden; background: #ffffff;
+        }
+        .art-side {
+            flex: 1; background: linear-gradient(135deg, #fafbfc 0%, #f1f4f8 100%);
+            border-left: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .chip-icon { font-size: 320px; color: var(--pri); opacity: 0.03; position: absolute; transform: scale(1.2); }
+        .lock-icon { position: absolute; font-size: 110px; color: var(--pri); opacity: 0.8; filter: drop-shadow(0 10px 15px rgba(122,37,95,0.2)); transition: all 0.4s ease; }
+        .painel { width: 100%; max-width: 320px; position: absolute; transition: all 0.4s ease; }
+        .painel.ativo   { opacity: 1; transform: translateX(0);    pointer-events: all; }
+        .painel.inativo { opacity: 0; transform: translateX(-40px); pointer-events: none; }
+        .painel.direita { opacity: 0; transform: translateX(40px);  pointer-events: none; }
+        .arone-title    { color: var(--pri-d); font-size: 1.8rem; margin-bottom: 6px; font-weight: 800; letter-spacing: -0.5px; }
+        .arone-subtitle { color: #888; margin-bottom: 24px; font-size: 0.95rem; }
+        .input-field {
+            width: 100%; padding: 15px 16px; margin-bottom: 16px;
+            border: 1.5px solid var(--border); border-radius: 8px; font-size: 1rem; color: var(--text);
+            background: #fcfcfc; transition: all 0.3s ease;
+        }
+        .input-field:focus { outline: none; border-color: var(--pri); background: #fff; box-shadow: 0 0 0 4px rgba(122,37,95,0.08); }
+        .empresa-select {
+            width: 100%; padding: 15px 16px; margin-bottom: 16px;
+            border: 1.5px solid var(--border); border-radius: 8px; font-size: 1rem; color: var(--text);
+            background: #fcfcfc; cursor: pointer; transition: all 0.3s ease;
+        }
+        .empresa-select:focus { outline: none; border-color: var(--pri); box-shadow: 0 0 0 4px rgba(122,37,95,0.08); }
+        .btn-submit {
+            width: 100%; padding: 16px; border: none; border-radius: 8px;
+            background: var(--btn);
+            color: #fff; font-weight: 700; font-size: 0.95rem;
+            text-transform: uppercase; cursor: pointer; letter-spacing: 1px;
+            box-shadow: 0 6px 15px rgba(122,37,95,0.25); transition: all 0.3s ease;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(122,37,95,0.35); }
+        .btn-submit:active { transform: translateY(0); box-shadow: 0 4px 10px rgba(122,37,95,0.2); }
+        .btn-voltar {
+            background: none; border: none; color: #888; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; margin-top: 14px; display: flex; align-items: center; justify-content: center;
+            gap: 6px; padding: 10px; width: 100%; transition: all 0.2s; border-radius: 8px;
+        }
+        .btn-voltar:hover { background: #f4f6f9; color: var(--pri); }
+        .flash-msg {
+            width: 100%; padding: 12px 14px; border-radius: 8px;
+            margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; text-align: center;
+        }
+        .flash-danger  { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+        .flash-success { background: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
+        .flash-warning { background: #fffbeb; color: #744210; border: 1px solid #fbd38d; }
+        .user-badge {
+            display: flex; align-items: center; gap: 10px;
+            background: #fbf5fc; border-radius: 8px; padding: 12px 16px;
+            margin-bottom: 20px; border: 1px solid #eedbf2;
+        }
+        .user-badge i { color: var(--pri); font-size: 20px; }
+        .user-badge span { font-size: 0.95rem; font-weight: 700; color: var(--pri-d); }
+        .senha-wrapper { position: relative; width: 100%; }
+        .btn-olho {
+            position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+            cursor: pointer; color: #aaa; background: none; border: none; font-size: 1rem; padding: 4px; transition: color 0.2s;
+        }
+        .btn-olho:hover { color: var(--pri); }
+        .human-check {
+            width: 100%; background: #f8fafc; border: 1.5px dashed #cbd5e0; border-radius: 8px;
+            padding: 12px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .human-check label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .human-check .math-box { display: flex; align-items: center; gap: 12px; font-weight: 800; color: var(--pri); font-size: 1.1rem; }
+        .human-check input { width: 60px; padding: 6px; border: 1.5px solid var(--border); border-radius: 6px; text-align: center; font-weight: 900; color: var(--pri); }
+    </style>
+</head>
+<body>
+<div class="login-container">
+
+    <div class="arione-bar">
+        <span style="font-weight:900;font-size:1.6rem;">AriOne</span>
+        <span style="font-size:0.9rem;font-weight:900;">Único, tudo em um.</span>
+    </div>
+
+    <div class="content-area">
+        <div class="form-side">
+
+            <!-- ETAPA 1: E-mail e Senha -->
+            <div class="painel ativo" id="painel-login">
+                <h1 class="arone-title">ACESSE SUA CONTA</h1>
+                <p class="arone-subtitle">Entre com suas credenciais AriOne</p>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="flash-msg flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
+
+                <form id="form-credenciais">
+                    <input type="email" id="email" name="email" class="input-field" placeholder="E-mail" required>
+                    <div class="senha-wrapper">
+                        <input type="password" id="senha" name="senha" class="input-field" placeholder="Senha" required style="padding-right:45px; margin-bottom:14px;">
+                        <button type="button" class="btn-olho" id="btn-olho">
+                            <i class="fas fa-eye" id="olho-icon"></i>
+                        </button>
+                    </div>
+                    <div id="erro-credenciais" style="display:none;" class="flash-msg flash-danger">E-mail ou senha incorretos.</div>
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-arrow-right"></i> Continuar
+                    </button>
+                </form>
+            </div>
+
+            <!-- ETAPA 2: Selecionar Empresa -->
+            <div class="painel direita" id="painel-empresa">
+                <h1 class="arone-title">SELECIONE A EMPRESA</h1>
+                <p class="arone-subtitle">Escolha a empresa que deseja acessar</p>
+
+                <div class="user-badge">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="badge-email">—</span>
+                </div>
+
+                <form action="{{ url_for('auth.login') }}" method="POST">
+                    <input type="hidden" id="hidden-email" name="email">
+                    <input type="hidden" id="hidden-senha" name="senha">
+
+                    <!-- ✅ CORRIGIDO: name=empresa_id, value=empresa.id -->
+                    <select name="empresa_id" class="empresa-select" required>
+                        <option value="">Selecione uma empresa...</option>
+                        {% for empresa in empresas %}
+                            <option value="{{ empresa.id }}">
+                                {{ empresa.nome_fantasia or empresa.razao_social }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="human-check">
+                        <label><i class="fas fa-shield-alt"></i> Verificação Humana</label>
+                        <div class="math-box">
+                            <span id="h-txt">...</span>
+                            <input type="number" name="h_resp" id="h-resp" required autocomplete="off">
+                        </div>
+                        <input type="hidden" name="h_val1" id="h-val1">
+                        <input type="hidden" name="h_val2" id="h-val2">
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-sign-in-alt"></i> Entrar no Sistema
+                    </button>
+                </form>
+
+                <button class="btn-voltar" onclick="voltarLogin()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+            </div>
+
+        </div>
+
+        <div class="art-side">
+            <i class="fas fa-microchip chip-icon"></i>
+            <i class="fas fa-lock lock-icon" id="arte-icon"></i>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('btn-olho').addEventListener('click', function() {
+        const campo = document.getElementById('senha');
+        const icone = document.getElementById('olho-icon');
+        campo.type = campo.type === 'password' ? 'text' : 'password';
+        icone.classList.toggle('fa-eye-slash');
+    });
+
+    document.getElementById('form-credenciais').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+        const erroDiv = document.getElementById('erro-credenciais');
+
+        const resp = await fetch('{{ url_for("auth.validar_credenciais") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha })
+        });
+
+        const data = await resp.json();
+
+        if (data.ok) {
+            document.getElementById('badge-email').textContent = email;
+            document.getElementById('hidden-email').value = email;
+            document.getElementById('hidden-senha').value = senha;
+            erroDiv.style.display = 'none';
+            irParaEmpresa();
+        } else {
+            erroDiv.style.display = 'block';
+        }
+    });
+
+    function irParaEmpresa() {
+        document.getElementById('painel-login').className   = 'painel inativo';
+        document.getElementById('painel-empresa').className = 'painel ativo';
+        document.getElementById('arte-icon').className      = 'fas fa-building lock-icon';
+        gerarHumanCheck();
+    }
+
+    function gerarHumanCheck() {
+        const v1 = Math.floor(Math.random() * 9) + 1;
+        const v2 = Math.floor(Math.random() * 9) + 1;
+        document.getElementById('h-val1').value = v1;
+        document.getElementById('h-val2').value = v2;
+        document.getElementById('h-txt').textContent = `${v1} + ${v2} = `;
+        document.getElementById('h-resp').value = "";
+    }
+
+    function voltarLogin() {
+        document.getElementById('painel-login').className   = 'painel ativo';
+        document.getElementById('painel-empresa').className = 'painel direita';
+        document.getElementById('arte-icon').className      = 'fas fa-lock lock-icon';
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!-- templates/gestao/grids/grid_marketing.html -->
+<div id="modal-overlay-mkt" class="ge-modal-overlay" onclick="fecharModalMkt()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" id="modal-header-mkt" style="background:linear-gradient(135deg,#E67E22,#f39c12);">
+            <div class="ge-modal-title">
+                <i id="modal-icon-mkt" class="ge-modal-icon"></i>
+                <span id="modal-titulo-mkt">Formulário</span>
+            </div>
+            <button class="ge-modal-fechar" onclick="fecharModalMkt()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-mkt"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title">
+        <i class="fas fa-bullhorn"></i>
+        <span>Marketing</span>
+    </div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalMkt('campanhas')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-bullhorn ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-bullhorn ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Campanhas</span>
+            <span class="ge-card-desc">Campanhas ativas</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalMkt('leads')" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-funnel-dollar ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-funnel-dollar ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Leads</span>
+            <span class="ge-card-desc">Captação de leads</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalMkt('midias')" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-photo-video ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap">
+                <i class="fas fa-photo-video ge-card-icon"></i>
+            </div>
+            <span class="ge-card-label">Mídias</span>
+            <span class="ge-card-desc">Canais e mídias</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const modaisMkt = {
+    campanhas: {
+        titulo: 'Campanhas',
+        icone: 'fas fa-bullhorn',
+        cor: '#E67E22',
+        corClara: '#f39c12',
+        campos: [
+            ['Nome *', 'nome', 'text'],
+            ['Canal', 'canal', 'text'],
+            ['Início', 'inicio', 'date'],
+            ['Fim', 'fim', 'date'],
+            ['Orçamento (R$)', 'orcamento', 'number']
+        ]
+    },
+    leads: {
+        titulo: 'Leads',
+        icone: 'fas fa-funnel-dollar',
+        cor: '#0072CE',
+        corClara: '#3498db',
+        campos: [
+            ['Nome *', 'nome', 'text'],
+            ['E-mail', 'email', 'email'],
+            ['Telefone', 'tel', 'text'],
+            ['Origem', 'origem', 'text'],
+            ['Status', 'status', 'text']
+        ]
+    },
+    midias: {
+        titulo: 'Mídias',
+        icone: 'fas fa-photo-video',
+        cor: '#8E44AD',
+        corClara: '#9b59b6',
+        campos: [
+            ['Canal *', 'canal', 'text'],
+            ['Tipo', 'tipo', 'text'],
+            ['Link', 'link', 'text'],
+            ['Investimento (R$)', 'invest', 'number']
+        ]
+    },
+    relatorios: {
+        titulo: 'Relatórios de Marketing',
+        icone: 'fas fa-chart-bar',
+        cor: '#34495E',
+        corClara: '#5D6D7E',
+        campos: [
+            ['Módulo do Relatório *', 'categoria', 'select', [
+                {v: 'campanhas', t: 'Efetividade e ROI de Campanhas'},
+                {v: 'leads', t: 'Estatísticas de Captação (Leads)'},
+                {v: 'midias', t: 'Performance de Mídias e Canais'}
+            ]],
+            ['Empresa', 'empresa_id', 'text'],
+            ['Data Início', 'data_inicio', 'date'],
+            ['Data Fim', 'data_fim', 'date']
+        ]
+    }
+};
+
+function abrirModalMkt(tipo) {
+    const m = modaisMkt[tipo];
+    if (!m) return;
+    
+    if (tipo === 'midias') {
+        document.getElementById('modal-titulo-mkt').textContent = m.titulo;
+        document.getElementById('modal-icon-mkt').className = m.icone + ' ge-modal-icon';
+        const modalHeader = document.getElementById('modal-header-mkt');
+        modalHeader.style.background = `linear-gradient(135deg, ${m.cor}, ${m.corClara})`;
+
+        fetch('/gestao/cards/canais')
+            .then(res => res.text())
+            .then(html => {
+                const container = document.getElementById('modal-body-mkt');
+                container.innerHTML = html;
+                Array.from(container.querySelectorAll('script')).forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            });
+        document.getElementById('modal-overlay-mkt').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+        return;
+    }
+
+    const campos = m.campos.map(([label, name, type, options]) => {
+        if (type === 'select') {
+            const opts = (options || []).map(o => `<option value="${o.v}">${o.t}</option>`).join('');
+            return `<div class="ge-form-group">
+                <label>${label}</label>
+                <select name="${name}" class="gf-input" style="padding:9px 11px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; width:100%;">
+                    ${opts}
+                </select>
+            </div>`;
+        }
+        return `<div class="ge-form-group">
+            <label>${label}</label>
+            <input type="${type}" name="${name}" placeholder="${label.replace(' *', '')}" style="padding:9px 11px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; width:100%; box-sizing:border-box;">
+        </div>`;
+    }).join('');
+    
+    document.getElementById('modal-titulo-mkt').textContent = m.titulo;
+    document.getElementById('modal-icon-mkt').className = m.icone + ' ge-modal-icon';
+    
+    const modalHeader = document.getElementById('modal-header-mkt');
+    modalHeader.style.background = `linear-gradient(135deg, ${m.cor}, ${m.corClara})`;
+    
+    document.getElementById('modal-body-mkt').innerHTML = `
+        <!-- ── BARRA DE OPÇÕES ── -->
+        <div style="background: #f8fafc; border-bottom: 2px solid #edf2f7; padding: 12px 18px; display: flex; gap: 8px; margin-bottom:20px; border-radius: 8px;">
+            <button type="button" class="ge-btn" style="background:${m.cor}; color:#fff; border:none; padding:7px 15px; font-size:11px; font-weight:700; border-radius:6px; cursor:pointer;"><i class="fas fa-plus"></i> Novo</button>
+            <button type="button" class="ge-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700; border-radius:6px; cursor:pointer;"><i class="fas fa-edit"></i> Editar</button>
+            <button type="button" class="ge-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700; border-radius:6px; cursor:pointer;"><i class="fas fa-search"></i> Consultar</button>
+            <button type="button" class="ge-btn" style="background:#fff; color:#64748b; border:1.5px solid #e2e8f0; padding:7px 15px; font-size:11px; font-weight:700; border-radius:6px; cursor:pointer;"><i class="fas fa-print"></i> Imprimir</button>
+        </div>
+
+        <form class="ge-form" method="POST" action="#">
+            ${campos}
+            <div class="ge-form-actions" style="margin-bottom:0;">
+                <button type="button" class="ge-btn-cancelar" onclick="fecharModalMkt()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="submit" class="ge-btn-salvar" style="background:${m.cor};">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </form>
+
+        <!-- ── ÚLTIMOS LANÇAMENTOS ── -->
+        <div style="margin-top:25px; padding:0; overflow:hidden; border: 1.5px solid #edf2f7; border-radius: 10px;">
+            <div style="background:${m.cor}; color:#fff; padding:10px 18px; font-size:11px; font-weight:800; display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fas fa-list"></i> ÚLTIMOS LANÇAMENTOS DE ${m.titulo.toUpperCase()}</span>
+                <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px;">Marketing</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                    <thead>
+                        <tr>
+                            <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Info / Referência</th>
+                            <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Detalhes</th>
+                            <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Métrica</th>
+                            <th style="background:#f8fafc; padding:12px 15px; text-align:left; color:#64748b; font-weight:800; text-transform:uppercase; font-size:9px; border-bottom:1px solid #edf2f7;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:12px 15px; color:#1e293b;"><span style="background:#f1f5f9; color:#475569; padding:3px 8px; border-radius:6px; font-weight:800; font-size:10px;">Lançado Hoje</span></td>
+                            <td style="padding:12px 15px; color:#1e293b;"><strong>Estratégia Ominichannel</strong></td>
+                            <td style="padding:12px 15px; color:#1e293b;">R$ 1.500,00</td>
+                            <td style="padding:12px 15px; color:#1e293b;"><span style="background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:20px; font-weight:700; font-size:10px;">Ativo / Em andamento</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modal-overlay-mkt').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModalMkt() {
+    document.getElementById('modal-overlay-mkt').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') fecharModalMkt();
+});
+</script>

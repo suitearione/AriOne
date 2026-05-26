@@ -1,0 +1,170 @@
+{# =============================================================================
+   Arquivo  : form_gateway_modulos_patrimonio.html
+   Caminho  : templates/patrimonio/cards/form_gateway_modulos_patrimonio.html
+   Função   : Menu Mestre (Nível 1) de Gestão de Ativos e Patrimônio.
+   Padrão   : DNA Cadastros (Quiet Luxury).
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-mestre {
+            padding: 25px;
+            /* Gradiente Camaleão Patrimônio: Slate, Silver, Ocean */
+            background: linear-gradient(90deg, #34495E 0%, #7F8C8D 33%, #2980B9 66%, #2C3E50 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 15px; }
+        .gateway-body { padding: 35px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid-mestre {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item-mestre {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 15px;
+            background: #fff;
+            border: 2px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .gateway-item-mestre:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border-color: var(--c);
+            background: #fff;
+        }
+
+        .gateway-icon-mestre {
+            width: 55px;
+            height: 55px;
+            background: var(--c-bg, rgba(0,0,0,0.05));
+            color: var(--c, #34495E);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .gateway-item-mestre:hover .gateway-icon-mestre {
+            background: var(--c);
+            color: #fff;
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        .gateway-label-mestre { font-size: 16px; font-weight: 800; color: #2d3748; }
+        .gateway-desc-mestre { font-size: 11px; color: #a0aec0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    </style>
+
+    <div class="gateway-header-mestre">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fas fa-landmark" style="font-size: 1.4rem; color: #BCAAA4;"></i>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <div class="gateway-title" style="gap:0; color: #BCAAA4;">Central de Relatórios: Módulo Patrimônio</div>
+                <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Imobilizado & Manutenção de Ativos</span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">GRIDs</span>
+            <button type="button" class="ge-modal-fechar" onclick="fecharModalGlobal()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid-mestre">
+            
+            <!-- Imóveis -->
+            <div class="gateway-item-mestre" style="--c:#34495E; --c-bg:rgba(52,73,94,0.08);" onclick="navegarPatrimonio('imoveis')">
+                <div class="gateway-icon-mestre"><i class="fas fa-city"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Imóveis</span>
+                <span class="gateway-desc-mestre">Listagem & Doc</span>
+            </div>
+
+            <!-- Máquinas -->
+            <div class="gateway-item-mestre" style="--c:#7F8C8D; --c-bg:rgba(127,140,141,0.08);" onclick="navegarPatrimonio('maquinas')">
+                <div class="gateway-icon-mestre"><i class="fas fa-tools"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Máquinas</span>
+                <span class="gateway-desc-mestre">A. Industriais</span>
+            </div>
+
+            <!-- Equipamentos -->
+            <div class="gateway-item-mestre" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.08);" onclick="navegarPatrimonio('equipamentos')">
+                <div class="gateway-icon-mestre"><i class="fas fa-microchip"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Equipamentos</span>
+                <span class="gateway-desc-mestre">Inventário TI</span>
+            </div>
+
+            <!-- Veículos -->
+            <div class="gateway-item-mestre" style="--c:#2C3E50; --c-bg:rgba(44,62,80,0.08);" onclick="navegarPatrimonio('veiculos')">
+                <div class="gateway-icon-mestre"><i class="fas fa-truck-pickup"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Veículos</span>
+                <span class="gateway-desc-mestre">Frota & Controle</span>
+            </div>
+
+            <!-- Softwares -->
+            <div class="gateway-item-mestre" style="--c:#8E44AD; --c-bg:rgba(142,68,173,0.08);" onclick="navegarPatrimonio('software')">
+                <div class="gateway-icon-mestre"><i class="fas fa-laptop-code"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Softwares</span>
+                <span class="gateway-desc-mestre">Ativos Digitais</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Navega para o sub-gateway de patrimônio (Padrão Ouro).
+ */
+function navegarPatrimonio(modulo) {
+    const url = "{{ url_for('patrimonio.card_ativos_relatorios') }}?modulo=" + modulo;
+    const content = document.getElementById('arione-modal-content');
+    
+    if (content && url) {
+        content.style.opacity = '0.4';
+        
+        // Loader Dinâmico
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; gap:20px; color:#34495E;">
+                <i class="fas fa-spinner fa-spin" style="font-size:40px;"></i>
+                <span style="font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Consolidando Ativos...</span>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar sub-gateway de patrimônio:", err);
+                content.style.opacity = '1';
+            });
+    }
+}
+</script>

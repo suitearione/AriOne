@@ -1,0 +1,252 @@
+{% extends "base_modal.html" if is_modal or request.args.get('modal') else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<style>
+    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+</style>
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; min-height: 100vh; width: 100%;">
+
+    {{ comp.cabecalho_mestre_arione(
+        titulo=('Editar' if cc else 'Novo') + " Centro de Custo",
+        subtitulo="Financeiro > Gerencial > Centros de Custo",
+        icone="fa-layer-group",
+        cor_tema="#00E676",
+        func_fechar="window.location.href='" + url_for('financeiro.abas', aba='gerencial') + "'",
+        form_id="form-centro-custo-fin",
+        onclick_save="salvarCentroCusto()",
+        status="Gestão de Estrutura Gerencial",
+        ajuda="Os centros de custo permitem o rastreamento granular de despesas e receitas por departamento ou projeto.",
+        tamanho="medio"
+    ) }}
+
+    <div class="op-container-fluid" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease;">
+
+        <form id="form-centro-custo-fin" method="POST" action="{{ url_for('financeiro.form_centro_custo', id=cc.id if cc else None) }}">
+            
+            <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+                
+                {# COLUNA ESQUERDA: Identidade e Hierarquia #}
+                <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+                    <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <i class="fas fa-id-card" style="color: #00E676; margin-right: 10px;"></i> IDENTIFICAÇÃO MESTRE
+                        </div>
+                        <span id="badge-status-form" style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">PENDENTE</span>
+                    </div>
+                    <div class="op-card-body" style="padding: 25px;">
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                <div class="op-group" style="width: 120px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Código</label>
+                                    <input type="text" name="codigo" id="cc_codigo" class="op-input" value="{{ cc.codigo if cc else '' }}" placeholder="EX: 01" {{ 'readonly' if cc else '' }} style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;">
+                                </div>
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Nome do Centro de Custo *</label>
+                                    <input type="text" name="nome" class="op-input" value="{{ cc.nome if cc else '' }}" placeholder="EX: ADMINISTRATIVO SEDE" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;">
+                                </div>
+                            </div>
+
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Vincular ao Pai</label>
+                                    <select name="pai_id" id="cc_pai_id" class="op-input" onchange="gerarCodigoAutomatico()" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                        <option value="">— CENTRO MESTRE (RAIZ) —</option>
+                                        {% for p in pais %}
+                                            {% if not cc or p.id != cc.id %}
+                                            <option value="{{ p.id }}" {{ 'selected' if cc and cc.pai_id == p.id else '' }}>{{ p.codigo }} - {{ p.nome }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Tipo / Natureza</label>
+                                    <select name="tipo" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                        <option value="Operacional" {{ 'selected' if cc and cc.tipo=='Operacional' else '' }}>OPERACIONAL</option>
+                                        <option value="Administrativo" {{ 'selected' if cc and cc.tipo=='Administrativo' else '' }}>ADMINISTRATIVO</option>
+                                        <option value="Comercial" {{ 'selected' if cc and cc.tipo=='Comercial' else '' }}>COMERCIAL</option>
+                                        <option value="Industrial" {{ 'selected' if cc and cc.tipo=='Industrial' else '' }}>INDUSTRIAL</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px;">
+                            <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 14px; display: flex; justify-content: space-between;">
+                                <span>INTEGRAÇÃO E PAGAMENTO</span>
+                            </div>
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
+                                <div class="op-group" style="width: 180px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Tipo Chave PIX</label>
+                                    <select id="tipo_pix_cc" class="op-input" onchange="aplicarMascaraPixCC(this.value)" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                        <option value="CPF">CPF</option>
+                                        <option value="CNPJ">CNPJ</option>
+                                        <option value="EMAIL">E-MAIL</option>
+                                        <option value="CELULAR">CELULAR</option>
+                                        <option value="EVP">ALEATÓRIA (EVP)</option>
+                                    </select>
+                                </div>
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Chave PIX</label>
+                                    <input type="text" name="pix" id="pix_input_cc" class="op-input" value="{{ cc.pix if cc else '' }}" placeholder="Insira a chave..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;">
+                                </div>
+                            </div>
+                            <div class="op-row" style="margin-bottom: 0;">
+                                <div class="op-group" style="flex: 1;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Cód. Contábil (ERP)</label>
+                                    <input type="text" name="contabil_cod" class="op-input" value="{{ cc.contabil_cod if cc else '' }}" placeholder="VÍNCULO COM PLANO DE CONTAS" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# COLUNA DIREITA: Status e Orçamento #}
+                <div class="op-card" style="flex: 1; min-width: 400px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+                    <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <i class="fas fa-coins" style="color: #F1C40F; margin-right: 10px;"></i> TETO FINANCEIRO
+                        </div>
+                    </div>
+                    <div class="op-card-body" style="padding: 25px;">
+                            <div class="op-group" style="margin-bottom: 20px;">
+                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Orçamento Mensal</label>
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #94a3b8;">R$</span>
+                                    <input type="text" name="orcamento_mensal" class="op-input money" value="{{ cc.orcamento_mensal if cc else '0,00' }}" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px 10px 35px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;" onfocus="this.select()">
+                                </div>
+                            </div>
+
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px;">
+                                <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 14px; display: flex; justify-content: space-between;">
+                                    <span>STATUS OPERACIONAL</span>
+                                </div>
+                                <label class="op-toggle-switch" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                    <input type="checkbox" name="ativo" {{ 'checked' if not cc or cc.ativo else '' }} style="display: none;" onchange="this.nextElementSibling.textContent = this.checked ? 'CENTRO ATIVO' : 'CENTRO INATIVO'">
+                                    <div class="switch-slider" style="width: 44px; height: 22px; background: #cbd5e1; border-radius: 20px; position: relative; transition: 0.3s;">
+                                        <div class="switch-knob" style="width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s;"></div>
+                                    </div>
+                                    <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">{{ 'CENTRO ATIVO' if not cc or cc.ativo else 'CENTRO INATIVO' }}</span>
+                                </label>
+                            </div>
+                            
+                            {% if cc %}
+                            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #e2e8f0;">
+                                <small style="display: block; font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Criado em: {{ cc.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+                                <small style="display: block; font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Atualizado em: {{ cc.atualizado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+                            </div>
+                            {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        function aplicarMascaraPixCC(tipo) {
+            const input = document.getElementById('pix_input_cc');
+            if (typeof $ !== 'undefined' && $.fn.mask) {
+                const $input = $(input);
+                $input.unmask();
+                if (tipo === 'CPF') $input.mask('000.000.000-00');
+                else if (tipo === 'CNPJ') $input.mask('00.000.000/0000-00');
+                else if (tipo === 'CELULAR') $input.mask('+55 (00) 00000-0000');
+            }
+
+            if (tipo === 'EMAIL') {
+                input.oninput = function () { this.value = this.value.toLowerCase(); };
+            } else {
+                input.oninput = null;
+            }
+        }
+
+        function gerarCodigoAutomatico() {
+            const cc_id = "{{ cc.id if cc else '' }}";
+            if (cc_id && cc_id !== 'None') return; 
+
+            const pai_id = document.getElementById('cc_pai_id').value;
+            const url = `{{ url_for('financeiro.proximo_codigo_cc') }}?pai_id=${pai_id}&v=${new Date().getTime()}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    const inputCodigo = document.getElementById('cc_codigo');
+                    if (data.codigo) {
+                        inputCodigo.value = data.codigo;
+                        inputCodigo.style.background = "#e8f5e9";
+                        setTimeout(() => inputCodigo.style.background = "#f8fafc", 1000);
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro ao gerar código:", err);
+                    document.getElementById('cc_codigo').value = "01"; 
+                });
+        }
+
+        function salvarCentroCusto() {
+            const form = document.getElementById('form-centro-custo-fin');
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    arioneToast(data.message, 'success');
+                    if (typeof fecharModalGlobal === 'function') fecharModalGlobal();
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('financeiro.abas', aba='gerencial') }}";
+                    }, 800);
+                } else {
+                    arioneToast("Erro: " + data.error, 'danger');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                arioneToast("Erro na requisição.", 'danger');
+            });
+        }
+
+        function initCentroCusto() {
+            console.log("Iniciando componentes do Centro de Custo...");
+            const pixSelect = document.getElementById('tipo_pix_cc');
+            if (pixSelect) {
+                aplicarMascaraPixCC(pixSelect.value);
+            }
+            
+            // PAA: Gera código automático para novos registros
+            gerarCodigoAutomatico();
+            
+            // Inicializa máscaras de dinheiro
+            if (typeof $ !== 'undefined' && $.fn.mask) {
+                $('.money').mask('#.##0,00', {reverse: true});
+            }
+        }
+
+        // Executa imediatamente (para AJAX) e no DOMContentLoaded (para acesso direto)
+        initCentroCusto();
+        document.addEventListener('DOMContentLoaded', initCentroCusto);
+    </script>
+
+    <style>
+        .op-input:focus {
+            border-color: #00E676 !important;
+            box-shadow: 0 0 0 3px rgba(0, 230, 118, 0.1);
+            outline: none;
+        }
+        .op-toggle-switch input:checked + .switch-slider {
+            background: #00E676 !important;
+        }
+        .op-toggle-switch input:checked + .switch-slider .switch-knob {
+            left: 25px !important;
+        }
+        .op-card:hover {
+            border-color: #00E676 !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
+            transition: all 0.3s ease;
+        }
+    </style>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/cards/parametros/form_par_comercial.html
+   Função   : Parâmetros Comerciais (GOLDEN STANDARD)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-comercial" style="background: #f4f6f9; min-height: 100vh;">
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros Comerciais",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-briefcase",
+        form_id="form-par-comercial",
+        onclick_save="arioneSalvarDocumento('parametros_comercial', this, 'form-par-comercial')",
+        cor_tema="#2C3E50",
+        func_fechar="fecharModalGlobal()",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+        <form id="form-par-comercial" method="POST" novalidate>
+        
+        {# CARD 1: REGRAS DE REVENDA #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-store"></i> Gestão de Revendedores e Canais
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Margem Mínima de Revenda (%)</label>
+                        <input class="fp-input" type="number" step="0.1" value="30.0">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Tabela de Preço Padrão</label>
+                        <select class="fp-input" name="tabela_padrao">
+                            <option value="varejo">Varejo Nacional</option>
+                            <option value="atacado" selected>Atacado Distribuidor</option>
+                            <option value="especial">Especial Exportação</option>
+                        </select>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Permitir Venda sem Estoque</label>
+                        <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
+                            <label class="fp-checkbox-wrap">
+                                <input type="checkbox" name="venda_sem_estoque">
+                                <span class="fp-checkbox-label">Ativar</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 2: COMISSIONAMENTO #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-percent"></i> Regras de Comissionamento
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Comissão Padrão Representante (%)</label>
+                        <input class="fp-input" type="number" step="0.01" value="5.00">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Momento da Geração de Comissão</label>
+                        <select class="fp-input" name="momento_comissao">
+                            <option value="faturamento">No Faturamento</option>
+                            <option value="recebimento" selected>Na Liquidação (Recebimento)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# FOOTER #}
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="button" class="fp-btn fp-btn-salvar-footer" style="background: #0072CE; color: #fff;" onclick="arioneSalvarDocumento('parametros_comercial', this)">
+                <i class="fas fa-save"></i> SALVAR PARÂMETROS
+            </button>
+        </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    console.log('💼 Parâmetros Comerciais AriOne Ativado');
+</script>
+{% endblock %}

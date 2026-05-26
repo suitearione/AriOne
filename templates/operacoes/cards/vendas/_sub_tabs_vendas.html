@@ -1,0 +1,181 @@
+{# =============================================================================
+   Arquivo  : _sub_tabs_vendas.html
+   Caminho  : templates/operacoes/cards/vendas/_sub_tabs_vendas.html
+   Função   : Snippet de abas secundárias (Pagamento, Entrega, CRM, Fiscal).
+============================================================================= #}
+
+<div class="venda-tabs-nav">
+    <div class="venda-tab active" data-venda-tab="pagamento"><i class="fas fa-cash-register"></i> Pagamento</div>
+    <div class="venda-tab" data-venda-tab="entrega"><i class="fas fa-shipping-fast"></i> Entrega</div>
+    <div class="venda-tab" data-venda-tab="crm"><i class="fas fa-heart"></i> CRM / Notas</div>
+    <div class="venda-tab" data-venda-tab="fiscal"><i class="fas fa-file-invoice-dollar"></i> Fiscal</div>
+    <div class="venda-tab" data-venda-tab="financeiro" style="color:#27ae60;"><i class="fas fa-hand-holding-usd"></i> Financeiro</div>
+</div>
+
+<!-- Aba 1: Pagamento -->
+<div class="venda-tab-panel active" id="venda-tab-pagamento">
+    <div class="venda-row">
+        <div class="venda-group">
+            <label class="venda-label">Condição de Venda</label>
+            <select class="venda-input">
+                <option>À Vista (Dinheiro/Pix)</option>
+                <option>Cartão 1x - Sem Juros</option>
+                <option>Entrada + 3x no Boleto</option>
+                <option>Crediário Próprio</option>
+            </select>
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">Meio de Pagamento</label>
+            <select class="venda-input">
+                <option>Pix / Transferência</option>
+                <option>Cartão de Crédito</option>
+                <option>Cartão de Débito</option>
+                <option>Boleto Bancário</option>
+            </select>
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">NSU / Cód. Autorização</label>
+            <input type="text" class="venda-input" placeholder="000000">
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">Caixa de Destino</label>
+            <select class="venda-input">
+                <option>Caixa de Vendas Local</option>
+                <option>Banco Itaú Web</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Aba 2: Entrega -->
+<div class="venda-tab-panel" id="venda-tab-entrega">
+    <div class="venda-row">
+        <div class="venda-group" style="flex:2;">
+            <label class="venda-label">Endereço de Entrega (Puxado do Cadastro)</label>
+            <input type="text" class="venda-input" value="Av. T-63, nº 1234, Setor Bueno, Goiânia-GO">
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">Tipo de Frete</label>
+            <select class="venda-input">
+                <option>Retirada no Local</option>
+                <option>Motoboy Express</option>
+                <option>Transportadora Parceira</option>
+                <option>Correios (PAC/SEDEX)</option>
+            </select>
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">Valor do Frete (R$)</label>
+            <input type="text" class="venda-input mask-money" placeholder="0,00">
+        </div>
+    </div>
+</div>
+
+<!-- Aba 3: CRM / Notas -->
+<div class="venda-tab-panel" id="venda-tab-crm">
+    <div class="venda-row">
+        <div class="venda-group" style="flex:1.5;">
+            <label class="venda-label">Histórico de Conversa / CRM</label>
+            <textarea class="venda-input" rows="3" placeholder="Ex: Cliente solicitou entrega rápida..."></textarea>
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">Preferências de Embalagem</label>
+            <select class="venda-input">
+                <option>Padrão AriOne</option>
+                <option>Embalagem para Presente</option>
+                <option>Reforçada (Eco-box)</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Aba 4: Fiscal -->
+<div class="venda-tab-panel" id="venda-tab-fiscal">
+    <div class="venda-row">
+        <div class="venda-group">
+            <label class="venda-label">Natureza da Operação</label>
+            <select class="venda-input">
+                <option>5.102 - Venda de Mercadoria</option>
+                <option>5.910 - Remessa em Bonificação</option>
+                <option>5.917 - Remessa de Consignação</option>
+            </select>
+        </div>
+        <div class="venda-group" style="flex:2;">
+            <label class="venda-label">Observações p/ o Fisco (Automático)</label>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:8px; font-size:11px; color:#64748b;">
+                "O ICMS foi calculado com base no regime... Lei 12.741/12 - Tributos incidentes aprox: R$ XX.XX"
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aba 5: Financeiro (Integração Direta) -->
+<div class="venda-tab-panel" id="venda-tab-financeiro">
+    <div class="venda-row">
+        <div class="venda-group">
+            <label class="venda-label">Centro de Custo</label>
+            <select class="venda-input">
+                <option>01.01 - Vendas Diretas</option>
+                <option>01.02 - Vendas E-commerce</option>
+                <option>02.01 - Marketing & Branding</option>
+            </select>
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">Conta Gerencial</label>
+            <select class="venda-input">
+                <option>3.01.001 - Receita de Venda de Mercadorias</option>
+                <option>3.01.002 - Receita de Serviços</option>
+            </select>
+        </div>
+        <div class="venda-group">
+            <label class="venda-label">Classificação DRE</label>
+            <div style="padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; font-size:11px; color:#1e293b; font-weight:700;">Receita Operacional Bruta</div>
+        </div>
+    </div>
+    
+    <div style="margin-top:15px; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:10px;">
+        <div style="font-size:11px; font-weight:800; color:#166534; margin-bottom:10px; display:flex; justify-content:space-between;">
+            <span>PROVISÃO DE RECEBIMENTO (TÍTULOS)</span>
+            <span>Estoque Vinculado: <i class="fas fa-check-circle"></i> BAIXA AUTOMÁTICA</span>
+        </div>
+        <table style="width:100%; font-size:11px; border-collapse:collapse;">
+            <thead>
+                <tr style="text-align:left; color:#166534; border-bottom:1px solid #bbf7d0;">
+                    <th style="padding:8px 5px;">Parcela</th>
+                    <th>Vencimento</th>
+                    <th>Forma</th>
+                    <th style="text-align:right;">Valor (R$)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding:8px 5px;">01/01</td>
+                    <td>10/05/2026</td>
+                    <td>Boleto Bancário</td>
+                    <td style="text-align:right; font-weight:700;">R$ 0,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .venda-tabs-nav { display: flex; gap: 5px; border-bottom: 2px solid #f1f5f9; margin-top: 20px; }
+    .venda-tab { padding: 12px 20px; cursor: pointer; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.2s; }
+    .venda-tab.active { color: #E67E22; border-bottom-color: #E67E22; background: rgba(230, 126, 34, 0.05); }
+    .venda-tab-panel { display: none; padding-top: 20px; animation: fadeInVenda 0.3s; }
+    .venda-tab-panel.active { display: block; }
+    @keyframes fadeInVenda { from {opacity: 0; transform: translateY(5px);} to {opacity: 1; transform: translateY(0);} }
+</style>
+
+<script>
+    // Gerenciador de Abas de Venda
+    document.querySelectorAll('.venda-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const wrap = tab.closest('.ctx-venda-wrap');
+            wrap.querySelectorAll('.venda-tab').forEach(t => t.classList.remove('active'));
+            wrap.querySelectorAll('.venda-tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            wrap.querySelector('#venda-tab-' + tab.dataset.vendaTab).classList.add('active');
+        });
+    });
+</script>

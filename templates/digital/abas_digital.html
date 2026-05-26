@@ -1,0 +1,175 @@
+{# =============================================================================
+   Caminho  : templates/digital/abas_digital.html
+   Arquivo  : abas_digital.html
+   Função   : Template principal do módulo Digital.
+   Descrição: Renderiza as abas de navegação (LinkOne, LeadOne, SiteOne,
+              ChatOne, ShopOne, MetricsOne).
+============================================================================= #}
+{% extends "base.html" %}
+{% import "macros/abas_cadastro.html" as nav %}
+
+{% block content %}
+<div class="arione-page-wrapper">
+    <style>
+        /* ESTILOS MODO ESCURO (ARIONE GLOBAL PATTERN) - REFINAMENTO SUAVE */
+        .arione-page-wrapper.dark-mode {
+            background: #334155 !important; /* Slate 700 */
+            transition: all 0.4s ease;
+            margin: -20px;
+            padding: 20px;
+        }
+        .dark-mode .arione-content-box, 
+        .dark-mode .arione-tabs-box {
+            background: #1e293b !important; /* Slate 800 */
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        }
+        .dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4, .dark-mode p, .dark-mode span, .dark-mode label {
+            color: #f8fafc !important;
+        }
+        /* Realce das ABAS no Dark Mode */
+        .dark-mode .arione-aba {
+            color: #cbd5e1 !important;
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid #334155 !important;
+        }
+        .dark-mode .arione-aba.active {
+            color: #ffffff !important;
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        }
+        .dark-mode .arione-aba-label, .dark-mode .arione-aba-icon { color: inherit !important; }
+
+        /* Realce dos CARDS DO GRID no Dark Mode */
+        .dark-mode .ge-card {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .dark-mode .ge-card-label {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+        }
+        .dark-mode .ge-card-desc {
+            color: #94a3b8 !important;
+        }
+        .dark-mode .ge-card-bg-icon {
+            opacity: 0.05 !important;
+        }
+
+        /* Realce dos NOMES DOS CARDS (GRID MESTRE) no Dark Mode */
+        .dark-mode .gateway-label-mestre {
+            color: #ffffff !important;
+            font-weight: 800 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        }
+        .dark-mode .gateway-desc-mestre {
+            color: #cbd5e1 !important;
+        }
+        /* Ajuste do Título da Central de Relatórios */
+        .dark-mode .gateway-title {
+            color: #fff !important;
+        }
+
+        /* Toggle Button */
+        .dark-toggle-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dark-toggle-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+    </style>
+
+    {% set sidebar_color = '#7A255F' %} {# Cor Padrão Nacional AriOne #}
+    {% set center_color  = '#a63282' %} {# Iluminação Padrão Central #}
+    {% set icon_color    = '#42A5F5' %} {# Identidade Cromática da Fonte (Digital) #}
+
+    {% set current_gradient = 'linear-gradient(90deg, ' + sidebar_color + ' 0%, ' + center_color + ' 50%, ' + sidebar_color + ' 100%)' %}
+
+    <div class="fe-header" style="background: {{ current_gradient }}; margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: {{ icon_color }}; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: {{ icon_color }}; border: 1px solid rgba(255,255,255,0.05);">
+                <i class="fas fa-network-wired"></i>
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: {{ icon_color }}; font-family: 'Outfit', sans-serif; text-transform: uppercase;">
+                    AriOne Digital & Hub de APIs
+                </h1>
+                <p style="margin: 0; font-size: 10px; font-weight: 700; opacity: 1; letter-spacing: 1px; text-transform: uppercase; color: #ffffff; margin-top: 5px;">
+                    INTEGRAÇÕES • CLOUD • SEGURANÇA DA INFORMAÇÃO
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+
+            <button type="button" onclick="abrirModalRelatoriosDigital()" style="background: transparent; color: {{ icon_color }}; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: 700; font-size: 9.5px; display: flex; align-items: center; gap: 6px; border: none; transition: all 0.3s ease; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;" onmouseover="this.style.opacity='1'; this.style.background='rgba(0,0,0,0.1)';" onmouseout="this.style.opacity='0.8'; this.style.background='transparent';">
+                Central de Relatórios <i class="fas fa-network-wired" style="font-size: 8px;"></i>
+            </button>
+            <a href="{{ url_for('gestao.dashboard') }}" style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; cursor: pointer; text-decoration: none;" onmouseover="this.style.background='rgba(0,0,0,0.25)';" onmouseout="this.style.background='rgba(0,0,0,0.15)';" title="Voltar ao Dashboard">
+                <img src="{{ url_for('static', filename='img/dashboard/dashboard.png') }}" style="height: 20px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+            </a>
+        </div>
+    </div>
+
+    <div class="arione-tabs-box">
+        {{ nav.gerar_abas_arione(abas, aba_ativa, 'digital') }}
+    </div>
+
+    <div class="arione-content-box">
+        {% if aba_ativa == 'linkone' %}
+            {% include 'digital/cards/grid_linkone.html' %}
+        {% elif aba_ativa == 'leadone' %}
+            {% include 'digital/cards/grid_leadone.html' %}
+        {% elif aba_ativa == 'siteone' %}
+            {% include 'digital/cards/grid_siteone.html' %}
+        {% elif aba_ativa == 'chatone' %}
+            {% include 'digital/cards/grid_chatone.html' %}
+        {% elif aba_ativa == 'shopone' %}
+            {% include 'digital/cards/grid_shopone.html' %}
+        {% elif aba_ativa == 'metricsone' %}
+            {% include 'digital/cards/grid_metricsone.html' %}
+        {% endif %}
+    </div>
+
+    <script>
+    function abrirModalRelatoriosDigital() {
+        const url = "{{ url_for('digital.gateway_modulos_digital') }}";
+        const modal = document.getElementById('arione-modal-global');
+        const content = document.getElementById('arione-modal-content');
+
+        if (!modal || !content) return;
+
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                modal.style.display = 'flex';
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar Analytics Digital:", err);
+                content.style.opacity = '1';
+            });
+    }
+    </script>
+
+</div>
+{% endblock %}

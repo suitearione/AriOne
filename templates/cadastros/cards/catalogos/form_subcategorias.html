@@ -1,0 +1,239 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+
+{% block content %}
+<div class="fp-wrap mod-subcategorias" id="ctx-sub-main">
+    <style>
+        .arione-page { padding: 0 !important; }
+        .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
+    </style>
+
+    {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0 24px; margin: 0; border-bottom: 2px solid #e2e8f0; transition: none !important;">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+        {{ cabecalho_mestre_arione(
+            titulo='Subcategorias & Classificação',
+            subtitulo='Catálogos > Estrutura > Subcategorias',
+            icone='fa-level-down-alt',
+            form_id='sub-form-area',
+            list_id='sub-list-area',
+            onclick_novo="novoRegistroSub()",
+            onclick_save="salvarSubRapido()",
+            onclick_search="document.getElementById('sub-search-input').focus()",
+            aba_retorno='catalogos',
+            cor_tema='#2ECC71'
+        ) }}
+    </div>
+
+
+
+    <div id="area-conteudo-sub" style="padding: 12px 24px; background: #f4f6f9;">
+        
+        {# ── FORMULÁRIO ── #}
+        <div id="sub-form-area" style="display:none; margin-bottom:16px; animation: feFadeUp 0.5s ease-out;">
+            <form id="sub-form" method="POST" action="{{ url_for('cadastros.card_subcategorias') }}" novalidate>
+                <input type="hidden" name="id" id="sub-id-hidden" value="">
+
+                <div class="fp-card" style="border-left: 4px solid #2ECC71;">
+                    <div class="fp-card-title" style="background: rgba(46, 204, 113, 0.03); color: #27ae60;">
+                        <i class="fas fa-sitemap"></i>
+                        <span id="sub-form-titulo">Nova Subcategoria</span>
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Categoria Pai <span class="fp-req">*</span></label>
+                                <select class="fp-input" name="categoria_id" id="sub-categoria-select" required>
+                                    <option value="">— Selecione a Categoria —</option>
+                                    {% for cat in categorias %}
+                                    <option value="{{ cat.id }}">{{ cat.nome|upper }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="fp-group fp-flex-3">
+                                <label class="fp-label">Nome da Subcategoria <span class="fp-req">*</span></label>
+                                <input type="text" class="fp-input fp-mask-upper" name="nome_sub" id="sub-nome-input" placeholder="Ex: ALGODÃO, DRY-FIT, COURO SINTÉTICO" required>
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Margem (%)</label>
+                                <input type="number" step="0.01" class="fp-input" name="margem" id="sub-margem-input" value="0">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Status</label>
+                                <select class="fp-input" name="ativo" id="sub-status-select">
+                                    <option value="1">ATIVO</option>
+                                    <option value="0">INATIVO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fp-footer-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding: 20px 0;">
+                    <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="fecharFormSub()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-sub" onclick="salvarSubRapido()">
+                        <i class="fas fa-save"></i> Confirmar e Salvar Subcategoria
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="sub-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div class="fp-card-title" style="justify-content:space-between; background: #f8fafc; padding: 15px 20px;">
+                <span><i class="fas fa-table"></i> Subcategorias Recentes
+                    <span id="sub-count" style="background: #2ECC71; color: #fff; padding: 2px 10px; border-radius: 20px; font-size: 11px; margin-left: 8px;">{{ recentes|length }} registros</span>
+                </span>
+                <div style="position:relative;">
+                    <i class="fas fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#2ECC71; font-size:12px;"></i>
+                    <input type="text" id="sub-search-input" oninput="filtrarTabelaSubs()"
+                        placeholder="Pesquisar subcategorias..."
+                        style="padding:8px 15px 8px 35px; border:1.5px solid #ddd; border-radius:20px; font-size:12px; width:240px; outline:none; transition:0.2s;"
+                        onfocus="this.style.borderColor='#2ECC71'" onblur="this.style.borderColor='#ddd'">
+                </div>
+            </div>
+
+            <div class="fp-card-body" style="padding: 0;">
+                <table class="fp-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 24px;">Subcategoria</th>
+                            <th>Categoria Pai</th>
+                            <th style="text-align: center;">Margem Sugerida</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="width: 100px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-subs">
+                        {% for s in recentes|default([]) %}
+                        <tr class="sub-row" data-id="{{ s.id }}" data-nome="{{ s.nome|upper }}" data-catid="{{ s.categoria_id }}" data-margem="{{ s.margem_sugerida or 0 }}" data-ativo="{{ '1' if s.ativa else '0' }}">
+                            <td style="padding-left: 24px;"><div style="font-weight: 800; color: #2d3748; font-size: 13px;">{{ s.nome }}</div></td>
+                            <td><span style="font-size: 10px; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-weight: 800; color: #64748b;">{{ s.categoria.nome|upper if s.categoria else 'N/A' }}</span></td>
+                            <td style="text-align: center; font-weight: 700; color: #27ae60;">{{ "%.2f"|format(s.margem_sugerida|default(0)) }}%</td>
+                            <td style="text-align: center;">
+                                {% if s.ativa %}
+                                <span style="color: #27ae60;"><i class="fas fa-check-circle"></i> ATIVO</span>
+                                {% else %}
+                                <span style="color: #e74c3c;"><i class="fas fa-times-circle"></i> INATIVO</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:8px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" onclick="editarSub(this)" title="Editar"><i class="fas fa-pen"></i></button>
+                                    <button type="button" class="fp-btn-icon fp-btn-delete" onclick="excluirSub('{{ s.id }}', this)" title="Excluir"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+
+        window.novoRegistroSub = function () {
+            limparFormSub();
+            document.getElementById('sub-form-titulo').textContent = 'Nova Subcategoria';
+            document.getElementById('sub-form-area').style.display = 'block';
+            document.getElementById('sub-form-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => document.getElementById('sub-categoria-select').focus(), 300);
+        };
+
+        window.fecharFormSub = function () {
+            document.getElementById('sub-form-area').style.display = 'none';
+            limparFormSub();
+        };
+
+        function limparFormSub() {
+            const f = document.getElementById('sub-form');
+            if (f) f.reset();
+            document.getElementById('sub-id-hidden').value = '';
+            document.getElementById('sub-form').action = "{{ url_for('cadastros.card_subcategorias') }}";
+        }
+
+        window.editarSub = function (btn) {
+            const row = btn.closest('tr');
+            const id = row.dataset.id;
+            const form = document.getElementById('sub-form');
+            form.action = `/cadastros/cards/subcategorias/${id}`; // Adjust if needed
+            document.getElementById('sub-id-hidden').value = id;
+            document.getElementById('sub-form-titulo').textContent = 'Editar: ' + row.dataset.nome;
+
+            document.getElementById('sub-categoria-select').value = row.dataset.catid;
+            document.getElementById('sub-nome-input').value = row.dataset.nome;
+            document.getElementById('sub-margem-input').value = row.dataset.margem;
+            document.getElementById('sub-status-select').value = row.dataset.ativo;
+
+            document.getElementById('sub-form-area').style.display = 'block';
+            document.getElementById('sub-form-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+                const inp = document.getElementById('sub-nome-input');
+                if (inp) { inp.focus(); inp.select(); }
+            }, 300);
+        };
+
+        window.salvarSubRapido = async function () {
+            const form = document.getElementById('sub-form');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            
+            const btn = document.getElementById('btn-salvar-sub');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+            try {
+                const resp = await fetch(form.action, {
+                    method: 'POST', body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    arioneToast('Subcategoria salva com sucesso!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    arioneToast('Erro: ' + (data.message || 'Falha ao salvar.'), 'danger');
+                }
+            } catch (e) {
+                arioneToast('Erro de comunicação.', 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        };
+
+        window.excluirSub = async function (id, btn) {
+            if (!confirm('🛡️ AriOne: Deseja realmente excluir esta subcategoria?')) return;
+            try {
+                const resp = await fetch(`/cadastros/cards/subcategorias/excluir/${id}`, {
+                    method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const res = await resp.json();
+                if (res.success) {
+                    const row = btn.closest('tr');
+                    row.style.opacity = '0';
+                    setTimeout(() => row.remove(), 300);
+                    arioneToast('Registro removido com sucesso.', 'success');
+                } else arioneToast('Erro: ' + res.message, 'danger');
+            } catch (e) { arioneToast('Erro ao excluir registro.', 'danger'); }
+        };
+
+        window.filtrarTabelaSubs = function () {
+            const filter = document.getElementById('sub-search-input').value.toUpperCase();
+            document.querySelectorAll('.sub-row').forEach(row => {
+                const nome = row.dataset.nome || '';
+                row.style.display = (nome.includes(filter)) ? '' : 'none';
+            });
+        };
+
+        document.querySelectorAll('.fp-mask-upper').forEach(el => {
+            el.addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+        });
+
+    })();
+</script>
+{% endblock %}

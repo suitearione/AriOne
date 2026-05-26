@@ -1,0 +1,241 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/grids/grid_pessoas.html
+   Arquivo  : grid_pessoas.html
+   Função   : Grid da aba Pessoas no módulo de Cadastros.
+   Descrição: Exibe cards de acesso rápido para Clientes, Fornecedores,
+              Funcionários e Motoristas. Carregamento via AJAX (Modal).
+============================================================================= #}
+
+<!-- Estrutura do Modal para Pessoas -->
+<div id="modal-overlay-pess" class="ge-modal-overlay" onclick="fecharModalPess(event)">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" style="display:none;"></div>
+        <div class="ge-modal-body" id="modal-body-pess"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title">
+        <i class="fas fa-users"></i>
+        <span>Pessoas</span>
+    </div>
+
+    <div class="ge-cards-container">
+
+        <div class="ge-card" id="card-clientes" onclick="window.location.href='{{ url_for('cadastros.form_cliente') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-user ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-user ge-card-icon"></i></div>
+            <span class="ge-card-label">Clientes</span>
+            <span class="ge-card-desc">Base de clientes</span>
+        </div>
+
+        <div class="ge-card" id="card-fornecedores" onclick="window.location.href='{{ url_for('cadastros.form_fornecedor') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-truck ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-truck ge-card-icon"></i></div>
+            <span class="ge-card-label">Fornecedores</span>
+            <span class="ge-card-desc">Seus fornecedores</span>
+        </div>
+
+        <div class="ge-card" id="card-hcm-funcionarios" onclick="window.location.href='{{ url_for('cadastros.form_funcionario') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-id-badge ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-id-badge ge-card-icon"></i></div>
+            <span class="ge-card-label">Funcionários</span>
+            <span class="ge-card-desc">Equipe da empresa</span>
+        </div>
+        
+        <div class="ge-card" id="card-comercial-vendedores" onclick="window.location.href='{{ url_for('cadastros.form_vendedor') }}'" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-handshake ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-handshake ge-card-icon"></i></div>
+            <span class="ge-card-label">Consultores</span>
+            <span class="ge-card-desc">Equipe de vendas</span>
+        </div>
+
+        <div class="ge-card" id="card-motoristas" onclick="window.location.href='{{ url_for('cadastros.form_motorista') }}'" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-car ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-car ge-card-icon"></i></div>
+            <span class="ge-card-label">Motoristas</span>
+            <span class="ge-card-desc">Motoristas cadastrados</span>
+        </div>
+
+        <div class="ge-card" id="card-revendedores" onclick="window.location.href='{{ url_for('cadastros.form_revendedor') }}'" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-store ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-store ge-card-icon"></i></div>
+            <span class="ge-card-label">Revendedores</span>
+            <span class="ge-card-desc">Rede de revendas</span>
+        </div>
+
+        <div class="ge-card" id="card-influenciadores" onclick="window.location.href='{{ url_for('cadastros.form_influenciador') }}'" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-star ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-star ge-card-icon"></i></div>
+            <span class="ge-card-label">Influenciadores</span>
+            <span class="ge-card-desc">Rede de influência</span>
+        </div>
+
+        <div class="ge-card" id="card-estilistas" onclick="window.location.href='{{ url_for('cadastros.form_estilista') }}'" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-paint-brush ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-paint-brush ge-card-icon"></i></div>
+            <span class="ge-card-label">Estilistas</span>
+            <span class="ge-card-desc">Parceiros criativos</span>
+        </div>
+
+
+    </div>
+</div>
+
+<style>
+.ge-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px); display: none; z-index: 9999;
+    align-items: center; justify-content: center;
+}
+.ge-modal-overlay.ativo { display: flex; }
+.ge-modal {
+    width: 95%; max-width: 1400px; max-height: 95vh;
+    border-radius: 12px; overflow-y: auto;
+    background: #f8fafc;
+}
+.ge-card {
+    cursor: pointer; color: var(--card-cor, #555);
+    background: var(--card-cor-bg, rgba(0,0,0,0.05));
+    border: 1.5px solid var(--card-cor, #ddd);
+    border-radius: 12px; padding: 20px 16px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    position: relative; overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    min-width: 130px;
+}
+.ge-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.ge-card-bg-icon { position: absolute; font-size: 64px; opacity: 0.07; right: -10px; bottom: -10px; color: var(--card-cor, #555); }
+.ge-card-icon-wrap { width: 48px; height: 48px; border-radius: 12px; background: var(--card-cor-bg, rgba(0,0,0,0.08)); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.ge-card-icon { font-size: 22px; color: var(--card-cor, #555); }
+.ge-card-label { font-size: 13px; font-weight: 700; color: var(--card-cor, #333); }
+.ge-card-desc { font-size: 11px; color: #888; text-align: center; }
+
+/* Badge de Conclusão AriOne (Vela no Bolo) */
+.ge-card-done-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #7A255F;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 10;
+    border: 1.5px solid #fff;
+    animation: badgeShine 3s infinite;
+}
+@keyframes badgeShine {
+    0% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.1); filter: brightness(1.3); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+</style>
+
+<script>
+const endpointsPess = {
+    clientes:        (id) => id ? `/cadastros/clientes/cards/form/${id}` : '{{ url_for("cadastros.form_cliente") }}',
+    fornecedores:    (id) => id ? `/cadastros/fornecedores/cards/form/${id}` : '{{ url_for("cadastros.form_fornecedor") }}',
+    funcionarios:    (id, novo=false) => {
+        let baseUrl = "{{ url_for('cadastros.form_funcionario') }}";
+        if(id) return `${baseUrl}/${id}`;
+        if(novo) return `${baseUrl}?novo=1`;
+        return baseUrl;
+    },
+    motoristas:      (id) => id ? `/cadastros/motoristas/cards/form/${id}` : '{{ url_for("cadastros.form_motorista") }}',
+    vendedores:      (id) => id ? `/cadastros/vendedores/form/${id}` : '{{ url_for("cadastros.form_vendedor") }}',
+    revendedores:    (id) => id ? `/cadastros/revendedores/form/${id}` : '{{ url_for("cadastros.form_revendedor") }}',
+    influenciadores: (id) => id ? `/cadastros/influenciadores/form/${id}` : '{{ url_for("cadastros.form_influenciador") }}',
+    estilistas:      (id) => id ? `/cadastros/estilistas/form/${id}` : '{{ url_for("cadastros.form_estilista") }}',
+    relatorios:      () => '{{ url_for("cadastros.gateway_relatorios") }}'
+};
+
+async function abrirModalPess(tipo, id = null, novo = false) {
+    const getter = endpointsPess[tipo];
+    if (!getter) return;
+    const url = typeof getter === 'function' ? getter(id, novo) : getter;
+    if (!url) return;
+    window.location.href = url;
+}
+
+function fecharModalPess(e) {
+    if (e && e.target !== document.getElementById('modal-overlay-pess')) return;
+    document.getElementById('modal-overlay-pess').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+// Auto-abertura Inteligente AriOne (Melhorado)
+function processAutoOpen() {
+    const params = new URLSearchParams(window.location.search);
+    const auto = params.get('auto_open');
+    if(auto && typeof abrirModalPess === 'function') {
+        const checkExist = setInterval(() => {
+            if (document.getElementById('card-hcm-funcionarios')) {
+                clearInterval(checkExist);
+                abrirModalPess(auto);
+            }
+        }, 100);
+        setTimeout(() => clearInterval(checkExist), 3000); // Timeout de 3s
+    }
+}
+
+document.addEventListener('DOMContentLoaded', processAutoOpen);
+// Para disparar também em mudanças de estado via browser
+window.addEventListener('popstate', processAutoOpen);
+
+{% if is_ari_dev %}
+// ── CARD SEAL DETECTOR (ROTINA DEV) ──
+function updateGridSeals() {
+    const getSafeId = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "_");
+    
+    const mappings = {
+        'card-hcm-funcionarios': { sub: "CADASTROS — Pessoas", tela: "Funcionários" },
+        'card-comercial-vendedores': { sub: "CADASTROS — Comercial", tela: "Consultores" },
+        'card-clientes':         { sub: "CADASTROS — Pessoas", tela: "Clientes" },
+        'card-fornecedores':     { sub: "CADASTROS — Pessoas", tela: "Fornecedores" },
+        'card-motoristas':       { sub: "CADASTROS — Pessoas", tela: "Motoristas" },
+        'card-revendedores':     { sub: "CADASTROS — Pessoas", tela: "Revendedores" },
+        'card-influenciadores':  { sub: "CADASTROS — Pessoas", tela: "Influenciadores" },
+        'card-estilistas':       { sub: "CADASTROS — Pessoas", tela: "Estilistas" }
+    };
+
+    Object.entries(mappings).forEach(([cardId, info]) => {
+        const sId = getSafeId(info.sub + "_" + info.tela);
+        const isPronto = localStorage.getItem('arione_dev_p2_' + sId) === 'true';
+        const card = document.getElementById(cardId);
+        
+        if (card) {
+            let badge = card.querySelector('.ge-card-done-badge');
+            if (isPronto) {
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'ge-card-done-badge';
+                    badge.innerHTML = '<i class="fas fa-award"></i>';
+                    badge.title = "AriOne Golden Standard";
+                    card.appendChild(badge);
+                    card.style.borderColor = "#FFD700";
+                }
+            } else if (badge) {
+                badge.remove();
+                card.style.borderColor = "";
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateGridSeals();
+    setInterval(updateGridSeals, 2000);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateGridSeals();
+    setInterval(updateGridSeals, 2000);
+});
+{% endif %}
+</script>

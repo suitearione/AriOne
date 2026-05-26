@@ -1,0 +1,64 @@
+/* ----------------- BLOCO: ESTRUTURA DE ROLAGEM ISOLADA ----------------- */ /* Centralizar função: Controle de scroll */
+.arione-main-wrapper {                  /* Wrapper que contém tudo exceto a sidebar */
+    display: flex;                      /* Alinhamento flexível vertical */
+    flex-direction: column;             /* Organiza barras no topo e conteúdo abaixo */
+    height: 100vh;                      /* Trava a altura na visão total da tela */
+    overflow: hidden;                   /* Impede que o wrapper principal role */
+}
+
+.arione-page {                          /* Área onde os formulários aparecem */
+    flex: 1;                            /* Ocupa todo o espaço restante da tela */
+    overflow-y: auto;                   /* Único lugar onde o scroll é permitido */
+    padding: 0 20px 20px 20px;          /* Espaçamento interno padrão */
+    background-color: #f4f7f6;        /* Cor de fundo institucional */
+}
+
+.form-scroll-container {                /* Container modular para formulários longos */
+    max-width: 1200px;                  /* Largura máxima para não esticar demais */
+    margin: 0 auto;                     /* Centraliza o formulário na tela */
+    display: flex;                      /* Organiza o conteúdo interno */
+    flex-direction: column;             /* Pilha vertical de elementos */
+    gap: 20px;                          /* Espaço entre os cards do formulário */
+}
+
+/* Customização do Scrollbar para ficar elegante */
+.arione-page::-webkit-scrollbar {
+    width: 8px;                            /* Largura da barra de rolagem */
+}
+.arione-page::-webkit-scrollbar-thumb {
+    background: #7A255F;                     /* Cor da barra (Roxo AriOne) */
+    border-radius: 10px;                       /* Bordas arredondadas */
+}
+
+/* Caminho: static/css/layout_base.css */
+/* Função: Definições de cores, fontes e estrutura de containers (Wrapper/Body) */
+
+:root {
+    --sidebar-width: 260px;
+    --topbar-height: 60px;
+    --cor-principal: #7A255F;
+    --cor-secundaria: #F4F6F9;
+    --cor-texto: #343a40;
+}
+
+html, body {
+    height: 100% !important;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    font-family: Arial, sans-serif;
+    background-color: var(--cor-secundaria);
+}
+
+.arione-main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    min-width: 0;
+}

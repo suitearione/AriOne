@@ -1,0 +1,357 @@
+<!-- templates/financeiro/cards/form_financeiro_movimentacoes.html -->
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+{{ comp.cabecalho_mestre_arione(
+    titulo="Extrato Geral de Movimentações",
+    subtitulo="Financeiro > Fluxo de Caixa > Extrato Geral Consolidado",
+    icone="fa-exchange-alt",
+    cor_tema="#8E44AD",
+    func_fechar="voltarParaGridMovimentacoes()",
+    form_id="formMovimentacoes",
+    onclick_novo="",
+    onclick_save="",
+    onclick_search="",
+    onclick_filter="",
+    onclick_list="",
+    onclick_clonar="",
+    onclick_export="",
+    onclick_import="",
+    onclick_print="",
+    onclick_email="",
+    onclick_whatsapp="",
+    status="Ativo",
+    ajuda="Acompanhamento centralizado de títulos pagos e movimentações de caixa do PDV.",
+    tamanho="grande"
+) }}
+
+<style>
+.mov-container {
+    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+    animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.mov-header-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.mov-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+.mov-subtitle {
+    font-size: 11px;
+    color: #64748b;
+    margin: 4px 0 0;
+}
+.mov-search-input {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 11px;
+    width: 250px;
+    outline: none;
+    transition: border 0.2s;
+}
+.mov-search-input:focus { border-color: #3b82f6; }
+
+.mov-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.mov-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    text-align: left;
+    border-bottom: 1px solid #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.mov-table td {
+    padding: 12px 16px;
+    font-size: 11px;
+    color: #334155;
+    border-bottom: 1px solid #e2e8f0;
+}
+.mov-table tr:last-child td { border-bottom: none; }
+.mov-table tr:hover td { background: #f1f5f9; }
+
+.mov-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+}
+.mov-badge-rec { background: rgba(39,174,96,0.15); color: #27AE60; }
+.mov-badge-des { background: rgba(229,62,62,0.15); color: #E53E3E; }
+.mov-badge-origem { background: #e2e8f0; color: #475569; }
+</style>
+
+<div class="mov-container">
+    <div class="mov-header-wrap">
+        <div>
+            <h2 class="mov-title">Extrato Geral Consolidado</h2>
+            <p class="mov-subtitle">Acompanhamento centralizado de títulos pagos e movimentações de caixa do PDV.</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="movCaixaSelect" class="mov-search-input" style="min-width: 200px;" onchange="filtrarPorCaixa()">
+                <option value="">Todos os Caixas</option>
+                {% for caixa in caixas %}
+                <option value="{{ caixa.id }}">{{ caixa.nome }} - R$ {{ '{:,.2f}'.format(caixa.saldo_atual or 0) }} ({{ caixa.status }})</option>
+                {% endfor %}
+            </select>
+            <input type="text" id="movSearchInput" class="mov-search-input" placeholder="Buscar por descrição ou conta..." onkeyup="filtrarMovimentacoes()">
+        </div>
+    </div>
+
+    <table class="mov-table" id="movTable">
+        <thead>
+            <tr>
+                <th onclick="ordenarTabela(0)" style="cursor: pointer; user-select: none;">
+                    Origem <i class="fas fa-sort" style="margin-left: 5px; color: #94a3b8; font-size: 11px;"></i>
+                </th>
+                <th onclick="ordenarTabela(1)" style="cursor: pointer; user-select: none;">
+                    Data <i class="fas fa-sort" style="margin-left: 5px; color: #94a3b8; font-size: 11px;"></i>
+                </th>
+                <th onclick="ordenarTabela(2)" style="cursor: pointer; user-select: none;">
+                    Tipo <i class="fas fa-sort" style="margin-left: 5px; color: #94a3b8; font-size: 11px;"></i>
+                </th>
+                <th onclick="ordenarTabela(3)" style="cursor: pointer; user-select: none;">
+                    Descrição <i class="fas fa-sort" style="margin-left: 5px; color: #94a3b8; font-size: 11px;"></i>
+                </th>
+                <th onclick="ordenarTabela(4)" style="cursor: pointer; user-select: none;">
+                    Classificação (Conta) <i class="fas fa-sort" style="margin-left: 5px; color: #94a3b8; font-size: 11px;"></i>
+                </th>
+                <th onclick="ordenarTabela(5)" style="cursor: pointer; user-select: none;">
+                    Forma Pag. <i class="fas fa-sort" style="margin-left: 5px; color: #94a3b8; font-size: 11px;"></i>
+                </th>
+                <th onclick="ordenarTabela(6)" style="cursor: pointer; user-select: none;">
+                    Valor <i class="fas fa-sort" style="margin-left: 5px; color: #94a3b8; font-size: 11px;"></i>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in extrato %}
+            <tr class="mov-row-item" data-caixa-id="{{ item.caixa_id or '' }}">
+                <td><span class="mov-badge mov-badge-origem">{{ item.origem }}</span></td>
+                <td>{{ item.data }}</td>
+                <td>
+                    <span class="mov-badge {{ 'mov-badge-rec' if item.tipo == 'RECEITA' or item.tipo == 'ENTRADA' else 'mov-badge-des' }}">
+                        {{ item.tipo }}
+                    </span>
+                </td>
+                <td class="mov-desc-cell">{{ item.descricao }}</td>
+                <td class="mov-conta-cell">{{ item.conta }}</td>
+                <td>{{ item.forma }}</td>
+                <td style="font-weight: 600; color: {{ '#27AE60' if item.tipo == 'RECEITA' or item.tipo == 'ENTRADA' else '#E53E3E' }};">
+                    R$ {{ '%.2f'|format(item.valor) }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 20px 0; color: #94a3b8;">Nenhuma movimentação registrada no período.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function voltarParaGridMovimentacoes() {
+    if (typeof fecharModalCxa === 'function') fecharModalCxa();
+    if (!window.location.search.includes('aba=movimentacoes')) { window.location.href = "{{ url_for('financeiro.abas', aba='movimentacoes') }}"; }
+}
+
+function atualizarExtrato() {
+    if (typeof arioneToast === 'function') arioneToast('Atualizando extrato...', 'info');
+    window.location.reload();
+}
+
+function salvarExtrato() {
+    if (typeof arioneToast === 'function') arioneToast('Salvando extrato...', 'info');
+}
+
+function focarPesquisaMovimentacoes() {
+    const input = document.getElementById('movSearchInput');
+    if (input) {
+        input.focus();
+        if (typeof arioneToast === 'function') arioneToast('Campo de pesquisa ativado', 'info');
+    }
+}
+
+function abrirModalFiltrosMovimentacoes() {
+    if (typeof arioneToast === 'function') arioneToast('Filtros avançados em desenvolvimento', 'info');
+}
+
+function alternarVisaoFormLista() {
+    if (typeof arioneToast === 'function') arioneToast('Alternando visão formulário/lista', 'info');
+}
+
+function clonarExtrato() {
+    if (typeof arioneToast === 'function') arioneToast('Clonagem indisponível nesta visão', 'info');
+}
+
+function exportarMovimentacoesCSV() {
+    if (typeof arioneToast === 'function') arioneToast('Exportando extrato para CSV/Excel...', 'info');
+}
+
+function abrirModalImportacaoMovimentacoes() {
+    if (typeof arioneToast === 'function') arioneToast('Importação indisponível nesta visão', 'info');
+}
+
+function imprimirExtrato() {
+    window.print();
+}
+
+function enviarExtratoEmail() {
+    if (typeof arioneToast === 'function') arioneToast('Enviando extrato por E-mail...', 'info');
+}
+
+function enviarExtratoWhatsApp() {
+    if (typeof arioneToast === 'function') arioneToast('Compartilhando extrato via WhatsApp...', 'info');
+}
+
+function filtrarMovimentacoes() {
+    const input = document.getElementById('movSearchInput').value.toLowerCase();
+    const caixaSelect = document.getElementById('movCaixaSelect');
+    const caixaId = caixaSelect ? caixaSelect.value : '';
+    const rows = document.querySelectorAll('.mov-row-item');
+
+    rows.forEach(row => {
+        const desc = row.querySelector('.mov-desc-cell').textContent.toLowerCase();
+        const conta = row.querySelector('.mov-conta-cell').textContent.toLowerCase();
+        const rowCaixaId = row.getAttribute('data-caixa-id') || '';
+
+        const matchTexto = desc.includes(input) || conta.includes(input);
+        const matchCaixa = !caixaId || rowCaixaId === caixaId;
+
+        if (matchTexto && matchCaixa) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filtrarPorCaixa() {
+    filtrarMovimentacoes();
+    const caixaSelect = document.getElementById('movCaixaSelect');
+    if (caixaSelect && caixaSelect.value) {
+        const selectedOption = caixaSelect.options[caixaSelect.selectedIndex];
+        if (typeof arioneToast === 'function') {
+            arioneToast(`Filtrando por caixa: ${selectedOption.text}`, 'info');
+        }
+    } else {
+        if (typeof arioneToast === 'function') {
+            arioneToast('Exibindo todos os caixas', 'info');
+        }
+    }
+}
+
+// Variável para controlar a direção da ordenação
+let direcaoOrdenacao = {};
+
+function ordenarTabela(colunaIndex) {
+    const tabela = document.getElementById('movTable');
+    const tbody = tabela.querySelector('tbody');
+    const linhas = Array.from(tbody.querySelectorAll('.mov-row-item'));
+    
+    // Inverte a direção se clicar na mesma coluna
+    direcaoOrdenacao[colunaIndex] = !direcaoOrdenacao[colunaIndex];
+    const crescente = direcaoOrdenacao[colunaIndex];
+    
+    // Atualiza os ícones de ordenação
+    const ths = tabela.querySelectorAll('th');
+    ths.forEach((th, index) => {
+        const icon = th.querySelector('i');
+        if (icon) {
+            if (index === colunaIndex) {
+                icon.className = crescente ? 'fas fa-sort-up' : 'fas fa-sort-down';
+                icon.style.color = '#8E44AD';
+            } else {
+                icon.className = 'fas fa-sort';
+                icon.style.color = '#94a3b8';
+            }
+        }
+    });
+    
+    // Ordena as linhas
+    linhas.sort((a, b) => {
+        let valorA, valorB;
+        
+        // Obtém o valor da célula baseado no índice da coluna
+        const celulaA = a.cells[colunaIndex];
+        const celulaB = b.cells[colunaIndex];
+        
+        // Tratamento especial para cada coluna
+        switch(colunaIndex) {
+            case 0: // Origem
+                valorA = celulaA.textContent.trim();
+                valorB = celulaB.textContent.trim();
+                return crescente ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
+                
+            case 1: // Data
+                valorA = celulaA.textContent.trim();
+                valorB = celulaB.textContent.trim();
+                // Converte data brasileira (DD/MM/YYYY) para comparação
+                const dataA = valorA.split('/').reverse().join('-');
+                const dataB = valorB.split('/').reverse().join('-');
+                return crescente ? dataA.localeCompare(dataB) : dataB.localeCompare(dataA);
+                
+            case 2: // Tipo
+                valorA = celulaA.textContent.trim();
+                valorB = celulaB.textContent.trim();
+                return crescente ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
+                
+            case 3: // Descrição
+                valorA = celulaA.textContent.trim();
+                valorB = celulaB.textContent.trim();
+                return crescente ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
+                
+            case 4: // Classificação (Conta)
+                valorA = celulaA.textContent.trim();
+                valorB = celulaB.textContent.trim();
+                return crescente ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
+                
+            case 5: // Forma Pag.
+                valorA = celulaA.textContent.trim();
+                valorB = celulaB.textContent.trim();
+                return crescente ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
+                
+            case 6: // Valor
+                valorA = parseFloat(celulaA.textContent.replace('R$', '').trim().replace(/\./g, '').replace(',', '.'));
+                valorB = parseFloat(celulaB.textContent.replace('R$', '').trim().replace(/\./g, '').replace(',', '.'));
+                return crescente ? valorA - valorB : valorB - valorA;
+                
+            default:
+                return 0;
+        }
+    });
+    
+    // Reinsere as linhas ordenadas
+    linhas.forEach(linha => tbody.appendChild(linha));
+    
+    if (typeof arioneToast === 'function') {
+        const colunas = ['Origem', 'Data', 'Tipo', 'Descrição', 'Classificação', 'Forma Pag.', 'Valor'];
+        arioneToast(`Ordenado por ${colunas[colunaIndex]} (${crescente ? 'Crescente' : 'Decrescente'})`, 'info');
+    }
+}
+</script>
+{% endblock %}

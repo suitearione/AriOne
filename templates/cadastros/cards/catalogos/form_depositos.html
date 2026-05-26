@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-depositos" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .shelf-tag {
+            background: #fffcf0; border: 1.5px solid rgba(230,126,34,0.15);
+            padding: 4px 12px; border-radius: 20px; display: inline-flex;
+            align-items: center; gap: 8px; font-size: 10px; font-weight: 900;
+            color: #E67E22; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: 0.2s;
+        }
+        .shelf-tag i { cursor: pointer; opacity: 0.7; }
+        .shelf-tag i:hover { color: #ef4444; }
+        
+        .dep-row:hover { background: #fffcf0 !important; cursor: pointer; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Depósitos & Almoxarifados',
+            subtitulo='Catálogos > Gestão de Estoque e Localizações',
+            icone='fa-warehouse',
+            cor_tema='#7A255F',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
+            form_id='dep-form-area',
+            onclick_novo='resetFormDeposito()',
+            onclick_save='salvarDeposito()',
+            onclick_search='focarPesquisaDeposito()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            onclick_clonar='clonarDepositoAtivo()',
+            onclick_export='exportarDepositoCSV()',
+            onclick_import='abrirModalImportacaoXML()',
+            onclick_print='imprimirRelatorioDeposito()',
+            onclick_email='enviarDepositoEmail()',
+            onclick_whatsapp='enviarDepositoWhatsApp()',
+            status='Ativo',
+            ajuda='Gerencie os depósitos e almoxarifados, incluindo localizações e prateleiras.',
+            tamanho='medio'
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="dep-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="dep-form" method="POST" action="{{ url_for('cadastros.card_depositos') }}">
+                <input type="hidden" name="id" id="dep-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="dep-form-titulo">CADASTRO DE DEPÓSITO</span></span>
+                        <button type="button" onclick="novoRegistroDep()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Nome do Depósito <span style="color:#ef4444;">*</span></label>
+                                <input type="text" class="fp-input" name="nome" id="dep-nome-input" placeholder="EX: ALMOXARIFADO CENTRAL" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Tipo de Depósito</label>
+                                <select class="fp-input" name="tipo" id="dep-tipo-input" style="width: 100%; background: #fff;">
+                                    <option value="proprio">PRÓPRIO</option>
+                                    <option value="terceiros">TERCEIROS (LOGÍSTICA)</option>
+                                    <option value="virtual">VIRTUAL (CONSIGNADO)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Localização / Endereço</label>
+                                <input type="text" class="fp-input" name="endereco" id="dep-endereco-input" placeholder="Rua, Bairro ou Localização Interna" style="width: 100%;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Nova Prateleira / Posição</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="novo-item-prateleira" class="fp-input" placeholder="EX: P1-A" style="flex: 1;" oninput="this.value = this.value.toUpperCase()">
+                                    <button type="button" onclick="addPrateleiraLista()" style="background: #E67E22; color: #fff; border:none; border-radius: 6px; width: 34px; height: 34px; cursor: pointer;"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <label class="fp-label"><i class="fas fa-th"></i> Estrutura de Endereçamento Interno</label>
+                            <div id="lista-prateleiras-container" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 15px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; min-height: 60px;">
+                                <span id="shelf-placeholder" style="color: #94a3b8; font-size: 11px; font-style: italic;">Nenhuma prateleira definida.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-dep" onclick="forceSubmitDeposito()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR DEPÓSITO
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="dep-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-warehouse" style="color: #E67E22; margin-right: 8px;"></i> Almoxarifados Cadastrados</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="dep-search-input" oninput="filtrarDepositos()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="dep-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ depositos|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 20px;">DEPÓSITO / LOCALIZAÇÃO</th>
+                            <th>ESTRUTURA DE ENDEREÇAMENTO</th>
+                            <th style="width: 150px; text-align: center;">TIPO</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-depositos">
+                        {% for dep in depositos %}
+                        <tr class="dep-row" data-nome="{{ dep.nome|upper }}" onclick='editarDeposito("{{ dep.id }}", {{ dep.nome|tojson|safe }}, {{ dep.endereco|tojson|safe }}, {{ dep.tipo|tojson|safe }}, [{% for p in dep.prateleiras %}"{{ p.nome }}"{% if not loop.last %},{% endif %}{% endfor %}])'>
+                            <td style="padding: 12px 20px;">
+                                <div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ dep.nome }}</div>
+                                <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">{{ dep.endereco or 'SEM ENDEREÇO DEFINIDO' }}</div>
+                            </td>
+                            <td>
+                                <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                                    {% for p in dep.prateleiras[:6] %}
+                                    <span style="background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: 800; border: 1px solid #e2e8f0;">{{ p.nome }}</span>
+                                    {% endfor %}
+                                    {% if dep.prateleiras|length > 6 %}
+                                    <span style="font-size: 10px; font-weight: 900; color: #E67E22; margin-left: 5px;">+{{ dep.prateleiras|length - 6 }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <span style="font-size: 10px; font-weight: 900; color: #64748b; background: #f1f5f9; padding: 3px 10px; border-radius: 20px;">{{ dep.tipo|upper }}</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirDeposito('{{ dep.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.addPrateleiraLista = function() {
+                const input = document.getElementById('novo-item-prateleira');
+                const container = document.getElementById('lista-prateleiras-container');
+                const nome = input.value.trim().toUpperCase();
+                if(!nome) return;
+                $('#shelf-placeholder').hide();
+                const tag = `<div class="shelf-tag">
+                    <input type="hidden" name="prateleiras[]" value="${nome}">
+                    <span>${nome}</span>
+                    <i class="fas fa-times" onclick="$(this).parent().remove()"></i>
+                </div>`;
+                $(container).append(tag);
+                input.value = ''; input.focus();
+            };
+
+            window.novoRegistroDep = function() {
+                document.getElementById('dep-form-titulo').textContent = 'NOVO DEPÓSITO';
+                document.getElementById('dep-id-hidden').value = '';
+                document.getElementById('dep-form').reset();
+                document.getElementById('lista-prateleiras-container').innerHTML = '<span id="shelf-placeholder" style="color: #94a3b8; font-size: 11px; font-style: italic;">Nenhuma prateleira definida.</span>';
+                document.getElementById('dep-nome-input').focus();
+            };
+
+            window.editarDeposito = function(id, nome, endereco, tipo, prats) {
+                document.getElementById('dep-form-titulo').textContent = 'EDITANDO: ' + nome;
+                document.getElementById('dep-id-hidden').value = id;
+                document.getElementById('dep-nome-input').value = nome;
+                document.getElementById('dep-endereco-input').value = endereco;
+                document.getElementById('dep-tipo-input').value = tipo;
+                const container = document.getElementById('lista-prateleiras-container');
+                container.innerHTML = '';
+                if(prats.length > 0) {
+                    prats.forEach(p => {
+                        $(container).append(`<div class="shelf-tag"><input type="hidden" name="prateleiras[]" value="${p}"><span>${p}</span><i class="fas fa-times" onclick="$(this).parent().remove()"></i></div>`);
+                    });
+                } else {
+                    container.innerHTML = '<span id="shelf-placeholder" style="color: #94a3b8; font-size: 11px; font-style: italic;">Nenhuma prateleira definida.</span>';
+                }
+                $('#dep-form-area').slideDown();
+                window.scrollTo({top:0, behavior:'smooth'});
+            };
+
+            window.salvarDeposito = async function() {
+                const form = document.getElementById('dep-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-dep-form-area');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Depósito salvo!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarDepositos = function() {
+                const f = document.getElementById('dep-search-input').value.toUpperCase();
+                document.querySelectorAll('.dep-row').forEach(r => {
+                    r.style.display = r.dataset.nome.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.excluirDeposito = async function(id, btn) {
+                if(!confirm('Excluir depósito?')) return;
+                const r = await fetch(`/cadastros/cards/depositos/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+
+            window.focarBuscaDep = function() { document.getElementById('dep-search-input').focus(); };
+            window.exportarDepositos = function() { arioneExportar({url:'/cadastros/cards/depositos/dados-json', modulo:'Depósitos'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

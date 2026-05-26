@@ -1,0 +1,16 @@
+{% macro abas_cadastro(lista_submenus, aba_ativa) %}
+<div class="arione-modulo-container">
+    <div class="arione-bar-abas"></div>
+
+    <div class="arione-tabs-wrapper">
+        <ul class="tabs-list">
+            {% for item in lista_submenus %}
+            <li class="tab-btn {{ 'active' if item.id == aba_ativa else '' }}" 
+                data-aba="{{ item.id }}">
+                {{ item.nome | upper }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endmacro %}

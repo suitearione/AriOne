@@ -1,0 +1,509 @@
+{# =============================================================================
+   Caminho  : templates/sistema/form_versao.html
+   Arquivo  : form_versao.html
+   Função   : Formulário padrão AriOne para gestão de versões.
+   ============================================================================= #}
+{% extends "base.html" %}
+{% block content %}
+<div class="fe-wrap">
+
+  {# ── MENSAGENS FLASH ── #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div style="padding: 12px 18px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; background: {% if cat=='success' %}#f0fff4; color:#276749; border:1px solid #c6f6d5;{% elif cat=='danger' %}#fff5f5; color:#c53030; border:1px solid #fed7d7;{% else %}#f0f9ff; color:#0369a1; border:1px solid #bae6fd;{% endif %}">
+        <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- ── CABEÇALHO MESTRE (GOLDEN STANDARD) ── -->
+  {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+  {{ cabecalho_mestre_arione(
+      titulo='Lançamento das Versões',
+      subtitulo='Sistema > Controle de Versões e Lançamentos',
+      icone='fa-code-branch',
+      form_id='fe-wrap',
+      rota_novo='sistema.form_versao',
+      onclick_save="document.getElementById('formVersao').submit()",
+      onclick_print='',
+      onclick_export='',
+      onclick_import='',
+      onclick_search='',
+      onclick_filter='',
+      aba_retorno='/sistema/?aba=versoes',
+      cor_tema='#7A255F'
+  ) }}
+
+  <form id="formVersao" method="POST">
+    
+    <!-- ── DADOS TÉCNICOS ── -->
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-info-circle"></i> Identificação da Versão</div>
+      <div class="fe-card-body">
+        <div class="fe-row">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Número da Versão <span class="fe-req">*</span></label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="text" name="numero" id="numero_versao" class="fe-input" placeholder="Ex: v1.04.06" value="{{ versao.numero if versao else '' }}" required style="flex: 1; font-family: 'JetBrains Mono', monospace; font-weight: 800;">
+              
+              <div class="sugestao-container" style="display: flex; gap: 4px;">
+                <button type="button" onclick="abrirModalSemVer('patch')" class="btn-sugestao" title="O que é PATCH? Clique para saber!">PATCH</button>
+                <button type="button" onclick="abrirModalSemVer('minor')" class="btn-sugestao" title="O que é MINOR? Clique para saber!">MINOR</button>
+                <button type="button" onclick="abrirModalSemVer('major')" class="btn-sugestao" title="O que é MAJOR? Clique para saber!">MAJOR</button>
+              </div>
+            </div>
+            <small style="font-size:10px;color:var(--muted);margin-top:4px;">
+              Última: <strong id="ultima_v_ref">{{ ultima_numero }}</strong> • Padrão Semântico (SemVer)
+            </small>
+          </div>
+        </div>
+
+        <div class="fe-row">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Sinopse da Versão (Objetivo Central)</label>
+            <textarea name="sinopse" class="fe-input" rows="2" placeholder="Descreva brevemente o objetivo desta atualização...">{{ versao.sinopse if versao else '' }}</textarea>
+          </div>
+        </div>
+
+        <div class="fe-row">
+          <div class="fe-group fe-flex-2">
+            <label class="fe-label">Título da Release</label>
+            <input type="text" name="titulo" class="fe-input" placeholder="Ex: Módulo de Administração Redesenhado" value="{{ versao.titulo if versao else '' }}">
+          </div>
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Responsável</label>
+            <input type="text" name="autor" class="fe-input" value="{{ versao.autor if versao else 'Arisvan' }}">
+          </div>
+        </div>
+
+        <div class="fe-row">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Status da Versão</label>
+            <select name="status" id="status_versao" class="fe-input" required>
+              <option value="dev" {% if versao and versao.status == 'dev' %}selected{% endif %}>Em Desenvolvimento</option>
+              <option value="homologacao" {% if versao and versao.status == 'homologacao' %}selected{% endif %}>Em Homologação</option>
+              <option value="publicada" {% if versao and versao.status == 'publicada' %}selected{% endif %}>Publicada (Produção)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fe-row">
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Data e Hora de Início</label>
+            <input type="datetime-local" name="data_inicio" class="fe-input" value="{{ versao.data_inicio.strftime('%Y-%m-%dT%H:%M') if versao and versao.data_inicio else '' }}">
+          </div>
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Data Prevista (Lançamento)</label>
+            <input type="datetime-local" name="data_previsao" id="data_previsao" class="fe-input" value="{{ versao.data_previsao.strftime('%Y-%m-%dT%H:%M') if versao and versao.data_previsao else '' }}" onchange="calcularPerformance()">
+          </div>
+          <div class="fe-group fe-flex-1">
+            <label class="fe-label">Data e Hora de Publicação</label>
+            <input type="datetime-local" name="data_publicacao" id="data_publicacao" class="fe-input" value="{{ versao.data_publicacao.strftime('%Y-%m-%dT%H:%M') if versao and versao.data_publicacao else '' }}" onchange="calcularPerformance()">
+          </div>
+        </div>
+
+        <!-- 📊 PAINEL DE PERFORMANCE (INTELIGÊNCIA) -->
+        <div id="painel-performance" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; background: #f8fafc; border: 1.5px dashed #e2e8f0; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div id="perf-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+              <i class="fas fa-stopwatch"></i>
+            </div>
+            <div>
+              <div id="perf-status" style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Status do Lançamento</div>
+              <div id="perf-detalhe" style="font-size: 11px; color: #64748b; font-weight: 600;">Aguardando datas para cálculo...</div>
+            </div>
+          </div>
+          <div id="perf-dias" style="font-size: 24px; font-weight: 900; font-family: 'JetBrains Mono', monospace; color: #1e293b;">00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TIMELINE DE ENGENHARIA (PAAv1 SMART LOG) ── -->
+    <div class="fe-card" style="border-left: 4px solid #7A255F;">
+      <div class="fe-card-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span><i class="fas fa-stream"></i> Timeline de Engenharia (Selo de Integridade)</span>
+        <span style="font-size: 9px; opacity: 0.6; font-weight: 800;">AUTO-TIMESTAMP ENABLED</span>
+      </div>
+      <div class="fe-card-body">
+        
+        <!-- Quick Logger -->
+        <div style="background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: flex-end;">
+          <div style="flex: 1;">
+            <label class="fe-label" style="font-size: 9px;">Tipo de Atividade</label>
+            <select id="log_tipo" class="fe-input" style="height: 38px;">
+              <option value="info">ℹ️ Informação / Geral</option>
+              <option value="feature">🚀 Nova Funcionalidade</option>
+              <option value="bugfix">🐛 Correção de Bug</option>
+              <option value="refactor">🛠️ Refatoração / Estrutura</option>
+              <option value="ui">🎨 Interface / Design</option>
+            </select>
+          </div>
+          <div style="flex: 3;">
+            <label class="fe-label" style="font-size: 9px;">O que foi feito?</label>
+            <textarea id="log_descricao" class="fe-input" placeholder="Descreva a atividade realizada (permite múltiplas linhas)..." style="height: 38px; resize: vertical; padding-top: 8px; font-family: inherit;"></textarea>
+          </div>
+          <button type="button" onclick="registrarAtividade()" class="fe-btn-salvar-footer" style="height: 38px; margin: 0; padding: 0 20px; border-radius: 8px;">
+            <i class="fas fa-plus"></i> REGISTRAR
+          </button>
+        </div>
+
+        <!-- Vertical Timeline Container -->
+        <div id="timeline-container" style="position: relative; padding-left: 30px; border-left: 2px solid #e2e8f0; margin-left: 10px;">
+          {% if versao and versao.atividades %}
+            {% for act in versao.atividades|sort(attribute='id', reverse=true) %}
+              <div class="timeline-item" style="position: relative; margin-bottom: 20px;">
+                <div style="position: absolute; left: -41px; top: 0; width: 20px; height: 20px; background: {{ act.tipo_cor }}; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 8px;">
+                  <i class="fas {{ act.tipo_icon }}"></i>
+                </div>
+                <div style="font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                  {{ act.data_hora.strftime('%d/%m/%Y %H:%M') }}
+                  <span style="background: {{ act.tipo_cor }}15; color: {{ act.tipo_cor }}; padding: 2px 6px; border-radius: 4px; font-size: 8px; text-transform: uppercase;">{{ act.tipo }}</span>
+                </div>
+                <div style="font-size: 13px; color: #1e293b; font-weight: 600; line-height: 1.5; white-space: pre-wrap; word-break: break-word; font-family: inherit;">{{ act.descricao }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div id="timeline-empty" style="padding: 20px 0; text-align: center; color: #94a3b8; font-size: 11px; font-style: italic;">
+              Nenhuma atividade registrada nesta timeline.
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    <div class="fe-card" style="opacity: 0.8;">
+      <div class="fe-card-title"><i class="fas fa-history"></i> Changelog Consolidado (Resumo)</div>
+      <div class="fe-card-body">
+        <textarea name="changelog" id="changelog_field" class="fe-input" rows="4" placeholder="Use este campo para um resumo executivo da versão..." onfocus="garantirDataHora(this)">{{ versao.changelog if versao else '' }}</textarea>
+      </div>
+    </div>
+
+    <div class="fe-card">
+      <div class="fe-card-title"><i class="fas fa-file-code"></i> Arquivos Afetados</div>
+      <div class="fe-card-body">
+        <textarea name="arquivos" class="fe-input" rows="6" placeholder="Caminho/do/arquivo.py&#10;templates/base.html">{{ versao.arquivos if versao else '' }}</textarea>
+        <small style="font-size:11px;color:var(--muted);margin-top:6px;display:block;">Dica: Liste um arquivo por linha para facilitar a leitura.</small>
+      </div>
+    </div>
+
+    <!-- ── AUDITORIA ── -->
+    {% if versao %}
+    <div style="display: flex; justify-content: space-between; padding: 10px 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #edf2f7; margin-bottom: 20px;">
+        <div style="font-size: 11px; color: #64748b;"><strong>Criado em:</strong> {{ versao.criado_em.strftime('%d/%m/%Y %H:%M') if versao.criado_em else '—' }}</div>
+        <div style="font-size: 11px; color: #64748b;"><strong>Última Alteração:</strong> {{ versao.atualizado_em.strftime('%d/%m/%Y %H:%M') if versao.atualizado_em else '—' }}</div>
+    </div>
+    {% endif %}
+
+    <div class="fe-footer-actions">
+      <a href="{{ url_for('sistema.versoes') }}" class="fe-btn fe-btn-ghost-dark"><i class="fas fa-times"></i> Cancelar</a>
+      <button type="submit" class="fe-btn fe-btn-salvar-footer"><i class="fas fa-save"></i> {% if versao %}Atualizar Registro{% else %}Confirmar Nova Versão{% endif %}</button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  const semverInfo = {
+    patch: {
+      titulo: 'PATCH — Correção / Ajuste Pontual',
+      incremento: '+0.0.1',
+      cor: '#0072CE',
+      icone: 'fa-wrench',
+      descricao: 'Use <strong>PATCH</strong> quando a versão corrige bugs, ajustes visuais pontuais, textos, ou pequenas correções que não alteram o funcionamento geral do sistema.',
+      exemplos: [
+        'Correção de erro de cálculo em um campo',
+        'Ajuste de layout (cor, espaçamento, fonte)',
+        'Correção de typo ou texto errado',
+        'Hotfix de validação de formulário',
+        'Regras: sem quebra de compatibilidade, sem nova funcionalidade'
+      ]
+    },
+    minor: {
+      titulo: 'MINOR — Nova Funcionalidade',
+      incremento: '+0.1.0',
+      cor: '#7A255F',
+      icone: 'fa-plus-circle',
+      descricao: 'Use <strong>MINOR</strong> quando a versão adiciona uma nova funcionalidade ou módulo de forma <em>retrocompatível</em>, sem quebrar o que já existe.',
+      exemplos: [
+        'Novo módulo ou tela adicionada ao sistema',
+        'Novo campo em um formulário existente',
+        'Nova integção com API ou serviço externo',
+        'Novo relatório ou grid de dados',
+        'Regras: retrocompatível, sem quebrar funcionalidades existentes'
+      ]
+    },
+    major: {
+      titulo: 'MAJOR — Mudança Estrutural / Breaking Change',
+      incremento: '+1.0.0',
+      cor: '#E67E22',
+      icone: 'fa-layer-group',
+      descricao: 'Use <strong>MAJOR</strong> quando a versão representa uma mudança arquitetural, refatoração profunda, ou altera funcionalidades existentes de forma <em>não retrocompatível</em>.',
+      exemplos: [
+        'Refatoração completa de um módulo crítico',
+        'Mudança de banco de dados ou schema principal',
+        'Reescrita de engine de negócio (cálculos, fluxos)',
+        'Migração de framework ou tecnologia base',
+        'Regras: pode quebrar compatibilidade; exige atenção redobrada'
+      ]
+    }
+  };
+
+  function abrirModalSemVer(tipo) {
+    const info = semverInfo[tipo];
+    if (!info) return;
+
+    // Calcula a próxima versão sugerida
+    const ref = document.getElementById('ultima_v_ref').innerText;
+    let clean = ref.toLowerCase().replace('v', '');
+    let parts = clean.split('.');
+    while (parts.length < 3) parts.push('0');
+    let major = parseInt(parts[0]) || 0;
+    let minor = parseInt(parts[1]) || 0;
+    let patch = parseInt(parts[2]) || 0;
+    const pad = (num, original) => (original && original.length > 1 && num < 10) ? '0' + num : num;
+
+    if (tipo === 'patch') patch++;
+    else if (tipo === 'minor') { minor++; patch = 0; }
+    else if (tipo === 'major') { major++; minor = 0; patch = 0; }
+
+    const novaSugestao = `v${major}.${pad(minor, parts[1])}.${pad(patch, parts[2])}`;
+
+    // Injeta o modal no DOM se não existir
+    let modal = document.getElementById('modalSemVer');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modalSemVer';
+      modal.style.cssText = 'display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);z-index:99999;justify-content:center;align-items:center;padding:20px;';
+      document.body.appendChild(modal);
+    }
+
+    const exemplosHTML = info.exemplos.map(e =>
+      `<li style="margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;"><i class="fas fa-check-circle" style="color:${info.cor};margin-top:2px;flex-shrink:0;"></i><span>${e}</span></li>`
+    ).join('');
+
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:20px;width:100%;max-width:560px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3);border:1px solid #e2e8f0;overflow:hidden;animation:modalScaleIn 0.25s ease;">
+        <div style="padding:20px 25px;background:${info.cor}10;border-bottom:2px solid ${info.cor}30;display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:12px;background:${info.cor};display:flex;align-items:center;justify-content:center;">
+              <i class="fas ${info.icone}" style="color:#fff;font-size:18px;"></i>
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:800;color:${info.cor};">${info.titulo}</div>
+              <div style="font-size:11px;color:#64748b;font-weight:600;">Padrão Semântico SemVer • Incremento ${info.incremento}</div>
+            </div>
+          </div>
+          <button onclick="fecharModalSemVer()" style="background:none;border:none;font-size:20px;color:#94a3b8;cursor:pointer;line-height:1;"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="padding:25px;">
+          <p style="font-size:13px;color:#334155;line-height:1.7;margin-bottom:20px;">${info.descricao}</p>
+          <div style="background:#f8fafc;border-radius:12px;padding:16px;border:1px solid #e2e8f0;margin-bottom:20px;">
+            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:12px;letter-spacing:1px;">✍️ Quando aplicar:</div>
+            <ul style="list-style:none;padding:0;margin:0;font-size:12px;color:#334155;font-weight:500;">${exemplosHTML}</ul>
+          </div>
+          <div style="background:${info.cor}0d;border:1.5px solid ${info.cor}30;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:2px;">Próxima versão sugerida</div>
+              <div style="font-size:22px;font-weight:900;color:${info.cor};font-family:'JetBrains Mono',monospace;">${novaSugestao}</div>
+            </div>
+            <button onclick="aplicarSemVer('${tipo}')" style="background:${info.cor};color:#fff;border:none;padding:12px 20px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:0.2s;box-shadow:0 4px 12px ${info.cor}30;">
+              <i class="fas fa-check" style="margin-right:6px;"></i>APLICAR ${tipo.toUpperCase()}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  }
+
+  function fecharModalSemVer() {
+    const modal = document.getElementById('modalSemVer');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function aplicarSemVer(tipo) {
+    sugerirVersao(tipo);
+    fecharModalSemVer();
+  }
+
+  function sugerirVersao(tipo) {
+    const ref = document.getElementById('ultima_v_ref').innerText;
+    let clean = ref.toLowerCase().replace('v', '');
+    let parts = clean.split('.');
+    while (parts.length < 3) parts.push('0');
+
+    let major = parseInt(parts[0]) || 0;
+    let minor = parseInt(parts[1]) || 0;
+    let patch = parseInt(parts[2]) || 0;
+
+    if (tipo === 'patch') patch++;
+    else if (tipo === 'minor') { minor++; patch = 0; }
+    else if (tipo === 'major') { major++; minor = 0; patch = 0; }
+
+    const pad = (num, original) => (original && original.length > 1 && num < 10) ? '0' + num : num;
+    let nova = `v${major}.${pad(minor, parts[1])}.${pad(patch, parts[2])}`;
+    document.getElementById('numero_versao').value = nova;
+
+    if (typeof arioneToast === 'function') arioneToast(`Sugestão aplicada: ${nova}`, 'info');
+  }
+
+  function calcularPerformance() {
+    const dPrevisao = document.getElementById('data_previsao').value;
+    const dPublicacao = document.getElementById('data_publicacao').value;
+    const painel = document.getElementById('painel-performance');
+    const statusTxt = document.getElementById('perf-status');
+    const detalheTxt = document.getElementById('perf-detalhe');
+    const diasTxt = document.getElementById('perf-dias');
+    const iconBox = document.getElementById('perf-icon');
+
+    if (!dPrevisao || !dPublicacao) {
+      painel.style.display = 'none';
+      return;
+    }
+
+    const dataPrev = new Date(dPrevisao);
+    const dataPub = new Date(dPublicacao);
+    
+    // Diferença em milissegundos
+    const diffTime = dataPub - dataPrev;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const absDays = Math.abs(diffDays);
+
+    painel.style.display = 'flex';
+    diasTxt.innerText = absDays.toString().padStart(2, '0');
+
+    if (diffDays > 0) {
+      // ATRASADO
+      statusTxt.innerText = "🚨 LANÇAMENTO ATRASADO";
+      statusTxt.style.color = "#e74c3c";
+      detalheTxt.innerText = `A entrega ocorreu ${absDays} dia(s) após o prazo previsto.`;
+      iconBox.style.background = "#fdedec";
+      iconBox.style.color = "#e74c3c";
+      painel.style.borderColor = "#fadbd8";
+    } else if (diffDays < 0) {
+      // ANTECIPADO
+      statusTxt.innerText = "🏆 LANÇAMENTO ANTECIPADO";
+      statusTxt.style.color = "#27ae60";
+      detalheTxt.innerText = `Parabéns! A entrega foi realizada ${absDays} dia(s) antes do prazo.`;
+      iconBox.style.background = "#eafaf1";
+      iconBox.style.color = "#27ae60";
+      painel.style.borderColor = "#d4efdf";
+    } else {
+      // NO DIA (EM DIA)
+      statusTxt.innerText = "✅ LANÇAMENTO NO PRAZO";
+      statusTxt.style.color = "#2980b9";
+      detalheTxt.innerText = "A publicação foi realizada exatamente na data prevista.";
+      iconBox.style.background = "#ebf5fb";
+      iconBox.style.color = "#2980b9";
+      painel.style.borderColor = "#d6eaf8";
+    }
+  }
+
+  // Inicializa o cálculo se já houver datas
+  document.addEventListener('DOMContentLoaded', () => {
+    calcularPerformance();
+
+    // Se estivermos editando (id existe), prepara o changelog para nova entrada
+    const versao_id = "{{ versao.id if versao else '' }}";
+    const changelog = document.getElementById('changelog_field');
+    
+    if (versao_id && changelog) {
+      const agora = new Date();
+      const dataStr = agora.toLocaleDateString('pt-BR');
+      const horaStr = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const carimbo = `\n[${dataStr} ${horaStr}] - `;
+      
+      // Só adiciona se o campo não estiver vazio e não terminar já com esse carimbo (evita duplicidade no refresh)
+      if (changelog.value.trim() !== "" && !changelog.value.includes(`[${dataStr} ${horaStr}]`)) {
+        changelog.value += carimbo;
+        // Posiciona o cursor no final
+        changelog.scrollTop = changelog.scrollHeight;
+        changelog.focus();
+      }
+    }
+  });
+
+  async function registrarAtividade() {
+    const versao_id = "{{ versao.id if versao else '' }}";
+    if (!versao_id) {
+      arioneToast("⚠️ Salve a versão primeiro antes de registrar atividades na timeline.", "warning");
+      return;
+    }
+
+    const tipo = document.getElementById('log_tipo').value;
+    const desc = document.getElementById('log_descricao').value.trim();
+
+    if (!desc) {
+      arioneToast("⚠️ Informe o que foi feito.", "warning");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/sistema/versoes/${versao_id}/atividade`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: tipo, descricao: desc })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        arioneToast("✅ Atividade registrada com sucesso!", "success");
+        // Recarrega a página para atualizar a timeline (ou injeta via JS para ser Pro)
+        window.location.reload();
+      } else {
+        arioneToast("❌ Erro ao registrar: " + data.message, "danger");
+      }
+    } catch (e) {
+      console.error(e);
+      arioneToast("❌ Erro na comunicação com o servidor.", "danger");
+    }
+  }
+
+  function garantirDataHora(el) {
+    const agora = new Date();
+    const dataStr = agora.toLocaleDateString('pt-BR');
+    const horaStr = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const carimbo = `[${dataStr} ${horaStr}] - `;
+
+    // Se estiver vazio, insere o carimbo inicial
+    if (!el.value.trim()) {
+      el.value = carimbo;
+      return;
+    }
+
+    // Se o usuário clicar no final e houver uma quebra de linha, insere novo carimbo
+    // Mas evitamos duplicar se o carimbo já for o último texto inserido
+    if (el.value.endsWith('\n')) {
+       el.value += carimbo;
+    }
+  }
+
+  function focusSearchMaster() { alert('Busca rápida indisponível nesta tela.'); }
+  function toggleFormView() { document.getElementById('fe-wrap').classList.toggle('fe-form-hidden'); }
+  function importXMLMaster() { alert('Importação indisponível para versões.'); }
+  function exportarMaster() { alert('Exportação indisponível para versões.'); }
+  function imprimirMaster() { window.print(); }
+</script>
+
+<style>
+  .btn-sugestao {
+    background: #f1f5f9;
+    border: 1.5px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #64748b;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn-sugestao:hover {
+    background: #7A255F;
+    color: #fff;
+    border-color: #7A255F;
+    transform: translateY(-1px);
+  }
+</style>
+{% endblock %}

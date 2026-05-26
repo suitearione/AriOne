@@ -1,0 +1,1399 @@
+{# =============================================================================
+Caminho : templates/cadastros/cards/catalogos/form_produto_abas.html
+Função  : Conteúdo Integral das Abas e Motor de Scripts (Padrão Golden)
+============================================================================= #}
+
+{% import "macros/componentes.html" as comp %}
+
+<style>
+  .fe-badge-mp { background: #2B6CB0; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; }
+  .fe-badge-ace { background: #D69E2E; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; }
+  .fe-badge-serv { background: var(--pri); color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; }
+  .fe-badge-ins { background: #319795; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; }
+  .fe-badge-emb { background: #4A5568; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800; text-transform: uppercase; font-size: 9px; }
+</style>
+<div class="fp-tabs-wrap">
+  <div class="fp-tabs-nav" id="fp-tabs-nav" style="display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px; position:relative;">
+    <button type="button" class="fp-tab active" data-tab="estoque"><i class="fas fa-layer-group"></i> Grades & Rendimento <span class="fp-tab-badge" id="badge-estoque"></span></button>
+    <button type="button" class="fp-tab" data-tab="composicao" id="btn-tab-composicao" style="display:none;"><i class="fas fa-shapes"></i> Composição <span class="fp-tab-badge" id="badge-composicao"></span></button>
+    <button type="button" class="fp-tab" data-tab="precos"><i class="fas fa-calculator"></i> Valores & Margens <span class="fp-tab-badge" id="badge-precos"></span></button>
+    <button type="button" class="fp-tab" data-tab="pdv"><i class="fas fa-cash-register"></i> PDV & Regras <span class="fp-tab-badge" id="badge-pdv"></span></button>
+    <button type="button" class="fp-tab" data-tab="fiscal"><i class="fas fa-gavel"></i> Fiscal <span class="fp-tab-badge" id="badge-fiscal"></span></button>
+    <button type="button" class="fp-tab" data-tab="loja"><i class="fas fa-globe"></i> Loja Virtual <span class="fp-tab-badge" id="badge-loja"></span></button>
+    <button type="button" class="fp-tab" data-tab="imagens"><i class="fas fa-images"></i> Imagens <span class="fp-tab-badge" id="badge-imagens"></span></button>
+    <button type="button" class="fp-tab" data-tab="avancado"><i class="fas fa-sliders-h"></i> Avançado <span class="fp-tab-badge" id="badge-avancado"></span></button>
+  </div>
+
+  {# Smart Badge de Expansão (Aparece quando recolhido) #}
+  <div id="badge-expandir" onclick="toggleIdentificacao(true)" 
+       style="display:none; align-items:center; gap:6px; background:var(--pri); color:#fff; padding:6px 20px; border-radius:0 0 15px 15px; font-size:10px; font-weight:800; cursor:pointer; width:fit-content; box-shadow:0 8px 20px rgba(122,37,95,0.25); animation:feFadeIn 0.3s ease; position:absolute; top:45px; z-index:1100; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 20px;">
+    <i class="fas fa-chevron-down"></i> EXPANDIR IDENTIFICAÇÃO
+  </div>
+
+  {# ════ ABA ESTOQUE (MATRIZ MASTER) ════ #}
+  <div class="fp-tab-panel active" id="tab-estoque">
+    <div class="fp-addr-card" style="--addr-cor:#7A255F; margin-bottom:12px; padding: 10px 15px;">
+      <div class="fp-addr-title" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0; border-bottom:none;">
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px;"><i class="fas fa-layer-group"></i> Controle de Estoque</div>
+        
+        <div style="display:flex; gap:8px;">
+          <label class="fp-toggle-mini-h" style="cursor:pointer; display:flex; align-items:center; gap:8px; padding:5px 12px; border:1.5px solid #e2e8f0; border-radius:8px; transition:0.2s; background:{% if produto and produto.tipo_estoque =='unico' %}#7A255F{% else %}#fff{% endif %}; color:{% if produto and produto.tipo_estoque =='unico' %}#fff{% else %}#64748b{% endif %};">
+            <input type="radio" name="tipo_estoque" value="unico" {% if produto and produto.tipo_estoque =='unico' %}checked{% endif %} onchange="alternarGrade(this.value)" style="display:none;">
+            <i class="fas fa-cube" style="font-size:12px;"></i>
+            <div style="line-height:1.1;">
+              <div style="font-size:10px; font-weight:800;">ESTOQUE ÚNICO</div>
+              <div style="font-size:8px; opacity:0.8;">Saldo geral</div>
+            </div>
+          </label>
+
+          <label class="fp-toggle-mini-h" style="cursor:pointer; display:flex; align-items:center; gap:8px; padding:5px 12px; border:1.5px solid #e2e8f0; border-radius:8px; transition:0.2s; background:{% if produto and produto.tipo_estoque=='grade' %}#7A255F{% else %}#fff{% endif %}; color:{% if produto and produto.tipo_estoque=='grade' %}#fff{% else %}#64748b{% endif %};">
+            <input type="radio" name="tipo_estoque" value="grade" {% if produto and produto.tipo_estoque=='grade' %}checked{% endif %} onchange="alternarGrade(this.value)" style="display:none;">
+            <i class="fas fa-th" style="font-size:12px;"></i>
+            <div style="line-height:1.1;">
+              <div style="font-size:10px; font-weight:800;">ESTOQUE POR GRADE</div>
+              <div style="font-size:8px; opacity:0.8;">Cor e Tamanho</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .fp-toggle-mini-h:has(input:checked) { border-color: #7A255F !important; background: #7A255F !important; color: #fff !important; }
+    </style>
+
+    {# Estoque único #}
+    <div id="bloco-unico" {% if produto and produto.tipo_estoque=='grade' %}style="display:none;"{% endif %}>
+      <div class="fp-addr-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 16px;">
+        <div class="fp-addr-card" style="--addr-cor:#27AE60;">
+          <div class="fp-addr-title"><i class="fas fa-cubes"></i> Quantidades (Atacado & Varejo)</div>
+          
+          <div class="fp-row" style="gap:8px; margin-bottom:10px;">
+            <div class="fp-group fp-flex-1"><label class="fp-label" style="color:#C0392B;">Est. Atual Atacado</label><input class="fp-input fp-track" type="number" name="est_atacado" step="0.01" value="{{ produto.est_atacado if produto else '' }}" placeholder="0,00" style="border-left:3px solid #C0392B;"></div>
+            <div class="fp-group fp-flex-1"><label class="fp-label" style="color:#C0392B;">Est. Mínimo Atacado</label><input class="fp-input fp-track" type="number" name="min_atacado" value="{{ produto.min_atacado if produto else '' }}" placeholder="0" style="border-left:3px solid #C0392B;"></div>
+          </div>
+          
+          <div class="fp-row" style="gap:8px;">
+            <div class="fp-group fp-flex-1"><label class="fp-label" style="color:#0072CE;">Est. Atual Varejo</label><input class="fp-input fp-track" type="number" name="est_varejo" step="0.01" value="{{ produto.est_varejo if produto else '' }}" placeholder="0,00" style="border-left:3px solid #0072CE;"></div>
+            <div class="fp-group fp-flex-1"><label class="fp-label" style="color:#0072CE;">Est. Mínimo Varejo</label><input class="fp-input fp-track" type="number" name="min_varejo" value="{{ produto.min_varejo if produto else '' }}" placeholder="0" style="border-left:3px solid #0072CE;"></div>
+          </div>
+        </div>
+        <div class="fp-addr-card" style="--addr-cor:#0072CE;">
+          <div class="fp-addr-title"><i class="fas fa-map-marker-alt"></i> Localização</div>
+          <div class="fp-row">
+            <div class="fp-group fp-flex-1">
+                <label class="fp-label" style="display:flex; align-items:center; gap:6px;">Depósito 
+                  {{ comp.info_icon("Local físico de armazenamento para controle de saldo e inventário.") }}
+                  {{ comp.master_icon("depositos", "Gerenciar Depósitos", "abrirModalMaster('depositos')") }}
+                </label>
+                <input class="fp-input" type="text" name="deposito" id="sel-deposito-base" list="lista-depositos-base" value="{{ produto.deposito if produto else '' }}" placeholder="Escolha..." oninput="filtrarPrateleiras(this, 'lista-prateleiras-base')">
+                <datalist id="lista-depositos-base">
+                  {% for d in depositos_lista %}<option value="{{ d.nome }}">{{ d.nome|upper }}</option>{% endfor %}
+                </datalist>
+            </div>
+            <div class="fp-group fp-flex-1">
+                <label class="fp-label">Prateleira</label>
+                <input class="fp-input" type="text" name="prateleira" id="sel-prateleira-base" list="lista-prateleiras-base" value="{{ produto.prateleira if produto else '' }}" placeholder="Posição...">
+                <datalist id="lista-prateleiras-base"></datalist>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Matriz Master (Padrão AriOne) #}
+    <div id="bloco-grade" {% if not produto or produto.tipo_estoque !='grade' %}style="display:none;"{% endif %}>
+        <div class="fp-addr-card" style="--addr-cor:#7A255F; margin-bottom:12px; padding: 10px 15px; border: 1px solid var(--pri);">
+            <div class="fp-addr-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; padding-bottom:8px;">
+              <div style="font-size:13px; font-weight:800;"><i class="fas fa-microchip"></i> Estrutura de Variações e Estoque</div>
+
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div id="badge-variacoes" class="fe-badge-primary" style="font-size: 9px; padding: 3px 10px; border-radius: 20px; background: var(--pri); color: #fff;">
+                  <i class="fas fa-calculator"></i> 0 Variações
+                </div>
+                </button>
+              </div>
+            </div>
+
+            <div id="painel-rendimento-tamanhos" style="margin-bottom:15px; padding:15px; background:rgba(122,37,95,0.03); border-radius:12px; border:1px solid rgba(122,37,95,0.1);">
+                <div style="font-size:11px; font-weight:800; color:var(--pri); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-ruler-combined"></i> Fatores de Rendimento por Tamanho
+                    <span style="font-size:9px; color:#64748b; font-weight:400; text-transform:none; font-style:italic;">(Defina o consumo base para cada tamanho selecionado)</span>
+                </div>
+                <div id="grid-fatores-tamanhos" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    {# Injetado via JS em forceRenderMatrix #}
+                </div>
+            </div>
+
+            <div class="fp-row" style="align-items: flex-start; gap: 10px; margin-bottom:0;">
+                {# Coluna Cores #}
+                <div class="fp-group" style="flex: 1; background: #fafafa; padding: 6px 10px; border-radius: 8px; border: 1px solid #eee;">
+                  <label class="fp-label" style="font-size:10px; margin-bottom:5px;"><i class="fas fa-palette" style="color:#9B59B6;"></i> Cores {{ comp.master_icon("cores", "Novo", "abrirModalMaster('cores')") }}</label>
+                  <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+                    <select class="fp-input" id="sel-cores-catalogo" style="height: 28px; font-size: 10px; padding: 0 5px;">
+                      <option value="">— SELECIONE —</option>
+                      {% for c in cores_catalogo %}<option value="{{ c.nome }}" data-hex="{{ c.cor_hex }}">{{ c.nome|upper }}</option>{% endfor %}
+                    </select>
+                    <button type="button" onclick="adicionarCorGradePorSelecao()" style="background:var(--pri); color:#fff; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer;"><i class="fas fa-plus" style="font-size:9px;"></i></button>
+                  </div>
+                  <div id="lista-cores-selecionadas" style="max-height: 100px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 3px;"></div>
+                </div>
+
+                {# Coluna Tamanhos #}
+                <div class="fp-group" style="flex: 1.5; background: #fafafa; padding: 6px 10px; border-radius: 8px; border: 1px solid #eee;">
+                  <label class="fp-label" style="font-size:10px; margin-bottom:5px;"><i class="fas fa-ruler-combined" style="color:#7A255F;"></i> Tamanhos {{ comp.master_icon("tamanhos", "Novo", "abrirModalMaster('tamanhos')") }}</label>
+                  <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+                    <select class="fp-input" id="sel-grade-modelo" style="height: 28px; font-size: 10px; padding: 0 5px;">
+                      <option value="">— MODELO —</option>
+                      {% for g in grades_modelos %}<option value="{{ g.id }}">{{ g.nome|upper }}</option>{% endfor %}
+                    </select>
+                    <button type="button" onclick="carregarGradeModelo(document.getElementById('sel-grade-modelo').value)" style="background:var(--pri); color:#fff; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer;"><i class="fas fa-download" style="font-size:9px;"></i></button>
+                  </div>
+                  <div class="fp-chips" id="chips-tamanhos" style="gap: 3px;">
+                    {% if tamanhos_catalogo %}{% for tam in tamanhos_catalogo %}
+                    <label class="fp-chip" style="margin: 0;">
+                      <input type="checkbox" name="grade_tamanhos" value="{{ tam.nome|upper }}" onchange="validarTrocaTamanho(this)" {{ 'checked' if produto and tam.nome|upper in (produto.grade_tamanhos or []) else '' }}>
+                      <span style="font-size: 8px; padding: 2px 5px;">{{ tam.nome }}</span>
+                    </label>
+                    {% endfor %}{% endif %}
+                  </div>
+                </div>
+
+                {# Coluna Atributos #}
+                <div class="fp-group" style="flex: 1; background: #fafafa; padding: 6px 10px; border-radius: 8px; border: 1px solid #eee;">
+                  <label class="fp-label" style="font-size:10px; margin-bottom:5px;"><i class="fas fa-tags" style="color:#F39C12;"></i> Atributos {{ comp.master_icon("atributos", "Novo", "abrirModalMaster('atributos')") }}</label>
+                  <input type="text" name="grade_label_adicional" value="{{ produto.grade_label_adicional if produto else '' }}" placeholder="Ex: Manga..." style="font-size: 9px; border:none; border-bottom:1px solid #ddd; outline:none; width:100%; margin-bottom:5px; background:transparent;">
+                  <div style="display: flex; gap: 4px;">
+                    <select class="fp-input" id="sel-atributo-catalogo" style="height: 28px; font-size: 10px; padding: 0 5px;">
+                      <option value="">— SELECT —</option>
+                      {% for a in atributos_catalogo %}<option value="{{ a.nome }}">{{ a.nome|upper }}</option>{% endfor %}
+                    </select>
+                    <button type="button" onclick="adicionarAtributoGrade()" style="background:#F39C12; color:#fff; border:none; border-radius:4px; width:28px; height:28px; cursor:pointer;"><i class="fas fa-plus" style="font-size:9px;"></i></button>
+                  </div>
+                  <div id="lista-atributos-selecionados" style="max-height: 80px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 3px; margin-top:5px;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="tabela-grade-wrap"></div>
+    </div>
+  </div>
+
+  {# ════ DEMAIS ABAS (RESTAURAÇÃO TOTAL) ════ #}
+  {# Composição #}
+  <div class="fp-tab-panel" id="tab-composicao">
+    {# Seletor de Tamanho (Aparece se for Grade) #}
+    <div id="comp-size-selector" style="display:none; margin-bottom:20px; padding:15px; background:var(--pri-bg); border-radius:12px; border:1px solid rgba(122,37,95,0.1);">
+      <div style="font-size:10px; font-weight:800; color:var(--pri); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+        <i class="fas fa-ruler-combined"></i> Composição por Tamanho
+      </div>
+      <div id="comp-size-list" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+    </div>
+
+    <div class="fp-ficha-kpis" style="display:flex; gap:16px; margin-bottom:20px;">
+      <div class="fp-kpi" style="flex:1; background:#fff; border:1px solid #eee; border-radius:12px; padding:15px; border-left:4px solid #C0392B;">
+        <div style="font-size:10px; font-weight:800; color:#999; text-transform:uppercase;">Custo Fab. Estimado</div>
+        <div id="kpi-custo-fab" style="font-size:18px; font-weight:900; color:#C0392B;">R$ 0,00</div>
+      </div>
+      <div class="fp-kpi" style="flex:1; background:#fff; border:1px solid #eee; border-radius:12px; padding:15px; border-left:4px solid #27AE60;">
+        <div style="font-size:10px; font-weight:800; color:#999; text-transform:uppercase;">Margem Bruta Composição</div>
+        <div id="kpi-margem-ft" style="font-size:18px; font-weight:900; color:#27AE60;">—</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:15px; justify-content:flex-end; flex-wrap:wrap;">
+      <button type="button" class="fp-btn" onclick="abrirComponente('Matéria-Prima')" style="background:#2B6CB0 !important; color:#fff !important;" title="Item principal (Malha, Tecido). Geralmente por metro ou quilo. Sem ele, não há produto."><i class="fas fa-scroll"></i> + Matéria-Prima</button>
+      <button type="button" class="fp-btn" onclick="abrirComponente('Acessório')" style="background:#D69E2E !important; color:#fff !important;" title="Gola pronta, reforço de ombro, etc. Itens anexados para acabamento."><i class="fas fa-puzzle-piece"></i> + Acessório</button>
+      <button type="button" class="fp-btn" onclick="abrirComponente('Serviço')" style="background:#7A255F !important; color:#fff !important;" title="Mão de obra (Costura, Estamparia, Bordado). Compõe o valor da peça."><i class="fas fa-cut"></i> + Serviço</button>
+      <button type="button" class="fp-btn" onclick="abrirComponente('Insumo')" style="background:#319795 !important; color:#fff !important;" title="Linha, fios, etc. Difíceis de medir exatamente. Entra no custo indireto."><i class="fas fa-box-open"></i> + Insumo</button>
+      <button type="button" class="fp-btn" onclick="abrirComponente('Embalagem')" style="background:#4A5568 !important; color:#fff !important;" title="Saco plástico, Tag, Cabide. Protege e apresenta o produto para o varejo."><i class="fas fa-box"></i> + Embalagem</button>
+    </div>
+    <div id="tabela-comp-wrap" style="display:none;"><table class="fp-table"><thead><tr><th>Tipo</th><th>Componente</th><th>Un.</th><th>Custo</th><th>Qtd.</th><th>Total</th><th></th></tr></thead><tbody id="tbody-comp"></tbody></table></div>
+    <div id="info-composicao" style="padding:40px; text-align:center; background:#f9fafb; border-radius:12px; border:1.5px dashed #eee;">
+        <i class="fas fa-shapes" style="font-size:30px; color:#ccc; margin-bottom:10px;"></i>
+        <div style="color:#999; font-size:13px;">Monte a engenharia do produto adicionando insumos e serviços.</div>
+    </div>
+  </div>
+
+  {# Preços #}
+  <div class="fp-tab-panel" id="tab-precos">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+      {% for nome, field, cor in [('Custo Bruto','preco_custo','#C0392B'),('Preço Varejo','preco_varejo','#0072CE'),('Preço Atacado','preco_atacado','#27AE60')] %}
+      <div class="fp-addr-card" style="--addr-cor:{{ cor }};">
+        <div class="fp-addr-title">{{ nome }}</div>
+        <input class="fp-input fp-mask-money fp-track" type="text" name="{{ field }}" id="{{ field }}" value="{{ produto[field] if produto else '' }}" style="width:100%; font-size:20px; font-weight:900; color:{{ cor }}; text-align:right;" oninput="calcMargens()">
+        <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:10px; font-weight:800; color:#999;">MARGEM %</span>
+            <span id="mg_{{ field }}" style="font-weight:900; font-size:14px;">—</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {# Estrutura de Variações e Estoque #}
+    <div id="bloco-grade-precos" {% if not produto or produto.tipo_estoque !='grade' %}style="display:none;"{% endif %} style="margin-top:20px;">
+        <div class="fp-addr-card" style="--addr-cor:#7A255F; margin-bottom:12px; padding: 10px 15px; border: 1px solid var(--pri);">
+            <div class="fp-addr-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; padding-bottom:8px;">
+              <div style="font-size:13px; font-weight:800;"><i class="fas fa-microchip"></i> Estrutura de Variações e Estoque</div>
+
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div id="badge-variacoes-precos" class="fe-badge-primary" style="font-size: 9px; padding: 3px 10px; border-radius: 20px; background: var(--pri); color: #fff;">
+                  <i class="fas fa-calculator"></i> 0 Variações
+                </div>
+              </div>
+            </div>
+
+            <div id="painel-rendimento-tamanhos-precos" style="margin-bottom:15px; padding:15px; background:rgba(122,37,95,0.03); border-radius:12px; border:1px solid rgba(122,37,95,0.1);">
+                <div style="font-size:11px; font-weight:800; color:var(--pri); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-ruler-combined"></i> Fatores de Rendimento por Tamanho
+                </div>
+                <div id="grid-fatores-tamanhos-precos" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    {# Injetado via JS #}
+                </div>
+            </div>
+
+            <div class="fp-row" style="align-items: flex-start; gap: 10px; margin-bottom:0;">
+                {# Coluna Cores #}
+                <div class="fp-group" style="flex: 1; background: #fafafa; padding: 6px 10px; border-radius: 8px; border: 1px solid #eee;">
+                  <label class="fp-label" style="font-size:10px; margin-bottom:5px;"><i class="fas fa-palette" style="color:#9B59B6;"></i> Cores</label>
+                  <div id="lista-cores-selecionadas-precos" style="max-height: 100px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 3px;"></div>
+                </div>
+
+                {# Coluna Tamanhos #}
+                <div class="fp-group" style="flex: 1.5; background: #fafafa; padding: 6px 10px; border-radius: 8px; border: 1px solid #eee;">
+                  <label class="fp-label" style="font-size:10px; margin-bottom:5px;"><i class="fas fa-ruler-combined" style="color:#7A255F;"></i> Tamanhos</label>
+                  <div id="lista-tamanhos-selecionados-precos" style="max-height: 100px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 3px;"></div>
+                </div>
+
+                {# Coluna Atributos #}
+                <div class="fp-group" style="flex: 1; background: #fafafa; padding: 6px 10px; border-radius: 8px; border: 1px solid #eee;">
+                  <label class="fp-label" style="font-size:10px; margin-bottom:5px;"><i class="fas fa-tags" style="color:#F39C12;"></i> Atributos</label>
+                  <div id="lista-atributos-selecionados-precos" style="max-height: 80px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 3px; margin-top:5px;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="tabela-grade-wrap-precos"></div>
+    </div>
+  </div>
+
+  {# PDV #}
+  <div class="fp-tab-panel" id="tab-pdv">
+    <div class="fp-addr-card" style="--addr-cor:#7A255F;">
+      <div class="fp-addr-title"><i class="fas fa-cash-register"></i> Regras Comerciais</div>
+      <div class="fp-row">
+        <div class="fp-group fp-flex-1">
+            <label class="fp-label">Permitir Desconto no PDV?</label>
+            <select class="fp-input" name="permite_desconto">
+                <option value="1" {% if produto and produto.permite_desconto %}selected{% endif %}>Sim, permitir</option>
+                <option value="0" {% if produto and not produto.permite_desconto %}selected{% endif %}>Não, preço fixo</option>
+            </select>
+        </div>
+        <div class="fp-group fp-flex-1">
+            <label class="fp-label">Limite de Desconto (%)</label>
+            <input class="fp-input" type="number" name="desconto_maximo" value="{{ produto.desconto_maximo if produto else '0' }}" placeholder="0,00">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Fiscal #}
+  <div class="fp-tab-panel" id="tab-fiscal">
+    <div class="fp-addr-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+      <div class="fp-addr-card" style="--addr-cor:#E67E22;">
+        <div class="fp-addr-title">Classificação Fiscal (NCM)</div>
+        <div class="fp-row">
+          <div class="fp-group fp-flex-1"><label class="fp-label">NCM <span class="fp-req">*</span></label><input class="fp-input fp-track" name="ncm" value="{{ produto.ncm if produto else '' }}" placeholder="Ex: 6109.10.00"></div>
+          <div class="fp-group fp-flex-1"><label class="fp-label">CEST</label><input class="fp-input" name="cest" value="{{ produto.cest if produto else '' }}" placeholder="Opcional"></div>
+        </div>
+      </div>
+      <div class="fp-addr-card" style="--addr-cor:#E67E22;">
+        <div class="fp-addr-title">Tributação Estadual</div>
+        <div class="fp-row">
+          <div class="fp-group fp-flex-1"><label class="fp-label">CST / CSOSN</label><input class="fp-input fp-track" name="cst" value="{{ produto.cst if produto else '' }}" placeholder="Ex: 101, 500..."></div>
+          <div class="fp-group fp-flex-1"><label class="fp-label">Origem</label>
+            <select class="fp-input" name="origem">
+                <option value="0" {% if produto and produto.origem == '0' %}selected{% endif %}>0 - Nacional</option>
+                <option value="1" {% if produto and produto.origem == '1' %}selected{% endif %}>1 - Estrangeira - Imp. Direta</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Imagens #}
+  <div class="fp-tab-panel" id="tab-imagens">
+    <div style="border: 2px dashed var(--border); border-radius:16px; padding:50px; text-align:center; background:#fcfcfc;">
+      <i class="fas fa-images" style="font-size:40px; color:var(--pri); opacity:.2; margin-bottom:15px;"></i>
+      <div style="font-weight:800; color:#555; margin-bottom:20px;">SELECIONE AS FOTOS DO PRODUTO</div>
+      <button type="button" class="fp-btn" onclick="document.getElementById('input-imagens').click()" style="background:var(--pri); color:#fff; padding:12px 40px; box-shadow:0 4px 15px rgba(122,37,95,0.2);">ESCOLHER ARQUIVOS</button>
+      <input type="file" name="imagens" id="input-imagens" multiple style="display:none;" onchange="previewImagens(this)">
+    </div>
+    <div id="preview-imagens" style="margin-top:25px; display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:15px;"></div>
+  </div>
+</div>
+
+<script>
+  // ════ MOTOR DE SCROLL (RECOLHER CABEÇALHO) ════
+  window.addEventListener('scroll', () => {
+    const mod = document.querySelector('.mod-produto');
+    if (window.scrollY > 150) {
+      mod.classList.add('is-scrolled');
+      // Auto-recolhe se estiver aberto ao scrollar muito
+      const body = document.getElementById('body-identificacao');
+      if (body && body.style.display !== 'none') toggleIdentificacao(false);
+    } else {
+      mod.classList.remove('is-scrolled');
+    }
+  });
+
+  function toggleIdentificacao(expand) {
+    const mod = document.querySelector('.mod-produto');
+    
+    if (expand === true) {
+        mod.classList.remove('is-collapsed');
+    } else {
+        mod.classList.add('is-collapsed');
+    }
+  }
+
+  // ════ SISTEMA DE ABAS ARIONE ════
+  document.addEventListener('DOMContentLoaded', () => {
+      const activeTab = document.querySelector('.fp-tab.active');
+      if (activeTab) {
+          setTimeout(() => {
+              toggleIdentificacao(false);
+          }, 500);
+      }
+  });
+
+  document.querySelectorAll('.fp-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.fp-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.fp-tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const target = document.getElementById('tab-' + btn.dataset.tab);
+      if(target) target.classList.add('active');
+    });
+  });
+
+  // ════ MOTOR DE ESTOQUE ════
+  function alternarGrade(val) {
+    document.getElementById('bloco-unico').style.display = val === 'unico' ? 'block' : 'none';
+    document.getElementById('bloco-grade').style.display = val === 'grade' ? 'block' : 'none';
+    const blocoGradePrecos = document.getElementById('bloco-grade-precos');
+    if (blocoGradePrecos) {
+        blocoGradePrecos.style.display = val === 'grade' ? 'block' : 'none';
+    }
+    updateComposicaoSizes(); // Sincroniza com a aba de composição
+  }
+
+  // ════ CÁLCULOS E MÁSCARAS ════
+  function parseMoney(v) { 
+      if (!v) return 0;
+      if (typeof v === 'number') return v;
+      return parseFloat(v.toString().replace(/\./g, '').replace(',', '.')) || 0; 
+  }
+  
+  function calcMargens() {
+    const custo = parseMoney(document.getElementById('preco_custo')?.value || '');
+    ['preco_varejo', 'preco_atacado'].forEach(id => {
+      const preco = parseMoney(document.getElementById(id)?.value || ''), el = document.getElementById('mg_' + id);
+      if (el && custo > 0 && preco > 0) {
+        const mg = ((preco - custo) / preco * 100).toFixed(1);
+        el.textContent = mg + '%';
+        el.style.color = parseFloat(mg) >= 0 ? '#27AE60' : '#e53e3e';
+      }
+    });
+  }
+
+  document.querySelectorAll('.fp-mask-money').forEach(el => {
+    el.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '');
+      v = (parseInt(v || '0') / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      e.target.value = v;
+    });
+  });
+
+  // ════ MATRIZ MASTER (INTEGRAÇÃO CATÁLOGO) ════
+  const selectedCoresGrade = [
+      {% if produto and produto.grade_cores %}
+          {% for c_nome in produto.grade_cores %}
+              {% set cor_obj = cores_catalogo|selectattr("nome", "equalto", c_nome)|first %}
+              { nome: "{{ c_nome }}", hex: "{{ cor_obj.cor_hex if cor_obj else '#CBD5E0' }}" },
+          {% endfor %}
+      {% endif %}
+  ];
+  function adicionarCorGradePorSelecao() {
+      const sel = document.getElementById('sel-cores-catalogo');
+      const nome = sel.value;
+      const hex = sel.options[sel.selectedIndex].dataset.hex;
+      if(!nome || selectedCoresGrade.some(c => c.nome === nome)) return;
+      selectedCoresGrade.push({ nome, hex });
+      renderCoresChips();
+  }
+
+  async function removerCorGrade(index, nome) {
+      const produtoId = document.getElementsByName('id')[0]?.value;
+      if (produtoId && produtoId !== '0') {
+          try {
+              const res = await fetch(`/produtos/checar-uso-variacao/${produtoId}/cor/${nome}`);
+              const data = await res.json();
+              if (data.bloqueado) {
+                  if (typeof arioneToast === 'function') arioneToast(data.mensagem, "danger");
+                  else alert(data.mensagem);
+                  return;
+              }
+          } catch(e) { console.error("Erro na trava de segurança:", e); }
+      }
+      selectedCoresGrade.splice(index, 1);
+      renderCoresChips();
+      forceRenderMatrix();
+  }
+
+  function renderCoresChips() {
+      const list = document.getElementById('lista-cores-selecionadas');
+      list.innerHTML = selectedCoresGrade.map((c, i) => `
+        <div class="fp-selection-item active" style="display:flex; align-items:center; gap:10px; padding:10px; border:1px solid var(--pri); border-radius:10px; margin-bottom:6px; background:var(--pri-bg);">
+          <input type="checkbox" name="grade_cores" value="${c.nome}" checked style="display:none;">
+          <span style="width:14px; height:14px; border-radius:50%; background:${c.hex}; border:1px solid rgba(0,0,0,0.1);"></span>
+          <span style="font-size:12px; font-weight:800; color:var(--pri); flex:1;">${c.nome}</span>
+          <i class="fas fa-times" onclick="removerCorGrade(${i}, '${c.nome}')" style="cursor:pointer; color:#e53e3e;"></i>
+        </div>
+      `).join('');
+      updateGradeSummary();
+  }
+
+  const selectedAtributosGrade = [
+      {% if produto and produto.grade_valores_adicional %}
+          {% for a_nome in produto.grade_valores_adicional %}
+              { nome: "{{ a_nome }}" },
+          {% endfor %}
+      {% endif %}
+  ];
+  function adicionarAtributoGrade() {
+      const sel = document.getElementById('sel-atributo-catalogo');
+      const nome = sel.value;
+      if(!nome || selectedAtributosGrade.some(a => a.nome === nome)) return;
+      selectedAtributosGrade.push({ nome });
+      renderAtributosChips();
+      forceRenderMatrix(); // Atualiza a matriz na hora
+  }
+
+  async function removerAtributoGrade(index, nome) {
+      const produtoId = document.getElementsByName('id')[0]?.value;
+      if (produtoId && produtoId !== '0') {
+          try {
+              const res = await fetch(`/produtos/checar-uso-variacao/${produtoId}/atributo/${nome}`);
+              const data = await res.json();
+              if (data.bloqueado) {
+                  if (typeof arioneToast === 'function') arioneToast(data.mensagem, "danger");
+                  else alert(data.mensagem);
+                  return;
+              }
+          } catch(e) { console.error("Erro na trava de segurança:", e); }
+      }
+      selectedAtributosGrade.splice(index, 1);
+      renderAtributosChips();
+      forceRenderMatrix();
+  }
+
+  function renderAtributosChips() {
+      const list = document.getElementById('lista-atributos-selecionados');
+      if(!list) return;
+      list.innerHTML = selectedAtributosGrade.map((a, i) => `
+        <div class="fp-selection-item active" style="display:flex; align-items:center; gap:10px; padding:8px; border:1px solid var(--sec); border-radius:10px; margin-bottom:6px; background:rgba(243,156,18,0.05);">
+          <input type="checkbox" name="grade_valores_adicional" value="${a.nome}" checked style="display:none;">
+          <i class="fas fa-tag" style="color:var(--sec); font-size:10px;"></i>
+          <span style="font-size:11px; font-weight:800; color:var(--sec); flex:1;">${a.nome}</span>
+          <i class="fas fa-times" onclick="removerAtributoGrade(${i}, '${a.nome}')" style="cursor:pointer; color:#e53e3e;"></i>
+        </div>
+      `).join('');
+      updateGradeSummary();
+  }
+
+  function limparTamanhosGrade() {
+      document.querySelectorAll('[name=grade_tamanhos]').forEach(cb => {
+          cb.checked = false;
+          const label = cb.closest('.fp-chip');
+          if(cb.dataset.dynamic === "true") {
+              label.remove();
+          } else {
+              label.style.display = 'none';
+          }
+      });
+      updateGradeSummary();
+      forceRenderMatrix();
+  }
+
+  async function carregarGradeModelo(id) {
+    if(!id) return;
+    try {
+        const response = await fetch(`/cadastros/catalogos/grades/${id}/json`);
+        const data = await response.json();
+        if(data && data.itens) {
+            // 1. Limpeza Profunda: Desmarcar todos e remover chips que foram adicionados dinamicamente
+            const chipWrap = document.getElementById('chips-tamanhos');
+            document.querySelectorAll('[name=grade_tamanhos]').forEach(cb => {
+                cb.checked = false;
+                // Se o chip foi adicionado dinamicamente (não estava no HTML original), removemos
+                if(cb.dataset.dynamic === "true") {
+                    cb.closest('.fp-chip').remove();
+                }
+            });
+            
+            // 2. Loop de processamento inteligente
+            const itensNormalizados = data.itens.map(i => i.trim().toUpperCase());
+            
+            for (const cleanItem of itensNormalizados) {
+                let cb = document.querySelector(`[name=grade_tamanhos][value="${cleanItem}"]`);
+                
+                if(!cb) {
+                    // Se o tamanho não existir no catálogo, cadastramos e criamos o chip
+                    try {
+                        const regRes = await fetch('/cadastros/cards/tamanhos', {
+                            method: 'POST',
+                            body: new URLSearchParams({ 'nome_tamanho': cleanItem, 'status_tamanho': 'ATIVO', 'ordem': 0 }),
+                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' }
+                        });
+                        
+                        if(regRes.ok) {
+                            const newChip = document.createElement('label');
+                            newChip.className = 'fp-chip';
+                            newChip.style.margin = '0';
+                            newChip.innerHTML = `
+                                <div class="fp-selection-item active" style="padding: 0; display: flex; align-items: center; border-radius: 6px; overflow: hidden; margin: 0;">
+                                    <input type="checkbox" name="grade_tamanhos" value="${cleanItem}" data-dynamic="true" onchange="validarTrocaTamanho(this)" checked>
+                                    <span style="font-size: 9px; padding: 3px 6px;">${cleanItem}</span>
+                                </div>
+                            `;
+                            chipWrap.appendChild(newChip);
+                            cb = newChip.querySelector('input');
+                        }
+                    } catch(regErr) { console.error("Erro no cadastro automático:", regErr); }
+                } else {
+                    cb.checked = true;
+                }
+            }
+
+            // 3. Toque Final: Esconder chips que NÃO estão na grade atual (opcional, mas ajuda na limpeza)
+            document.querySelectorAll('[name=grade_tamanhos]').forEach(cb => {
+                const label = cb.closest('.fp-chip');
+                if(!cb.checked) {
+                    label.style.display = 'none'; // Esconde o que não é da grade
+                } else {
+                    label.style.display = 'block'; // Mostra o que é da grade
+                }
+            });
+            
+            if (typeof arioneToast === 'function') {
+                arioneToast(`Grade "${data.nome}" carregada e sincronizada!`, "success");
+            }
+            
+            updateGradeSummary();
+            forceRenderMatrix(); 
+            if (typeof updateComposicaoSizes === 'function') updateComposicaoSizes();
+        }
+    } catch(e) {
+        console.error("Erro ao carregar grade:", e);
+        if (typeof arioneToast === 'function') arioneToast("Erro ao carregar grade modelo.", "danger");
+    }
+  }
+
+  async function validarTrocaTamanho(checkbox) {
+      if (!checkbox.checked) {
+          const produtoId = document.getElementsByName('id')[0]?.value;
+          const nome = checkbox.value;
+          if (produtoId && produtoId !== '0') {
+              try {
+                  const res = await fetch(`/produtos/checar-uso-variacao/${produtoId}/tamanho/${nome}`);
+                  const data = await res.json();
+                  if (data.bloqueado) {
+                      checkbox.checked = true; // Re-marca
+                      if (typeof arioneToast === 'function') arioneToast(data.mensagem, "danger");
+                      else alert(data.mensagem);
+                      return;
+                  }
+              } catch(e) { console.error("Erro na trava de segurança:", e); }
+          }
+      }
+      updateGradeSummary();
+      forceRenderMatrix();
+      if (typeof updateComposicaoSizes === 'function') updateComposicaoSizes();
+  }
+
+  function updateGradeSummary() {
+      const cores = selectedCoresGrade.length;
+      const tams = document.querySelectorAll('[name=grade_tamanhos]:checked').length;
+      const attrs = selectedAtributosGrade.length || 1; // Se zero, conta como 1 para não zerar o total
+      const total = cores * tams * (selectedAtributosGrade.length || 1);
+      const badge = document.getElementById('badge-variacoes');
+      if (badge) {
+          badge.innerHTML = `<i class="fas fa-calculator"></i> ${total} Variações Selecionadas`;
+          badge.style.background = total > 0 ? '#27AE60' : 'var(--pri)';
+          badge.style.color = '#fff';
+      }
+  }
+
+  function forceRenderMatrix(force = false) {
+      const cores = selectedCoresGrade.map(c => c.nome);
+      const tams = [...document.querySelectorAll('[name=grade_tamanhos]:checked')].map(t => t.value);
+      const attrs = selectedAtributosGrade.map(a => a.nome);
+      const wrap = document.getElementById('tabela-grade-wrap');
+      const wrapPrecos = document.getElementById('tabela-grade-wrap-precos');
+
+      const isEngenharia = document.getElementById('chk-has-composicao')?.checked;
+
+      if(!cores.length || !tams.length) {
+          const msg = '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd; border-radius:12px;">Defina ao menos as Cores e Tamanhos para gerar a matriz.</div>';
+          if(wrap) wrap.innerHTML = msg;
+          if(wrapPrecos) wrapPrecos.innerHTML = msg;
+          return;
+      }
+
+      let html = '<div style="margin-top:25px; margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid #f1f5f9; display:flex; align-items:center; gap:10px;"><i class="fas fa-chart-pie" style="color:var(--pri); font-size:16px;"></i> <span style="font-size:14px; font-weight:900; color:#1e293b; text-transform:uppercase; letter-spacing:0.5px;">Fatores de Rendimentos</span></div>';
+      html += '<table class="fp-table"><thead><tr style="background:#f1f5f9;"><th style="width:140px; text-align:left; font-size:9px; color:#475569; padding:6px 8px;"><i class="fas fa-barcode"></i> SKU-FILHO</th><th style="text-align:left; font-size:9px; color:#475569;">DESCRIÇÃO COMPLETA DA VARIAÇÃO</th><th style="width:80px; text-align:right; font-size:9px; color:#475569;">CUSTO</th><th style="width:60px; text-align:center; font-size:9px; color:#475569;">ESTOQUE</th>';
+
+      html += '<th style="width:80px; text-align:right; font-size:9px; color:#475569; padding-right:10px;">PREÇO VENDA</th><th style="width:40px; text-align:center; font-size:9px; color:#475569;">SYNC</th></tr></thead><tbody>';
+
+      cores.forEach(c => {
+          tams.forEach(t => {
+              if (attrs.length > 0) {
+                  attrs.forEach(a => {
+                      html += renderRow(c, t, a, force);
+                  });
+              } else {
+                  html += renderRow(c, t, null, force);
+              }
+          });
+      });
+
+      // 🚀 Renderiza o Painel de Rendimento por Tamanho (aba Grades)
+      const gridFatores = document.getElementById('grid-fatores-tamanhos');
+      if (gridFatores) {
+          let fatoresHtml = '';
+          tams.forEach(t => {
+              let existingFator = "1.00";
+              const firstKeyMatch = Object.keys(existingData).find(k => k.split('-')[1] === t);
+              if (firstKeyMatch && existingData[firstKeyMatch].fator) {
+                  existingFator = existingData[firstKeyMatch].fator;
+              } else {
+                  existingFator = (t.includes('GG') ? '1.20' : t.includes('XG') ? '1.35' : '1.00');
+              }
+
+              fatoresHtml += `
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:4px; min-width:80px; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                  <span style="font-size:10px; font-weight:900; color:#475569;">TAM ${t}</span>
+                  <input type="number" step="0.01" class="fator-tamanho-input" data-size="${t}" value="${existingFator}"
+                         style="width:60px; height:24px; text-align:center; font-weight:800; color:var(--pri); border:1px solid #cbd5e1; border-radius:4px;"
+                         oninput="syncFatorPorTamanho('${t}', this.value)">
+              </div>`;
+          });
+          gridFatores.innerHTML = fatoresHtml;
+      }
+
+      // 🚀 Renderiza o Painel de Rendimento por Tamanho (aba Valores & Margens)
+      const gridFatoresPrecos = document.getElementById('grid-fatores-tamanhos-precos');
+      if (gridFatoresPrecos) {
+          let fatoresHtml = '';
+          tams.forEach(t => {
+              let existingFator = "1.00";
+              const firstKeyMatch = Object.keys(existingData).find(k => k.split('-')[1] === t);
+              if (firstKeyMatch && existingData[firstKeyMatch].fator) {
+                  existingFator = existingData[firstKeyMatch].fator;
+              } else {
+                  existingFator = (t.includes('GG') ? '1.20' : t.includes('XG') ? '1.35' : '1.00');
+              }
+
+              fatoresHtml += `
+              <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:4px; min-width:80px; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                  <span style="font-size:10px; font-weight:900; color:#475569;">TAM ${t}</span>
+                  <input type="number" step="0.01" class="fator-tamanho-input" data-size="${t}" value="${existingFator}"
+                         style="width:60px; height:24px; text-align:center; font-weight:800; color:var(--pri); border:1px solid #cbd5e1; border-radius:4px;"
+                         oninput="syncFatorPorTamanho('${t}', this.value)">
+              </div>`;
+          });
+          gridFatoresPrecos.innerHTML = fatoresHtml;
+      }
+
+      // 🚀 Atualiza listas de cores/tamanhos/atributos na aba Valores & Margens
+      const listaCoresPrecos = document.getElementById('lista-cores-selecionadas-precos');
+      const listaTamsPrecos = document.getElementById('lista-tamanhos-selecionados-precos');
+      const listaAttrsPrecos = document.getElementById('lista-atributos-selecionados-precos');
+
+      if(listaCoresPrecos) {
+          listaCoresPrecos.innerHTML = selectedCoresGrade.map(c => `<span style="font-size:8px; padding:2px 6px; background:#9B59B6; color:#fff; border-radius:4px;">${c.nome}</span>`).join('');
+      }
+      if(listaTamsPrecos) {
+          listaTamsPrecos.innerHTML = tams.map(t => `<span style="font-size:8px; padding:2px 6px; background:#7A255F; color:#fff; border-radius:4px;">${t}</span>`).join('');
+      }
+      if(listaAttrsPrecos) {
+          listaAttrsPrecos.innerHTML = selectedAtributosGrade.map(a => `<span style="font-size:8px; padding:2px 6px; background:#F39C12; color:#fff; border-radius:4px;">${a.nome}</span>`).join('');
+      }
+
+      // 🚀 Atualiza badge de variações na aba Valores & Margens
+      const badgePrecos = document.getElementById('badge-variacoes-precos');
+      if(badgePrecos) {
+          const total = cores.length * tams.length * (attrs.length || 1);
+          badgePrecos.innerHTML = `<i class="fas fa-calculator"></i> ${total} Variações`;
+      }
+
+      html += '</tbody></table>';
+      if(wrap) wrap.innerHTML = html;
+      if(wrapPrecos) wrapPrecos.innerHTML = html;
+  }
+
+      // Carregar dados existentes da matriz (se houver)
+      const existingData = {{ (produto.grade_matrix if produto and produto.grade_matrix else {})|tojson|safe }};
+
+      // Função para sanitizar e pegar siglas
+      function getSigla(str, len) {
+          if(!str) return "";
+          return str.normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+                    .replace(/[^a-zA-Z0-9]/g, "")   // Remove caracteres especiais
+                    .substring(0, len)
+                    .toUpperCase();
+      }
+
+      function gerarSKU(c, t, a) {
+          const skuPai = document.getElementsByName('referencia')[0]?.value || 'REF';
+          const cor = getSigla(c, 3);
+          const tam = t.replace(/\s+/g, '').toUpperCase();
+          const attr = a ? getSigla(a, 2) : '';
+          
+          let res = `${skuPai}.${cor}.${tam}`;
+          if (attr) res += `.${attr}`;
+          return res;
+      }
+
+      function renderRow(c, t, a, force) {
+          const key = a ? `${c}-${t}-${a}` : `${c}-${t}`;
+          const isEngenharia = document.getElementById('chk-has-composicao')?.checked;
+          const val = (!force && existingData[key]) ? existingData[key] : {};
+          const skuAuto = val.sku || gerarSKU(c, t, a);
+          const labelCompleta = `${campoDescricao.value} - ${c} - ${t}${a ? ' - ' + a : ''}`.toUpperCase();
+
+          let custoBase = parseMoney(document.getElementById('preco_custo')?.value || '0,00');
+
+          // 🛡️ Se for engenharia, busca custo da composição por variação
+          if (isEngenharia && typeof window.composicaoData !== 'undefined') {
+              const compKey = a ? `${c}|${t}|${a}` : `${c}|${t}|`;
+              const compData = window.composicaoData[compKey] || window.composicaoData['GERAL'] || [];
+
+              if (compData.length > 0) {
+                  let custoComposicao = 0;
+                  compData.forEach(item => {
+                      const itemCusto = parseMoney(item.custo || '0');
+                      custoComposicao += itemCusto * (item.qtd || 0);
+                  });
+                  custoBase = custoComposicao;
+              }
+          }
+
+          const fator = val.fator || (t.includes('GG') ? '1.20' : t.includes('XG') ? '1.35' : '1.00');
+          const custoCalc = (custoBase * parseFloat(fator)).toFixed(2).replace('.', ',') || '0,00';
+
+          let rowHtml = `<tr class="matrix-row" data-key="${key}" style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 2px 4px; width: 140px;">
+                <input class="fp-input sku-input" name="mat_sku_${key}" type="text" value="${skuAuto}" style="width:100%; height:22px !important; font-size:10px !important; font-weight:600 !important; color:#475569; background:#fff; border:1px solid #e2e8f0; border-radius:4px; padding:0 6px !important; letter-spacing:-0.1px;">
+            </td>
+            <td style="font-size:10px; font-weight:500; color:#1e293b; padding:2px 8px;">${labelCompleta}</td>
+            <td style="padding: 2px 8px; text-align:right; font-size:10px; font-weight:800; color:#C0392B;" class="custo-calc-text">R$ ${custoCalc}</td>
+            <td style="padding: 2px 4px;"><input class="fp-input estoque-input" name="mat_estoque_${key}" type="number" value="${val.estoque || '0'}" style="width:100%; text-align:center; height:20px; font-size:10px; border:1px solid #e2e8f0; border-radius:4px;"></td>`;
+
+          if (isEngenharia) {
+              const sizeInput = document.querySelector(`.fator-tamanho-input[data-size="${t}"]`);
+              const rowFator = sizeInput ? sizeInput.value : (val.fator || "1.00");
+              rowHtml += `<input type="hidden" class="fator-input" name="mat_fator_${key}" data-size="${t}" value="${rowFator}">`;
+          }
+
+          rowHtml += `
+            <td style="padding: 2px 4px;"><input class="fp-input fp-mask-money preco-input" name="mat_preco_${key}" type="text" value="${val.preco || (document.getElementById('preco_varejo') ? document.getElementById('preco_varejo').value : '0,00')}" style="width:100%; text-align:right; height:20px; font-weight:700; font-size:10px; color:var(--pri); border:1px solid #e2e8f0; border-radius:4px; padding: 0 6px;"></td>
+            <td class="mat-status-cell" style="text-align:center; padding:2px;"></td>
+          </tr>`;
+
+          return rowHtml;
+      }
+
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+      
+      // Aplicar máscaras nos novos campos gerados
+      wrap.querySelectorAll('.fp-mask-money').forEach(el => {
+          el.addEventListener('input', e => {
+              let v = e.target.value.replace(/\D/g, '');
+              v = (parseInt(v || '0') / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+              e.target.value = v;
+          });
+      });
+  }
+
+  }
+
+  // Sincroniza o fator de um tamanho específico com todas as variações correspondentes
+  function syncFatorPorTamanho(size, val) {
+      const fator = parseFloat(val) || 1.00;
+      const custoBase = parseMoney(document.getElementById('preco_custo')?.value || '0,00');
+      
+      document.querySelectorAll(`.fator-input[data-size="${size}"]`).forEach(input => {
+          input.value = fator.toFixed(2);
+          const row = input.closest('tr');
+          const custoText = row.querySelector('.custo-calc-text');
+          if (custoText) {
+              const novoCusto = (custoBase * fator).toFixed(2).replace('.', ',');
+              custoText.textContent = `R$ ${novoCusto}`;
+          }
+      });
+  }
+
+  // ════ SISTEMA AJAX ARIONE ════
+  async function forceSubmitProduto() {
+    const form = document.getElementById('form-produto');
+    const btnHeader = document.querySelector('.fe-action-save');
+    const btnFooter = document.querySelector('.fp-btn-salvar-footer');
+    
+    const setBtnState = (loading) => {
+        [btnHeader, btnFooter].forEach(b => {
+            if (!b) return;
+            b.disabled = loading;
+            if (loading) {
+                b.dataset.oldHtml = b.innerHTML;
+                b.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            } else {
+                b.innerHTML = b.dataset.oldHtml || (b.classList.contains('fe-action-save') ? '<i class="fas fa-save"></i>' : '<i class="fas fa-save"></i> SALVAR PRODUTO');
+            }
+        });
+    };
+
+    setBtnState(true);
+    
+    try {
+      if (typeof collectMatrixData === 'function') collectMatrixData();
+      
+      const formData = new FormData(form);
+      const response = await fetch(form.action || window.location.href, { 
+        method: 'POST', 
+        body: formData, 
+        headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+      });
+      
+      if (response.ok) { 
+          if (typeof arioneToast === 'function') arioneToast("Produto salvo com sucesso!", "success");
+          else alert("Produto salvo com sucesso!");
+          setTimeout(() => window.location.reload(), 1000); 
+      } else { 
+          const errData = await response.text();
+          console.error("Erro no Servidor:", errData);
+          if (typeof arioneToast === 'function') arioneToast("Erro ao salvar. Verifique o console.", "danger");
+          else alert("Erro ao salvar produto.");
+      }
+    } catch (e) { 
+        console.error("Erro no AJAX:", e);
+        form.submit(); 
+    } finally { 
+        setBtnState(false);
+    }
+  }
+
+  // ════ DEPÓSITOS DINÂMICOS ════
+  window.shelfMap = {{ mapeamento_prateleiras|tojson|safe if mapeamento_prateleiras else '{}' }};
+  function filtrarPrateleiras() {
+      const dep = document.getElementById('sel-deposito').value;
+      const list = document.getElementById('lista-prateleiras-dinamica');
+      list.innerHTML = '';
+      if(window.shelfMap[dep]) {
+          window.shelfMap[dep].forEach(p => {
+              const opt = document.createElement('option');
+              opt.value = p;
+              list.appendChild(opt);
+          });
+      }
+  }
+
+  function previewImagens(input) {
+      const preview = document.getElementById('preview-imagens');
+      if (!preview) return;
+      if (input.files) {
+          const currentCount = preview.children.length;
+          [...input.files].forEach((file, index) => {
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                  const div = document.createElement('div');
+                  div.style.cssText = 'width:130px; height:130px; border-radius:12px; border:1px solid #eee; overflow:hidden; position:relative;';
+                  div.innerHTML = `
+                      <img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">
+                      <div style="position:absolute; top:8px; left:8px; background:rgba(122,37,95,0.9); color:#fff; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.2);">Imagem ${currentCount + index + 1}</div>
+                      <button type="button" onclick="this.parentElement.remove(); renumerarImagens();" style="position:absolute; top:8px; right:8px; background:rgba(231,76,60,0.9); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:12px; font-weight:800; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">✕</button>
+                  `;
+                  preview.appendChild(div);
+
+                  // 🛡️ Atualiza a foto principal no cabeçalho com a primeira imagem
+                  if (index === 0 && currentCount === 0) {
+                      const heroPreview = document.getElementById('hero-photo-preview');
+                      if (heroPreview) {
+                          heroPreview.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;" id="hero-img">`;
+                      }
+                  }
+              }
+              reader.readAsDataURL(file);
+          });
+      }
+  }
+
+  function renumerarImagens() {
+      const preview = document.getElementById('preview-imagens');
+      if (!preview) return;
+      const badges = preview.querySelectorAll('div[style*="background:rgba(122,37,95,0.9)"]');
+      badges.forEach((badge, index) => {
+          badge.textContent = `Imagem ${index + 1}`;
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+      calcMargens();
+      updateGradeSummary();
+      forceRenderMatrix(); // Garante que a grade carregue na edição
+      recalcPrecosCore(); // Inicializa os KPIs de Valores & Margens
+      console.log("Sistema Modular AriOne (v1.0) Carregado.");
+  });
+  // Inicialização Automática (Edição)
+  renderCoresChips();
+  renderAtributosChips();
+  updateGradeSummary();
+
+  // Função para coletar os dados da matriz antes de salvar
+  function collectMatrixData() {
+      const data = {};
+      document.querySelectorAll('.matrix-row').forEach(row => {
+          const key = row.dataset.key; // ex: VERMELHO-P-MANGA
+          data[key] = {
+              sku: row.querySelector('.sku-input')?.value || '',
+              preco: row.querySelector('.preco-input')?.value || '0,00',
+              estoque: row.querySelector('.estoque-input')?.value || '0',
+              fator: row.querySelector('.fator-input')?.value || '1.00'
+          };
+      });
+      const input = document.getElementById('matrix_json_hidden');
+      if(input) input.value = JSON.stringify(data);
+  }
+
+  // Chamar ao mudar qualquer campo da matriz
+  document.getElementById('body-matriz')?.addEventListener('change', collectMatrixData);
+
+  // ════ SISTEMA DE COMPOSIÇÃO (ENGENHARIA) ════
+  window.currentSizeComp = 'GERAL';
+  window.composicaoData = {{ (produto.composicao_json if produto and produto.composicao_json else {})|tojson|safe }};
+
+  function toggleComposicaoTab(visible) {
+      const btn = document.getElementById('btn-tab-composicao');
+      const wrapMov = document.getElementById('wrap-mov-composicao');
+      const engContainer = document.getElementById('engenharia-container');
+      const boxResale = document.getElementById('box-custo-resale');
+      const boxIndustry = document.getElementById('box-custo-industry');
+      
+      if (btn) {
+          btn.style.display = visible ? 'flex' : 'none';
+          if (!visible && btn.classList.contains('active')) {
+              // Se a aba sumir e estiver ativa, volta para a primeira
+              document.querySelector('.fp-tab').click();
+          }
+      }
+
+      if (wrapMov) {
+          wrapMov.style.display = visible ? 'flex' : 'none';
+          // Se desabilitar a composição, desmarcar a movimentação por segurança
+          if (!visible) document.getElementById('chk-mov-composicao').checked = false;
+      }
+      
+      // 🛡️ ARI ONE ADAPTIVE: Controla o container de botões de engenharia
+      if (engContainer) {
+          engContainer.style.display = visible ? 'block' : 'none';
+      }
+
+      // 🛡️ ARI ONE ADAPTIVE: Alterna entre custo de nota e custo industrial
+      if (boxResale) boxResale.style.display = visible ? 'none' : 'block';
+      if (boxIndustry) boxIndustry.style.display = visible ? 'block' : 'none';
+      if (document.getElementById('kpi-custo-origem')) {
+          document.getElementById('kpi-custo-origem').textContent = visible ? 'Origem: Composição' : 'Origem: Revenda';
+      }
+      
+      // 🛡️ ARI ONE ADAPTIVE: Re-renderiza a matriz para mostrar/ocultar colunas de engenharia
+      if (typeof forceRenderMatrix === 'function') forceRenderMatrix();
+
+      // Recalcula os preços com a nova origem de custo
+      recalcPrecosCore();
+  }
+
+  function recalcPrecosCore() {
+      const isInd = document.getElementById('chk-has-composicao')?.checked;
+
+      // 1. Obter Custo Base (considerando contexto da composição em grades)
+      let custoBase = 0;
+      let contextoLabel = 'GERAL';
+
+      if (isInd) {
+          const isGrade = document.querySelector('[name="tipo_estoque"]:checked')?.value === 'grade';
+
+          if (isGrade && typeof window.composicaoData !== 'undefined') {
+              // 🚀 Para produtos com Grade: calcula custo médio ponderado de todas as variações
+              let custoTotal = 0;
+              let count = 0;
+
+              // Itera sobre todos os contextos de composição
+              for (const key in window.composicaoData) {
+                  const compData = window.composicaoData[key];
+                  if (compData && compData.length > 0) {
+                      let custoContexto = 0;
+                      compData.forEach(item => {
+                          const itemCusto = parseFloat(item.custo) || 0;
+                          const itemQtd = parseFloat(item.qtd) || 0;
+                          custoContexto += itemCusto * itemQtd;
+                      });
+                      custoTotal += custoContexto;
+                      count++;
+                  }
+              }
+
+              // Se houver variações com composição, usa a média
+              if (count > 0) {
+                  custoBase = custoTotal / count;
+                  contextoLabel = 'MÉDIA GRADE';
+              } else {
+                  // Fallback para GERAL se não houver variações
+                  const totalStr = document.getElementById('sum-total-geral')?.textContent || '0,00';
+                  custoBase = parseMoney(totalStr);
+              }
+          } else {
+              // Produto único: pega do contexto atual
+              const contextLabel = document.getElementById('comp-context-label');
+              if (contextLabel && contextLabel.textContent) {
+                  contextoLabel = contextLabel.textContent.trim();
+              }
+
+              const totalStr = document.getElementById('sum-total-geral')?.textContent || '0,00';
+              custoBase = parseMoney(totalStr);
+          }
+
+          if(document.getElementById('custo-fab-display')) {
+              document.getElementById('custo-fab-display').textContent = 'R$ ' + custoBase.toFixed(2).replace('.', ',');
+          }
+      } else {
+          // Pega do campo de entrada manual
+          custoBase = parseMoney(document.getElementById('preco_custo')?.value || '0,00');
+      }
+
+      // 2. Adicionais de Compra (IPI/Frete)
+      const ipiP = parseFloat(document.getElementById('compra_ipi')?.value || 0) / 100;
+      const freteP = parseFloat(document.getElementById('compra_frete')?.value || 0) / 100;
+      const custoEntrada = custoBase * (1 + ipiP + freteP);
+
+      // Atualiza KPI e Display de Custo
+      if(document.getElementById('kpi-custo-real')) document.getElementById('kpi-custo-real').textContent = formatMoney(custoEntrada);
+      if(document.getElementById('custo-total-final')) document.getElementById('custo-total-final').textContent = formatMoney(custoEntrada);
+
+      // Atualiza origem do custo no KPI
+      if(document.getElementById('kpi-custo-origem')) {
+          if (isInd) {
+              const isGrade = document.querySelector('[name="tipo_estoque"]:checked')?.value === 'grade';
+              if (isGrade && contextoLabel === 'MÉDIA GRADE') {
+                  document.getElementById('kpi-custo-origem').textContent = 'Origem: Composição (Média Grade)';
+              } else if (isGrade && contextoLabel !== 'GERAL') {
+                  document.getElementById('kpi-custo-origem').textContent = 'Origem: Composição (' + contextoLabel + ')';
+              } else {
+                  document.getElementById('kpi-custo-origem').textContent = 'Origem: Composição';
+              }
+          } else {
+              document.getElementById('kpi-custo-origem').textContent = 'Origem: Revenda';
+          }
+      }
+
+      // 3. Impostos e Taxas de Venda
+      const impV = parseFloat(document.getElementById('venda_impostos')?.value || 0) / 100;
+      const comV = parseFloat(document.getElementById('venda_comissao')?.value || 0) / 100;
+      const outV = parseFloat(document.getElementById('venda_outros')?.value || 0) / 100;
+      const taxasTotais = impV + comV + outV;
+
+      // 4. Markup Alvo e Sugestão
+      const mkAlvo = parseFloat(document.getElementById('markup_alvo')?.value || 1);
+      const precoSug = custoEntrada * mkAlvo;
+      if(document.getElementById('preco-sugerido-display')) document.getElementById('preco-sugerido-display').textContent = formatMoney(precoSug);
+
+      // 5. Analisar Canais (Varejo, Atacado, Dist)
+      const ids = ['varejo', 'atacado', 'dist'];
+      let varejoPrice = 0;
+
+      ids.forEach(id => {
+          const campo = document.getElementById('preco_' + id);
+          if (!campo) return;
+
+          const vVenda = parseMoney(campo.value);
+          if (id === 'varejo') varejoPrice = vVenda;
+
+          if (vVenda > 0) {
+              const lucroLiq = vVenda * (1 - taxasTotais) - custoEntrada;
+              const margemLiq = (lucroLiq / vVenda) * 100;
+              const mkReal = vVenda / custoEntrada;
+
+              const elLucro = document.getElementById('lucro-' + id);
+              if (elLucro) {
+                  elLucro.textContent = formatMoney(lucroLiq);
+                  elLucro.style.color = lucroLiq > 0 ? '#27AE60' : '#C0392B';
+              }
+          }
+      });
+
+      // 6. Atualizar KPIs principais (usando varejo ou preço sugerido como fallback)
+      const precoBaseKPI = varejoPrice > 0 ? varejoPrice : precoSug;
+      const lucroLiqKPI = precoBaseKPI * (1 - taxasTotais) - custoEntrada;
+      const margemLiqKPI = (lucroLiqKPI / precoBaseKPI) * 100;
+      const mkRealKPI = precoBaseKPI / custoEntrada;
+
+      if(document.getElementById('kpi-markup')) document.getElementById('kpi-markup').textContent = mkRealKPI.toFixed(2) + 'x';
+      if(document.getElementById('kpi-margem-liq')) {
+          const elMg = document.getElementById('kpi-margem-liq');
+          elMg.textContent = margemLiqKPI.toFixed(2).replace('.',',') + '%';
+          elMg.style.color = margemLiqKPI > 25 ? '#27AE60' : (margemLiqKPI > 10 ? '#E67E22' : '#C0392B');
+      }
+      if(document.getElementById('kpi-lucro-rs')) document.getElementById('kpi-lucro-rs').textContent = formatMoney(lucroLiqKPI);
+
+      // Atualiza Markup na Linha do Tempo (Avançado)
+      const elTimelineMk = document.getElementById('timeline-markup-atual');
+      if (elTimelineMk) elTimelineMk.textContent = mkRealKPI.toFixed(2) + 'x';
+  }
+
+  // Atalho para formatar dinheiro nos KPIs
+  function formatMoney(val) {
+      return 'R$ ' + val.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+  }
+
+  function arioneClonarProduto() {
+      const id = "{{ produto.id if produto else '' }}";
+      if (!id) {
+          if (typeof arioneToast === 'function') arioneToast("Salve o produto antes de duplicar.", "warning");
+          return;
+      }
+      
+      if (typeof arioneConfirm === 'function') {
+          arioneConfirm("Deseja criar uma cópia idêntica deste produto?", () => {
+              window.location.href = `/cadastros/produtos/duplicar/${id}`;
+          });
+      } else {
+          if (confirm("Deseja criar uma cópia idêntica deste produto?")) {
+              window.location.href = `/cadastros/produtos/duplicar/${id}`;
+          }
+      }
+  }
+
+  function updateComposicaoSizes() {
+      const isGrade = document.querySelector('[name="tipo_estoque"]:checked')?.value === 'grade';
+      const selector = document.getElementById('comp-size-selector');
+      const list = document.getElementById('comp-size-list');
+      
+      if (!isGrade) {
+          selector.style.display = 'none';
+          window.currentSizeComp = 'GERAL';
+          renderComposicaoTable();
+          return;
+      }
+
+      selector.style.display = 'block';
+      const sizes = [...document.querySelectorAll('[name="grade_tamanhos"]:checked')].map(cb => cb.value);
+      
+      if (sizes.length === 0) {
+          list.innerHTML = '<span style="font-size:11px; color:#999; font-style:italic;">Nenhum tamanho selecionado na aba Grades.</span>';
+          return;
+      }
+
+      list.innerHTML = sizes.map(s => `
+          <div class="comp-size-chip ${window.currentSizeComp === s ? 'active' : ''}" 
+               onclick="switchComposicaoSize('${s}')"
+               style="padding:8px 15px; border-radius:10px; border:1px solid #ddd; background:#fff; cursor:pointer; font-size:12px; font-weight:800; transition:0.2s;">
+            ${s}
+          </div>
+      `).join('');
+
+      // Se o tamanho atual não existe mais, reseta
+      if (!sizes.includes(window.currentSizeComp)) {
+          switchComposicaoSize(sizes[0]);
+      } else {
+          renderComposicaoTable();
+      }
+  }
+
+  function switchComposicaoSize(size) {
+      window.currentSizeComp = size;
+      document.querySelectorAll('.comp-size-chip').forEach(el => {
+          el.classList.remove('active');
+          if (el.textContent.trim() === size) el.classList.add('active');
+          // Update styles manually for visual feedback
+          el.style.background = el.classList.contains('active') ? 'var(--pri)' : '#fff';
+          el.style.color = el.classList.contains('active') ? '#fff' : '#444';
+          el.style.borderColor = el.classList.contains('active') ? 'var(--pri)' : '#ddd';
+      });
+      renderComposicaoTable();
+  }
+
+  function renderComposicaoTable() {
+      const data = window.composicaoData[window.currentSizeComp] || [];
+      const tbody = document.getElementById('tbody-comp');
+      const wrap = document.getElementById('tabela-comp-wrap');
+      const info = document.getElementById('info-composicao');
+
+      const badgeMap = {
+          'Matéria-Prima': 'mp',
+          'Acessório': 'ace',
+          'Serviço': 'serv',
+          'Insumo': 'ins',
+          'Embalagem': 'emb'
+      };
+
+      if (data.length === 0) {
+          wrap.style.display = 'none';
+          info.style.display = 'block';
+      } else {
+          wrap.style.display = 'block';
+          info.style.display = 'none';
+          tbody.innerHTML = data.map((item, i) => `
+              <tr>
+                  <td><span class="fe-badge-${badgeMap[item.tipo] || 'info'}" style="font-size:9px;">${item.tipo}</span></td>
+                  <td style="font-weight:700;">${item.nome}</td>
+                  <td>${item.unidade}</td>
+                  <td>R$ ${item.custo}</td>
+                  <td><input type="number" class="fp-input" style="width:70px; padding:4px;" value="${item.qtd}" onchange="updateItemQtd(${i}, this.value)"></td>
+                  <td style="font-weight:800;">R$ ${(parseMoney(item.custo) * item.qtd).toFixed(2).replace('.',',')}</td>
+                  <td><i class="fas fa-trash" onclick="removeItemComp(${i})" style="color:#e53e3e; cursor:pointer;"></i></td>
+              </tr>
+          `).join('');
+      }
+      calcCustoEstimado();
+  }
+
+  function updateItemQtd(idx, val) {
+      if (!window.composicaoData[window.currentSizeComp]) return;
+      window.composicaoData[window.currentSizeComp][idx].qtd = parseFloat(val) || 0;
+      renderComposicaoTable();
+      syncComposicaoJson();
+  }
+
+  function removeItemComp(idx) {
+      if (!window.composicaoData[window.currentSizeComp]) return;
+      window.composicaoData[window.currentSizeComp].splice(idx, 1);
+      renderComposicaoTable();
+      syncComposicaoJson();
+  }
+
+  function calcCustoEstimado() {
+      const data = window.composicaoData[window.currentSizeComp] || [];
+      let total = 0;
+      data.forEach(item => {
+          total += parseMoney(item.custo) * item.qtd;
+      });
+      document.getElementById('kpi-custo-fab').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+  }
+
+  function syncComposicaoJson() {
+      const input = document.getElementById('input-composicao-json');
+      if (input) input.value = JSON.stringify(window.composicaoData);
+  }
+
+  // ════ SISTEMA DE COMPOSIÇÃO (ENGENHARIA) ════
+  window.currentSizeComp = 'GERAL';
+  
+  // Função para abrir o formulário rápido de componente
+  window.abrirComponente = async function(tipo) {
+      const container = document.getElementById('info-composicao');
+      const tableWrap = document.getElementById('tabela-comp-wrap');
+      
+      // Mapeamento de arquivos conforme o print do usuário
+      const fileMap = {
+          'Matéria-Prima': 'mpmat',
+          'Acessório': 'acess',
+          'Serviço': 'serv',
+          'Insumo': 'insum',
+          'Embalagem': 'embal'
+      };
+
+      const fileName = `form_produto_comp_${fileMap[tipo]}.html`;
+      
+      try {
+          // Rota Master de Fragmentos do AriOne
+          const response = await fetch(`/cadastros/produtos/fragmento/${fileName}`);
+          if (!response.ok) throw new Error("Fragmento não encontrado");
+          
+          const html = await response.text();
+          
+          // Injeta o formulário acima da tabela ou do info
+          let formTarget = document.getElementById('comp-form-injection-zone');
+          if(!formTarget) {
+              formTarget = document.createElement('div');
+              formTarget.id = 'comp-form-injection-zone';
+              container.parentNode.insertBefore(formTarget, container);
+          }
+          
+          formTarget.innerHTML = html;
+          container.style.display = 'none'; // Esconde o "Monte a engenharia"
+          
+          // Aplica máscaras e listeners no novo HTML
+          formTarget.querySelectorAll('.fp-mask-money').forEach(el => {
+              el.addEventListener('input', e => {
+                  let v = e.target.value.replace(/\D/g, '');
+                  v = (parseInt(v || '0') / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                  e.target.value = v;
+              });
+          });
+
+      } catch (e) {
+          console.error("Erro ao carregar formulário rápido:", e);
+          if (typeof arioneToast === 'function') arioneToast(`Erro ao carregar formulário de ${tipo}.`, "danger");
+      }
+  };
+
+  window.fecharFormComp = function() {
+      const zone = document.getElementById('comp-form-injection-zone');
+      if(zone) zone.innerHTML = '';
+      const data = window.composicaoData[window.currentSizeComp] || [];
+      if(data.length === 0) document.getElementById('info-composicao').style.display = 'block';
+  };
+
+  window.confirmarInclusaoComp = function(tipo) {
+      const zone = document.getElementById('comp-form-injection-zone');
+      if(!zone) return;
+
+      const nome = zone.querySelector('.comp-item-nome-input')?.value;
+      const desc = zone.querySelector('.comp-item-desc-input')?.value || nome;
+      const qtd = parseFloat(zone.querySelector('.comp-item-qtd-input')?.value) || 0;
+      const un = zone.querySelector('.comp-item-un-select')?.value || 'UN';
+      const custo = zone.querySelector('.comp-item-custo-input')?.value || '0,00';
+
+      if(!nome || qtd <= 0) {
+          if (typeof arioneToast === 'function') arioneToast("Preencha o item e a quantidade.", "warning");
+          return;
+      }
+
+      if(!window.composicaoData[window.currentSizeComp]) window.composicaoData[window.currentSizeComp] = [];
+      
+      window.composicaoData[window.currentSizeComp].push({
+          tipo: tipo,
+          nome: desc,
+          unidade: un,
+          custo: custo,
+          qtd: qtd
+      });
+
+      fecharFormComp();
+      renderComposicaoTable();
+      syncComposicaoJson();
+      if (typeof arioneToast === 'function') arioneToast(`${tipo} adicionado à composição!`, "success");
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+      // Inicializa visibilidade da aba e containers de engenharia
+      const chkComp = document.getElementById('chk-has-composicao');
+      if (chkComp) toggleComposicaoTab(chkComp.checked);
+      
+      const radioGrade = document.querySelector('[name="tipo_estoque"]:checked');
+      if (radioGrade && typeof alternarGrade === 'function') alternarGrade(radioGrade.value);
+
+      if (typeof updateComposicaoSizes === 'function') updateComposicaoSizes();
+  });
+
+</script>

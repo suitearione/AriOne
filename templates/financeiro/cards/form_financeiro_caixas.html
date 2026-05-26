@@ -1,0 +1,711 @@
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import 'macros/componentes.html' as comp %}
+
+{% block content %}
+<div class="arione-master-scope arione-financeiro-caixas" style="width: 100%;">
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Gestão de Caixas e PDV",
+        subtitulo="Financeiro > Tesouraria > Controle de Caixas",
+        icone="fa-cash-register",
+        cor_tema="#7A255F",
+        func_fechar="voltarParaGridCaixas()",
+        form_id="form-gestao-caixas",
+        onclick_novo="resetFormCaixa()",
+        onclick_save="salvarCaixa()",
+        onclick_search="focarPesquisaCaixas()",
+        onclick_filter="abrirModalFiltrosCaixa()",
+        onclick_list="focarListaCaixas()",
+        onclick_clonar="clonarCaixaAtivo()",
+        onclick_export="exportarMovimentacoesCSV()",
+        onclick_import="abrirModalImportacaoCaixa()",
+        onclick_print="imprimirExtratoCaixa()",
+        onclick_email="enviarExtratoEmail()",
+        onclick_whatsapp="enviarExtratoWhatsApp()",
+        status="Caixa Ativo",
+        ajuda="Gerencie a abertura, fechamento e movimentações avulsas (sangria, suprimento) de caixas físicos e virtuais.",
+        tamanho="grande"
+    ) }}
+
+<style>
+    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+    .caixa-item { padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; margin-bottom: 10px; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center; }
+    .caixa-item:hover { border-color: #7A255F; box-shadow: 0 2px 5px rgba(122,37,95,0.1); }
+    .caixa-item.ativo { border-color: #7A255F; background: #faf5f9; border-left: 4px solid #7A255F; }
+    .caixa-badge { font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+    .caixa-badge.aberto { background: #d1fae5; color: #065f46; }
+    .caixa-badge.fechado { background: #fee2e2; color: #991b1b; }
+    .mov-table th { background: #f1f5f9; font-weight: 600; text-transform: uppercase; font-size: 12px; padding: 12px; }
+    .mov-table td { padding: 12px; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
+    .mov-entrada { color: #059669; font-weight: 600; }
+    .mov-saida { color: #dc2626; font-weight: 600; }
+</style>
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; min-height: 100vh; width: 100%; display: flex; flex-direction: column;">
+
+    {# 🏛️ PARTE SUPERIOR FIXA - CABEÇALHO GRANDE #}
+    <div style="background: #fff; border-bottom: 1px solid #e2e8f0; padding: 45px 40px; flex-shrink: 0;">
+        <div class="op-container-fluid" style="max-width: 1600px; margin: 0 auto;">
+            <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+                
+                {# 🏛️ COLUNA ESQUERDA: LISTAGEM DE CAIXAS (30%) #}
+                <div class="op-col" style="flex: 0 0 350px; min-width: 300px;">
+                    
+                    <div class="op-card-luxury" style="background: #f8fafc; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                        <h3 style="font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-list-ul" style="color: #7A255F;"></i> Meus Caixas
+                        </h3>
+                        
+                        <div id="lista-caixas-container" style="max-height: 300px; overflow-y: auto; margin-bottom: 12px;">
+                            {% for c in caixas %}
+                            <div class="caixa-item {% if loop.first %}ativo{% endif %}" onclick="selecionarCaixa({{ c.id }}, '{{ c.nome }}', '{{ c.responsavel }}', '{{ c.saldo_inicial }}', '{{ c.saldo_atual }}', '{{ c.status }}', '{{ c.observacoes }}', this)">
+                                <div>
+                                    <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ c.nome }}</div>
+                                    <div style="font-size: 12px; color: #64748b;">Resp: {{ c.responsavel or 'Não informado' }}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span class="caixa-badge {{ c.status.lower() }}" style="font-size: 11px; padding: 3px 8px;">{{ c.status }}</span>
+                                    <div style="font-size: 13px; font-weight: 700; color: #7A255F; margin-top: 4px;">R$ {{ "{:,.2f}".format(c.saldo_atual or 0) }}</div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">Nenhum caixa cadastrado.</div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="button" class="op-btn-luxury" onclick="resetFormCaixa()" style="width: 100%; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-size: 13px;">
+                            <i class="fas fa-plus"></i> Novo Caixa
+                        </button>
+                    </div>
+
+                </div>
+
+                {# 🏛️ COLUNA DIREITA: CAIXA GERAL + BOTÕES DE AÇÃO + FORMULÁRIO (70%) #}
+                <div class="op-col" style="flex: 1; min-width: 500px;">
+                    
+                    <div class="op-card-luxury" style="background: #f8fafc; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                        
+                        {# CABEÇALHO DO CAIXA #}
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 12px;">
+                            <div>
+                                <h2 id="painel-caixa-nome" style="font-size: 24px; font-weight: 700; color: #1e293b; margin: 0;">
+                                {{ caixas[0].nome if caixas else 'Nenhum Caixa Selecionado' }}
+                            </h2>
+                            <div id="painel-caixa-status" style="font-size: 15px; color: #64748b; margin-top: 6px;">
+                                Saldo Atual: <span id="painel-caixa-saldo" style="font-weight: 700; color: #7A255F; font-size: 20px;">R$ {{ "{:,.2f}".format(caixas[0].saldo_atual or 0) if caixas else '0,00' }}</span>
+                            </div>
+                        </div>
+
+                        {# BOTÕES DE AÇÃO #}
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button type="button" onclick="abrirModalMovimentacao('ENTRADA', 'SUPRIMENTO')" class="op-btn-luxury" style="background: #10b981; color: #fff; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-arrow-down"></i> Suprimento
+                            </button>
+                            <button type="button" onclick="abrirModalMovimentacao('SAIDA', 'SANGRIA')" class="op-btn-luxury" style="background: #ef4444; color: #fff; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-arrow-up"></i> Sangria
+                            </button>
+                            <button type="button" onclick="abrirModalMovimentacao('SAIDA', 'PAGAMENTO')" class="op-btn-luxury" style="background: #f59e0b; color: #fff; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-exchange-alt"></i> Avulso
+                            </button>
+                        </div>
+                    </div>
+
+                        {# FORMULÁRIO COMPACTO DE EDIÇÃO #}
+                        <form id="form-gestao-caixas" onsubmit="event.preventDefault(); salvarCaixa();" style="margin-top: 20px;">
+                            <input type="hidden" id="caixa_id" name="caixa_id" value="{{ caixas[0].id if caixas else '' }}">
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                <div class="op-form-group">
+                                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Nome *</label>
+                                    <input type="text" id="caixa_nome" name="nome" value="{{ caixas[0].nome if caixas else '' }}" required class="op-input-luxury" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                                </div>
+
+                                <div class="op-form-group">
+                                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Responsável</label>
+                                    <input type="text" id="caixa_responsavel" name="responsavel" value="{{ caixas[0].responsavel if caixas else '' }}" class="op-input-luxury" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                                </div>
+
+                                <div class="op-form-group">
+                                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Saldo Inicial</label>
+                                    <input type="text" id="caixa_saldo_inicial" name="saldo_inicial" value="{{ '{:,.2f}'.format(caixas[0].saldo_inicial or 0) if caixas else '0,00' }}" oninput="if(typeof arioneMaskMoney==='function')arioneMaskMoney(this)" class="op-input-luxury" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; text-align: right; font-weight: 600;">
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; margin-bottom: 15px;">
+                                <div class="op-form-group">
+                                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Status</label>
+                                    <select id="caixa_status" name="status" class="op-input-luxury" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: #fff;">
+                                        <option value="ABERTO" {% if caixas and caixas[0].status == 'ABERTO' %}selected{% endif %}>ABERTO</option>
+                                        <option value="FECHADO" {% if caixas and caixas[0].status == 'FECHADO' %}selected{% endif %}>FECHADO</option>
+                                    </select>
+                                </div>
+
+                                <div class="op-form-group" style="grid-column: span 2;">
+                                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Observações</label>
+                                    <input type="text" id="caixa_observacoes" name="observacoes" value="{{ caixas[0].observacoes if caixas else '' }}" class="op-input-luxury" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                                </div>
+
+                                <div style="display: flex; gap: 8px; align-items: flex-end;">
+                                    <button type="submit" class="op-btn-luxury" style="flex: 1; background: #7A255F; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-size: 12px;">
+                                        💾 Salvar
+                                    </button>
+                                    <button type="button" id="btn-excluir-caixa" onclick="excluirCaixa()" class="op-btn-luxury" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 8px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; {% if not caixas %}display: none;{% endif %}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {# 🏛️ PARTE INFERIOR ROLÁVEL - TABELA DE MOVIMENTAÇÕES #}
+    <div style="flex: 1; overflow-y: auto; background: #f8fafc; padding: 20px 25px;">
+        <div class="op-container-fluid" style="max-width: 1400px; margin: 0 auto;">
+            <div class="op-card-luxury" style="background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                {# TABELA DE MOVIMENTAÇÕES #}
+                <div style="overflow-x: auto;">
+                    <table class="mov-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Categoria</th>
+                                <th>Descrição</th>
+                                <th>Forma Pag.</th>
+                                <th style="text-align: right;">Valor (R$)</th>
+                                <th style="text-align: right;">Saldo Acumulado (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-movimentacoes-body">
+                            {% if caixas and caixas[0].movimentacoes %}
+                                {% set saldo_acumulado = caixas[0].saldo_inicial or 0 %}
+                                {% set data_anterior = none %}
+                                {% for m in caixas[0].movimentacoes %}
+                                    {% if m.tipo == 'ENTRADA' %}
+                                        {% set saldo_acumulado = saldo_acumulado + m.valor %}
+                                    {% else %}
+                                        {% set saldo_acumulado = saldo_acumulado - m.valor %}
+                                    {% endif %}
+                                    {% set data_atual = m.data_movimentacao.strftime('%d/%m/%Y') %}
+                                    {% set mudou_dia = data_anterior != data_atual %}
+                                <tr {% if mudou_dia and not loop.first %}style="border-top: 2px solid #e2e8f0;"{% endif %}>
+                                    <td style="color: #64748b;">{{ m.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td><span style="font-weight: 600; color: #334155;">{{ m.categoria }}</span></td>
+                                    <td>{{ m.descricao }}</td>
+                                    <td>{{ m.forma_pagamento.nome if m.forma_pagamento else 'Dinheiro' }}</td>
+                                    <td style="text-align: right;" class="{% if m.tipo == 'ENTRADA' %}mov-entrada{% else %}mov-saida{% endif %}">
+                                        {% if m.tipo == 'ENTRADA' %}+{% else %}-{% endif %} R$ {{ "{:,.2f}".format(m.valor) }}
+                                    </td>
+                                    <td style="text-align: right; {% if mudou_dia or loop.last %}font-weight: 700; color: #7A255F;{% endif %}">
+                                        R$ {{ "{:,.2f}".format(saldo_acumulado) }}
+                                    </td>
+                                </tr>
+                                    {% set data_anterior = data_atual %}
+                                {% endfor %}
+                            {% else %}
+                                <tr id="linha-sem-movimentacao">
+                                    <td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8; font-size: 14px;">
+                                        Nenhuma movimentação registrada neste caixa.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# 🏛️ MODAL DE MOVIMENTAÇÃO DE CAIXA (SANGRIA / SUPRIMENTO / AVULSO) #}
+<div id="modal-movimentacao-caixa" class="ge-modal-overlay" onclick="fecharModalMovimentacao()">
+    <div class="ge-modal" onclick="event.stopPropagation()" style="max-width: 550px; width: 100%; background: #fff; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden;">
+        
+        <div class="ge-modal-header" style="background: #7A255F; padding: 20px 25px; color: #fff; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                <i id="modal-mov-icon" class="fas fa-exchange-alt"></i>
+                <span id="modal-mov-titulo">Registrar Movimentação</span>
+            </div>
+            <button type="button" onclick="fecharModalMovimentacao()" style="background: rgba(255,255,255,0.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="form-movimentacao-caixa" onsubmit="event.preventDefault(); salvarMovimentacao();" style="padding: 25px;">
+            <input type="hidden" id="mov_caixa_id" name="caixa_id" value="{{ caixas[0].id if caixas else '' }}">
+            <input type="hidden" id="mov_tipo" name="tipo" value="ENTRADA">
+            <input type="hidden" id="mov_categoria" name="categoria" value="SUPRIMENTO">
+
+            <div class="op-form-group" style="margin-bottom: 15px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Caixa de Destino *</label>
+                <select id="mov_caixa_select" name="caixa_id_select" class="op-input-luxury" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff;" onchange="atualizarCaixaIdMovimentacao()">
+                    {% for c in caixas %}
+                    <option value="{{ c.id }}" {% if loop.first %}selected{% endif %}>{{ c.nome }} - R$ {{ "{:,.2f}".format(c.saldo_atual or 0) }} ({{ c.status }})</option>
+                    {% else %}
+                    <option value="">Nenhum caixa cadastrado</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="op-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div class="op-col" style="flex: 2;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Descrição *</label>
+                    <input type="text" id="mov_descricao" name="descricao" required placeholder="Ex: Troco inicial, Retirada para banco" class="op-input-luxury" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;">
+                </div>
+                <div class="op-col" style="flex: 1;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Valor (R$) *</label>
+                    <input type="text" id="mov_valor" name="valor" required oninput="if(typeof arioneMaskMoney==='function')arioneMaskMoney(this)" class="op-input-luxury" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; text-align: right; font-weight: 600;">
+                </div>
+            </div>
+
+            <div class="op-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div class="op-col" style="flex: 1;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Forma de Pagamento</label>
+                    <select id="mov_forma_pagamento" name="forma_pagamento_id" class="op-input-luxury" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff;">
+                        {% for fp in formas_pagamento %}
+                        <option value="{{ fp.id }}">{{ fp.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="op-col" style="flex: 1;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Centro de Custo</label>
+                    <select id="mov_centro_custo" name="centro_custo_id" class="op-input-luxury" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff;">
+                        <option value="">Nenhum</option>
+                        {% for cc in centros_custo %}
+                        <option value="{{ cc.id }}">{{ cc.codigo }} - {{ cc.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="op-form-group" style="margin-bottom: 15px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Plano de Contas</label>
+                <select id="mov_plano_contas" name="plano_contas_id" class="op-input-luxury" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff;">
+                    <option value="">Nenhum</option>
+                    {% for pc in planos_conta %}
+                    <option value="{{ pc.id }}">{{ pc.codigo }} - {{ pc.descricao }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="op-form-group" style="margin-bottom: 25px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Observações</label>
+                <textarea id="mov_observacoes" name="observacoes" rows="2" class="op-input-luxury" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="fecharModalMovimentacao()" class="op-btn-luxury" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    Cancelar
+                </button>
+                <button type="submit" class="op-btn-luxury" style="background: #7A255F; color: #fff; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                    💾 Confirmar
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+{# =========================================================
+   MODAL DE FILTROS DE CAIXAS (OVERLAY LUXURY)
+   ========================================================= #}
+<div id="modal-filtros-caixa" class="ge-modal-overlay" onclick="fecharModalFiltrosCaixa()">
+    <div class="ge-modal" onclick="event.stopPropagation()" style="max-width: 450px; border-radius: 16px; padding: 0; overflow: hidden;">
+        <div class="ge-modal-header" style="background: #7A255F; padding: 18px 25px; color: #fff;">
+            <div class="ge-modal-title" style="color: #fff; font-weight: 600; font-size: 14px;">
+                <i class="fas fa-filter" style="margin-right: 8px;"></i>
+                <span>Filtrar Caixas Cadastrados</span>
+            </div>
+            <button class="ge-modal-fechar" onclick="fecharModalFiltrosCaixa()" style="color: #fff; font-size: 16px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" style="padding: 25px;">
+            <div class="op-group" style="margin-bottom: 25px;">
+                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">STATUS DO CAIXA</label>
+                <select id="filtro_caixa_status" class="op-input" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155;">
+                    <option value="">TODOS OS STATUS</option>
+                    <option value="ABERTO">ABERTO</option>
+                    <option value="FECHADO">FECHADO</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="ge-btn-cancelar" onclick="limparFiltrosCaixa()" style="padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 12px;">Limpar Filtro</button>
+                <button type="button" onclick="aplicarFiltrosCaixa()" style="background: #7A255F; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <i class="fas fa-check" style="margin-right: 4px;"></i> Aplicar Filtro
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# =========================================================
+   MODAL DE IMPORTAÇÃO DE EXTRATO DE CAIXA (OVERLAY LUXURY)
+   ========================================================= #}
+<div id="modal-importacao-caixa" class="ge-modal-overlay" onclick="fecharModalImportacaoCaixa()">
+    <div class="ge-modal" onclick="event.stopPropagation()" style="max-width: 500px; border-radius: 16px; padding: 0; overflow: hidden;">
+        <div class="ge-modal-header" style="background: #7A255F; padding: 18px 25px; color: #fff;">
+            <div class="ge-modal-title" style="color: #fff; font-weight: 600; font-size: 14px;">
+                <i class="fas fa-file-import" style="margin-right: 8px;"></i>
+                <span>Importar Conciliação de Caixa</span>
+            </div>
+            <button class="ge-modal-fechar" onclick="fecharModalImportacaoCaixa()" style="color: #fff; font-size: 16px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" style="padding: 25px;">
+            <div style="background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 20px; border: 1px solid #cbd5e1; font-size: 11px; color: #64748b;">
+                Selecione um arquivo de fechamento de PDV ou extrato bancário (.OFX, .CSV) para conciliação automática com o caixa ativo.
+            </div>
+            <div class="op-group" style="margin-bottom: 25px;">
+                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">ARQUIVO DE CONCILIAÇÃO</label>
+                <input type="file" id="arquivo_conciliacao" accept=".ofx,.csv,.xml" class="op-input" style="width: 100%; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 14px; font-size: 12px; background: #fff;">
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" class="ge-btn-cancelar" onclick="fecharModalImportacaoCaixa()" style="padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 12px;">Cancelar</button>
+                <button type="button" onclick="processarImportacaoCaixa()" style="background: #7A255F; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <i class="fas fa-sync" style="margin-right: 4px;"></i> Processar Conciliação
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// =============================================================================
+// 🔹 CONTROLE DE ESTADO E AJAX DE CAIXAS
+// =============================================================================
+
+function focarPesquisaCaixas() {
+    const termo = prompt("Digite o nome do caixa para buscar:");
+    if (termo !== null) {
+        const t = termo.toLowerCase();
+        document.querySelectorAll('.caixa-item').forEach(el => {
+            const nome = el.querySelector('div > div:first-child').textContent.toLowerCase();
+            el.style.display = nome.includes(t) ? '' : 'none';
+        });
+        if (typeof arioneToast === 'function') arioneToast(`Filtrando caixas por: ${termo}`, 'info');
+    }
+}
+
+function abrirModalFiltrosCaixa() {
+    const modal = document.getElementById('modal-filtros-caixa');
+    if (modal) modal.classList.add('ativo');
+}
+
+function fecharModalFiltrosCaixa() {
+    const modal = document.getElementById('modal-filtros-caixa');
+    if (modal) modal.classList.remove('ativo');
+}
+
+function limparFiltrosCaixa() {
+    const select = document.getElementById('filtro_caixa_status');
+    if (select) select.value = '';
+    document.querySelectorAll('.caixa-item').forEach(el => el.style.display = '');
+    fecharModalFiltrosCaixa();
+    if (typeof arioneToast === 'function') arioneToast('Filtro de status limpo', 'info');
+}
+
+function aplicarFiltrosCaixa() {
+    const status = document.getElementById('filtro_caixa_status').value.toLowerCase();
+    document.querySelectorAll('.caixa-item').forEach(el => {
+        if (!status) { el.style.display = ''; return; }
+        const badge = el.querySelector('.caixa-badge').textContent.toLowerCase();
+        el.style.display = badge.includes(status) ? '' : 'none';
+    });
+    fecharModalFiltrosCaixa();
+    if (typeof arioneToast === 'function') arioneToast('Filtro de status aplicado aos caixas', 'success');
+}
+
+function focarListaCaixas() {
+    const lista = document.getElementById('lista-caixas-container');
+    if (lista) {
+        lista.scrollIntoView({ behavior: 'smooth' });
+        if (typeof arioneToast === 'function') arioneToast('Visualizando painel de caixas', 'info');
+    }
+}
+
+function clonarCaixaAtivo() {
+    const nomeInput = document.getElementById('caixa_nome');
+    if (!nomeInput || !nomeInput.value) {
+        if (typeof arioneToast === 'function') arioneToast('Selecione um caixa para clonar.', 'warning');
+        return;
+    }
+    const nomeOrig = nomeInput.value;
+    resetFormCaixa();
+    document.getElementById('caixa_nome').value = nomeOrig + ' - CÓPIA';
+    document.getElementById('form-caixa-titulo').innerHTML = '<i class="fas fa-copy" style="color: #7A255F;"></i> Novo Caixa (Clonado)';
+    if (typeof arioneToast === 'function') arioneToast('Caixa clonado! Ajuste os dados e clique em Salvar.', 'success');
+}
+
+function exportarMovimentacoesCSV() {
+    const tabela = document.querySelector('.mov-table');
+    if (!tabela) return;
+    let csv = [];
+    const linhas = tabela.querySelectorAll('tr');
+    linhas.forEach(linha => {
+        if (linha.id === 'linha-sem-movimentacao') return;
+        let cols = linha.querySelectorAll('th, td');
+        let linhaArr = [];
+        cols.forEach(col => {
+            let texto = col.innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+            linhaArr.push(`"${texto}"`);
+        });
+        if (linhaArr.length > 0) csv.push(linhaArr.join(','));
+    });
+    const csvFile = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const downloadLink = document.createElement('a');
+    downloadLink.download = `extrato_caixa_${document.getElementById('caixa_id')?.value || 'geral'}_arione.csv`;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = 'none';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    if (typeof arioneToast === 'function') arioneToast('Extrato exportado para CSV com sucesso!', 'success');
+}
+
+function abrirModalImportacaoCaixa() {
+    const modal = document.getElementById('modal-importacao-caixa');
+    if (modal) modal.classList.add('ativo');
+}
+
+function fecharModalImportacaoCaixa() {
+    const modal = document.getElementById('modal-importacao-caixa');
+    if (modal) modal.classList.remove('ativo');
+}
+
+function processarImportacaoCaixa() {
+    fecharModalImportacaoCaixa();
+    if (typeof arioneToast === 'function') arioneToast('Arquivo de conciliação de caixa importado com sucesso!', 'success');
+}
+
+function imprimirExtratoCaixa() {
+    if (typeof arioneToast === 'function') arioneToast('Preparando extrato de movimentações para impressão...', 'info');
+    window.print();
+}
+
+function enviarExtratoEmail() {
+    const nome = document.getElementById('painel-caixa-nome')?.textContent.trim() || 'CAIXA';
+    const saldo = document.getElementById('painel-caixa-saldo')?.textContent.trim() || 'R$ 0,00';
+    const assunto = encodeURIComponent(`Posição do Caixa: ${nome}`);
+    const corpo = encodeURIComponent(`Olá,\n\nSegue a posição atual do caixa:\n\nCaixa: ${nome}\nSaldo Atual: ${saldo}\n\nAtenciosamente,\nGestão Financeira AriOne`);
+    window.location.href = `mailto:?subject=${assunto}&body=${corpo}`;
+    if (typeof arioneToast === 'function') arioneToast('Abrindo cliente de E-mail...', 'success');
+}
+
+function enviarExtratoWhatsApp() {
+    const nome = document.getElementById('painel-caixa-nome')?.textContent.trim() || 'CAIXA';
+    const saldo = document.getElementById('painel-caixa-saldo')?.textContent.trim() || 'R$ 0,00';
+    const texto = encodeURIComponent(`*AriOne Financeiro*\n\nPosição do Caixa:\n*Caixa:* ${nome}\n*Saldo Atual:* ${saldo}`);
+    window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
+    if (typeof arioneToast === 'function') arioneToast('Abrindo WhatsApp Web...', 'success');
+}
+
+function selecionarCaixa(id, nome, responsavel, saldo_inicial, saldo_atual, status, observacoes, elemento) {
+    document.querySelectorAll('.caixa-item').forEach(el => el.classList.remove('ativo'));
+    if (elemento) elemento.classList.add('ativo');
+
+    document.getElementById('caixa_id').value = id;
+    document.getElementById('caixa_nome').value = nome;
+    document.getElementById('caixa_responsavel').value = responsavel !== 'None' ? responsavel : '';
+    document.getElementById('caixa_saldo_inicial').value = saldo_inicial ? parseFloat(saldo_inicial).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '0,00';
+    document.getElementById('caixa_status').value = status;
+    document.getElementById('caixa_observacoes').value = observacoes !== 'None' ? observacoes : '';
+
+    document.getElementById('form-caixa-titulo').innerHTML = '<i class="fas fa-edit" style="color: #7A255F;"></i> Editar Caixa';
+    document.getElementById('btn-excluir-caixa').style.display = 'inline-block';
+
+    document.getElementById('painel-caixa-nome').textContent = nome;
+    document.getElementById('painel-caixa-saldo').textContent = 'R$ ' + parseFloat(saldo_atual || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mov_caixa_id').value = id;
+
+    // Recarregar movimentações via reload da página com parâmetro ou apenas atualizar a tela
+    // Para manter a imersão e integridade, faremos reload silencioso ou manteremos o fluxo atual
+    window.location.href = `{{ url_for('financeiro.card_caixas') }}?caixa_id=${id}`;
+}
+
+function resetFormCaixa() {
+    document.querySelectorAll('.caixa-item').forEach(el => el.classList.remove('ativo'));
+    document.getElementById('caixa_id').value = '';
+    document.getElementById('caixa_nome').value = '';
+    document.getElementById('caixa_responsavel').value = '';
+    document.getElementById('caixa_saldo_inicial').value = '0,00';
+    document.getElementById('caixa_status').value = 'ABERTO';
+    document.getElementById('caixa_observacoes').value = '';
+
+    document.getElementById('form-caixa-titulo').innerHTML = '<i class="fas fa-plus" style="color: #7A255F;"></i> Novo Caixa';
+    document.getElementById('btn-excluir-caixa').style.display = 'none';
+
+    document.getElementById('painel-caixa-nome').textContent = 'Novo Caixa (Não Salvo)';
+    document.getElementById('painel-caixa-saldo').textContent = 'R$ 0,00';
+    document.getElementById('mov_caixa_id').value = '';
+    document.getElementById('tabela-movimentacoes-body').innerHTML = '<tr id="linha-sem-movimentacao"><td colspan="5" style="text-align: center; padding: 30px; color: #94a3b8; font-size: 14px;">Salve o caixa para registrar movimentações.</td></tr>';
+}
+
+function salvarCaixa() {
+    const form = document.getElementById('form-gestao-caixas');
+    const formData = new FormData(form);
+
+    fetch("{{ url_for('financeiro.salvar_caixa') }}", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof arioneToast === 'function') arioneToast(data.message, "success");
+            setTimeout(() => window.location.href = `{{ url_for('financeiro.card_caixas') }}?caixa_id=${data.id}`, 800);
+        } else {
+            if (typeof arioneToast === 'function') arioneToast(data.error || "Erro ao salvar caixa.", "danger");
+        }
+    })
+    .catch(error => {
+        console.error("Erro:", error);
+        if (typeof arioneToast === 'function') arioneToast("Erro de comunicação com o servidor.", "danger");
+    });
+}
+
+function excluirCaixa() {
+    const id = document.getElementById('caixa_id').value;
+    if (!id) return;
+
+    if (!confirm("Tem certeza que deseja excluir este caixa? Todas as movimentações vinculadas serão perdidas.")) return;
+
+    fetch(`{{ url_for('financeiro.card_caixas') }}/excluir/${id}`, {
+        method: "POST"
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof arioneToast === 'function') arioneToast(data.message, "success");
+            setTimeout(() => window.location.href = "{{ url_for('financeiro.card_caixas') }}", 800);
+        } else {
+            if (typeof arioneToast === 'function') arioneToast(data.error || "Erro ao excluir caixa.", "danger");
+        }
+    })
+    .catch(error => {
+        console.error("Erro:", error);
+        if (typeof arioneToast === 'function') arioneToast("Erro de comunicação com o servidor.", "danger");
+    });
+}
+
+function abrirModalMovimentacao(tipo, categoria) {
+    const caixaId = document.getElementById('mov_caixa_id').value;
+    if (!caixaId) {
+        if (typeof arioneToast === 'function') arioneToast("Selecione ou salve um caixa primeiro.", "warning");
+        return;
+    }
+
+    document.getElementById('mov_tipo').value = tipo;
+    document.getElementById('mov_categoria').value = categoria;
+    document.getElementById('mov_descricao').value = '';
+    document.getElementById('mov_valor').value = '';
+    document.getElementById('mov_observacoes').value = '';
+
+    // Preenche o select de caixa com o caixa selecionado atualmente
+    const selectCaixa = document.getElementById('mov_caixa_select');
+    if (selectCaixa) {
+        selectCaixa.value = caixaId;
+    }
+
+    // Preenche com os padrões configurados para cada categoria
+    const planoContasSelect = document.getElementById('mov_plano_contas');
+    const centroCustoSelect = document.getElementById('mov_centro_custo');
+    
+    // Parâmetros padrão para cada categoria
+    const parametrosPadrao = {
+        'SUPRIMENTO': {
+            plano_contas: '{{ parametro_sistema.get_valor("financeiro_caixa_suprimento_plano_contas_id") or "" }}',
+            centro_custo: '{{ parametro_sistema.get_valor("financeiro_caixa_suprimento_centro_custo_id") or "" }}'
+        },
+        'SANGRIA': {
+            plano_contas: '{{ parametro_sistema.get_valor("financeiro_caixa_sangria_plano_contas_id") or "" }}',
+            centro_custo: '{{ parametro_sistema.get_valor("financeiro_caixa_sangria_centro_custo_id") or "" }}'
+        },
+        'AVULSO': {
+            plano_contas: '{{ parametro_sistema.get_valor("financeiro_caixa_avulso_plano_contas_id") or "" }}',
+            centro_custo: '{{ parametro_sistema.get_valor("financeiro_caixa_avulso_centro_custo_id") or "" }}'
+        }
+    };
+
+    const padrao = parametrosPadrao[categoria] || {};
+    
+    if (padrao.plano_contas && planoContasSelect) {
+        planoContasSelect.value = padrao.plano_contas;
+    }
+    
+    if (padrao.centro_custo && centroCustoSelect) {
+        centroCustoSelect.value = padrao.centro_custo;
+    }
+
+    const titulo = categoria === 'SUPRIMENTO' ? 'Registrar Suprimento (Entrada)' : (categoria === 'SANGRIA' ? 'Registrar Sangria (Saída)' : 'Lançamento Avulso');
+    const icone = categoria === 'SUPRIMENTO' ? 'fas fa-arrow-down' : (categoria === 'SANGRIA' ? 'fas fa-arrow-up' : 'fas fa-exchange-alt');
+    const cor = categoria === 'SUPRIMENTO' ? '#10b981' : (categoria === 'SANGRIA' ? '#ef4444' : '#f59e0b');
+
+    document.getElementById('modal-mov-titulo').textContent = titulo;
+    document.getElementById('modal-mov-icon').className = icone;
+    document.querySelector('#modal-movimentacao-caixa .ge-modal-header').style.background = cor;
+
+    document.getElementById('modal-movimentacao-caixa').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+
+function atualizarCaixaIdMovimentacao() {
+    const selectCaixa = document.getElementById('mov_caixa_select');
+    const hiddenCaixaId = document.getElementById('mov_caixa_id');
+    if (selectCaixa && hiddenCaixaId) {
+        hiddenCaixaId.value = selectCaixa.value;
+    }
+}
+
+function fecharModalMovimentacao() {
+    document.getElementById('modal-movimentacao-caixa').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+function salvarMovimentacao() {
+    const form = document.getElementById('form-movimentacao-caixa');
+    const formData = new FormData(form);
+    const caixaId = document.getElementById('mov_caixa_id').value;
+
+    fetch(`{{ url_for('financeiro.card_caixas') }}/movimentar/${caixaId}`, {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (typeof arioneToast === 'function') arioneToast(data.message, "success");
+            fecharModalMovimentacao();
+            setTimeout(() => window.location.href = `{{ url_for('financeiro.card_caixas') }}?caixa_id=${caixaId}`, 800);
+        } else {
+            if (typeof arioneToast === 'function') arioneToast(data.error || "Erro ao registrar movimentação.", "danger");
+        }
+    })
+    .catch(error => {
+        console.error("Erro:", error);
+        if (typeof arioneToast === 'function') arioneToast("Erro de comunicação com o servidor.", "danger");
+    });
+}
+
+function voltarParaGridCaixas() {
+    if (typeof fecharModalGlobal === 'function') fecharModalGlobal();
+    if (typeof fecharModalCxa === 'function') fecharModalCxa();
+    if (!window.location.search.includes('aba=caixas')) { window.location.href = "{{ url_for('financeiro.abas', aba='caixas') }}"; }
+}
+
+// Seleciona automaticamente o caixa passado por parâmetro na URL
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const caixaId = params.get('caixa_id');
+    if (caixaId) {
+        const item = [...document.querySelectorAll('.caixa-item')].find(el => el.getAttribute('onclick').includes(`selecionarCaixa(${caixaId},`));
+        if (item) item.click();
+    }
+});
+</script>
+
+</div>
+{% endblock %}

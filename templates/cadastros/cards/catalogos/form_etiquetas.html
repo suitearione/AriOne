@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-etiquetas" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .tag-foto-upload-premium {
+            width: 100px; height: 100px; border: 2.5px dashed #e2e8f0; border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+            overflow: hidden; background: #fff; transition: 0.3s; position: relative;
+        }
+        .tag-foto-upload-premium:hover { border-color: #E67E22; background: #fffcf0; }
+        
+        .tag-row:hover { background: #fffcf0 !important; cursor: pointer; }
+        {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Tags & Etiquetas',
+            subtitulo='Catálogos > Identificadores Visuais e Categorização de Tags',
+            icone='fa-tags',
+            cor_tema='#7A255F',
+            tamanho='medio',
+            aba_retorno='catalogos',
+            form_id='eti-form-area',
+            list_id='tag-list-area',
+            onclick_novo="novoRegistroEti()",
+            onclick_save="forceSubmitEtiqueta()",
+            onclick_search="focarBuscaTag()",
+            onclick_filter="abrirModalFiltrosAvancados()",
+            onclick_clonar="arioneClonarRegistro('eti-form-area')",
+            onclick_export="exportarEtiquetas()",
+            onclick_import="arioneToast('Importação em desenvolvimento para Etiquetas.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Etiquetas')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Etiquetas')",
+            status="Standard PAAv1.0"
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="eti-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="eti-form" method="POST" action="{{ url_for('cadastros.card_etiquetas') }}" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="eti-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="eti-form-titulo">CADASTRO DE ETIQUETA</span></span>
+                        <button type="button" onclick="novoRegistroEti()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: flex; gap: 30px; align-items: flex-start;">
+                            {# UPLOAD DE ÍCONE #}
+                            <div style="text-align: center;">
+                                <label class="fp-label">Ícone / Imagem</label>
+                                <div class="tag-foto-upload-premium" onclick="document.getElementById('tag-foto-input').click()">
+                                    <div id="tag-foto-preview" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-image" style="font-size: 30px; color: #cbd5e1;"></i>
+                                    </div>
+                                    <div style="position: absolute; bottom: 0; background: rgba(230,126,34,0.9); width: 100%; color: #fff; font-size: 8px; padding: 4px 0; font-weight: 900;">ALTERAR</div>
+                                </div>
+                                <input type="file" id="tag-foto-input" name="foto_etiqueta" accept="image/*" style="display: none;" onchange="previewTagFoto(this)">
+                            </div>
+
+                            <div style="flex: 1;">
+                                <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Identificador (Label) <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" class="fp-input" name="label" id="eti-nome-input" placeholder="EX: URGENTE, NOVIDADE..." required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Cor de Destaque</label>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input type="color" class="fp-input" name="cor_hex" id="tag-cor-hex" value="#E67E22" style="width: 50px; height: 38px; padding: 3px; cursor: pointer;">
+                                            <input type="text" class="fp-input" id="tag-cor-text" placeholder="#HEX" style="flex: 1; font-family: monospace; font-weight: 800; text-align: center;" oninput="document.getElementById('tag-cor-hex').value = this.value">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fp-row" style="display: grid; grid-template-columns: 100px 1fr; gap: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Prioridade</label>
+                                        <input type="number" class="fp-input" name="prioridade" id="tag-prioridade" value="0" min="0" max="10" style="width: 100%; text-align: center; font-weight: 900;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Observações Internas</label>
+                                        <input type="text" class="fp-input" name="observacao" id="tag-obs" placeholder="Finalidade desta etiqueta no sistema..." style="width: 100%;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-tag" onclick="forceSubmitEtiqueta()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR ETIQUETA
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="tag-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-tags" style="color: #E67E22; margin-right: 8px;"></i> Catálogo de Tags e Identificadores</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="tag-search-input" oninput="filtrarTabelaEtiquetas()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="tag-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ etiquetas|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center; padding-left: 20px;">ÍCONE</th>
+                            <th>LABEL / IDENTIFICADOR</th>
+                            <th style="width: 200px;">PREVIEW VISUAL</th>
+                            <th style="width: 120px; text-align: center;">PRIORIDADE</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-etiquetas">
+                        {% for tag in etiquetas %}
+                        <tr class="tag-row" data-id="{{ tag.id }}" data-nome="{{ tag.label|upper }}" data-cor="{{ tag.cor_hex }}" data-prioridade="{{ tag.prioridade }}" data-foto="{{ tag.foto or '' }}" data-obs="{{ tag.observacao or '' }}" onclick="editarEti_ByRow(this)">
+                            <td style="text-align: center; padding-left: 20px;">
+                                <div style="width: 36px; height: 36px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #f1f5f9; margin: 0 auto;">
+                                    {% if tag.foto %}
+                                    <img src="{{ url_for('static', filename='uploads/etiquetas/'~tag.foto) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-tag" style="color: #cbd5e1; font-size: 14px;"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ tag.label }}</div>
+                                <div style="font-size: 10px; color: #94a3b8; font-weight: 700;">{{ tag.observacao or 'SEM OBSERVAÇÃO' }}</div>
+                            </td>
+                            <td>
+                                <span style="background: {{ tag.cor_hex or '#E67E22' }}; color: #fff; padding: 4px 15px; border-radius: 20px; font-size: 10px; font-weight: 900; text-transform: uppercase; box-shadow: 0 4px 10px {{ tag.cor_hex }}33;">
+                                    {{ tag.label }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;"><span style="font-weight: 900; color: #64748b; font-size: 11px;">NÍVEL {{ tag.prioridade }}</span></td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirEtiqueta('{{ tag.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroEti = function() {
+                document.getElementById('eti-form-titulo').textContent = 'NOVA ETIQUETA';
+                document.getElementById('eti-id-hidden').value = '';
+                document.getElementById('eti-form').reset();
+                document.getElementById('eti-nome-input').focus();
+            };
+
+            window.fecharFormEti = function() { novoRegistroEti(); };
+
+            window.editarEti_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('eti-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('eti-id-hidden').value = id;
+                document.getElementById('eti-nome-input').value = r.dataset.nome;
+                document.getElementById('tag-cor-hex').value = r.dataset.cor || '#E67E22';
+                document.getElementById('tag-cor-text').value = r.dataset.cor || '#E67E22';
+                document.getElementById('tag-prioridade').value = r.dataset.prioridade || 0;
+                document.getElementById('tag-obs').value = (r.dataset.obs && r.dataset.obs !== 'None') ? r.dataset.obs : '';
+                
+                if(r.dataset.foto) {
+                    document.getElementById('tag-foto-preview').innerHTML = `<img src="/static/uploads/etiquetas/${r.dataset.foto}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else {
+                    document.getElementById('tag-foto-preview').innerHTML = '<i class="fas fa-image" style="font-size: 30px; color: #cbd5e1;"></i>';
+                }
+                
+                document.getElementById('eti-form').action = `/cadastros/cards/etiquetas/${id}`;
+                $('#eti-form-area').slideDown();
+                window.scrollTo({top:0, behavior:'smooth'});
+            };
+
+            window.forceSubmitEtiqueta = async function() {
+                const form = document.getElementById('eti-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-tag');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Tag salva!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarTabelaEtiquetas = function() {
+                const f = document.getElementById('tag-search-input').value.toUpperCase();
+                document.querySelectorAll('.tag-row').forEach(r => {
+                    r.style.display = r.dataset.nome.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.previewTagFoto = function(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        document.getElementById('tag-foto-preview').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
+
+            window.excluirEtiqueta = async function(id, btn) {
+                if(!confirm('Excluir tag?')) return;
+                const r = await fetch(`/cadastros/cards/etiquetas/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+
+            window.focarBuscaTag = function() { document.getElementById('tag-search-input').focus(); };
+            window.exportarEtiquetas = function() { arioneExportar({url:'/cadastros/cards/etiquetas/dados-json', modulo:'Etiquetas'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

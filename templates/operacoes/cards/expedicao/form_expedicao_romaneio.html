@@ -1,0 +1,99 @@
+{# =============================================================================
+   Arquivo  : form_expedicao_romaneio.html
+   Caminho  : templates/operacoes/cards/expedicao/form_expedicao_romaneio.html
+   Função   : Gestão de Romaneios de Entrega (Carga/Manifesto).
+ ============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% block content %}
+<div class="ctx-exp-wrap">
+    <style>
+        :root { --exp-pri: #E67E22; --exp-acc: #D35400; }
+        .ctx-exp-header { background: linear-gradient(135deg, var(--exp-pri), #A04000); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-exp-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        .arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
+        .arione-main-wrapper { margin-left: 0 !important; }
+
+        .exp-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .exp-title { font-size: 11px; font-weight: 800; color: var(--exp-pri); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .exp-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .exp-group { display: flex; flex-direction: column; gap: 5px; }
+        .exp-label { font-size: 11px; font-weight: 700; color: #64748b; }
+        .exp-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
+
+        /* Lista de Pedidos */
+        .order-item { border: 1.5px solid #edf2f7; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .order-item:hover { border-color: var(--exp-pri); background: #fdfdfd; }
+        .order-seq { background: #f1f5f9; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #64748b; }
+        .order-info { flex: 1; display: flex; flex-direction: column; }
+    </style>
+
+    <div class="ctx-exp-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-truck-loading"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Romaneio de Carga & Entrega</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Agrupamento e Sequenciamento Logístico</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.15) !important; color:#fff !important; border:1px solid rgba(255,255,255,0.2) !important; padding:8px 20px !important;" onclick="fecharModalExp()">Sair</button>
+            <button style="background:#fff; color:var(--exp-pri); border:none; padding:8px 24px; border-radius:6px; font-weight:700; cursor:pointer;"><i class="fas fa-print"></i> IMPRIMIR MANIFESTO</button>
+        </div>
+    </div>
+
+    <div class="ctx-exp-body">
+        <div class="exp-section">
+            <div class="exp-row">
+                <div class="exp-group"><label class="exp-label">ID Romaneio</label><div style="font-size:20px; font-weight:900; color:var(--exp-pri);">ROM-#859</div></div>
+                <div class="exp-group"><label class="exp-label">Rota / Região</label><select class="exp-input"><option>ZONA NORTE - ROTA 01</option><option>VILA VELHA - INTERIOR</option></select></div>
+                <div class="exp-group"><label class="exp-label">Motorista / Veículo</label><input type="text" class="exp-input" value="CARLOS SILVA - FIAT FIORINO (ABC-1234)"></div>
+            </div>
+        </div>
+
+        <div class="exp-title"><i class="fas fa-list-ol"></i> Sequência de Entregas</div>
+        <div class="order-list">
+            <div class="order-item">
+                <div class="order-seq">1</div>
+                <div class="order-info">
+                    <span style="font-weight:800; font-size:13px;">NF #4521 - SUPERMERCADO PINHEIRO</span>
+                    <span style="font-size:11px; color:#64748b;">End: Av. Santos Dumont, 1200 - Centro</span>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-weight:900; color:var(--exp-pri);">R$ 4.520,00</div>
+                    <div style="font-size:10px; color:#94a3b8;">5 Volumes</div>
+                </div>
+            </div>
+            <div class="order-item">
+                <div class="order-seq">2</div>
+                <div class="order-info">
+                    <span style="font-weight:800; font-size:13px;">NF #4525 - LOJINHA DO POVO</span>
+                    <span style="font-size:11px; color:#64748b;">End: Rua Frei Mansueto, 45 - Meireles</span>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-weight:900; color:var(--exp-pri);">R$ 1.280,00</div>
+                    <div style="font-size:10px; color:#94a3b8;">2 Volumes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="exp-section" style="background:#fff7ed; border-color:#ffedd5; margin-top:20px;">
+            <div class="exp-row">
+                <div class="exp-group">
+                    <label class="exp-label">Total de Pedidos</label>
+                    <div style="font-size:18px; font-weight:900;">12</div>
+                </div>
+                <div class="exp-group">
+                    <label class="exp-label">Total de Volumes</label>
+                    <div style="font-size:18px; font-weight:900;">28</div>
+                </div>
+                <div class="exp-group">
+                    <label class="exp-label">Valor Total da Carga</label>
+                    <div style="font-size:22px; font-weight:900; color:var(--exp-pri);">R$ 24.580,00</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

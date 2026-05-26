@@ -1,0 +1,426 @@
+{# =============================================================================
+   Caminho  : templates/operacoes/cards/compras/form_compras_pedidos.html
+   Função   : Pedido de Compras (PADRÃO HCM GOLDEN STANDARD - SPLIT LAYOUT)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-compras split-layout-active" style="background: #f8fafc; min-height: 100vh;">
+
+    {# CABEÇALHO MESTRE (PADRÃO OURO) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Pedido de Compra",
+        subtitulo="Operacional > Compras > Pedidos",
+        icone="fa-cart-shopping",
+        form_id="form-pedido-compra",
+        onclick_save="arioneSalvarDocumento('Pedido de Compra', this, 'form-pedido-compra')",
+        onclick_clonar="arioneClonarRegistro('form-pedido-compra')",
+        onclick_novo="arioneResetForm('form-pedido-compra')",
+        onclick_search="focusSearchMaster()",
+        onclick_filter="arioneToast('Filtros Avançados de Compra', 'info')",
+        cor_tema="#27AE60",
+        func_fechar="fecharModalGlobal()",
+        aba_retorno="compras",
+        blueprint_retorno="operacoes",
+        status="EM EDIÇÃO",
+        ajuda="O formulário de Pedidos de Compra gerencia a reposição de estoque e contratação de serviços."
+    ) }}
+
+    <form id="form-pedido-compra" method="POST" novalidate style="padding: 20px; max-width: 1600px; margin: 0 auto;">
+        
+        <div class="split-container" style="display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start;">
+            
+            {# COLUNA DA ESQUERDA: DADOS E ITENS #}
+            <div class="split-main" style="display: flex; flex-direction: column; gap: 24px;">
+                
+                {# CARD 1: IDENTIFICAÇÃO #}
+                <div class="fp-card" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+                    <div class="fp-card-title" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; background: #fff; border-radius: 16px 16px 0 0; display: flex; align-items: center; gap: 10px; font-weight: 800; color: #1e293b;">
+                        <i class="fas fa-file-contract" style="color: #27AE60;"></i> IDENTIFICAÇÃO DO PEDIDO DE COMPRA
+                    </div>
+                    <div class="fp-card-body" style="padding: 20px;">
+                        {# LINHA 1: FORNECEDOR E COMPRADOR #}
+                        <div class="fp-row" style="margin-bottom: 20px;">
+                            <div class="fp-group fp-flex-3">
+                                <label class="fp-label">FORNECEDOR {{ comp.info_icon("Busque por Razão Social ou CNPJ") }}</label>
+                                <div class="fp-input-wrapper" style="position: relative;">
+                                    <input type="hidden" name="fornecedor_id" id="fornecedor_id">
+                                    <input class="fp-input" list="lista-fornecedores" name="fornecedor_nome" id="fornecedor_busca" placeholder="Pesquisar fornecedor..." style="font-weight: 700; border-color: #cbd5e1; height: 42px; padding-left: 15px;"
+                                           oninput="this.value = this.value.toUpperCase(); syncFornecedor(this);">
+                                    <i class="fas fa-search" style="position: absolute; right: 15px; top: 13px; color: #94a3b8;"></i>
+                                </div>
+                            </div>
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">COMPRADOR RESPONSÁVEL</label>
+                                <select class="fp-input" name="comprador_id" style="height: 42px; font-weight: 700;">
+                                    <option value="1">COMPRADOR MASTER</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {# LINHA 2: NÚMERO, DATAS, PERFIL #}
+                        <div class="fp-row">
+                            <div class="fp-group" style="width: 140px;">
+                                <label class="fp-label">Nº PEDIDO</label>
+                                <input class="fp-input" type="text" name="numero" id="doc_numero" placeholder="PDC-..." style="font-weight: 900; color: #27AE60; background: #f8fafc; height: 42px; text-align: center;">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">EMISSÃO</label>
+                                <input class="fp-input" type="date" name="data_emissao" value="{{ today }}" style="height: 42px;">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">ENTREGA PREV.</label>
+                                <input class="fp-input" type="date" name="data_entrega" value="{{ today }}" style="height: 42px;">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">PERFIL DE COMPRA</label>
+                                <select class="fp-input" name="perfil_compra" style="height: 42px; font-weight: 700; color: #27AE60;">
+                                    <option value="padrao">PADRÃO</option>
+                                    <option value="importacao">IMPORTAÇÃO</option>
+                                    <option value="servicos">SERVIÇOS</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {# CARD 2: ITENS DO PEDIDO #}
+                <div class="fp-card" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff;">
+                    <div class="fp-card-title" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #1e293b;">
+                            <i class="fas fa-truck-loading" style="color: #27AE60;"></i> ITENS E MERCADORIAS
+                        </div>
+                        <button type="button" onclick="arioneAdicionarLinhaGrid('#tabela-itens-compra', '#27AE60', 'calcularTotaisPedidoCompra')" class="fp-btn" style="background: #27AE60; color: #fff; font-size: 11px; padding: 6px 15px; border-radius: 8px;">
+                            <i class="fas fa-plus"></i> ADICIONAR ITEM
+                        </button>
+                    </div>
+                    <div class="fp-card-body" style="padding: 0;">
+                        <table class="arione-table-hcm" id="tabela-itens-compra">
+                            <thead>
+                                <tr>
+                                    <th style="width: 180px;">CÓDIGO / SKU</th>
+                                    <th>DESCRIÇÃO DO ITEM</th>
+                                    <th style="width: 100px; text-align: center;">QTD</th>
+                                    <th style="width: 140px; text-align: right;">UNITÁRIO</th>
+                                    <th style="width: 140px; text-align: right;">TOTAL</th>
+                                    <th style="width: 60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <input type="text" class="fp-input table-input-sku" placeholder="Cód..." oninput="fetchItemBySKU(this)">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="fp-input table-input-desc" placeholder="Buscar item..." list="lista-produtos">
+                                    </td>
+                                    <td><input type="number" class="fp-input table-input-qtd" value="1" style="text-align: center;" oninput="calcularTotaisPedidoCompra()"></td>
+                                    <td><input type="text" class="fp-input table-input-vlr" value="0,00" style="text-align: right;" oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedidoCompra()"></td>
+                                    <td style="text-align: right; font-weight: 800; color: #27AE60;" class="col-total-linha">R$ 0,00</td>
+                                    <td style="text-align: center;">
+                                        <button type="button" onclick="this.closest('tr').remove(); calcularTotaisPedidoCompra();" style="color: #ef4444; background: none; border: none; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {# CARD 3: ABAS DE APOIO #}
+                <div class="fp-tabs-wrap" style="background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+                    <div class="fp-tabs-nav" style="padding: 10px 20px; border-bottom: 1px solid #f1f5f9; gap: 30px;">
+                        <button type="button" class="fp-tab active" onclick="switchOpeTab(this, 'tab-pagto')"><i class="fas fa-credit-card"></i> Pagamento</button>
+                        <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-transp')"><i class="fas fa-truck"></i> Transporte</button>
+                        <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-financeiro')"><i class="fas fa-university"></i> Financeiro</button>
+                    </div>
+                    <div class="fp-tab-content" style="padding: 20px;">
+                        <div id="tab-pagto" class="fp-tab-panel active">
+                            <div class="fp-row">
+                                <div class="fp-group fp-flex-1">
+                                    <label class="fp-label">CONDIÇÃO DE PAGAMENTO</label>
+                                    <select class="fp-input"><option>FATURADO 30 DIAS</option><option>À VISTA</option><option>30/60/90 DIAS</option></select>
+                                </div>
+                                <div class="fp-group fp-flex-1">
+                                    <label class="fp-label">TABELA FORNECEDOR</label>
+                                    <input type="text" class="fp-input" placeholder="Ref. tabela do fornecedor...">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tab-transp" class="fp-tab-panel">
+                            <div class="fp-row">
+                                <div class="fp-group fp-flex-2"><label class="fp-label">TRANSPORTADORA</label><input type="text" class="fp-input" placeholder="Buscar transportadora..."></div>
+                                <div class="fp-group fp-flex-1"><label class="fp-label">FRETE</label><select class="fp-input"><option>FOB (POR CONTA DO FORNECEDOR)</option><option>CIF (POR CONTA DA EMPRESA)</option></select></div>
+                            </div>
+                        </div>
+                        <div id="tab-financeiro" class="fp-tab-panel">
+                            <div class="fp-row">
+                                <div class="fp-group fp-flex-1"><label class="fp-label">CENTRO DE CUSTO</label><select class="fp-input"><option>ADMINISTRATIVO</option><option>PRODUÇÃO</option><option>VENDAS</option></select></div>
+                                <div class="fp-group fp-flex-1"><label class="fp-label">PLANO DE CONTAS</label><select class="fp-input"><option>COMPRA DE MERCADORIA PARA REVENDA</option></select></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# COLUNA DA DIREITA: RESUMO E AÇÕES #}
+            <div class="split-sidebar" style="position: sticky; top: 90px; display: flex; flex-direction: column; gap: 24px;">
+                
+                {# CARD STATUS #}
+                <div class="fp-card" style="padding: 20px; border-radius: 16px; background: #fff; border: 1px solid #e2e8f0; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Status da Compra</div>
+                    <select class="fp-input" name="status" id="status_pedido" style="font-size: 12px; font-weight: 700; text-transform: uppercase; background: #f8fafc; border-color: #cbd5e1; text-align: center;" onchange="atualizarStatusBadge()">
+                        <option value="RASCUNHO">RASCUNHO</option>
+                        <option value="CONFIRMADO">CONFIRMADO (SALDO PREVISTO)</option>
+                        <option value="EM_TRANSITO">EM TRÂNSITO</option>
+                        <option value="RECEBIDO">RECEBIDO (ENTRADA NF)</option>
+                        <option value="CANCELADO">CANCELADO</option>
+                    </select>
+                    <div id="status-badge-display" style="margin-top: 10px; padding: 8px 15px; border-radius: 10px; background: #94a3b8; color: #fff; font-weight: 800; font-size: 13px; text-transform: uppercase;">
+                        RASCUNHO
+                    </div>
+                </div>
+
+                {# CARD RESUMO FINANCEIRO #}
+                <div class="fp-card" style="padding: 24px; border-radius: 16px; background: #1e293b; color: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                        Totais do Pedido
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                            <span style="color: #94a3b8;">Mercadorias</span>
+                            <span id="resumo-subtotal" style="font-weight: 700;">R$ 0,00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #60a5fa;">
+                            <span>Frete / IPI</span>
+                            <span id="resumo-frete">+ R$ 0,00</span>
+                        </div>
+                        <div style="margin-top: 15px; padding-top: 20px; border-top: 2px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Investimento Total</div>
+                            <div id="resumo-total-geral" style="font-size: 32px; font-weight: 900; color: #27AE60; letter-spacing: -1px;">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# AÇÕES RÁPIDAS #}
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button type="button" class="fp-btn" style="background: #27AE60; color: #fff; height: 52px; font-size: 15px; font-weight: 800; border-radius: 12px; box-shadow: 0 4px 20px rgba(39, 174, 96, 0.3);" onclick="finalizarPedido()">
+                        <i class="fas fa-check-double"></i> FINALIZAR PEDIDO
+                    </button>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button type="button" class="fp-btn" style="background: #fff; border: 1px solid #e2e8f0; color: #1e293b; height: 44px; font-size: 12px; font-weight: 700;" onclick="arioneToast('Gerando PDF...', 'info')">
+                            <i class="fas fa-print" style="color: #64748b;"></i> PDF
+                        </button>
+                        <button type="button" class="fp-btn" style="background: #fff; border: 1px solid #e2e8f0; color: #1e293b; height: 44px; font-size: 12px; font-weight: 700;" onclick="enviarWhatsApp()">
+                            <i class="fab fa-whatsapp" style="color: #22c55e;"></i> ENVIAR
+                        </button>
+                    </div>
+                    
+                    <button type="button" class="fp-btn" style="background: #f8fafc; border: 1px dashed #cbd5e1; color: #64748b; height: 44px; font-size: 12px; font-weight: 700; justify-content: center;" onclick="arioneSalvarDocumento('Pedido de Compra', this, 'form-pedido-compra')">
+                        <i class="fas fa-save"></i> SALVAR RASCUNHO
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<style>
+    .arione-table-hcm { width: 100%; border-collapse: collapse; }
+    .arione-table-hcm th { background: #f8fafc; color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 15px; border-bottom: 2px solid #edf2f7; text-align: left; }
+    .arione-table-hcm td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; }
+    
+    .table-input-sku { font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700; height: 34px !important; }
+    .table-input-desc { font-size: 13px; height: 34px !important; }
+    .table-input-qtd, .table-input-vlr { height: 34px !important; font-weight: 700; }
+    
+    .fp-tab { padding: 12px 5px; background: none; border: none; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; color: #94a3b8; cursor: pointer; position: relative; transition: all 0.3s; }
+    .fp-tab.active { color: #27AE60; }
+    .fp-tab.active::after { content: ''; position: absolute; bottom: -11px; left: 0; width: 100%; height: 3px; background: #27AE60; border-radius: 3px 3px 0 0; }
+    
+    .fp-tab-panel { display: none; animation: fadeIn 0.3s ease; }
+    .fp-tab-panel.active { display: block; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<script>
+    console.log('💎 AriOne Compras Evolution Active');
+
+    function atualizarStatusBadge() {
+        const statusSelect = document.getElementById('status_pedido');
+        const badgeDisplay = document.getElementById('status-badge-display');
+        const status = statusSelect.value;
+        
+        const statusColors = {
+            'RASCUNHO': '#94a3b8',
+            'CONFIRMADO': '#27AE60',
+            'EM_TRANSITO': '#3498DB',
+            'RECEBIDO': '#16A085',
+            'CANCELADO': '#E74C3C'
+        };
+        
+        badgeDisplay.style.background = statusColors[status] || '#94a3b8';
+        badgeDisplay.textContent = statusSelect.options[statusSelect.selectedIndex].text;
+    }
+
+    function syncFornecedor(input) {
+        const val = input.value;
+        const list = document.getElementById('lista-fornecedores');
+        const opt = [...list.options].find(o => o.value === val);
+        if (opt) {
+            document.getElementById('fornecedor_id').value = opt.dataset.id;
+            arioneToast(`✅ Fornecedor Selecionado: ${val}`, 'success');
+        }
+    }
+
+    function calcularTotaisPedidoCompra() {
+        let total = 0;
+        const rows = document.querySelectorAll('#tabela-itens-compra tbody tr');
+        rows.forEach(row => {
+            const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
+            const vlr = parseFloat(row.querySelector('.table-input-vlr').value.replace(/\./g, '').replace(',', '.')) || 0;
+            const subtotal = qtd * vlr;
+            total += subtotal;
+            const colTotal = row.querySelector('.col-total-linha');
+            if (colTotal) colTotal.innerText = 'R$ ' + subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        });
+        document.getElementById('resumo-subtotal').innerText = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('resumo-total-geral').innerText = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+
+    function switchOpeTab(btn, tabId) {
+        const wrap = btn.closest('.fp-tabs-wrap');
+        wrap.querySelectorAll('.fp-tab').forEach(t => t.classList.remove('active'));
+        wrap.querySelectorAll('.fp-tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function arioneMaskMoney(val) {
+        let v = val.replace(/\D/g, '');
+        v = (v / 100).toFixed(2) + '';
+        v = v.replace(".", ",");
+        v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return v;
+    }
+
+    function finalizarPedido() {
+        const status = document.getElementById('status_pedido').value;
+        
+        if (confirm('Deseja FINALIZAR este pedido de compra e atualizar o estoque?')) {
+            // Se status for CONFIRMADO, atualiza saldo_previsto dos produtos
+            if (status === 'CONFIRMADO') {
+                const rows = document.querySelectorAll('#tabela-itens-compra tbody tr');
+                rows.forEach(row => {
+                    const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
+                    // Aqui seria chamada AJAX para atualizar saldo_previsto no backend
+                    console.log(`Atualizando saldo_previsto: +${qtd} para o produto`);
+                });
+                arioneToast('✅ Pedido Confirmado - Saldo Previsto Atualizado!', 'success');
+            } else if (status === 'RECEBIDO') {
+                // Se status for RECEBIDO, atualiza saldo_fisico e custo_medio
+                const rows = document.querySelectorAll('#tabela-itens-compra tbody tr');
+                rows.forEach(row => {
+                    const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
+                    // Aqui seria chamada AJAX para atualizar saldo_fisico e custo_medio no backend
+                    console.log(`Atualizando saldo_fisico: +${qtd} e custo_medio para o produto`);
+                });
+                arioneToast('✅ Entrada NF Processada - Saldo Físico Atualizado!', 'success');
+            } else {
+                arioneToast('🚀 Pedido Finalizado!', 'success');
+            }
+            setTimeout(() => fecharModalGlobal(), 1200);
+        }
+    }
+
+    function enviarWhatsApp() { 
+        if (window.arioneWhatsApp) arioneWhatsApp('5562999999999', `Olá, segue Pedido de Compra PC-8291`);
+    }
+
+    function arioneAdicionarLinhaGrid(tableSelector, corTema, funcCalculo) {
+        const table = document.querySelector(tableSelector + ' tbody');
+        if (!table) return;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="fp-input table-input-sku" placeholder="Cód..." oninput="fetchItemBySKU(this)"></td>
+            <td><input type="text" class="fp-input table-input-desc" placeholder="Buscar item..." list="lista-produtos"></td>
+            <td><input type="number" class="fp-input table-input-qtd" value="1" style="text-align: center;" oninput="${funcCalculo}()"></td>
+            <td><input type="text" class="fp-input table-input-vlr" value="0,00" style="text-align: right;" oninput="this.value = arioneMaskMoney(this.value); ${funcCalculo}()"></td>
+            <td style="text-align: right; font-weight: 800; color: ${corTema};" class="col-total-linha">R$ 0,00</td>
+            <td style="text-align: center;">
+                <button type="button" onclick="this.closest('tr').remove(); ${funcCalculo}();" style="color: #ef4444; background: none; border: none; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        `;
+        table.appendChild(row);
+        row.querySelector('input').focus();
+    }
+
+    function arioneInitForm() {
+        console.log("🚀 AriOne: Inicializando parâmetros de Pedido de Compra...");
+        fetch('/cadastros/parametros/get?grupo=compras')
+            .then(res => res.json())
+            .then(params => {
+                const docNumero = document.getElementById('doc_numero');
+                if (docNumero) {
+                    const isAuto = (params.usar_sequencia_automatica_ped === undefined) || 
+                                   (params.usar_sequencia_automatica_ped === '1') || 
+                                   (params.usar_sequencia_automatica_ped === 'on');
+                    if (isAuto) {
+                        const ultimo = parseInt(params.ult_pedido_compra) || 3000;
+                        const incremento = parseInt(params.incremento) || 1;
+                        const prefixo = params.pref_ped_comp || '';
+                        docNumero.value = prefixo + (ultimo + incremento);
+                        docNumero.readOnly = true;
+                        docNumero.style.background = '#f8fafc';
+                        docNumero.style.color = '#94a3b8';
+                        docNumero.style.fontWeight = '900';
+                    } else {
+                        docNumero.value = '';
+                        docNumero.placeholder = 'DIGITE O NÚMERO...';
+                        docNumero.readOnly = false;
+                        docNumero.style.background = '#fff';
+                        docNumero.style.color = '#27AE60';
+                        docNumero.style.border = '2px solid #27AE60';
+                    }
+                }
+
+                // Prazo de Entrega Automático
+                const hoje = new Date();
+                const formataData = (d) => d.toISOString().split('T')[0];
+
+                if (params.prazo_entrega_comp_padrao) {
+                    const dataEnt = new Date();
+                    dataEnt.setDate(hoje.getDate() + parseInt(params.prazo_entrega_comp_padrao));
+                    const inputEnt = document.querySelector('input[name="data_entrega"]');
+                    if (inputEnt) inputEnt.value = formataData(dataEnt);
+                }
+            })
+            .catch(err => console.error("❌ Erro ao carregar parâmetros:", err));
+    }
+
+    async function fetchItemBySKU(input) {
+        const sku = input.value.trim();
+        if (!sku) return;
+        try {
+            const response = await fetch(`/operacoes/api/produtos/get-by-sku?sku=${encodeURIComponent(sku)}`);
+            const data = await response.json();
+            if (data.ok) {
+                const row = input.closest('tr');
+                row.querySelector('.table-input-desc').value = data.descricao;
+                row.querySelector('.table-input-vlr').value = data.valor_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                arioneToast('✨ Item identificado!', 'success');
+                calcularTotaisPedidoCompra();
+            }
+        } catch (err) {
+            console.error('❌ Erro SKU:', err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', arioneInitForm);
+</script>
+{% endblock %}

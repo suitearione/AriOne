@@ -1,0 +1,247 @@
+{# =============================================================================
+   Arquivo  : form_vendas_metas.html
+   Caminho  : templates/operacoes/cards/vendas/form_vendas_metas.html
+   Função   : Gestão de Metas Mensais e Anuais de Vendas (Quiet Luxury)
+   Cor Tema : #E74C3C (Vermelho Vendas)
+   ============================================================================= #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-vendas" style="background: #f8fafc; min-height: 100vh;">
+    
+    <style>
+        .fe-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+        .gf-input { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #1e293b; background: #fff; transition: all 0.2s; width: 100%; box-sizing: border-box; outline: none; }
+        .gf-input:focus { border-color: #E74C3C; box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1); }
+        
+        .fe-card { background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 20px; }
+        .fe-card-title { padding: 16px 24px; font-size: 14px; font-weight: 800; color: #E74C3C; border-bottom: 1px solid #f1f5f9; background: rgba(231, 76, 60, 0.02); display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+        .fe-card-body { padding: 24px; }
+
+        .fe-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+        .fe-table th { padding: 14px 20px; background: #f8fafc; color: #64748b; font-weight: 800; text-align: left; font-size: 10.5px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+        .fe-table td { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+        .fe-table tbody tr:hover td { background: #fdfefe; }
+        
+        .meta-badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(231,76,60,0.1); color: #E74C3C; }
+        .meta-geral { background: rgba(41,128,185,0.1); color: #2980B9; }
+        
+        @media (max-width: 1400px) {
+            .metas-grid-container { grid-template-columns: 1fr !important; }
+        }
+    </style>
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Gestão de Metas de Vendas",
+        subtitulo="Vendas > Inteligência Comercial > Metas Mensais e Anuais",
+        icone="fa-trophy",
+        form_id="form-meta-venda",
+        list_id="grid-metas-venda",
+        onclick_novo="limparFormMeta()",
+        onclick_save="document.getElementById('form-salvar-meta').submit()",
+        onclick_list="arioneAlternarVisualizacao('form-meta-venda', 'grid-metas-venda')",
+        cor_tema="#E74C3C",
+        func_fechar="window.location.href='/operacoes/vendas/central?modal=1'" if is_modal else "window.location.href='/operacoes/vendas/central'",
+        tamanho="grande"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px;">
+        
+        {# ── MENSAGENS DE FEEDBACK ── #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="fe-flash fe-flash-{{ category }}" style="margin-bottom: 20px; padding: 14px 20px; border-radius: 10px; font-weight: 700;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {# ══════════ FORMULÁRIO DE CADASTRO (PADRÃO OCULTO/EXIBÍVEL) ══════════ #}
+        <div id="form-meta-venda" style="display: none;">
+            <form id="form-salvar-meta" method="POST" action="{{ url_for('operacoes.salvar_meta_venda', modal=1 if is_modal else 0) }}">
+                <input type="hidden" name="meta_id" id="input-meta-id" value="">
+                
+                <div class="fe-card" style="border-bottom: 4px solid #E74C3C;">
+                    <div class="fe-card-title">
+                        <i class="fas fa-plus-circle"></i> Configurar Meta de Vendas
+                    </div>
+                    <div class="fe-card-body">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <label class="fe-label">Consultor / Vendedor <span style="color:#aaa;">(Deixe em branco para Meta Geral da Empresa)</span></label>
+                                <select class="gf-input" name="vendedor_id" id="select-vendedor">
+                                    <option value="">🎯 META GERAL DA EMPRESA</option>
+                                    {% for v in vendedores %}
+                                        <option value="{{ v.id }}">{{ v.nome_exibivel or v.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="fe-label">Ano Referência</label>
+                                <input type="number" class="gf-input" name="ano" id="input-ano" value="{{ range(2024, 2030)|random if False else 2026 }}" required>
+                            </div>
+                            <div>
+                                <label class="fe-label">Mês Referência</label>
+                                <select class="gf-input" name="mes" id="select-mes" required>
+                                    <option value="1">Janeiro (01)</option>
+                                    <option value="2">Fevereiro (02)</option>
+                                    <option value="3">Março (03)</option>
+                                    <option value="4">Abril (04)</option>
+                                    <option value="5" selected>Maio (05)</option>
+                                    <option value="6">Junho (06)</option>
+                                    <option value="7">Julho (07)</option>
+                                    <option value="8">Agosto (08)</option>
+                                    <option value="9">Setembro (09)</option>
+                                    <option value="10">Outubro (10)</option>
+                                    <option value="11">Novembro (11)</option>
+                                    <option value="12">Dezembro (12)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                            <div>
+                                <label class="fe-label">Valor da Meta (R$)</label>
+                                <input type="text" class="gf-input" name="valor_meta" id="input-valor-meta" placeholder="Ex: 150.000,00" style="font-weight: 800; color: #27AE60; font-size: 16px;" oninput="this.value = arioneMaskMoney(this.value)" required>
+                            </div>
+                            <div>
+                                <label class="fe-label">Observações / Premiação</label>
+                                <input type="text" class="gf-input" name="observacoes" id="input-observacoes" placeholder="Ex: Bônus de 2% ao atingir 100%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ══════════ GRID DE METAS CADASTRADAS ══════════ #}
+        <div id="grid-metas-venda" style="display: block;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 16px; font-weight: 800; color: #1e293b; margin: 0;"><i class="fas fa-trophy" style="color: #E74C3C; margin-right: 8px;"></i> Painel de Metas Comerciais</h2>
+                <button class="ge-btn-add" onclick="limparFormMeta()" style="background: #E74C3C; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; box-shadow: 0 4px 12px rgba(231,76,60,0.2);">
+                    <i class="fas fa-plus"></i> CADASTRAR NOVA META
+                </button>
+            </div>
+
+            <div class="metas-grid-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; align-items: start;">
+                {# ── TABELA 1: METAS GERAIS DA EMPRESA ── #}
+                <div class="fe-card" style="border-left: 4px solid #2980B9; margin: 0;">
+                    <div class="fe-card-title" style="background: rgba(41,128,185,0.05); color: #2980B9;">
+                        <span><i class="fas fa-building"></i> Metas Gerais da Empresa (Global)</span>
+                    </div>
+                    <div class="fe-card-body" style="padding: 0;">
+                        <table class="fe-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%; text-align: center;">ANO / MÊS</th>
+                                    <th style="width: 40%;">ALVO GLOBAL</th>
+                                    <th style="width: 20%; text-align: right;">VALOR DA META</th>
+                                    <th style="width: 15%;">OBSERVAÇÕES</th>
+                                    <th style="width: 10%; text-align: center;">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set lista_geral = metas | selectattr('vendedor', 'none') | list %}
+                                {% for m in lista_geral %}
+                                <tr>
+                                    <td style="text-align: center; font-weight: 800; color: #1e293b;">{{ m.ano }}/{{ "{:02d}".format(m.mes) }}</td>
+                                    <td><span class="meta-badge meta-geral"><i class="fas fa-globe"></i> META GERAL DA EMPRESA</span></td>
+                                    <td style="text-align: right; font-weight: 900; color: #2980B9; font-size: 14px;">R$ {{ "{:,.2f}".format(m.valor_meta or 0).replace(',','v').replace('.',',').replace('v','.') }}</td>
+                                    <td style="color: #64748b; font-size: 12px;">{{ m.observacoes or '--' }}</td>
+                                    <td style="text-align: center;">
+                                        <button class="ge-btn-acao" onclick="editarMeta({{ m.id }}, null, {{ m.ano }}, {{ m.mes }}, '{{ m.valor_meta }}', '{{ m.observacoes }}')" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; color: #334155; cursor: pointer;" title="Editar Meta">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 30px; color: #94a3b8; font-weight: 700;">Nenhuma meta geral da empresa cadastrada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {# ── TABELA 2: METAS INDIVIDUAIS POR CONSULTOR ── #}
+                <div class="fe-card" style="border-left: 4px solid #8E44AD; margin: 0;">
+                    <div class="fe-card-title" style="background: rgba(142,68,173,0.05); color: #8E44AD;">
+                        <span><i class="fas fa-user-tie"></i> Metas Individuais por Consultor / Vendedor</span>
+                    </div>
+                    <div class="fe-card-body" style="padding: 0;">
+                        <table class="fe-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%; text-align: center;">ANO / MÊS</th>
+                                    <th style="width: 40%;">CONSULTOR</th>
+                                    <th style="width: 20%; text-align: right;">VALOR DA META</th>
+                                    <th style="width: 15%;">OBSERVAÇÕES</th>
+                                    <th style="width: 10%; text-align: center;">AÇÕES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set lista_indiv = metas | rejectattr('vendedor', 'none') | list %}
+                                {% for m in lista_indiv %}
+                                <tr>
+                                    <td style="text-align: center; font-weight: 800; color: #1e293b;">{{ m.ano }}/{{ "{:02d}".format(m.mes) }}</td>
+                                    <td><span class="meta-badge" style="background: rgba(142,68,173,0.1); color: #8E44AD;"><i class="fas fa-user-tie"></i> {{ m.vendedor.nome_exibivel or m.vendedor.nome }}</span></td>
+                                    <td style="text-align: right; font-weight: 900; color: #8E44AD; font-size: 14px;">R$ {{ "{:,.2f}".format(m.valor_meta or 0).replace(',','v').replace('.',',').replace('v','.') }}</td>
+                                    <td style="color: #64748b; font-size: 12px;">{{ m.observacoes or '--' }}</td>
+                                    <td style="text-align: center;">
+                                        <button class="ge-btn-acao" onclick="editarMeta({{ m.id }}, {{ m.vendedor_id }}, {{ m.ano }}, {{ m.mes }}, '{{ m.valor_meta }}', '{{ m.observacoes }}')" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; color: #334155; cursor: pointer;" title="Editar Meta">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 30px; color: #94a3b8; font-weight: 700;">Nenhuma meta individual de consultor cadastrada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function arioneMaskMoney(val) {
+            if (!val) return '0,00';
+            let v = val.toString().replace(/\D/g, '');
+            v = (v / 100).toFixed(2) + '';
+            v = v.replace(".", ",");
+            v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return v;
+        }
+
+        function limparFormMeta() {
+            document.getElementById('input-meta-id').value = '';
+            document.getElementById('select-vendedor').value = '';
+            document.getElementById('input-valor-meta').value = '';
+            document.getElementById('input-observacoes').value = '';
+            arioneAlternarVisualizacao('form-meta-venda', 'grid-metas-venda');
+        }
+
+        function editarMeta(id, vendedor_id, ano, mes, valor, obs) {
+            document.getElementById('input-meta-id').value = id;
+            document.getElementById('select-vendedor').value = vendedor_id || '';
+            document.getElementById('input-ano').value = ano;
+            document.getElementById('select-mes').value = mes;
+            document.getElementById('input-valor-meta').value = arioneMaskMoney(parseFloat(valor).toFixed(2));
+            document.getElementById('input-observacoes').value = obs !== 'None' ? obs : '';
+            arioneAlternarVisualizacao('form-meta-venda', 'grid-metas-venda');
+        }
+    </script>
+</div>
+{% endblock %}

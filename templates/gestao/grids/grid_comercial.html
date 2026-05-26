@@ -1,0 +1,132 @@
+<!-- templates/gestao/grids/grid_comercial.html -->
+<div id="modal-overlay-com" class="ge-modal-overlay" onclick="fecharModalCom()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header" id="modal-header-com">
+            <div class="ge-modal-title"><i id="modal-icon-com" class="ge-modal-icon"></i><span id="modal-titulo-com">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalCom()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-com"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-store"></i><span>Comercial</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalCom('revendedores')" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-store ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-store ge-card-icon"></i></div>
+            <span class="ge-card-label">Revendedores</span><span class="ge-card-desc">Rede de revendas</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalCom('ministerios')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-church ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-church ge-card-icon"></i></div>
+            <span class="ge-card-label">Ministérios</span><span class="ge-card-desc">Parcerias ministeriais</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalCom('influenciadores')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-star ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-star ge-card-icon"></i></div>
+            <span class="ge-card-label">Influenciadores</span><span class="ge-card-desc">Rede de influência</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalCom('parcerias')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-handshake ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-handshake ge-card-icon"></i></div>
+            <span class="ge-card-label">Parcerias</span><span class="ge-card-desc">Acordos comerciais</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalCom('estilistas')" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-paint-brush ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-paint-brush ge-card-icon"></i></div>
+            <span class="ge-card-label">Estilistas</span><span class="ge-card-desc">Parceiros criativos</span>
+        </div>
+
+
+    </div>
+</div>
+
+<style>
+@keyframes modalEntrar { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+</style>
+ 
+<script>
+const _configCom = {
+    revendedores:    { titulo: 'Painel de Revendas',       icone: 'fas fa-store',       cor: '#0072CE', corL: '#3399ee' },
+    ministerios:     { titulo: 'Parcerias Ministeriais',   icone: 'fas fa-church',      cor: '#7A255F', corL: '#a8357f' },
+    influenciadores: { titulo: 'Rede de Influência',       icone: 'fas fa-star',        cor: '#E67E22', corL: '#f39c12' },
+    parcerias:       { titulo: 'Acordos Comerciais',       icone: 'fas fa-handshake',   cor: '#27AE60', corL: '#2ecc71' },
+    estilistas:      { titulo: 'Parcerias Criativas',      icone: 'fas fa-paint-brush', cor: '#8E44AD', corL: '#9b59b6' },
+};
+ 
+const _rotasCom = {
+    revendedores:    '/gestao/cards/revendedores',
+    ministerios:     '/gestao/cards/ministerios',
+    influenciadores: '/gestao/cards/influenciadores',
+    parcerias:       '/gestao/cards/parcerias',
+    estilistas:      '/gestao/cards/estilistas',
+};
+ 
+function abrirModalCom(tipo) {
+    const c = _configCom[tipo];
+    if (!c) return;
+ 
+    // Atualiza header
+    document.getElementById('modal-titulo-com').textContent = c.titulo;
+    document.getElementById('modal-icon-com').className = c.icone;
+    document.getElementById('modal-header-com').style.background =
+        `linear-gradient(135deg, ${c.cor}, ${c.corL})`;
+ 
+    // Mostra spinner
+    document.getElementById('modal-body-com').innerHTML = `
+        <div style="text-align:center; padding:40px; color:#aaa;">
+            <i class="fas fa-spinner fa-spin" style="font-size:32px; color:${c.cor};"></i>
+            <p style="margin-top:12px; font-size:14px;">Carregando ${c.titulo}...</p>
+        </div>`;
+ 
+    // Abre modal
+    const overlay = document.getElementById('modal-overlay-com');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+ 
+    // Carrega conteúdo via fetch
+    fetch(_rotasCom[tipo])
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.text();
+        })
+        .then(html => {
+            const container = document.getElementById('modal-body-com');
+            container.innerHTML = html;
+
+            // Regra 11 (Anti-Erro): Força o navegador a engatilhar e interpretar o JS do modal injetado por fetch.
+            // Quando usamos '.innerHTML', o navegador por segurança NÃO roda as tags <script>.
+            // Precisamos recriar cada script como elemento DOM real para que sejam executados.
+            Array.from(container.querySelectorAll('script')).forEach(script => {
+                const newScript = document.createElement('script');
+                Array.from(script.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(script.innerHTML));
+                script.parentNode.replaceChild(newScript, script);
+            });
+        })
+        .catch(err => {
+            document.getElementById('modal-body-com').innerHTML = `
+                <div style="text-align:center; padding:40px; color:#e53e3e;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:32px;"></i>
+                    <p style="margin-top:12px; font-size:14px; font-weight:600;">Erro ao carregar o formulário.</p>
+                    <p style="font-size:12px; color:#aaa; margin-top:6px;">${err.message}</p>
+                    <p style="font-size:12px; color:#aaa;">Verifique se a rota <code>${_rotasCom[tipo]}</code> existe.</p>
+                </div>`;
+        });
+}
+ 
+function fecharModalCom() {
+    document.getElementById('modal-overlay-com').style.display = 'none';
+    document.body.style.overflow = '';
+}
+ 
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') fecharModalCom();
+});
+</script>

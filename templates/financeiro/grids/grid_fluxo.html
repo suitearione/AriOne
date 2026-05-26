@@ -1,0 +1,89 @@
+<!-- templates/financeiro/grids/grid_fluxo.html -->
+<div id="modal-overlay-flx" class="ge-modal-overlay" onclick="fecharModalFlx(event)">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-flx" class="ge-modal-icon"></i><span id="modal-titulo-flx">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalFlx()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-flx"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-chart-line"></i><span>Fluxo & Projeções</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_projecao') }}'" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-chart-area ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-chart-area ge-card-icon"></i></div>
+            <span class="ge-card-label">Projeção Financeira</span><span class="ge-card-desc">Previsão 30/60/90 dias</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+async function abrirModalFlx(tipo) {
+    let url = `/financeiro/card/${tipo}`;
+    let titulo = '';
+    let icone = '';
+
+    if (tipo === 'fluxo-caixa') {
+        titulo = 'Fluxo de Caixa Consolidado';
+        icone = 'fas fa-water';
+    } else if (tipo === 'projecao') {
+        titulo = 'Projeção Financeira (30/60/90 dias)';
+        icone = 'fas fa-chart-area';
+    } else if (tipo === 'movimentacoes') {
+        titulo = 'Extrato Geral de Movimentações';
+        icone = 'fas fa-exchange-alt';
+    } else if (tipo === 'entradas-saidas') {
+        titulo = 'Lançamento Rápido de Entradas & Saídas';
+        icone = 'fas fa-bolt';
+    }
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        
+        document.getElementById('modal-titulo-flx').textContent = titulo;
+        document.getElementById('modal-icon-flx').className = icone + ' ge-modal-icon';
+        const body = document.getElementById('modal-body-flx');
+        body.innerHTML = html;
+
+        // Blindagem de Scripts para o conteúdo carregado via AJAX
+        body.querySelectorAll('script').forEach(script => {
+            const novo = document.createElement('script');
+            [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+            novo.appendChild(document.createTextNode(script.innerHTML));
+            script.parentNode.replaceChild(novo, script);
+        });
+
+        document.getElementById('modal-overlay-flx').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+    } catch (e) {
+        console.error("Erro ao carregar card de fluxo:", e);
+        if (typeof arioneToast === 'function') arioneToast("Erro ao carregar módulo", "danger");
+    }
+}
+function fecharModalFlx(e) { 
+    if (e && e.target !== document.getElementById('modal-overlay-flx')) return;
+    document.getElementById('modal-overlay-flx').classList.remove('ativo'); 
+    document.body.style.overflow = ''; 
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalFlx(); });
+</script>
+
+<style>
+    .ge-cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: flex-start !important;
+        padding: 10px 0;
+    }
+    .ge-card {
+        width: 180px;
+        margin: 0 !important;
+    }
+</style>

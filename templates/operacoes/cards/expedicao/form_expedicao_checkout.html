@@ -1,0 +1,180 @@
+{# =============================================================================
+   Arquivo  : form_expedicao_checkout.html
+   Caminho  : templates/operacoes/cards/expedicao/form_expedicao_checkout.html
+   Função   : Conferência e Checkout de Pedidos (Packing List).
+ ============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
+{% block content %}
+<div class="ctx-exp-wrap">
+    <style>
+        :root { --exp-pri: #2C3E50; --exp-acc: #34495E; }
+        .ctx-exp-header { background: linear-gradient(135deg, var(--exp-pri), #1C2833); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-exp-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        .arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
+        .arione-main-wrapper { margin-left: 0 !important; }
+
+        .exp-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .exp-title { font-size: 11px; font-weight: 800; color: var(--exp-pri); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .exp-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .exp-group { display: flex; flex-direction: column; gap: 5px; }
+        .exp-label { font-size: 11px; font-weight: 700; color: #64748b; }
+        .exp-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600; }
+        .exp-input:focus { border-color: var(--exp-pri); outline: none; }
+
+        /* Bipagem */
+        .bip-input-wrap { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; transition: 0.3s; }
+        .bip-input-wrap.active { border-color: #27AE60; background: #f0fdf4; box-shadow: 0 0 15px rgba(39,174,96,0.1); }
+        .bip-field { width: 100%; max-width: 400px; text-align: center; font-size: 24px; font-weight: 900; letter-spacing: 2px; color: var(--exp-pri); background: transparent; border: none; outline: none; }
+        .bip-field::placeholder { font-size: 14px; letter-spacing: 0; font-weight: 600; color: #94a3b8; }
+
+        /* Grade de Itens */
+        .item-row { display: grid; grid-template-columns: 80px 1fr 100px 100px 60px; gap: 10px; padding: 12px; border-bottom: 1px solid #f1f5f9; align-items: center; }
+        .item-row.done { background: #f0fdf4; opacity: 0.7; }
+        .item-check { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; color: transparent; transition: 0.2s; }
+        .item-row.done .item-check { background: #27AE60; border-color: #27AE60; color: #fff; }
+
+        /* Abas Inferiores */
+        .exp-tabs { display: flex; gap: 5px; border-bottom: 2px solid #f1f5f9; margin-top: 20px; }
+        .exp-tab { padding: 10px 20px; font-size: 12px; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .exp-tab:hover { color: var(--exp-pri); }
+        .exp-tab.active { color: var(--exp-pri); border-bottom-color: var(--exp-pri); }
+    </style>
+
+    <div class="ctx-exp-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-barcode"></i></div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Conferência & Checkout</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Packing List e Saída de Mercadorias</div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.15) !important; color:#fff !important; border:1px solid rgba(255,255,255,0.2) !important; padding:8px 20px !important;" onclick="fecharModalExp()">Sair</button>
+            <button style="background:#27AE60; color:#fff; border:none; padding:8px 24px; border-radius:6px; font-weight:700; cursor:pointer;"><i class="fas fa-check-double"></i> FINALIZAR CHECKOUT</button>
+        </div>
+    </div>
+
+    <div class="ctx-exp-body">
+        
+        <div class="exp-row" style="margin-bottom:20px;">
+            <div class="exp-group" style="flex:1.5;"><label class="exp-label">Pedido / NF</label><input type="text" class="exp-input" placeholder="Bipe ou digite o Nº" value="PV-85942"></div>
+            <div class="exp-group"><label class="exp-label">Transportadora</label><div style="font-weight:800; color:var(--exp-pri);">BRASPRESS TRANSPORTES</div></div>
+            <div class="exp-group"><label class="exp-label">Cliente</label><div style="font-weight:700;">LOJAS AVENIDA LTDA - SP</div></div>
+        </div>
+
+        <!-- Bipagem -->
+        <div class="bip-input-wrap" id="bip-wrap">
+            <i class="fas fa-barcode" style="font-size:20px; color:#cbd5e1;"></i>
+            <input type="text" class="bip-field" id="ean-field" placeholder="BIPE O PRODUTO..." autofocus>
+            <div id="bip-status" style="font-size:11px; font-weight:700; color:#94a3b8;">Aguardando leitor...</div>
+        </div>
+
+        <!-- Resumo de Checkout -->
+        <div class="exp-row">
+            <div class="exp-group"><label class="exp-label">Volumes</label><div style="display:flex; gap:5px; align-items:center;"><input type="number" class="exp-input" value="1" style="width:60px;"> de <span style="font-weight:800;">3</span></div></div>
+            <div class="exp-group"><label class="exp-label">Tipo Embalagem</label><select class="exp-input"><option>CAIXA TIPO A (PADRÃO)</option><option>ENVELOPE DE SEGURANÇA</option></select></div>
+            <div class="exp-group"><label class="exp-label">Peso Real (kg)</label><input type="text" class="exp-input" placeholder="0,00" value="12,580"></div>
+        </div>
+
+        <!-- Abas Inferiores -->
+        <div class="exp-tabs">
+            <div class="exp-tab active" data-tab="itens">CONFERÊNCIA (4)</div>
+            <div class="exp-tab" data-tab="etiquetas">ETIQUETAS</div>
+            <div class="exp-tab" data-tab="ocorrencias">OCORRÊNCIAS</div>
+            <div class="exp-tab" data-tab="documentos">DOCUMENTOS</div>
+        </div>
+
+        <!-- Painel: Itens -->
+        <div id="panel-itens" class="exp-panel active">
+            <div style="margin-top:15px; border:1.5px solid #edf2f7; border-radius:10px; overflow:hidden;">
+                <div style="background:#f8fafc; padding:10px 12px; font-size:10px; font-weight:800; color:#64748b; display:grid; grid-template-columns: 80px 1fr 100px 100px 60px; gap:10px;">
+                    <span>EAN</span><span>PRODUTO</span><span style="text-align:center;">QTD PEDIDO</span><span style="text-align:center;">CONFIRMADO</span><span>STS</span>
+                </div>
+                <div id="check-list">
+                    <div class="item-row done">
+                        <span style="font-family:monospace; font-weight:700;">78900122</span>
+                        <span style="font-weight:700;">CAMISETA POLO VERÃO M - AZUL</span>
+                        <span style="text-align:center; font-weight:800;">10</span>
+                        <span style="text-align:center; color:#27AE60; font-weight:900;">10</span>
+                        <div class="item-check"><i class="fas fa-check"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel: Etiquetas -->
+        <div id="panel-etiquetas" class="exp-panel" style="display:none; padding:30px; text-align:center;">
+            <i class="fas fa-print fa-3x" style="color:#cbd5e1; margin-bottom:15px;"></i>
+            <div style="font-weight:700; color:#64748b;">Nenhuma etiqueta gerada.</div>
+            <button class="ge-btn-salvar" style="margin-top:15px; background:var(--exp-pri);"><i class="fas fa-barcode"></i> GERAR ETIQUETAS ZPL</button>
+        </div>
+
+        <!-- Painel: Ocorrências -->
+        <div id="panel-ocorrencias" class="exp-panel" style="display:none; padding:20px;">
+            <div class="exp-group">
+                <label class="exp-label">Nova Ocorrência</label>
+                <select class="exp-input"><option>Endereço não localizado</option><option>Cliente ausente</option><option>Recusa de recebimento</option></select>
+                <textarea class="exp-input" placeholder="Detalhes da ocorrência..." rows="3" style="margin-top:10px; resize:none;"></textarea>
+                <button type="button" class="btn-crud" style="margin-top:10px; width:fit-content;">Registrar Problema</button>
+            </div>
+        </div>
+
+        <!-- Painel: Documentos -->
+        <div id="panel-documentos" class="exp-panel" style="display:none; padding:20px;">
+            <div style="display:flex; gap:15px;">
+                <div style="flex:1; background:#f8fafc; padding:15px; border-radius:8px; border:1.5px dashed #cbd5e1; text-align:center;">
+                    <i class="fas fa-file-pdf fa-2x" style="color:#C0392B;"></i>
+                    <div style="font-size:11px; font-weight:800; margin-top:5px;">DANFE_8594.PDF</div>
+                </div>
+                <div style="flex:1; background:#f8fafc; padding:15px; border-radius:8px; border:1.5px dashed #cbd5e1; text-align:center;">
+                    <i class="fas fa-file-code fa-2x" style="color:#27AE60;"></i>
+                    <div style="font-size:11px; font-weight:800; margin-top:5px;">XML_8594.XML</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const eanInput = document.getElementById('ean-field');
+    const bipWrap = document.getElementById('bip-wrap');
+    const bipStatus = document.getElementById('bip-status');
+
+    // Troca de Abas
+    document.querySelectorAll('.exp-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.exp-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.exp-panel').forEach(p => p.style.display = 'none');
+            
+            tab.classList.add('active');
+            const panelId = 'panel-' + tab.dataset.tab;
+            document.getElementById(panelId).style.display = 'block';
+        });
+    });
+
+    eanInput.addEventListener('focus', () => bipWrap.classList.add('active'));
+    eanInput.addEventListener('blur', () => bipWrap.classList.remove('active'));
+
+    eanInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const code = eanInput.value;
+            if (code) {
+                bipStatus.textContent = `PROCESSANDO: ${code}...`;
+                bipStatus.style.color = '#27AE60';
+                
+                // Simulação de Bipagem
+                setTimeout(() => {
+                    eanInput.value = '';
+                    bipStatus.textContent = 'AGUARDANDO LEITOR...';
+                    bipStatus.style.color = '#94a3b8';
+                }, 500);
+            }
+        }
+    });
+
+    // Auto-focus no leitor ao abrir
+    setTimeout(() => eanInput.focus(), 500);
+</script>
+{% endblock %}

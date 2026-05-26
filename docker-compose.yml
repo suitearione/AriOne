@@ -1,0 +1,76 @@
+# =============================================================================
+# Docker Compose para AriOne ERP
+# =============================================================================
+version: '3.8'
+
+services:
+  # Aplicação Web
+  web:
+    build: .
+    container_name: arione_web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://arione:arione123@db:5432/arione
+      - SECRET_KEY=${SECRET_KEY:-chave-secreta-padrao-trocar-em-producao}
+    volumes:
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+      - ./static/uploads:/app/static/uploads
+    depends_on:
+      - db
+      - redis
+    networks:
+      - arione_network
+
+  # Banco de Dados PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: arione_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=arione
+      - POSTGRES_PASSWORD=arione123
+      - POSTGRES_DB=arione
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - arione_network
+
+  # Redis para cache e filas
+  redis:
+    image: redis:7-alpine
+    container_name: arione_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - arione_network
+
+  # Nginx como proxy reverso
+  nginx:
+    image: nginx:alpine
+    container_name: arione_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./static:/app/static:ro
+    depends_on:
+      - web
+    networks:
+      - arione_network
+
+volumes:
+  postgres_data:
+
+networks:
+  arione_network:
+    driver: bridge

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-cores" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .cor-swatch-premium {
+            width: 34px; height: 34px; border-radius: 8px; 
+            border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            margin: 0 auto; transition: 0.3s;
+        }
+        .cor-row:hover .cor-swatch-premium { transform: scale(1.15) rotate(5deg); }
+        .cor-row:hover { background: #fffcf0 !important; cursor: pointer; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Catálogo de Cores',
+            subtitulo='Catálogos > Cores e Paletas',
+            icone='fa-palette',
+            cor_tema='#7A255F',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
+            form_id='cor-form-area',
+            onclick_novo='resetFormCor()',
+            onclick_save='salvarCor()',
+            onclick_search='focarPesquisaCor()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            onclick_clonar='clonarCorAtivo()',
+            onclick_export='exportarCorCSV()',
+            onclick_import='abrirModalImportacaoXML()',
+            onclick_print='imprimirRelatorioCor()',
+            onclick_email='enviarCorEmail()',
+            onclick_whatsapp='enviarCorWhatsApp()',
+            status='Ativo',
+            ajuda='Gerencie as cores e paletas utilizadas nos produtos.',
+            tamanho='medio'
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="cor-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="cor-form" method="POST" action="{{ url_for('cadastros.card_cores') }}">
+                <input type="hidden" name="id" id="cor-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="cor-form-titulo">CADASTRO DE COR</span></span>
+                        <button type="button" onclick="novoRegistroCor()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Nome da Cor / Variante <span style="color:#ef4444;">*</span></label>
+                                <input type="text" class="fp-input" name="nome_cor" id="cor-nome-input" placeholder="EX: PRETO, AZUL ROYAL..." required oninput="syncColorMaster(this)" style="width: 100%; font-weight: 800;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Seletor Visual</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="color" class="fp-input" name="cor_hex" id="cor-hex-input" value="#E67E22" style="width: 50px; height: 38px; padding: 3px; cursor: pointer;">
+                                    <input type="text" class="fp-input" id="cor-hex-text" placeholder="#HEX" maxlength="7" style="flex:1; font-family: monospace; font-weight: 800; text-align: center; color: #E67E22;">
+                                </div>
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Status</label>
+                                <select class="fp-input" name="status_cor" id="cor-status-input" style="width: 100%; background: #fff;">
+                                    <option value="ATIVO">ATIVO</option>
+                                    <option value="INATIVO">INATIVO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-cor" onclick="forceSubmitCor()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR COR
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="cor-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-palette" style="color: #E67E22; margin-right: 8px;"></i> Paleta de Cores Cadastradas</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="cor-search-input" oninput="filtrarCores()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="cor-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ cores|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center; padding-left: 20px;">VISUAL</th>
+                            <th>NOME DA COR</th>
+                            <th style="width: 150px; text-align: center;">CÓDIGO HEX</th>
+                            <th style="width: 120px; text-align: center;">STATUS</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-cores">
+                        {% for c in cores %}
+                        <tr class="cor-row" data-id="{{ c.id }}" data-nome="{{ c.nome|upper }}" data-hex="{{ c.cor_hex }}" onclick='editarCor_ByRow(this)'>
+                            <td style="text-align: center; padding-left: 20px;">
+                                <div class="cor-swatch-premium" style="background: {{ c.cor_hex }};"></div>
+                            </td>
+                            <td style="padding: 12px 20px; font-weight: 800; color: #1e293b; font-size: 14px;">{{ c.nome }}</td>
+                            <td style="text-align: center;">
+                                <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 900; font-family: monospace; border: 1px solid #e2e8f0;">{{ c.cor_hex|upper }}</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span style="font-size: 9px; font-weight: 900; background: {{ '#e6f9ef' if c.ativa else '#f1f5f9' }}; color: {{ '#27AE60' if c.ativa else '#94a3b8' }}; padding: 3px 12px; border-radius: 20px;">
+                                    {{ 'ATIVO' if c.ativa else 'INATIVO' }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirCor('{{ c.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            const magicColors = { 'PRETO':'#000000','BRANCO':'#FFFFFF','VERMELHO':'#FF0000','AZUL':'#0000FF','VERDE':'#008000','AMARELO':'#FFFF00','CINZA':'#808080','LARANJA':'#FFA500','ROSA':'#FFC0CB','ROXO':'#800080','MARROM':'#A52A2A','BEGE':'#F5F5DC','VINHO':'#722F37','CHUMBO':'#3F3F3F' };
+
+            window.syncColorMaster = function(el) {
+                const v = el.value.toUpperCase().trim();
+                if(magicColors[v]) {
+                    document.getElementById('cor-hex-input').value = magicColors[v];
+                    document.getElementById('cor-hex-text').value = magicColors[v];
+                }
+            };
+
+            const hIn = document.getElementById('cor-hex-input');
+            const hTx = document.getElementById('cor-hex-text');
+            if(hIn && hTx) {
+                hIn.addEventListener('input', e => hTx.value = e.target.value.toUpperCase());
+                hTx.addEventListener('input', e => { 
+                    let v = e.target.value; if(!v.startsWith('#')) v = '#' + v;
+                    if(/^#[0-9A-F]{6}$/i.test(v)) hIn.value = v;
+                });
+            }
+
+            window.novoRegistroCor = function() {
+                document.getElementById('cor-form-titulo').textContent = 'NOVA COR';
+                document.getElementById('cor-id-hidden').value = '';
+                document.getElementById('cor-form').reset();
+                document.getElementById('cor-nome-input').focus();
+            };
+
+            window.fecharFormCor = function() { novoRegistroCor(); };
+
+            window.editarCor_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('cor-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('cor-id-hidden').value = id;
+                document.getElementById('cor-nome-input').value = r.dataset.nome;
+                document.getElementById('cor-hex-input').value = r.dataset.hex;
+                document.getElementById('cor-form').action = `/cadastros/cards/cores/${id}`;
+                window.scrollTo({top:0, behavior:'smooth'});
+                setTimeout(() => document.getElementById('cor-nome-input').focus(), 300);
+            };
+
+            window.forceSubmitCor = async function() {
+                const form = document.getElementById('cor-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-cor');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Cor salva!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarCores = function() {
+                const f = document.getElementById('cor-search-input').value.toUpperCase();
+                document.querySelectorAll('.cor-row').forEach(r => {
+                    r.style.display = r.dataset.nome.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.excluirCor = async function(id, btn) {
+                if(!confirm('Excluir cor?')) return;
+                const r = await fetch(`/cadastros/cards/cores/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+            
+            window.focarBuscaCor = function() { document.getElementById('cor-search-input').focus(); };
+            window.exportarCores = function() { arioneExportar({url:'/cadastros/cards/cores/dados-json', modulo:'Cores'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

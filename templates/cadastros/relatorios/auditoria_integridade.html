@@ -1,0 +1,277 @@
+{# templates/cadastros/relatorios/auditoria_integridade.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="fe-header" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+    <div class="fe-header-left">
+        <div class="fe-header-icon" style="background: rgba(255,255,255,0.1);"><i class="fas fa-microscope"></i></div>
+        <div>
+            <h2 class="fe-header-title">Auditoria de Integridade de Dados</h2>
+            <nav class="fe-breadcrumb">AriOne / Desenvolvimento / Auditoria / {{ entidade }}</nav>
+        </div>
+    </div>
+    <div class="fe-header-actions" style="display:flex; gap:10px;">
+        <button onclick="window.close()" class="fe-btn" style="background:#fff; color:#1e293b; border:none; font-weight:700;">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+        <button onclick="window.print()" class="fe-btn" style="background:rgba(255,255,255,0.15); color:#fff; border:1px solid rgba(255,255,255,0.3);">
+            <i class="fas fa-print"></i> Imprimir Laudo
+        </button>
+    </div>
+</div>
+
+<div style="padding: 30px; max-width: 1000px; margin: 0 auto;">
+    
+    <!-- Painel de Configuração (Não imprime) -->
+    <div class="no-print" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:15px; margin-bottom:25px; display:flex; align-items:center; gap:20px;">
+        <div style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Configurações de Impressão:</div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#1e293b; font-weight:600;">
+            <input type="checkbox" id="toggle-dados" checked onchange="toggleTabelaDados()" style="width:16px; height:16px;"> 
+            Incluir Valores Gravados (Audit de Dados)
+        </label>
+    </div>
+
+    <div id="audit-main-card" style="background:#fff; border-radius:12px; border:1.5px solid #e2e8f0; padding:25px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #f1f5f9; padding-bottom:15px;">
+            <h4 style="margin:0; color:#1e293b;">
+                {% if is_estrutura %}
+                    Auditoria Estrutural (Mapeamento de Campos): {{ entidade }}
+                {% else %}
+                    Laudo de Conformidade e Persistência: {{ nome_registro }}
+                {% endif %}
+            </h4>
+            <span style="background:#dcfce7; color:#166534; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700;">
+                {% if is_estrutura %}
+                    Golden Standard: Tabela
+                {% else %}
+                    Registro ID: {{ record_id }}
+                {% endif %}
+            </span>
+        </div>
+
+        <!-- Estatísticas Gerais (Sempre Visível) -->
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+            <div style="background:#f1f5f9; padding:20px; border-radius:10px;">
+                <div style="font-size:10px; color:#64748b; font-weight:800; text-transform:uppercase;">Volume / Amostragem</div>
+                <div style="font-size:24px; font-weight:800; color:#1e293b;">{{ total_registros if is_estrutura else '1 Registro' }}</div>
+            </div>
+            <div style="background:#f1f5f9; padding:20px; border-radius:10px;">
+                <div style="font-size:10px; color:#64748b; font-weight:800; text-transform:uppercase;">Dicionário AriOne</div>
+                <div style="font-size:24px; font-weight:800; color:#1e293b;">{{ colunas|length if is_estrutura else auditoria_data|length }} Colunas</div>
+            </div>
+        </div>
+
+        <!-- Seção: Dicionário de Campos (O "O que é") -->
+        <div style="margin-bottom:30px;">
+            <h5 style="color:#64748b; font-size:12px; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px;">1. Estrutura de Campos (Dicionário Técnico)</h5>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                {% if is_estrutura %}
+                    {% for col in colunas %}
+                        <span class="tag-campo">{{ col }}</span>
+                    {% endfor %}
+                {% else %}
+                     {% for campo in auditoria_data.keys() %}
+                        <span class="tag-campo">{{ campo }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção: Tabela de Dados (O "O que tem dentro") -->
+        <div id="secao-tabela-dados">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h5 style="color:#64748b; font-size:12px; margin:0; text-transform:uppercase; letter-spacing:1px;">2. Auditoria de Valores Gravados (Registro)</h5>
+                
+                {% if not is_estrutura %}
+                <div class="no-print" style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="navegarRegistro(-1)" class="fe-btn" style="background:rgba(0,0,0,0.05); color:#1e293b; padding:5px 10px; height:32px; border-radius:6px; border:1px solid #e2e8f0;" title="Registro Anterior">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <input type="number" id="lookup-id" value="{{ record_id }}" placeholder="ID..." style="width:60px; height:32px; padding:0 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; font-weight:700; text-align:center;">
+                    
+                    <button onclick="navegarRegistro(1)" class="fe-btn" style="background:rgba(0,0,0,0.05); color:#1e293b; padding:5px 10px; height:32px; border-radius:6px; border:1px solid #e2e8f0;" title="Próximo Registro">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button onclick="carregarRegistro()" style="background:#1e293b; color:#fff; border:none; padding:0 12px; height:32px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; margin-left:5px;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="text-align:left; border-bottom:2px solid #e2e8f0;">
+                        <th style="padding:12px; font-size:11px; color:#64748b; text-transform:uppercase;">Campo no Banco</th>
+                        <th style="padding:12px; font-size:11px; color:#64748b; text-transform:uppercase;">Conteúdo Persistido</th>
+                        <th style="padding:12px; font-size:11px; color:#64748b; text-transform:uppercase; text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if is_estrutura %}
+                        {% for campo in colunas %}
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:12px; font-weight:600; color:#475569; font-family:monospace; font-size:12px;">{{ campo }}</td>
+                            <td style="padding:12px; color:#94a3b8; font-style:italic;">[Área Reservada para Dados]</td>
+                            <td style="padding:12px; text-align:center;"><i class="fas fa-layer-group" style="color:#e2e8f0;"></i></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for campo, valor in auditoria_data.items() %}
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:12px; font-weight:600; color:#475569; font-family:monospace; font-size:12px;">{{ campo }}</td>
+                            <td style="padding:12px; color:#1e293b;">{{ valor if valor is not none else '—' }}</td>
+                            <td style="padding:12px; text-align:center;">
+                                {% if valor is not none and valor != '' %}
+                                    <i class="fas fa-check-circle" style="color:#22c55e;"></i>
+                                {% else %}
+                                    <i class="fas fa-exclamation-circle" style="color:#94a3b8;" title="Campo Vazio"></i>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top:30px; padding:20px; background:#f8fafc; border-radius:8px; border-left:4px solid #1e293b;">
+            <p style="font-size:12px; color:#64748b; margin:0;">
+                <strong>Certificação AriOne:</strong> Este laudo confirma que a integridade dos dados foi auditada via camada AriOne "Golden Standard".
+                <br><br>
+                <em>Gerado em: {{ now().strftime('%d/%m/%Y %H:%M:%S') }} - Somente Versão Desenvolvimento</em>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function navegarRegistro(delta) {
+    const input = document.getElementById('lookup-id');
+    let id = parseInt(input.value) || 0;
+    id += delta;
+    if (id < 1) id = 1;
+    input.value = id;
+    carregarRegistro();
+}
+
+function carregarRegistro() {
+    const id = document.getElementById('lookup-id').value;
+    if (!id) return alert('Por favor, informe o ID do registro.');
+    
+    // Recarrega a página passando o record_id na URL
+    const url = new URL(window.location.href);
+    url.searchParams.set('record_id', id);
+    window.location.href = url.toString();
+}
+
+function toggleTabelaDados() {
+    const check = document.getElementById('toggle-dados');
+    const secao = document.getElementById('secao-tabela-dados');
+    if (secao) {
+        secao.style.display = check.checked ? 'block' : 'none';
+    }
+}
+</script>
+
+<style>
+.no-print { display: flex; }
+.tag-campo {
+    background: #f8fafc; 
+    border: 1px solid #e2e8f0; 
+    padding: 4px 10px; 
+    border-radius: 6px; 
+    font-size: 11px; 
+    font-family: monospace; 
+    color: #475569;
+}
+
+@media print {
+    .no-print, .fe-sidebar, .fe-header-actions, .fe-navbar, .fe-breadcrumb, .fe-btn, .fe-footer { 
+        display: none !important; 
+    }
+    
+    /* Configurações de Página (Vertical / Retrato) */
+    @page {
+        size: auto;
+        margin: 10mm;
+    }
+
+    /* Configurações globais de página */
+    html, body { 
+        background: #fff !important; 
+        color: #000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    
+    /* Garantir que containers ocupem a largura centralizada e permitam scroll */
+    .fe-sidebar, .fe-navbar, .fe-breadcrumb { display: none !important; }
+    
+    .fe-content-wrapper, .fe-wrap, .fe-content, #arione-main-content { 
+        width: 100% !important; 
+        margin: 0 !important; 
+        padding: 0 !important;
+        background: transparent !important;
+        display: block !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: static !important;
+    }
+
+    /* Manter cores de fundo e bordas */
+    * { 
+        -webkit-print-color-adjust: exact !important; 
+        print-color-adjust: exact !important; 
+    }
+
+    /* Estilização do cabeçalho alinhado à esquerda no papel */
+    .fe-header { 
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+        border-radius: 8px !important;
+        margin: 0 0 30px 0 !important;
+        padding: 20px !important;
+        max-width: 1000px !important; 
+        display: flex !important;
+    }
+    .fe-header-title { color: #fff !important; }
+
+    /* Estilização do card alinhado à esquerda */
+    div[style*="max-width: 1000px"] {
+        max-width: 100% !important; /* Deixa fluir na vertical */
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }
+    
+    div[style*="background:#fff"] {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 30px !important;
+        border-radius: 12px !important;
+    }
+
+    /* Forçar badges e elementos verdes */
+    span[style*="background:#dcfce7"] {
+        background-color: #dcfce7 !important;
+        border: 1px solid #166534 !important;
+    }
+
+    /* Dicionário de dados - tags */
+    span[style*="background:#f8fafc"] {
+        background-color: #f8fafc !important;
+        border: 1px solid #ddd !important;
+        display: inline-block !important;
+    }
+
+    /* Ajuste de tabela para não quebrar no meio do registro */
+    tr { page-break-inside: avoid; }
+}
+</style>
+{% endblock %}

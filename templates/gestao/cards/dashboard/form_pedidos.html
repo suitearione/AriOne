@@ -1,0 +1,523 @@
+<!--
+==================================================
+📁 Arquivo: form_dash_orcamentos.html
+📂 Caminho: templates/gestao/cards/
+🧩 Módulo: Gestão - Orçamentos
+📄 Descrição: Filtros do painel de Orçamentos.
+              Período: Hoje/Semana/Mês/Ano → datas ocultas e preenchidas automaticamente.
+              Personalizado → exibe campos de data inicial e final + intervalo.
+==================================================
+-->
+
+<form class="ge-form" id="form-pedido">
+
+    {# ── LINHA 1: Período ── #}
+    <div class="gf-row" id="linha_periodo">
+        
+        <!-- ========================================== -->
+        <!--        SELETOR DE PERÍODO (ESQUERDA)       -->
+        <!-- ========================================== -->
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Período <span class="gf-req">*</span></label>
+            <select 
+                class="gf-input" 
+                name="periodo" 
+                id="sel-periodo" 
+                onchange="aplicarPeriodo(this)">
+                <option value="hoje">Hoje</option>
+                <option value="semana">Semana</option>
+                <option value="mes" selected>Mês</option>
+                <option value="ano">Ano</option>
+                <option value="personalizado">Personalizado</option>
+            </select>
+        </div>
+
+        <!-- ========================================== -->
+        <!--  INTERVALO / DATAS PERSONALIZADAS (DIREITA)-->
+        <!-- ========================================== -->
+        <div class="gf-group gf-flex-1" id="wrap-periodo-info">
+            <label class="gf-label">Intervalo</label>
+            
+            <!-- Barra de Texto (Visível nos períodos normais) -->
+            <div 
+                class="gf-periodo-info" 
+                id="periodo-info"
+                style="width: max-content; min-width: 160px; justify-content: center;"
+            >—</div>
+
+            <!-- Campos de Data (Visíveis SOMENTE em Personalizado) -->
+            <div 
+                id="wrap-datas-personalizadas" 
+                style="display:none; gap: 10px; width: 100%;">
+                
+                <div class="gf-group gf-flex-1">
+                    <label class="gf-label" style="font-size:9.5px;">Data Inicial</label>
+                    <input 
+                        class="gf-input" 
+                        type="date" 
+                        name="data_inicio" 
+                        id="inp-data-inicio" 
+                        onchange="atualizarIntervalo(this)">
+                </div>
+                
+                <div class="gf-group gf-flex-1">
+                    <label class="gf-label" style="font-size:9.5px;">Data Final</label>
+                    <input 
+                        class="gf-input" 
+                        type="date" 
+                        name="data_final" 
+                        id="inp-data-final" 
+                        onchange="atualizarIntervalo(this)">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {# ── LINHA 2: Código/Tabela, Consultor e Status ── #}
+    <div class="gf-row">
+        <div class="gf-group gf-flex-2">
+            <label class="gf-label">Código / Tabela de Pedido</label>
+            <input class="gf-input" type="text" name="codigo_pedido" placeholder="Digite o código ou nome do pedido">
+        </div>
+        <div class="gf-group gf-flex-2">
+            <label class="gf-label">Consultor</label>
+            <select class="gf-input" name="consultor">
+                <option value="">Todos</option>
+                {# Aqui virão os consultores do backend #}
+                {% if consultores %}
+                  {% for c in consultores %}
+                    <option value="{{ c.id }}">{{ c.nome }}</option>
+                  {% endfor %}
+                {% endif %}
+            </select>
+        </div>
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Status</label>
+            <select class="gf-input" name="status">
+                <option value="">Todos</option>
+                <option value="EM EDIÇÃO">EM EDIÇÃO</option>
+                <option value="APROVADO">APROVADO</option>
+                <option value="FATURADO">FATURADO</option>
+                <option value="ENTREGUE">ENTREGUE</option>
+                <option value="CANCELADO">CANCELADO</option>
+            </select>
+        </div>
+    </div>
+
+    {# ── LINHA 3: Cliente e Tipo de Cliente ── #}
+    <div class="gf-row">
+        <div class="gf-group gf-flex-3">
+            <label class="gf-label">Cliente</label>
+            <input class="gf-input" list="lista-clientes-dash-ped" type="text" name="cliente" placeholder="Código, CPF/CNPJ ou nome do cliente" oninput="this.value = this.value.toUpperCase()">
+            <datalist id="lista-clientes-dash-ped">
+                {% if clientes %}
+                  {% for c in clientes %}
+                    <option value="{{ c.nome|upper }} - {{ c.cpf_cnpj }}"></option>
+                  {% endfor %}
+                {% endif %}
+            </datalist>
+        </div>
+        <div class="gf-group gf-flex-2">
+            <label class="gf-label">Tipo de Cliente</label>
+            <select class="gf-input" name="tipo_cliente">
+                <option value="">Todos</option>
+                <option value="pessoa_fisica">Pessoa Física</option>
+                <option value="pessoa_juridica">Pessoa Jurídica</option>
+            </select>
+        </div>
+    </div>
+
+    {# ── DIVISOR: Geografia ── #}
+    <div class="gf-divisor"><i class="fas fa-map-marker-alt"></i> Geografia</div>
+
+    {# ── LINHA 4: País, Estado, Cidade e Bairro ── #}
+    <div class="gf-row">
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">País</label>
+            <select class="gf-input" name="pais">
+                <option value="">Todos</option>
+                <option value="Brasil" selected>Brasil</option>
+                <option value="Argentina">Argentina</option>
+                <option value="Paraguai">Paraguai</option>
+                <option value="Uruguai">Uruguai</option>
+            </select>
+        </div>
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Estado</label>
+            <select class="gf-input" name="estado">
+                <option value="">Todos</option>
+                {% for uf in ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] %}
+                  <option value="{{ uf }}">{{ uf }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="gf-group gf-flex-2">
+            <label class="gf-label">Cidade</label>
+            <input class="gf-input" type="text" name="cidade" placeholder="Nome da cidade">
+        </div>
+        <div class="gf-group gf-flex-2">
+            <label class="gf-label">Bairro</label>
+            <input class="gf-input" type="text" name="bairro" placeholder="Nome do bairro">
+        </div>
+    </div>
+
+    {# ── DIVISOR: Produtos ── #}
+    <div class="gf-divisor"><i class="fas fa-box"></i> Produtos</div>
+
+    {# ── LINHA 5: Produto, Cor e Tamanho ── #}
+    <div class="gf-row">
+        <div class="gf-group gf-flex-3">
+            <label class="gf-label">Produto</label>
+            <input class="gf-input" type="text" name="produto" placeholder="Código ou nome do produto">
+        </div>
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Cor</label>
+            <select class="gf-input" name="cor">
+                <option value="">Todas</option>
+                {% if cores %}
+                  {% for c in cores %}<option>{{ c.nome }}</option>{% endfor %}
+                {% else %}
+                  {% for c in ['Branco','Preto','Cinza','Azul','Vermelho','Verde','Amarelo','Rosa','Roxo'] %}
+                    <option>{{ c }}</option>
+                  {% endfor %}
+                {% endif %}
+            </select>
+        </div>
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Tamanho</label>
+            <select class="gf-input" name="tamanho">
+                <option value="">Todos</option>
+                {% if tamanhos %}
+                  {% for t in tamanhos %}<option>{{ t.nome }}</option>{% endfor %}
+                {% else %}
+                  {% for t in ['PP','P','M','G','GG','XG','XGG'] %}
+                    <option>{{ t }}</option>
+                  {% endfor %}
+                {% endif %}
+            </select>
+        </div>
+    </div>
+
+    {# ── LINHA 6: Categoria e Subcategoria ── #}
+    <div class="gf-row">
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Categoria</label>
+            <select class="gf-input" name="categoria">
+                <option value="">Todas</option>
+                {% if categorias %}
+                  {% for c in categorias %}<option>{{ c.nome }}</option>{% endfor %}
+                {% endif %}
+            </select>
+        </div>
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Subcategoria</label>
+            <select class="gf-input" name="subcategoria">
+                <option value="">Todas</option>
+                {% if subcategorias %}
+                  {% for s in subcategorias %}<option>{{ s.nome }}</option>{% endfor %}
+                {% endif %}
+            </select>
+        </div>
+    </div>
+
+    {# ── LINHA 7: Canais de Venda e Centro de Custos ── #}
+    <div class="gf-row">
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Canais de Vendas</label>
+            <select class="gf-input" name="canalvenda">
+                <option value="">Todas</option>
+                {% if canalvenda %}
+                  {% for c in canalvenda %}<option value="{{ c.valor }}">{{ c.nome }}</option>{% endfor %}
+                {% endif %}
+            </select>
+        </div>
+
+        <div class="gf-group gf-flex-1">
+            <label class="gf-label">Centro de Custo</label>
+            <select class="gf-input" name="centrocusto">
+                <option value="">Todas</option>
+                {% if centrocusto %}
+                  {% for s in centrocusto %}<option>{{ s.nome }}</option>{% endfor %}
+                {% endif %}
+            </select>
+        </div>
+    </div>
+
+
+    {# ── BOTÕES ── #}
+    <div class="gf-actions">
+        <button type="button" class="gf-btn gf-btn-cancelar" onclick="fecharModalDash()">
+            <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="gf-btn gf-btn-limpar" onclick="limparFiltros()">
+            <i class="fas fa-eraser"></i> Limpar
+        </button>
+        <button type="submit" class="gf-btn gf-btn-consultar">
+            <i class="fas fa-search"></i> Consultar
+        </button>
+    </div>
+
+    {# ── LISTA RÁPIDA ── #}
+    {% if recentes %}
+    <div class="gf-divisor" style="margin-top:30px; border-color: rgba(122,37,95,0.15);">
+        <i class="fas fa-history"></i> Últimos Pedidos Realizados
+    </div>
+    <div class="gf-table-wrap">
+        <table class="gf-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th style="text-align:right;">Valor</th>
+                    <th style="text-align:center;">Status</th>
+                    <th style="text-align:center;">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in recentes %}
+                <tr>
+                    <td style="font-weight:700; color:#7A255F;">{{ r.data_pedido.strftime('%d/%m/%Y') }}</td>
+                    <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        {{ r.cliente.nome.upper() if r.cliente else '---' }}
+                    </td>
+                    <td style="text-align:right; font-weight:700; color:#1a202c;">R$ {{ "%.2f"|format(r.total_liquido or 0) }}</td>
+                    <td style="text-align:center;">
+                        {% set st = (r.status or '').upper().strip() %}
+                        {% set badge_bg = 'rgba(0,114,206,0.1)' %}
+                        {% set badge_color = '#0072CE' %}
+                        
+                        {% if st in ['FATURADO', 'ENTREGUE', 'FINALIZADO'] %}
+                            {% set badge_bg = 'rgba(39,174,96,0.1)' %}
+                            {% set badge_color = '#27AE60' %}
+                        {% elif st in ['CANCELADO'] %}
+                            {% set badge_bg = 'rgba(229,62,62,0.1)' %}
+                            {% set badge_color = '#E53E3E' %}
+                        {% elif st in ['PRODUCAO', 'PRODUÇÃO', 'COSTURA', 'PINTURA', 'PRENSA'] %}
+                            {% set badge_bg = 'rgba(122,37,95,0.1)' %}
+                            {% set badge_color = '#7A255F' %}
+                        {% endif %}
+                        
+                        <span class="gf-status-badge" style="background: {{ badge_bg }}; color: {{ badge_color }};">
+                            {{ st }}
+                        </span>
+                    </td>
+                    <td style="text-align:center;">
+                        <a href="{{ url_for('operacoes.card_vendas_pedido', id=r.id) }}" class="gf-btn-icon" title="Abrir Pedido">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</form>
+
+<style>
+/* ── Layout Compacto Quiet Luxury ── */
+.ge-form{display:flex;flex-direction:column;gap:0;}
+.gf-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.gf-group{display:flex;flex-direction:column;gap:2px;min-width:110px;}
+.gf-flex-1{flex:1;}.gf-flex-2{flex:2;}.gf-flex-3{flex:3;}
+
+/* ── Labels Suaves ── */
+.gf-label{font-size:9.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.2px;}
+.gf-req{color:#e53e3e;}
+
+/* ── Inputs Compactos ── */
+.gf-input{padding:5px 8px;border:1px solid #cbd5e1;border-radius:5px;font-size:11px;color:#1e293b;background:#fff;transition:all .15s;width:100%;box-sizing:border-box;height:28px;}
+.gf-input:focus{outline:none;border-color:#7A255F;box-shadow:0 0 0 2px rgba(122,37,95,.15);}
+.gf-input:hover{border-color:#a8357f;}
+
+/* ── Info do período selecionado ── */
+.gf-periodo-info{padding:5px 10px;background:#fdf5fa;border:1px solid #e9d0e6;border-radius:5px;font-size:11px;font-weight:600;color:#7A255F;display:flex;align-items:center;gap:6px;height:28px;box-sizing:border-box;}
+
+/* ── Divisores Finos ── */
+.gf-divisor{font-size:10px;font-weight:600;color:#7A255F;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:6px;padding:6px 0 4px;border-bottom:1px solid #f0e6f5;margin-bottom:8px;}
+
+/* ── Botões Compactos ── */
+.gf-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;}
+.gf-btn{padding:6px 14px;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;height:28px;}
+.gf-btn-cancelar{background:#edf2f7;color:#4a5568;}
+.gf-btn-cancelar:hover{background:#e2e8f0;}
+.gf-btn-limpar{background:#fff;color:#64748b;border:1px solid #cbd5e1;}
+.gf-btn-limpar:hover{border-color:#7A255F;color:#7A255F;}
+.gf-btn-consultar{background:linear-gradient(135deg,#7A255F,#a8357f);color:#fff;}
+.gf-btn-consultar:hover{opacity:.9;}
+
+/* ── Tabela Rápida Compacta (se houver) ── */
+.gf-table-wrap{margin-top:8px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
+.gf-table{width:100%;border-collapse:collapse;font-size:11px; background: #fff;}
+.gf-table th{background:#f8fafc;padding:8px 10px;text-align:left;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;text-transform:uppercase;font-size:9px; letter-spacing: 0.3px;}
+.gf-table td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle;}
+.gf-table tr:last-child td { border-bottom: none; }
+.gf-table tr:hover td { background: #fdf5fa; }
+.gf-status-badge{padding:2px 8px;border-radius:12px;font-size:8.5px;font-weight:700;text-transform:uppercase; display: inline-block;}
+.gf-btn-icon{color:#cbd5e1;transition:all .2s; font-size: 13px;}
+.gf-btn-icon:hover{color:#7A255F; transform: scale(1.15);}
+</style>
+
+<script>
+// ── Calcula datas automaticamente por período
+function calcularDatas(periodo) {
+    const hoje = new Date();
+    const fmt = d => d.toISOString().split('T')[0];
+    const fmtBR = d => d.toLocaleDateString('pt-BR');
+
+    let ini, fim = hoje, label = '';
+
+    switch(periodo) {
+        case 'hoje':
+            ini = new Date(hoje);
+            label = `📅 ${fmtBR(hoje)}`;
+            break;
+        case 'semana':
+            ini = new Date(hoje);
+            ini.setDate(hoje.getDate() - hoje.getDay()); // domingo da semana
+            fim = new Date(ini);
+            fim.setDate(ini.getDate() + 6);
+            label = `📅 ${fmtBR(ini)} até ${fmtBR(fim)}`;
+            break;
+        case 'mes':
+            ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+            label = `📅 ${fmtBR(ini)} até ${fmtBR(fim)}`;
+            break;
+        case 'ano':
+            ini = new Date(hoje.getFullYear(), 0, 1);
+            fim = new Date(hoje.getFullYear(), 11, 31);
+            label = `📅 ${fmtBR(ini)} até ${fmtBR(fim)}`;
+            break;
+        default:
+            ini = null; fim = null;
+            label = '';
+    }
+
+    return { ini: ini ? fmt(ini) : '', fim: fim ? fmt(fim) : '', label };
+}
+
+// ── Atualiza o intervalo quando datas personalizadas mudam
+function atualizarIntervalo(inputEl) {
+    // Isolamento Anti-Erro
+    const parentForm = inputEl ? inputEl.closest('form') : document.querySelector('.ge-form');
+    if (!parentForm) return;
+
+    const inpIni = parentForm.querySelector('#inp-data-inicio');
+    const inpFim = parentForm.querySelector('#inp-data-final');
+    const infoEl = parentForm.querySelector('#periodo-info');
+
+    if (!inpIni || !inpFim || !infoEl) return;
+
+    if (inpIni.value && inpFim.value) {
+        const dataIni = new Date(inpIni.value + 'T00:00:00');
+        const dataFim = new Date(inpFim.value + 'T00:00:00');
+        const fmtBR = d => d.toLocaleDateString('pt-BR');
+        
+        infoEl.textContent = `📅 ${fmtBR(dataIni)} até ${fmtBR(dataFim)}`;
+    } else if (inpIni.value) {
+        const dataIni = new Date(inpIni.value + 'T00:00:00');
+        const fmtBR = d => d.toLocaleDateString('pt-BR');
+        infoEl.textContent = `📅 Desde ${fmtBR(dataIni)}`;
+    } else {
+        infoEl.textContent = '—';
+    }
+}
+
+// ── Aplica período selecionado
+function aplicarPeriodo(sel) {
+    if (!sel) return;
+    const periodo = sel.value;
+    
+    // Captura dos elementos restrita ao form atual
+    const parentForm = sel.closest('form') || document.querySelector('.ge-form');
+    if (!parentForm) return;
+
+    const divPeriodoInfoText = parentForm.querySelector('#periodo-info');
+    const divWrapDatasFlex = parentForm.querySelector('#wrap-datas-personalizadas');
+    const inpIni = parentForm.querySelector('#inp-data-inicio');
+    const inpFim = parentForm.querySelector('#inp-data-final');
+
+    // Regra 11 - Valida se os DOMs essenciais existem
+    if (divPeriodoInfoText && divWrapDatasFlex && inpIni && inpFim) {
+        
+        if (periodo === 'personalizado') {
+            // Oculta a barra com string formatada "Mês Atual", etc.
+            divPeriodoInfoText.style.display = 'none';
+            // Exibe as duas caixas de Data lado a lado substituindo
+            divWrapDatasFlex.style.display = 'flex';
+            
+            inpIni.disabled = false;
+            inpFim.disabled = false;
+            
+            if (!inpIni.value || !inpFim.value) {
+                const datas = calcularDatas('mes');
+                inpIni.value = inpIni.value || datas.ini;
+                inpFim.value = inpFim.value || datas.fim;
+            }
+        } else {
+            // Retorna o bloco de texto para tela cheia
+            divPeriodoInfoText.style.display = 'flex';
+            divWrapDatasFlex.style.display = 'none';
+
+            inpIni.disabled = true;
+            inpFim.disabled = true;
+
+            const datas = calcularDatas(periodo);
+            inpIni.value = datas.ini;
+            inpFim.value = datas.fim;
+            divPeriodoInfoText.textContent = datas.label;
+        }
+    }
+}
+
+// ── Limpar filtros
+function limparFiltros() {
+    const form = document.getElementById('form-pedido');
+    if(!form) return;
+    form.reset();
+    
+    const sel = form.querySelector('#sel-periodo');
+    if(sel) {
+        sel.value = 'mes';
+        aplicarPeriodo(sel);
+    }
+    
+    const paisSel = form.querySelector('[name=pais]');
+    if (paisSel) paisSel.value = 'Brasil';
+}
+
+// ── Inicializa ao carregar
+(function() {
+    // Isolamento: Seleciona do formulário atual
+    const sel = document.querySelector('#form-pedido #sel-periodo');
+    if (sel) aplicarPeriodo(sel);
+    
+    const form = document.getElementById('form-pedido');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const params = new URLSearchParams(formData).toString();
+            const container = document.getElementById('modal-body-dash');
+            if (!container) return;
+            container.style.opacity = '0.5';
+            fetch('/gestao/cards/pedidos?' + params)
+                .then(res => res.text())
+                .then(html => {
+                    container.style.opacity = '1';
+                    container.innerHTML = html;
+                    Array.from(container.querySelectorAll('script')).forEach(script => {
+                        const newScript = document.createElement('script');
+                        Array.from(script.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                        newScript.appendChild(document.createTextNode(script.innerHTML));
+                        script.parentNode.replaceChild(newScript, script);
+                    });
+                })
+                .catch(err => { container.style.opacity = '1'; });
+        });
+    }
+})();
+</script> 

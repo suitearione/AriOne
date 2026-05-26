@@ -1,0 +1,47 @@
+# =============================================================================
+# Arquivo de Serviço Systemd para AriOne (Linux)
+# Instalação: sudo cp arione.service /etc/systemd/system/
+# Ativação: sudo systemctl daemon-reload
+#            sudo systemctl enable arione
+#            sudo systemctl start arione
+# =============================================================================
+
+[Unit]
+Description=AriOne ERP System
+After=network.target
+
+[Service]
+# Usuário para rodar o serviço (altere conforme necessário)
+User=www-data
+Group=www-data
+
+# Diretório de trabalho
+WorkingDirectory=/caminho/para/AriONEDEV
+
+# Comando para iniciar (Gunicorn)
+ExecStart=/caminho/para/AriONEDEV/venv/bin/gunicorn \
+    --config gunicorn.conf.py \
+    --bind 0.0.0.0:5000 \
+    app.app:create_app()
+
+# Comando para recarregar (SIGHUP)
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Reinicialização automática em caso de falha
+Restart=always
+RestartSec=10
+
+# Variáveis de ambiente
+Environment="FLASK_ENV=production"
+Environment="FLASK_DEBUG=0"
+
+# Segurança
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging
+StandardOutput=append:/var/log/arione/access.log
+StandardError=append:/var/log/arione/error.log
+
+[Install]
+WantedBy=multi-user.target

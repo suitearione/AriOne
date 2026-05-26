@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %} AriOne – Dashboard Principal{% endblock %}
+
+{% block content %}
+
+<div class="main">
+    <div class="home-container">
+        <img src="{{ url_for('static', filename='img/arione-logo.png') }}" 
+             alt="Logo AriOne" class="home-logo">
+
+        <h1>Bem-vindo ao AriOne v1.05</h1>
+        <p>Gestão Completa e inteligente — tudo em um só lugar.</p>
+        <span class="home-subtext">Escolha uma opção no menu à esquerda para começar.</span>
+    </div>
+</div>
+{% endblock %}
+
+# BLOCO: ENVIO DE DATA PARA O TEMPLATE #                            
+from datetime import datetime                                                      # Importa biblioteca de data
+                                                                                   #
+@home_bp.route('/')                                                                # Rota da sua Dashboard
+def index():                                                                       # Funcao da pagina
+    return render_template('index.html', agora=datetime.now())                     # Envia a data atual como 'agora'

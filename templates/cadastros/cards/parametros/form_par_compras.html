@@ -1,0 +1,131 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/cards/parametros/form_par_compras.html
+   Função   : Parâmetros do Módulo de Compras (GOLDEN STANDARD)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-sistema" style="background: #f4f6f9; min-height: 100vh;">
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros de Compra",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-shopping-cart",
+        form_id="form-par-compras",
+        onclick_save="arioneSalvarDocumento('parametros_compra', this, 'form-par-compras')",
+        cor_tema="#27AE60",
+        func_fechar="fecharModalGlobal()",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+        <form id="form-par-compras" method="POST" action="{{ url_for('cadastros.salvar_parametros') }}" novalidate>
+            <input type="hidden" name="grupo_config" value="compras">
+        
+        {# CARD 1: NUMERAÇÃO E SEQUÊNCIA #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-sort-numeric-up"></i> Numeração e Sequência de Compras
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Última Cotação</label>
+                        <input class="fp-input" type="number" name="ult_cotacao" value="7281" style="font-weight: 800;">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Último Pedido de Compra</label>
+                        <input class="fp-input" type="number" name="ult_pedido_compra" value="8942" style="font-weight: 800; color: #E67E22;">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Incremento</label>
+                        <input class="fp-input" type="number" name="incremento" value="1">
+                    </div>
+                </div>
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Prefixo Cotações</label>
+                        <input class="fp-input" type="text" name="pref_cot" value="COT-">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Prefixo Pedidos Compra</label>
+                        <input class="fp-input" type="text" name="pref_ped_comp" value="PC-">
+                    </div>
+                    <div class="fp-group fp-flex-1" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label class="fp-checkbox-wrap">
+                            <input type="checkbox" name="usar_sequencia_automatica_orc" checked>
+                            <span class="fp-checkbox-label" style="font-weight: 800; color: #2980B9;">Auto Numeração Cotações</span>
+                        </label>
+                        <label class="fp-checkbox-wrap">
+                            <input type="checkbox" name="usar_sequencia_automatica_ped" checked>
+                            <span class="fp-checkbox-label" style="font-weight: 800; color: #2C3E50;">Auto Numeração Pedidos</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# CARD 2: REGRAS #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-check-circle"></i> Aprovações e Alçadas
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Exigir Aprovação p/ Pedidos > R$</label>
+                        <input class="fp-input" type="number" value="5000">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Validade da Cotação (Dias)?</label>
+                        <input class="fp-input" type="number" name="validade_cot_padrao" value="5">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Prazo de Entrega (Dias)?</label>
+                        <input class="fp-input" type="number" name="prazo_entrega_comp_padrao" value="10">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Permitir Compra sem Orçamento</label>
+                        <select class="fp-input" name="permitir_compra_sem_orcamento">
+                            <option value="1">Sim, permitir compra direta</option>
+                            <option value="0">Não, exigir cotação prévia</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# FOOTER #}
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="button" class="fp-btn fp-btn-salvar-footer" onclick="arioneSalvarDocumento('parametros_compras', this)">
+                <i class="fas fa-save"></i> SALVAR CONFIGURAÇÕES
+            </button>
+        </div>
+
+        </form>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/cadastros/parametros/get?grupo=compras')
+            .then(res => res.json())
+            .then(data => {
+                for (const [chave, valor] of Object.entries(data)) {
+                    const el = document.querySelector(`[name="${chave}"]`);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = valor === '1';
+                        else el.value = valor;
+                    }
+                }
+            });
+    });
+    console.log('⚙️ Parâmetros de Compras HCM Ativado');
+</script>
+{% endblock %}

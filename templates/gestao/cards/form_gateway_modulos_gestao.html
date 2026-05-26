@@ -1,0 +1,164 @@
+{# =============================================================================
+   Arquivo  : form_gateway_modulos_gestao.html
+   Caminho  : templates/gestao/cards/form_gateway_modulos_gestao.html
+   Função   : Menu Mestre (Camada 1) de Relatórios de Gestão Executiva.
+   Lógica   : Apresenta as categorias [Dashboard, Marketing, Pessoas]
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header-mestre {
+            padding: 25px;
+            /* Gradiente Camaleão: Fusão das cores de Gestão */
+            background: linear-gradient(90deg, #2C3E50 0%, #E67E22 50%, #7A255F 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 15px; }
+        .gateway-body { padding: 35px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid-mestre {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .gateway-item-mestre {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 15px;
+            background: #fff;
+            border: 2px solid var(--c, #edf2f7);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            gap: 12px;
+        }
+
+        .gateway-item-mestre:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border-color: var(--c);
+            background: #fff;
+        }
+
+        .gateway-icon-mestre {
+            width: 55px;
+            height: 55px;
+            background: var(--c-bg, rgba(0,0,0,0.05));
+            color: var(--c, #2C3E50);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .gateway-item-mestre:hover .gateway-icon-mestre {
+            background: var(--c);
+            color: #fff;
+            transform: rotate(5deg) scale(1.1);
+        }
+
+        .gateway-label-mestre { font-size: 16px; font-weight: 800; color: #2d3748; }
+        .gateway-desc-mestre { font-size: 11px; color: #a0aec0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    </style>
+
+    {% if not is_tab %}
+    <div class="gateway-header-mestre">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fas fa-chart-line" style="font-size: 1.4rem; color: #CE93D8;"></i>
+            <div style="display:flex; flex-direction:column; gap:2px;">
+                <div class="gateway-title" style="gap:0; color: #CE93D8;">Central de Relatórios: Módulo Gestão</div>
+                <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Inteligência de Mercado & Capital Humano</span>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">GRIDs</span>
+            <button type="button" class="ge-modal-fechar" onclick="fecharModalGlobal()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="gateway-body" style="{% if is_tab %}border-radius: 14px; border: 1px solid #edf2f7;{% endif %}">
+        <div class="gateway-grid-mestre">
+            
+            <!-- Dashboard -->
+            <div class="gateway-item-mestre" style="--c:#2C3E50; --c-bg:rgba(44,62,80,0.08);" onclick="navegarGestao('dashboard')">
+                <div class="gateway-icon-mestre"><i class="fas fa-chart-line"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Dashboard</span>
+                <span class="gateway-desc-mestre">Indicadores Estratégicos</span>
+            </div>
+
+            <!-- Marketing -->
+            <div class="gateway-item-mestre" style="--c:#E67E22; --c-bg:rgba(230,126,34,0.08);" onclick="navegarGestao('marketing')">
+                <div class="gateway-icon-mestre"><i class="fas fa-bullhorn"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Marketing</span>
+                <span class="gateway-desc-mestre">Canais & Campanhas</span>
+            </div>
+
+            <!-- RH -->
+            <div class="gateway-item-mestre" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="navegarGestao('pessoas')">
+                <div class="gateway-icon-mestre"><i class="fas fa-user-tie"></i></div>
+                <span class="gateway-label-mestre"><i class="fas fa-print"></i> Pessoal RH</span>
+                <span class="gateway-desc-mestre">H.C.M. & Pessoas</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Navega de forma fluida para o sub-gateway de gestão (Padrão Ouro).
+ */
+function navegarGestao(modulo) {
+    const url = "{{ url_for('gestao.card_gestao_relatorios') }}?modulo=" + modulo;
+    const content = document.getElementById('arione-modal-content');
+    
+    if (content && url) {
+        content.style.opacity = '0.4';
+        
+        // Loader Dinâmico
+        content.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:100px; gap:20px; color:#2C3E50;">
+                <i class="fas fa-spinner fa-spin" style="font-size:40px;"></i>
+                <span style="font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Carregando Inteligência...</span>
+            </div>`;
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                // RE-INJEÇÃO DE SCRIPTS
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao carregar sub-gateway de gestão:", err);
+                content.style.opacity = '1';
+            });
+    }
+}
+
+function fecharModalGestao() {
+    const overlay = document.getElementById('modal-overlay-gestao');
+    if (overlay) overlay.classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+</script>

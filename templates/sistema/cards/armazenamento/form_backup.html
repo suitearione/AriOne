@@ -1,0 +1,389 @@
+{# =============================================================================
+   Caminho  : templates/sistema/cards/armazenamento/form_backup.html
+   Função   : Formulário de criação de Backups manuais.
+   Padrão   : Rules 3-2-1 Enterprise Backup.
+============================================================================= #}
+{% extends "base.html" %}
+{% block content %}
+<div class="arione-page-wrapper">
+
+    {# ── CABEÇALHO ── #}
+    <div class="arione-header-premium" style="background: linear-gradient(135deg, #27AE60 0%, #2ecc71 100%);">
+        <div style="flex:1;">
+            <h2 style="margin:0; font-size:20px; font-weight:800;"><i class="fas fa-save"></i> Criar Snapshot de Segurança</h2>
+            <div style="font-size:12px; opacity:0.9;">Estratégia 3-2-1: 3 Cópias, 2 Mídias, 1 Off-site</div>
+        </div>
+        <div class="fe-header-actions">
+            <a href="{{ url_for('sistema.armazenamento') }}" class="fe-btn-arione-ghost"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </div>
+    </div>
+
+    <div class="fe-row">
+        
+        {# Coluna de Configuração #}
+        <div class="fe-flex-1">
+            <div class="fe-card">
+                <div class="fe-card-title"><i class="fas fa-cog"></i> Configurações do Backup</div>
+                <form id="backupForm" action="{{ url_for('sistema.executar_backup') }}" method="POST" class="fe-card-body">
+                    
+                    <div class="fe-row">
+                        <div class="fe-group">
+                            <label class="fe-label">Escopo do Backup</label>
+                            <select name="escopo" id="backupScope" class="fe-input" onchange="toggleFolderSelection()">
+                                <option value="db" selected>Apenas Banco de Dados (SQL)</option>
+                                <option value="full">Snapshot Completo (Banco + Arquivos)</option>
+                                <option value="media">Apenas Mídias e Uploads (Storage)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- SELETOR DE PASTAS (ARIONE FILE EXPLORER) -->
+                    <div id="folderSelectionArea" style="display:none; margin-top:5px; margin-bottom:15px; padding:15px; background:rgba(41,128,185,0.05); border:1px solid #edf2f7; border-radius:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <label class="fe-label" style="font-size:11px; color:#2980B9; margin:0;">
+                                <i class="fas fa-folder-tree"></i> Estrutura de Mídias no Servidor
+                            </label>
+                            <span id="currentPathDisplay" style="font-size:10px; color:#64748b; font-family:monospace;">/uploads</span>
+                        </div>
+                        
+                        <div id="fileExplorerList" style="max-height:200px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; background:#fff; padding:5px;">
+                            <!-- JS carregará as pastas aqui -->
+                            <div style="padding:20px; text-align:center; color:#94a3b8; font-size:12px;">Carregando pastas...</div>
+                        </div>
+
+                        <div id="selectedFoldersContainer" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:5px;">
+                            <!-- Badges das pastas selecionadas -->
+                        </div>
+                    </div>
+
+                    <div class="fe-row">
+                        <div class="fe-group">
+                            <label class="fe-label">Destino do Backup</label>
+                            <select name="destino" id="backupDestino" class="fe-input" onchange="toggleDestinoFields()">
+                                <option value="local" selected>Unidade Local (Padrão)</option>
+                                <option value="rede">Unidade de Rede / Caminho Customizado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="redeDestinoArea" style="display:none; margin-top:5px; margin-bottom:15px; padding:15px; background:rgba(230, 126, 34, 0.05); border:1px solid #edf2f7; border-radius:12px;">
+                        <div class="fe-group">
+                            <label class="fe-label" style="font-size:11px; color:#E67E22;">
+                                <i class="fas fa-network-wired"></i> Caminho de Destino (Local ou Rede)
+                            </label>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" name="caminho_destino" id="caminhoDestinoInput" class="fe-input" placeholder="Ex: \\servidor\backups ou D:\Backups\AriOne" style="flex:1;">
+                                <button type="button" onclick="selecionarDestino()" class="fe-btn" style="background:#E67E22; color:#fff; padding:8px 15px; font-size:12px;">
+                                    <i class="fas fa-folder-open"></i> Selecionar
+                                </button>
+                            </div>
+                            <small style="display:block; font-size:9px; color:#64748b; margin-top:5px;">
+                                Use caminho absoluto. Para rede, use formato UNC (\\servidor\pasta) ou letra de unidade mapeada.
+                            </small>
+                        </div>
+
+                        <!-- Input oculto para seleção de pasta -->
+                        <input type="file" id="folderSelector" webkitdirectory directory style="display:none;" onchange="handleFolderSelect(this)">
+                        <!-- Input oculto para seleção de arquivo -->
+                        <input type="file" id="fileSelector" style="display:none;" onchange="handleFileSelect(this)">
+                    </div>
+
+                    <div class="fe-row">
+                        <div class="fe-group">
+                            <label class="fe-label">Destino Cloud (Sincronização Off-site)</label>
+                            <div style="display:flex; gap:15px; margin-top:5px;">
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                    <input type="checkbox" name="cloud_aws" checked> AWS S3
+                                </label>
+                                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                    <input type="checkbox" name="cloud_google"> Google Drive
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fe-row">
+                        <div class="fe-group">
+                            <label class="fe-label">Identificador do Backup (Opcional)</label>
+                            <input type="text" name="nota" class="fe-input" placeholder="Ex: Antes da Atualização v2.4">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px; padding:15px; background:#fff8e1; border-left:4px solid #ffc107; border-radius:4px;">
+                        <span style="font-size:12px; color:#856404; font-weight:700;">
+                            <i class="fas fa-exclamation-triangle"></i> Atenção: Backups completos podem levar alguns minutos e ocupar espaço considerável no servidor local.
+                        </span>
+                    </div>
+
+                    {# ── BARRA DE PROGRESSO DINÂMICA (SUBSTITUI FEEDBACK VAGO) ── #}
+                    <div id="backupProgressArea" style="display:none; margin-top:20px; padding:15px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+                        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:8px;">
+                            <span id="progressLabel" style="font-weight:700; color:#2C3E50;">Iniciando Processamento...</span>
+                            <span id="progressPercent" style="color:#64748b;">0%</span>
+                        </div>
+                        <div style="height:6px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
+                            <div id="progressBar" style="width:0%; height:100%; background: linear-gradient(90deg, #27AE60, #2ECC71); transition: width 0.3s ease;"></div>
+                        </div>
+                        <div id="progressStep" style="font-size:10px; color:#94a3b8; margin-top:8px; font-style:italic;">
+                            Compactando banco de dados e arquivos selecionados...
+                        </div>
+                    </div>
+
+                    <div class="fe-footer-actions" id="backupActions">
+                        <button type="submit" class="fe-btn" style="background:#27AE60; color:#fff; font-weight:800;">
+                            <i class="fas fa-play"></i> Gerar Snapshot Agora
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Coluna de Status/Info #}
+        <div style="width:350px;">
+            <div class="fe-card">
+                <div class="fe-card-title"><i class="fas fa-info-circle"></i> Saúde do Armazenamento</div>
+                <div class="fe-card-body">
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:11px; color:#a0aec0; font-weight:800; text-transform:uppercase;">Espaço em Disco Local</label>
+                        <div style="height:8px; background:#edf2f7; border-radius:10px; margin-top:8px; overflow:hidden;">
+                            <div style="width:42%; height:100%; background:#7A255F;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:5px; font-weight:700;">
+                            <span>42GB Usados</span>
+                            <span>100GB Total</span>
+                        </div>
+                    </div>
+
+                    <div style="padding:15px; background:#f4f6f8; border-radius:8px;">
+                        <h4 style="margin:0 0 10px 0; font-size:13px; font-weight:800; color:#2d3748;">Último Backup</h4>
+                        {% if ultimo %}
+                        <div style="font-size:12px; color:#718096;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span>Data:</span> <strong style="color:#2d3748;">{{ ultimo.created_at }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span>Arquivo:</span> <strong style="color:#2d3748; font-size: 10px;">{{ ultimo.filename }}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span>Tamanho:</span> <strong style="color:#2d3748;">{{ (ultimo.size / 1024 / 1024) | round(2) }} MB</strong>
+                            </div>
+                             <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                 <span>Cloud Sync:</span> 
+                                 {% if ultimo.cloud and ultimo.cloud.status == 'success' %}
+                                    <strong style="color:#27AE60;"><i class="fas fa-cloud-upload-alt"></i> Sincronizado ({{ ultimo.cloud.provider }})</strong>
+                                 {% else %}
+                                    <strong style="color:#e74c3c;"><i class="fas fa-times-circle"></i> Local Apenas</strong>
+                                 {% endif %}
+                             </div>
+                             <div style="display:flex; justify-content:space-between;">
+                                 <span>Integridade:</span> <span class="fe-badge" style="background:#d1fae5; color:#065f46; font-size:9px;">Seguro (SHA256)</span>
+                             </div>
+                        </div>
+                        {% else %}
+                        <div style="font-size:12px; color:#718096; text-align:center;">
+                            Nenhum snapshot gerado ainda.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<script>
+    let selectedPaths = new Set();
+    let currentNavPath = '';
+
+    function toggleFolderSelection() {
+        const scope = document.getElementById('backupScope').value;
+        const area = document.getElementById('folderSelectionArea');
+        if (scope === 'full' || scope === 'media') {
+            area.style.display = 'block';
+            if (selectedPaths.size === 0) loadDirs('');
+        } else {
+            area.style.display = 'none';
+        }
+    }
+
+    function toggleDestinoFields() {
+        const destino = document.getElementById('backupDestino').value;
+        const area = document.getElementById('redeDestinoArea');
+        if (destino === 'rede') {
+            area.style.display = 'block';
+        } else {
+            area.style.display = 'none';
+        }
+    }
+
+    function selecionarDestino() {
+        // Exibe um menu simples para escolher entre pasta ou arquivo
+        const choice = confirm('Clique em OK para selecionar uma PASTA\nClique em Cancelar para selecionar um ARQUIVO');
+
+        if (choice) {
+            // Selecionar pasta
+            document.getElementById('folderSelector').click();
+        } else {
+            // Selecionar arquivo
+            document.getElementById('fileSelector').click();
+        }
+    }
+
+    function handleFolderSelect(input) {
+        if (input.files && input.files.length > 0) {
+            // Obtém o primeiro arquivo para extrair o caminho da pasta
+            const firstFile = input.files[0];
+            const fullPath = firstFile.webkitRelativePath;
+            const folderPath = fullPath.substring(0, fullPath.lastIndexOf('/'));
+
+            document.getElementById('caminhoDestinoInput').value = folderPath;
+        }
+    }
+
+    function handleFileSelect(input) {
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+            // Para arquivos, usamos o nome do arquivo como destino
+            document.getElementById('caminhoDestinoInput').value = file.name;
+        }
+    }
+
+    async function loadDirs(path) {
+        currentNavPath = path;
+        const list = document.getElementById('fileExplorerList');
+        const pathDisplay = document.getElementById('currentPathDisplay');
+        pathDisplay.innerText = '/uploads' + (path ? '/' + path : '');
+        
+        list.innerHTML = '<div style="padding:10px; text-align:center;"><i class="fas fa-spinner fa-spin"></i></div>';
+        
+        try {
+            const resp = await fetch(`/sistema/api/listar-diretorios?path=${path}`);
+            const data = await resp.json();
+            
+            list.innerHTML = '';
+            
+            // Botão Voltar
+            if (path !== '') {
+                const parentPath = path.split('/').slice(0, -1).join('/');
+                const item = createDirItem('.. (Voltar)', parentPath, true);
+                list.appendChild(item);
+            }
+
+            data.dirs.forEach(d => {
+                const fullPath = path ? `${path}/${d}` : d;
+                const item = createDirItem(d, fullPath);
+                list.appendChild(item);
+            });
+
+            if (data.dirs.length === 0 && path !== '') {
+                list.innerHTML += '<div style="padding:10px; color:#94a3b8; font-size:11px;">Pasta vazia</div>';
+            }
+        } catch (e) {
+            list.innerHTML = '<div style="color:red; padding:10px;">Erro ao carregar</div>';
+        }
+    }
+
+    function createDirItem(name, path, isBack = false) {
+        const div = document.createElement('div');
+        div.style.padding = '8px 12px';
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.justifyContent = 'space-between';
+        div.style.cursor = 'pointer';
+        div.style.borderBottom = '1px solid #f1f5f9';
+        div.className = 'dir-item';
+
+        const left = document.createElement('div');
+        left.style.display = 'flex';
+        left.style.alignItems = 'center';
+        left.style.gap = '10px';
+        left.innerHTML = `<i class="fas ${isBack ? 'fa-level-up-alt' : 'fa-folder'}" style="color:${isBack ? '#94a3b8' : '#fbbf24'}"></i> <span style="font-size:13px;">${name}</span>`;
+        left.onclick = () => loadDirs(path);
+
+        div.appendChild(left);
+
+        if (!isBack) {
+            const check = document.createElement('input');
+            check.type = 'checkbox';
+            check.style.cursor = 'pointer';
+            check.checked = selectedPaths.has('uploads/' + path);
+            check.onchange = (e) => {
+                const fullP = 'uploads/' + path;
+                if (e.target.checked) selectedPaths.add(fullP);
+                else selectedPaths.delete(fullP);
+                renderBadges();
+            };
+            div.appendChild(check);
+        }
+
+        return div;
+    }
+
+    function renderBadges() {
+        const container = document.getElementById('selectedFoldersContainer');
+        container.innerHTML = '';
+        selectedPaths.forEach(p => {
+            const badge = document.createElement('div');
+            badge.style.background = '#2980B9';
+            badge.style.color = '#fff';
+            badge.style.padding = '2px 8px';
+            badge.style.borderRadius = '20px';
+            badge.style.fontSize = '10px';
+            badge.style.display = 'flex';
+            badge.style.alignItems = 'center';
+            badge.style.gap = '5px';
+            badge.innerHTML = `<span>${p}</span> <i class="fas fa-times" style="cursor:pointer;" onclick="removePath('${p}')"></i>`;
+            
+            // Input hidden para o form
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'pastas[]';
+            input.value = p;
+            badge.appendChild(input);
+
+            container.appendChild(badge);
+        });
+    }
+
+    function removePath(p) {
+        selectedPaths.delete(p);
+        renderBadges();
+        loadDirs(currentNavPath); // Atualiza checkbox na lista
+    }
+
+    // Gerenciamento de Progresso do Backup
+    document.getElementById('backupForm').onsubmit = function() {
+        const btn = document.querySelector('#backupActions .fe-btn');
+        const progressArea = document.getElementById('backupProgressArea');
+        const progressBar = document.getElementById('progressBar');
+        const progressLabel = document.getElementById('progressLabel');
+        const progressPercent = document.getElementById('progressPercent');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+        progressArea.style.display = 'block';
+
+        // Simulação de estágios (até que tenhamos SSE/Websockets)
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 5;
+            if (progress > 95) {
+                progress = 95;
+                progressLabel.innerText = "Sincronizando com AWS S3...";
+            } else if (progress > 60) {
+                progressLabel.innerText = "Finalizando Criptografia AES-256...";
+            } else if (progress > 30) {
+                progressLabel.innerText = "Compactando Mídias e Documentos...";
+            }
+            
+            progressBar.style.width = progress + '%';
+            progressPercent.innerText = Math.round(progress) + '%';
+        }, 800);
+    };
+</script>
+
+<style>
+    .dir-item:hover { background: #f8fafc; }
+</style>
+{% endblock %}

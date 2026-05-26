@@ -1,0 +1,93 @@
+{# =============================================================================
+   Arquivo  : form_par_fiscal.html
+   Caminho  : templates/cadastros/cards/parametros/form_par_fiscal.html
+   Cor Tema : #8E44AD (Roxo Fiscal)
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% block content %}
+{% import "macros/componentes.html" as comp %}
+<div class="fe-wrap fp-wrap mod-fiscal" style="background: #f4f6f9; min-height: 100vh;">
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros Fiscais",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-file-invoice-dollar",
+        form_id="form-par-fiscal",
+        onclick_save="arioneSalvarDocumento('parametros_fiscal', this, 'form-par-fiscal')",
+        cor_tema="#8E44AD",
+        func_fechar="fecharModalGlobal()",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+
+    <form id="form-par-fiscal" method="POST" action="{{ url_for('cadastros.salvar_parametros') }}" novalidate>
+        <input type="hidden" name="grupo_config" value="fiscal">
+        
+        <div class="fp-card">
+            <div class="fp-card-title"><i class="fas fa-file-invoice-dollar"></i> Regime & CFOP</div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Regime Tributário</label>
+                        <select class="fp-input" name="regime_tributario">
+                            <option>Simples Nacional</option>
+                            <option>Lucro Presumido</option>
+                            <option>Lucro Real</option>
+                        </select>
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">CFOP Padrão (Venda Interna)</label>
+                        <input type="text" class="fp-input" name="cfop_venda" placeholder="5.102">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fp-card">
+            <div class="fp-card-title"><i class="fas fa-percentage"></i> Retenções & Gatilhos</div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Valor Mínimo para Retenção (R$)</label>
+                        <input type="text" class="fp-input mask-money" name="min_retencao" placeholder="0,00">
+                    </div>
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Ambiente de Emissão</label>
+                        <select class="fp-input" name="ambiente_nfe">
+                            <option value="1">Produção (Real)</option>
+                            <option value="2">Homologação (Testes)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="submit" class="fp-btn fp-btn-salvar-footer" style="background: #8E44AD; color: #fff;">
+                <i class="fas fa-save"></i> SALVAR FISCAL
+            </button>
+        </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/cadastros/parametros/get?grupo=fiscal')
+            .then(res => res.json())
+            .then(data => {
+                for (const [chave, valor] of Object.entries(data)) {
+                    const el = document.querySelector(`[name="${chave}"]`);
+                    if (el) {
+                        if (el.type === 'checkbox') el.checked = valor === '1';
+                        else el.value = valor;
+                    }
+                }
+            });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{# =============================================================================
+   Arquivo  : _status_badge.html
+   Caminho  : templates/operacoes/cards/vendas/_status_badge.html
+   Função   : Componente de Status Comunicativo AriOne.
+============================================================================= #}
+
+<style>
+    .ari-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .badge-warning { background: #FFF7ED; color: #C2410C; border: 1.5px solid #FDBA74; }
+    .badge-success { background: #F0FDF4; color: #15803D; border: 1.5px solid #86EFAC; }
+    .badge-danger  { background: #FEF2F2; color: #B91C1C; border: 1.5px solid #FCA5A5; }
+    .badge-info    { background: #EFF6FF; color: #1D4ED8; border: 1.5px solid #93C5FD; }
+</style>
+
+{% macro render_status(status) %}
+    {% if status|lower == 'aberto' or status|lower == 'orcamento' %}
+        <span class="ari-badge badge-warning"><i class="fas fa-clock"></i> Aberto</span>
+    {% elif status|lower == 'pago' or status|lower == 'finalizado' %}
+        <span class="ari-badge badge-success"><i class="fas fa-check-circle"></i> Pago</span>
+    {% elif status|lower == 'cancelado' or status|lower == 'rejeitado' %}
+        <span class="ari-badge badge-danger"><i class="fas fa-times-circle"></i> Cancelado</span>
+    {% else %}
+        <span class="ari-badge badge-info"><i class="fas fa-sync-alt"></i> Em Trânsito</span>
+    {% endif %}
+{% endmacro %}

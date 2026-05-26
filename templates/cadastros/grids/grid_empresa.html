@@ -1,0 +1,129 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/grids/grid_empresa.html
+   Arquivo  : grid_empresa.html
+   Função   : Grid de Empresa com Modais AJAX Premium.
+============================================================================= #}
+
+<!-- Estrutura de Modal AJAX Unificado para Empresa -->
+<div id="modal-overlay-emp" class="ge-modal-overlay" onclick="fecharModalEmp()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-body" id="modal-body-emp"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+
+    <!-- CABEÇALHO -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #7A255F;">
+        <div style="display:flex; align-items:center; gap:10px; font-size:18px; font-weight:700; color:#7A255F;">
+            <i class="fas fa-building"></i><span>Gestão de Unidades</span>
+        </div>
+    </div>
+
+    <!-- CARDS DE ACESSO RÁPIDO -->
+    <div class="ge-cards-container" style="margin-bottom:24px;">
+
+        <!-- Dados (Página Inteira conforme padrão) -->
+        <div class="ge-card" onclick="window.location='{{ url_for('cadastros.form_empresa') }}'"
+             style="--card-cor:#7A255F; --card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-id-card ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-id-card ge-card-icon"></i></div>
+            <span class="ge-card-label">Dados</span>
+            <span class="ge-card-desc">Cadastro de Empresa</span>
+        </div>
+
+        <!-- Setor (Macro) -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('gestao.card_setores') }}'"
+             style="--card-cor:#2980B9; --card-cor-bg:rgba(41,128,185,0.10);">
+            <i class="fas fa-sitemap ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-sitemap ge-card-icon"></i></div>
+            <span class="ge-card-label">Setores</span>
+            <span class="ge-card-desc">Macro Estrutura</span>
+        </div>
+
+        <!-- Departamento (Micro) -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('gestao.card_departamentos') }}'"
+             style="--card-cor:#7F8C8D; --card-cor-bg:rgba(127,140,141,0.10);">
+            <i class="fas fa-network-wired ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-network-wired ge-card-icon"></i></div>
+            <span class="ge-card-label">Departamentos</span>
+            <span class="ge-card-desc">Micro Estrutura</span>
+        </div>
+
+        <!-- Cargos (Funções) -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('gestao.card_cargos') }}'"
+             style="--card-cor:#E67E22; --card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-user-tie ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-user-tie ge-card-icon"></i></div>
+            <span class="ge-card-label">Cargos</span>
+            <span class="ge-card-desc">Funções e Níveis</span>
+        </div>
+
+        <!-- Sócios (AJAX) -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('cadastros.form_socio') }}'"
+             style="--card-cor:#0072CE; --card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-users ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-users ge-card-icon"></i></div>
+            <span class="ge-card-label">Sócios</span>
+            <span class="ge-card-desc">Quadro Societário</span>
+        </div>
+
+        <!-- Investidores (AJAX) -->
+        <div class="ge-card" onclick="window.location.href='{{ url_for('cadastros.form_investidor') }}'"
+             style="--card-cor:#27AE60; --card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-hand-holding-usd ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-hand-holding-usd ge-card-icon"></i></div>
+            <span class="ge-card-label">Investidores</span>
+            <span class="ge-card-desc">Aportes e Participações</span>
+        </div>
+
+
+    </div>
+
+</div>
+
+<style>
+/* Cards */
+.ge-card { cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s; }
+.ge-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+</style>
+
+<script>
+const endpointsEmp = {
+    socios:       '{{ url_for("cadastros.form_socio") }}',
+    investidores: '{{ url_for("cadastros.form_investidor") }}',
+    setores:      '{{ url_for("gestao.card_setores") }}',
+    departamentos: '{{ url_for("gestao.card_departamentos") }}',
+    cargos:        '{{ url_for("gestao.card_cargos") }}',
+    relatorios:    '{{ url_for("cadastros.gateway_relatorios") }}'
+};
+
+async function abrirModalEmp(tipo, id = null) {
+    let url = endpointsEmp[tipo];
+    if (!url) return;
+
+    if (id) {
+        if (url.includes('/form')) {
+            url = url.split('/form')[0] + '/form/' + id;
+        } else {
+            url += (url.includes('?') ? '&' : '?') + 'id=' + id;
+        }
+    }
+    window.location.href = url;
+}
+
+function fecharModalEmp() {
+    document.getElementById('modal-overlay-emp').classList.remove('ativo');
+    document.body.style.overflow = '';
+}
+
+function imprimirModal() {
+    window.print();
+}
+
+function exportarModal(formato) {
+    alert('Exportação para ' + formato + ' em desenvolvimento.');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModalEmp(); });
+</script>

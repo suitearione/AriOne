@@ -1,0 +1,508 @@
+{# =============================================================================
+   Caminho  : templates/sistema/grids/grid_versoes.html
+   Arquivo  : grid_versoes.html
+   Função   : Central de Engenharia de Versões AriOne (Golden Standard)
+   ============================================================================= #}
+{% import "macros/componentes.html" as comp %}
+
+<div class="arione-grid-wrapper" style="padding: 10px 20px; animation: feFadeUp 0.6s ease-out;">
+    
+    <!-- 📊 KPI CARDS (DASHBOARD EXECUTIVO) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 25px;">
+        <div class="ge-kpi-card" style="--kpi-cor: #7A255F;">
+            <div class="kpi-icon-bg"><i class="fas fa-code-branch"></i></div>
+            <div class="kpi-content">
+                <span class="kpi-label">Versão Atual</span>
+                <span class="kpi-value">{{ versao_atual.numero if versao_atual else 'v0.0.0' }}{% if versao_atual and versao_atual.status != 'publicada' and config.IS_DEV %} <span style="background: #E67E22; color: #fff; padding: 2px 6px; border-radius: 6px; font-size: 12px; vertical-align: middle;">DEV</span>{% endif %}</span>
+                <span class="kpi-subtext">Release: {{ versao_atual.data_publicacao.strftime('%d/%m/%Y') if versao_atual and versao_atual.data_publicacao else '—' }}</span>
+            </div>
+            <div class="golden-seal seal-card"><i class="fas fa-shield-alt"></i></div>
+        </div>
+        <div class="ge-kpi-card" style="--kpi-cor: #2980b9;">
+            <div class="kpi-icon-bg"><i class="fas fa-laptop-code"></i></div>
+            <div class="kpi-content">
+                <span class="kpi-label">Em Desenvolvimento</span>
+                <span class="kpi-value">{{ em_dev|length if em_dev else 0 }}</span>
+                <span class="kpi-subtext">{{ em_dev[0].numero if em_dev else 'Nenhum' }} em andamento</span>
+            </div>
+        </div>
+        <div class="ge-kpi-card" style="--kpi-cor: #27ae60;">
+            <div class="kpi-icon-bg"><i class="fas fa-cloud-upload-alt"></i></div>
+            <div class="kpi-content">
+                <span class="kpi-label">Ambiente PROD</span>
+                <span class="kpi-value">Sincronizado</span>
+                <span class="kpi-subtext">Integridade Golden Seal OK</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚀 CENTRAL DE SINCRONIZAÇÃO (QUIET LUXURY STANDARD) -->
+    <div class="ge-sync-zone" style="background: #ffffff; padding: 25px 35px; border-radius: 16px; color: #1e293b; margin-bottom: 30px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 20px; width: 100%; box-sizing: border-box;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div style="width: 50px; height: 50px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #2980b9; border: 1.5px solid #e2e8f0;">
+                    <i class="fas fa-sync-alt"></i>
+                </div>
+                <div>
+                    <h2 style="font-size: 17px; font-weight: 800; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        Sincronização em Tempo Real {{ comp.info_icon("Publica as alterações do ambiente de desenvolvimento para o ambiente de produção.") }}
+                    </h2>
+                    <p style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #7A255F;">DEV</span> 
+                        <i class="fas fa-long-arrow-alt-right" style="font-size: 12px; opacity: 0.5;"></i> 
+                        <span style="color: #27ae60;">PRODUÇÃO (C:\AriOne)</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <button onclick="window.location.href='{{ url_for('sistema.form_versao') }}'" class="ge-action-btn-luxury" style="background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-plus-circle" style="color: #2980b9;"></i> NOVA VERSÃO
+                </button>
+                <button onclick="window.open('{{ url_for('sistema.visualizar_log_sincronia') }}', '_blank')" class="ge-action-btn-luxury" style="background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;" title="Ver log detalhado da última cópia física">
+                    <i class="fas fa-file-invoice" style="color: #64748b;"></i> RELATÓRIO
+                </button>
+                <button onclick="dispararSincronizacaoFisica(event)" class="ge-sync-btn-luxury" style="background: #2980b9; color: #fff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(41, 128, 185, 0.2); display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-cloud-upload-alt"></i> SINCRONIZAR AGORA
+                </button>
+            </div>
+        </div>
+
+        <div id="arione-deploy-progress-container" style="display: none; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; animation: feFadeIn 0.5s ease;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="spinner-sync" style="width: 14px; height: 14px; border: 2px solid #e2e8f0; border-top: 2px solid #2980b9; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <span id="arione-deploy-msg" style="font-size: 9px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1.5px;">Deploy em Execução...</span>
+                </div>
+                <span id="arione-deploy-perc" style="font-size: 14px; font-weight: 900; color: #2980b9; font-family: 'JetBrains Mono', monospace;">0%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden;">
+                <div id="arione-deploy-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2980b9 0%, #34d399 100%); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(41, 128, 185, 0.2);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏗️ LAYOUT MESTRE-DETALHE (WABEST INSPIRED) -->
+    <div style="display: flex; gap: 25px; min-height: 500px;">
+        
+        <!-- COLUNA ESQUERDA: LISTA DE VERSÕES -->
+        <div style="width: 280px; flex-shrink: 0;">
+            <div style="font-size: 12px; font-weight: 800; color: #64748b; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 10px;">Versões e Releases</div>
+            <div class="ge-version-sidebar" style="display: flex; flex-direction: column; gap: 8px;">
+                {% for v in versoes %}
+                <div class="ge-version-item {% if loop.first %}active{% endif %}" onclick="selectVersion(this)" 
+                     data-id="{{ v.id }}" 
+                     data-numero="{{ v.numero }}"
+                     data-titulo="{{ v.titulo or 'Sem Título' }}"
+                     data-status="{{ v.status }}" 
+                     data-status-label="{{ v.status_label }}"
+                     data-cor="{{ v.status_cor }}"
+                     data-data-inicio="{{ v.data_inicio.strftime('%d/%m/%Y %H:%M') if v.data_inicio else '--/--/----' }}"
+                     data-data-previsao="{{ v.data_previsao.strftime('%d/%m/%Y %H:%M') if v.data_previsao else 'Não Definida' }}"
+                     data-data-publicacao="{{ v.data_publicacao.strftime('%d/%m/%Y %H:%M') if v.data_publicacao else 'Não Publicada' }}"
+                     data-autor="{{ v.autor }}"
+                     data-changelog="{{ v.changelog or '' }}"
+                     data-arquivos="{{ v.arquivos or '' }}">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="v-num">{{ v.numero }}</span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            {% if v.status == 'dev' %}
+                            <span class="v-badge" style="background: #E67E22; color: #fff;">DEV</span>
+                            {% endif %}
+                            {% if versao_atual and v.id == versao_atual.id %}
+                            <span class="v-badge">Atual</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="v-date" style="display: flex; flex-direction: column; gap: 2px;">
+                        <span><i class="far fa-calendar-alt"></i> Publicação: {{ (v.data_publicacao).strftime('%d/%m/%Y') if v.data_publicacao else '--/--/----' }}</span>
+                        <span style="color: #7A255F; font-weight: 700;"><i class="fas fa-calendar-check"></i> Previsão: {{ v.data_previsao.strftime('%d/%m/%Y') if v.data_previsao else 'N/D' }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- COLUNA DIREITA: DETALHAMENTO DA VERSÃO -->
+        <div style="flex: 1;">
+            <div id="ge-detail-card" class="fe-card" style="border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 15px 45px rgba(0,0,0,0.04); background: #fff; padding: 40px; position: sticky; top: 130px; transition: 0.3s; z-index: 100;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                            <h1 id="det-numero" style="font-size: 28px; font-weight: 900; color: var(--pri); font-family: 'JetBrains Mono', monospace; margin: 0;">v0.0.0</h1>
+                            <span id="det-dev-badge" style="display: none; padding: 4px 12px; border-radius: 8px; font-size: 16px; font-weight: 900; background: #E67E22; color: #fff; box-shadow: 0 4px 10px rgba(230, 126, 34, 0.3);">DEV</span>
+                            <span id="det-status" style="padding: 4px 15px; border-radius: 30px; font-size: 10px; font-weight: 900; text-transform: uppercase;">STATUS</span>
+                        </div>
+                        <p id="det-titulo" style="font-size: 16px; font-weight: 700; color: #1e293b; margin: 0;">Título da Versão</p>
+                        
+                        <div style="display: flex; gap: 20px; margin-top: 10px;">
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">
+                                <i class="fas fa-hammer"></i> INÍCIO DEV<br>
+                                <span id="det-data-inicio" style="color: #64748b; font-weight: 800;">--/--/----</span>
+                            </div>
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">
+                                <i class="fas fa-calendar-check"></i> PREVISÃO<br>
+                                <span id="det-data-previsao" style="color: #7A255F; font-weight: 800;">Não Definida</span>
+                            </div>
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">
+                                <i class="fas fa-rocket"></i> PUBLICAÇÃO<br>
+                                <span id="det-data-publicacao" style="color: #27ae60; font-weight: 800;">Não Publicada</span>
+                            </div>
+                            <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">
+                                <i class="fas fa-user-edit"></i> RESPONSÁVEL<br>
+                                <span id="det-autor" style="color: #1e293b; font-weight: 800;">Autor</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btn-pub-versao" class="ge-btn-primary" style="display: none;"><i class="fas fa-rocket"></i> PUBLICAR AGORA</button>
+                        <button id="btn-edit-versao" class="ge-action-btn"><i class="fas fa-pencil-alt"></i></button>
+                        <button id="btn-del-versao" class="ge-action-btn btn-delete"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>
+
+                <div class="det-section">
+                    <h3 class="det-section-title"><i class="fas fa-bullseye"></i> O QUE MUDOU NESTA VERSÃO</h3>
+                    <div id="det-changelog" class="det-content-box">
+                        <!-- Conteúdo será injetado pelo JS -->
+                    </div>
+                </div>
+
+                <div class="det-section" style="margin-top: 30px;">
+                    <h3 class="det-section-title"><i class="fas fa-file-code"></i> ARQUIVOS AFETADOS</h3>
+                    <div id="det-arquivos" class="det-content-box" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #64748b;">
+                        <!-- Conteúdo será injetado pelo JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+/* 💎 ESTILO WA-BEST & QUIET LUXURY */
+.ge-version-sidebar { max-height: 700px; overflow-y: auto; padding-right: 5px; }
+.ge-version-sidebar::-webkit-scrollbar { width: 4px; }
+.ge-version-sidebar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+.ge-version-item {
+    background: #fff; padding: 15px 20px; border-radius: 14px; border: 1px solid #edf2f7;
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+.ge-version-item:hover { border-color: var(--pri); background: #f8fafc; }
+.ge-version-item.active { background: #fff; border-color: #34d399; border-width: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); }
+.ge-version-item.active::after { 
+    content: ''; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); 
+    border-left: 12px solid #34d399; border-top: 10px solid transparent; border-bottom: 10px solid transparent;
+    filter: drop-shadow(4px 0 4px rgba(0,0,0,0.05));
+    z-index: 5;
+}
+
+.v-num { font-weight: 900; color: #1e293b; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+.v-badge { background: #d1fae5; color: #065f46; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 30px; text-transform: uppercase; }
+.v-date { font-size: 10px; color: #94a3b8; font-weight: 600; margin-top: 5px; }
+
+.det-section-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.det-content-box { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9; line-height: 1.6; color: #334155; font-size: 13px; white-space: pre-line; }
+
+.ge-sync-btn { background: #34d399; color: #fff; border: none; padding: 12px 25px; border-radius: 30px; font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 25px rgba(52, 211, 153, 0.3); display: flex; align-items: center; gap: 8px; }
+.ge-sync-btn:hover { background: #10b981; transform: scale(1.05); }
+
+.ge-btn-primary { background: #3b82f6; color: #fff; border: none; padding: 10px 20px; border-radius: 30px; font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); }
+.ge-btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
+
+.ge-action-btn-luxury:hover { background: #f8fafc !important; border-color: #cbd5e1 !important; transform: translateY(-1px); }
+.ge-sync-btn-luxury:hover { background: #2574a9 !important; transform: translateY(-2px); box-shadow: 0 12px 25px rgba(41, 128, 185, 0.3); }
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.ge-action-btn { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #64748b; background: #f8fafc; border: 1px solid #edf2f7; transition: 0.2s; cursor: pointer; }
+.ge-action-btn:hover { background: var(--pri); color: #fff; border-color: var(--pri); }
+.ge-action-btn.btn-delete:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+/* REUTILIZA OS KPI CARDS DA VERSÃO ANTERIOR */
+.ge-kpi-card { background: #fff; padding: 18px; border-radius: 14px; border: 1px solid #edf2f7; position: relative; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
+.ge-kpi-card::before { content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: var(--kpi-cor); }
+.kpi-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+.kpi-value { font-size: 20px; font-weight: 900; color: #1e293b; margin: 4px 0; }
+.kpi-subtext { font-size: 9px; color: #94a3b8; font-weight: 600; }
+.kpi-icon-bg { position: absolute; right: -10px; bottom: -10px; font-size: 50px; opacity: 0.03; color: var(--kpi-cor); }
+
+@keyframes feFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<script>
+function selectVersion(element) {
+    // UI Update
+    document.querySelectorAll('.ge-version-item').forEach(i => i.classList.remove('active'));
+    element.classList.add('active');
+
+    const data = element.dataset;
+    const card = document.getElementById('ge-detail-card');
+    
+    // Animation Effect
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(10px)';
+
+    setTimeout(() => {
+        document.getElementById('det-numero').innerText = data.numero;
+        document.getElementById('det-titulo').innerText = data.titulo;
+        document.getElementById('det-data-inicio').innerText = data.dataInicio;
+        document.getElementById('det-data-previsao').innerText = data.dataPrevisao;
+        document.getElementById('det-data-publicacao').innerText = data.dataPublicacao;
+        
+        // DEV Badge Toggle
+        const devBadge = document.getElementById('det-dev-badge');
+        if (data.status === 'dev') {
+            devBadge.style.display = 'inline-block';
+        } else {
+            devBadge.style.display = 'none';
+        }
+        document.getElementById('det-autor').innerText = data.autor;
+        
+        // Status Badge
+        const st = document.getElementById('det-status');
+        st.innerText = data.statusLabel;
+        st.style.background = data.cor + '15';
+        st.style.color = data.cor;
+        st.style.border = `1px solid ${data.cor}40`;
+
+        // Changelog
+        document.getElementById('det-changelog').innerText = data.changelog || 'Nenhuma descrição detalhada disponível.';
+
+        // Arquivos
+        document.getElementById('det-arquivos').innerText = data.arquivos || 'Nenhum arquivo listado.';
+
+        // Buttons Actions
+        const btnPub = document.getElementById('btn-pub-versao');
+        if (data.status !== 'publicada') {
+            btnPub.style.display = 'block';
+            btnPub.onclick = () => {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/sistema/versoes/publicar/${data.id}`;
+                document.body.appendChild(form);
+                if(window.setStatusSincronizando) window.setStatusSincronizando();
+                form.submit();
+            };
+        } else {
+            btnPub.style.display = 'none';
+        }
+
+        document.getElementById('btn-edit-versao').onclick = () => {
+            window.location.href = `/sistema/versoes/form/${data.id}`;
+        };
+
+        document.getElementById('btn-del-versao').onclick = async () => {
+            const ok = await arioneConfirm(`🛡️ AriOne: Deseja realmente EXCLUIR a versão ${data.numero}?`, document.getElementById('btn-del-versao'));
+            if(ok) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/sistema/versoes/excluir/${data.id}`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        };
+
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, 200);
+}
+
+// Inicializa com a primeira versão
+document.addEventListener('DOMContentLoaded', () => {
+    const first = document.querySelector('.ge-version-item');
+    if (first) selectVersion(first);
+});
+
+// Reutiliza funções de sincronização existentes
+async function dispararSincronizacaoFisica(event) {
+    const cardAlvo = event ? event.currentTarget : null;
+    let confirmacao = false;
+    
+    if (typeof window.arioneConfirm === 'function') {
+        confirmacao = await window.arioneConfirm("🛡️ AriOne: Deseja sincronizar arquivos DEV -> PRODUÇÃO agora?", cardAlvo);
+    } else {
+        confirmacao = confirm("Deseja iniciar a sincronização física?");
+    }
+
+    if (!confirmacao) return;
+
+    if (typeof window.setStatusSincronizando === 'function') window.setStatusSincronizando();
+    if (typeof window.arioneToast === 'function') window.arioneToast("📡 Iniciando sincronização física...", "info");
+
+    try {
+        const res = await fetch("{{ url_for('sistema.sincronizar_fisico') }}", { 
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.success) monitorarProgressoSincronia();
+        else alert("⚠️ Erro: " + data.message);
+    } catch (e) { console.error(e); }
+}
+
+function monitorarProgressoSincronia() {
+    const container = document.getElementById('arione-deploy-progress-container');
+    const bar = document.getElementById('arione-deploy-bar');
+    const msg = document.getElementById('arione-deploy-msg');
+    const percTxt = document.getElementById('arione-deploy-perc');
+    
+    container.style.display = 'block';
+    
+    const interval = setInterval(async () => {
+        try {
+            const res = await fetch("{{ url_for('sistema.consultar_status_sincronia') }}");
+            const data = await res.json();
+            
+            if (data.status === 'idle' && data.percent === 0) {
+                setTimeout(() => { container.style.display = 'none'; }, 2000);
+                clearInterval(interval);
+                return;
+            }
+
+            bar.style.width = data.percent + '%';
+            percTxt.innerText = data.percent + '%';
+            msg.innerText = data.message || "Sincronizando...";
+
+            if (data.status === 'success' || data.status === 'finished') {
+                if (typeof window.arioneToast === 'function') window.arioneToast("✅ Sincronização Concluída!", "success");
+                clearInterval(interval);
+                setTimeout(() => { container.style.display = 'none'; }, 5000);
+            }
+        } catch (e) { clearInterval(interval); }
+    }, 1000);
+}
+</script>
+</div>
+
+<script>
+function toggleVersaoLogs() {
+    const sec = document.getElementById('section-logs-versoes');
+    if (sec.style.display === 'none') {
+        sec.style.display = 'block';
+        window.scrollTo({ top: sec.offsetTop - 100, behavior: 'smooth' });
+    } else {
+        sec.style.display = 'none';
+    }
+}
+
+async function dispararSincronizacaoFisica(event) {
+    console.log("🚀 AriOne: Iniciando processo de sincronização...");
+    
+    // Captura o card alvo
+    const cardAlvo = event ? event.currentTarget : document.querySelector('.ge-card');
+    let confirmacao = false;
+    
+    try {
+        // Tenta usar o motor Premium
+        if (typeof window.arioneConfirm === 'function') {
+            confirmacao = await window.arioneConfirm(
+                "🛡️ AriOne: Deseja sincronizar todos os arquivos de DEV para PRODUÇÃO (C:\\AriOne) agora? O sistema de produção será encerrado durante a cópia.", 
+                cardAlvo
+            );
+        } else {
+            confirmacao = confirm("Deseja iniciar a sincronização física para C:\\AriOne?");
+        }
+    } catch (e) {
+        console.error("Erro no modal:", e);
+        confirmacao = confirm("Erro no modal de luxo. Deseja prosseguir com a sincronização padrão?");
+    }
+
+    if (!confirmacao) return;
+
+    // Feedback Visual (Defensivo)
+    try {
+        if (typeof window.setStatusSincronizando === 'function') {
+            window.setStatusSincronizando();
+        }
+        if (typeof window.arioneToast === 'function') {
+            window.arioneToast("📡 Iniciando sincronização física...", "info");
+        }
+    } catch (e) { console.warn("Falha ao atualizar status visual:", e); }
+
+    try {
+        console.log("📡 Enviando requisição para o servidor...");
+        const res = await fetch("{{ url_for('sistema.sincronizar_fisico') }}", { 
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+            // Inicia o monitoramento em tempo real
+            monitorarProgressoSincronia();
+        } else {
+            alert("⚠️ Erro ao disparar: " + data.message);
+        }
+    } catch (e) {
+        console.error("Erro na requisição fetch:", e);
+    }
+}
+
+function monitorarProgressoSincronia() {
+    const container = document.getElementById('arione-deploy-progress-container');
+    const bar = document.getElementById('arione-deploy-bar');
+    const msg = document.getElementById('arione-deploy-msg');
+    const percTxt = document.getElementById('arione-deploy-perc');
+    
+    container.style.display = 'block';
+    
+    const interval = setInterval(async () => {
+        try {
+            const res = await fetch("{{ url_for('sistema.consultar_status_sincronia') }}");
+            const data = await res.json();
+            
+            if (data.status === 'idle' && data.percent === 0) {
+                setTimeout(() => { container.style.display = 'none'; }, 2000);
+                clearInterval(interval);
+                return;
+            }
+
+            // Atualiza Interface
+            bar.style.width = data.percent + '%';
+            percTxt.innerText = data.percent + '%';
+            msg.innerText = data.message || "Sincronizando...";
+
+            if (data.status === 'success' || data.status === 'finished') {
+                bar.style.background = 'linear-gradient(90deg, #00b09b, #96c93d)';
+                bar.style.boxShadow = '0 0 20px rgba(150, 201, 61, 0.6)';
+                if (typeof window.arioneToast === 'function') window.arioneToast("✅ Sincronização realizada com sucesso!", "success");
+                clearInterval(interval);
+                setTimeout(() => { container.style.display = 'none'; }, 5000);
+            }
+
+            if (data.status === 'error') {
+                bar.style.background = '#e74c3c';
+                msg.innerText = "❌ Erro na sincronia: " + (data.message || "");
+                clearInterval(interval);
+            }
+
+        } catch (e) {
+            console.error("Erro ao monitorar progresso:", e);
+            clearInterval(interval);
+        }
+    }, 1000);
+}
+</script>
+
+<style>
+.ge-section-title { font-size: 14px; font-weight: 800; color: #1e293b; font-family: 'Montserrat', sans-serif; gap: 10px; display: flex; align-items: center; }
+.ge-card { 
+    background: #fff; padding: 25px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; min-height: 140px; position: relative; overflow: hidden; transition: 0.3s; cursor: pointer;
+}
+.ge-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+.ge-card-bg-icon { position: absolute; right: -10px; top: -10px; font-size: 80px; opacity: 0.04; color: var(--card-cor); transform: rotate(-15deg); }
+.ge-card-icon-wrap { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+.ge-card-icon { font-size: 18px; color: var(--card-cor); }
+.ge-card-label { font-weight: 800; font-family: 'Montserrat', sans-serif; font-size: 14px; color: #1e293b; z-index: 2; line-height: 1.2; }
+.ge-card-desc { font-size: 10px; color: #64748b; font-weight: 600; margin-top: 8px; z-index: 2; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>

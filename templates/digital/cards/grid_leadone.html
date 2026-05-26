@@ -1,0 +1,63 @@
+<!-- templates/digital/cards/grid_leadone.html -->
+<div id="modal-overlay-ld" class="ge-modal-overlay" onclick="fecharModalLd()">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-ld" class="ge-modal-icon"></i><span id="modal-titulo-ld">LeadOne</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalLd()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-ld"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-funnel-dollar"></i><span>LeadOne</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalLd('captura')" style="--card-cor:#0072CE;--card-cor-bg:rgba(0,114,206,0.10);">
+            <i class="fas fa-magnet ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-magnet ge-card-icon"></i></div>
+            <span class="ge-card-label">Captura</span><span class="ge-card-desc">Formulários de captura</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalLd('pipeline')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-columns ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-columns ge-card-icon"></i></div>
+            <span class="ge-card-label">Pipeline</span><span class="ge-card-desc">Funil de vendas</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalLd('automacoes')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-robot ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-robot ge-card-icon"></i></div>
+            <span class="ge-card-label">Automações</span><span class="ge-card-desc">Follow-up automático</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalLd('conversoes')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
+            <i class="fas fa-check-double ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-check-double ge-card-icon"></i></div>
+            <span class="ge-card-label">Conversões</span><span class="ge-card-desc">Leads convertidos</span>
+        </div>
+        
+
+    </div>
+</div>
+
+<script>
+const modaisLd = {
+    captura:    {titulo:'Formulário de Captura', icone:'fas fa-magnet',      campos:[['Nome do Form *','nome','text'],['Campos','campos','text'],['Destino','destino','text'],['Integração','integ','text']]},
+    pipeline:   {titulo:'Pipeline de Leads',    icone:'fas fa-columns',     campos:[['Nome do Lead *','nome','text'],['E-mail','email','email'],['Telefone','tel','text'],['Etapa','etapa','text'],['Origem','origem','text']]},
+    automacoes: {titulo:'Automações',           icone:'fas fa-robot',       campos:[['Nome *','nome','text'],['Gatilho','gatilho','text'],['Ação','acao','text'],['Delay (horas)','delay','number']]},
+    conversoes: {titulo:'Conversões',           icone:'fas fa-check-double',campos:[['Lead *','lead','text'],['Data Conversão','data','date'],['Valor (R$)','valor','number'],['Responsável','resp','text']]},
+};
+
+function abrirModalLd(tipo) {
+    const m = modaisLd[tipo]; if (!m) return;
+    const campos = m.campos.map(([label,name,type]) => `<div class="ge-form-group"><label>${label}</label><input type="${type}" name="${name}" placeholder="${label.replace(' *','')}"></div>`).join('');
+    document.getElementById('modal-titulo-ld').textContent = m.titulo;
+    document.getElementById('modal-icon-ld').className = m.icone + ' ge-modal-icon';
+    document.getElementById('modal-body-ld').innerHTML = `<form class="ge-form" method="POST" action="#">${campos}<div class="ge-form-actions"><button type="button" class="ge-btn-cancelar" onclick="fecharModalLd()">Cancelar</button><button type="submit" class="ge-btn-salvar">💾 Salvar</button></div></form>`;
+    document.getElementById('modal-overlay-ld').classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+function fecharModalLd() { document.getElementById('modal-overlay-ld').classList.remove('ativo'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalLd(); });
+</script>

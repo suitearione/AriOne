@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-insumos" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .ins-foto-upload-premium {
+            width: 100px; height: 100px; border: 2.5px dashed #e2e8f0; border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+            overflow: hidden; background: #fff; transition: 0.3s; position: relative;
+        }
+        .ins-foto-upload-premium:hover { border-color: #E67E22; background: #fffcf0; }
+        
+        .ins-row:hover { background: #fffcf0 !important; cursor: pointer; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Insumos Produtivos',
+            subtitulo='Catálogos > Gestão de Insumos e Materiais de Apoio à Produção',
+            icone='fa-flask',
+            cor_tema='#7A255F',
+            tamanho='medio',
+            aba_retorno='catalogos',
+            form_id='ins-form-area',
+            list_id='ins-list-area',
+            onclick_novo="novoRegistroIns()",
+            onclick_save="forceSubmitInsumo()",
+            onclick_search="focarBuscaIns()",
+            onclick_filter="abrirModalFiltrosAvancados()",
+            onclick_clonar="arioneClonarRegistro('ins-form-area')",
+            onclick_export="exportarInsumos()",
+            onclick_import="arioneToast('Importação em desenvolvimento para Insumos.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Insumos')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Insumos')",
+            status="Standard PAAv1.0"
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="ins-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="ins-form" method="POST" action="{{ url_for('cadastros.card_insumos') }}" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="ins-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="ins-form-titulo">CADASTRO DE INSUMO</span></span>
+                        <button type="button" onclick="novoRegistroIns()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="display: flex; gap: 30px; align-items: flex-start;">
+                            {# FOTO #}
+                            <div style="text-align: center;">
+                                <label class="fp-label">Foto Insumo</label>
+                                <div class="ins-foto-upload-premium" onclick="document.getElementById('ins-foto-input').click()">
+                                    <div id="ins-foto-preview" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-flask" style="font-size: 30px; color: #cbd5e1;"></i>
+                                    </div>
+                                    <div style="position: absolute; bottom: 0; background: rgba(230,126,34,0.9); width: 100%; color: #fff; font-size: 8px; padding: 4px 0; font-weight: 900;">ALTERAR</div>
+                                </div>
+                                <input type="file" id="ins-foto-input" name="foto_insumo" accept="image/*" style="display: none;" onchange="previewInsFoto(this)">
+                            </div>
+
+                            <div style="flex: 1;">
+                                <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Descrição do Insumo <span style="color:#ef4444;">*</span></label>
+                                        <input type="text" class="fp-input" name="nome" id="ins-nome-input" placeholder="EX: SOLVENTE X-40" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Modo do Código</label>
+                                        <select class="fp-input" id="ins-sku-mode" onchange="toggleSKUMode()" style="width: 100%; background: #fff;">
+                                            <option value="AUTOMATICO">AUTOMÁTICO</option>
+                                            <option value="LIVRE">LIVRE (MANUAL)</option>
+                                            <option value="FORNECEDOR">CÓD. FORNECEDOR</option>
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">SKU / Código</label>
+                                        <input type="text" class="fp-input" name="sku" id="ins-sku-input" placeholder="GERANDO..." readonly style="width: 100%; font-weight: 900; background: #f8fafc; color: #E67E22; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <div class="fp-row" style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 15px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Unidade de Medida</label>
+                                        <select class="fp-input" name="unidade_id" id="ins-unidade-select" style="width: 100%; background: #fff;">
+                                            <option value="">Selecione...</option>
+                                            {% for un in unidades_list|default([]) %}
+                                            <option value="{{ un.id }}">{{ un.sigla }} - {{ un.nome }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Estoque Mínimo</label>
+                                        <input type="number" step="0.001" class="fp-input" name="estoque_minimo" id="ins-estoque-minimo" value="0" style="width: 100%; font-weight: 800; text-align: center;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Custo de Compra (R$)</label>
+                                        <input type="text" class="fp-input fp-mask-money" name="preco_custo" id="ins-preco-custo" placeholder="0,00" style="width: 100%; font-weight: 900; text-align: right; color: #E67E22;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-ins" onclick="forceSubmitInsumo()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR INSUMO
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="ins-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-flask" style="color: #E67E22; margin-right: 8px;"></i> Catálogo de Insumos e Materiais de Apoio</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="ins-search-input" oninput="filtrarTabelaInsumos()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="ins-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ insumos|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center; padding-left: 20px;">FOTO</th>
+                            <th>DESCRIÇÃO DO INSUMO</th>
+                            <th>SKU</th>
+                            <th style="text-align: center;">UN</th>
+                            <th style="text-align: center;">EST. MÍN</th>
+                            <th style="text-align: right; padding-right: 20px;">CUSTO UNIT.</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-ins">
+                        {% for ins in insumos %}
+                        <tr class="ins-row" data-id="{{ ins.id }}" data-nome="{{ ins.nome|upper }}" data-sku="{{ ins.sku }}" data-unidade="{{ ins.unidade_id or '' }}" data-estoque="{{ ins.estoque_minimo }}" data-custo="{{ '%.2f'|format(ins.preco_custo|default(0))|replace('.', ',') }}" data-foto="{{ ins.foto or '' }}" onclick="editarIns_ByRow(this)">
+                            <td style="text-align: center; padding-left: 20px;">
+                                <div style="width: 38px; height: 38px; background: #f8fafc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #f1f5f9; margin: 0 auto;">
+                                    {% if ins.foto %}
+                                    <img src="{{ url_for('static', filename='uploads/insumos/'~ins.foto) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-flask" style="color: #cbd5e1; font-size: 14px;"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td><div style="font-weight: 800; color: #1e293b; font-size: 13px;">{{ ins.nome }}</div></td>
+                            <td style="font-family: monospace; font-weight: 800; color: #E67E22;">{{ ins.sku }}</td>
+                            <td style="text-align: center;"><span style="font-weight: 900; color: #64748b; font-size: 11px;">{{ ins.unidade.sigla if ins.unidade else '—' }}</span></td>
+                            <td style="text-align: center;"><span style="font-weight: 900; color: #64748b; font-size: 11px;">{{ ins.estoque_minimo }}</span></td>
+                            <td style="text-align: right; font-weight: 900; color: #E67E22; padding-right: 20px;">R$ {{ '%.2f'|format(ins.preco_custo|default(0))|replace('.', ',') }}</td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirInsumo('{{ ins.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            window.novoRegistroIns = function() {
+                document.getElementById('ins-form-titulo').textContent = 'NOVA INSUMO';
+                document.getElementById('ins-id-hidden').value = '';
+                document.getElementById('ins-form').reset();
+                document.getElementById('ins-foto-preview').innerHTML = '<i class="fas fa-flask" style="font-size: 30px; color: #cbd5e1;"></i>';
+                document.getElementById('ins-nome-input').focus();
+            };
+
+            window.fecharFormIns = function() { novoRegistroIns(); };
+
+            window.editarIns_ByRow = function(r) {
+                const id = r.dataset.id;
+                document.getElementById('ins-form-titulo').textContent = 'EDITANDO: ' + r.dataset.nome;
+                document.getElementById('ins-id-hidden').value = id;
+                document.getElementById('ins-nome-input').value = r.dataset.nome;
+                document.getElementById('ins-sku-input').value = r.dataset.sku;
+                document.getElementById('ins-unidade-select').value = r.dataset.unidade;
+                document.getElementById('ins-estoque-minimo').value = r.dataset.estoque;
+                document.getElementById('ins-preco-custo').value = r.dataset.custo;
+                
+                if(r.dataset.foto) {
+                    document.getElementById('ins-foto-preview').innerHTML = `<img src="/static/uploads/insumos/${r.dataset.foto}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else {
+                    document.getElementById('ins-foto-preview').innerHTML = '<i class="fas fa-flask" style="font-size: 30px; color: #cbd5e1;"></i>';
+                }
+                
+                document.getElementById('ins-form').action = `/cadastros/cards/insumos/${id}`;
+                $('#ins-form-area').slideDown();
+                window.scrollTo({top:0, behavior:'smooth'});
+            };
+
+            window.toggleSKUMode = async function() {
+                const mode = document.getElementById('ins-sku-mode').value;
+                const input = document.getElementById('ins-sku-input');
+                if(mode === 'AUTOMATICO') {
+                    input.readOnly = true; input.style.background = '#f8fafc';
+                    const res = await fetch('/cadastros/cards/insumos/proximo-sku');
+                    const data = await res.json(); input.value = data.sku;
+                } else {
+                    input.readOnly = false; input.style.background = '#fff'; input.focus();
+                }
+            };
+
+            window.forceSubmitInsumo = async function() {
+                const form = document.getElementById('ins-form');
+                if(!form.checkValidity()) { form.reportValidity(); return; }
+                const btn = document.getElementById('btn-salvar-ins');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Insumo salvo!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarTabelaInsumos = function() {
+                const f = document.getElementById('ins-search-input').value.toUpperCase();
+                document.querySelectorAll('.ins-row').forEach(r => {
+                    const txt = r.dataset.nome + r.dataset.sku;
+                    r.style.display = txt.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.previewInsFoto = function(input) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        document.getElementById('ins-foto-preview').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            };
+
+            window.excluirInsumo = async function(id, btn) {
+                if(!confirm('Excluir insumo?')) return;
+                const r = await fetch(`/cadastros/cards/insumos/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+
+            window.focarBuscaIns = function() { document.getElementById('ins-search-input').focus(); };
+            window.exportarInsumos = function() { arioneExportar({url:'/cadastros/cards/insumos/dados-json', modulo:'Insumos'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

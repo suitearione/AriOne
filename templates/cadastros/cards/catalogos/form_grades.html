@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap mod-grades" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
+
+    <style>
+        /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
+        .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .fe-wrap { margin-top: 0 !important; }
+        
+        /* 💎 Tipografia Compacto Premium §13 */
+        .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
+        .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        
+        .grade-chip-item {
+            background: #fffcf0; border: 1.5px solid rgba(230,126,34,0.15);
+            padding: 4px 12px; border-radius: 6px; display: inline-flex;
+            align-items: center; gap: 10px; font-size: 11px; font-weight: 900;
+            color: #E67E22; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .grade-chip-item i { cursor: pointer; opacity: 0.7; font-size: 10px; }
+        .grade-chip-item i:hover { color: #ef4444; }
+        
+        .grade-row:hover { background: #fffcf0 !important; cursor: pointer; }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE STICKY #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; transition: none !important;">
+        {{ comp.cabecalho_mestre_arione(
+            titulo='Grades de Variação',
+            subtitulo='Catálogos > Gestão de Modelos de Grades (Tamanhos/Variações)',
+            icone='fa-th-large',
+            cor_tema='#7A255F',
+            tamanho='medio',
+            aba_retorno='catalogos',
+            form_id='gra-form-area',
+            list_id='gra-list-area',
+            onclick_novo="novoRegistroGrade()",
+            onclick_save="forceSubmitGrade()",
+            onclick_search="focarBuscaGra()",
+            onclick_filter="abrirModalFiltrosAvancados()",
+            onclick_clonar="arioneClonarRegistro('gra-form-area')",
+            onclick_export="exportarGrades()",
+            onclick_import="arioneToast('Importação em desenvolvimento para Grades.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Grades')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Grades')",
+            status="Standard PAAv1.0"
+        ) }}
+
+    </div>
+
+    <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ── FORMULÁRIO ── #}
+        <div id="gra-form-area" style="margin-bottom:20px; animation: feFadeUp 0.4s ease-out;">
+            <form id="gra-form" method="POST" action="{{ url_for('cadastros.card_grades') }}">
+                <input type="hidden" name="id" id="gra-id-hidden" value="">
+                <div class="fp-card" style="border-left: 5px solid #E67E22; border-radius: 12px; background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+                    <div class="fp-card-title" style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: rgba(230,126,34,0.02); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-edit" style="color:#E67E22; margin-right: 8px;"></i> <span id="gra-form-titulo">CADASTRO DE GRADE</span></span>
+                        <button type="button" onclick="novoRegistroGrade()" style="background:none; border:none; color:#E67E22; cursor:pointer; font-size: 11px; font-weight: 700;"><i class="fas fa-plus-circle"></i> LIMPAR / NOVO</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div class="fp-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Nome do Modelo de Grade <span style="color:#ef4444;">*</span></label>
+                                <input type="text" class="fp-input" name="nome" id="gra-nome-input" placeholder="EX: GRADE ADULTO P-GG" required oninput="this.value = this.value.toUpperCase()" style="width: 100%; font-weight: 800;">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Segmento / Categoria</label>
+                                <select class="fp-input" name="categoria" id="gra-cat-input" style="width: 100%; background: #fff;">
+                                    {% for cat in ['VESTUÁRIO', 'CALÇADOS', 'ACESSÓRIOS', 'OUTROS'] %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="fp-group">
+                            <label class="fp-label"><i class="fas fa-tags"></i> Itens da Grade (Sequência de Tamanhos)</label>
+                            <div id="gra-tags-container" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; min-height: 80px; background: #fcfdfe; cursor: text;" onclick="document.getElementById('gra-tag-input').focus()">
+                                <div id="gra-tags-list" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                                <input type="text" id="gra-tag-input" placeholder="Digite e aperte ENTER..." style="border: none; outline: none; font-size: 12px; font-weight: 700; color: #E67E22; flex: 1; min-width: 150px; background: transparent; text-transform: uppercase;">
+                            </div>
+                            <input type="hidden" name="itens" id="gra-itens-hidden" value="" required>
+                            <p style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-top: 8px; text-transform: uppercase;"><i class="fas fa-info-circle"></i> A ordem definida aqui será respeitada nos pedidos e relatórios.</p>
+                        </div>
+                    </div>
+                    <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-gra" onclick="forceSubmitGrade()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                            <i class="fas fa-save"></i> SALVAR GRADE COMPLETA
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTAGEM ── #}
+        <div class="fp-card" id="gra-list-area" style="border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
+                <span style="font-weight: 800; color: #1e293b;"><i class="fas fa-th-large" style="color: #E67E22; margin-right: 8px;"></i> Modelos de Grade</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #E67E22; font-size: 11px;"></i>
+                        <input type="text" id="gra-search-input" oninput="filtrarGrades()" placeholder="Busca rápida..." style="padding: 7px 12px 7px 32px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 11px; width: 220px; outline: none; font-weight: 700;">
+                    </div>
+                    <span id="gra-total-badge" style="background:#E67E22; color:#fff; padding:3px 12px; border-radius:20px; font-size:10px; font-weight:900;">{{ grades|length }} TOTAL</span>
+                </div>
+            </div>
+            
+            <div style="max-height: calc(100vh - 200px); overflow-y: auto;">
+                <table class="arione-table-hcm">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 20px;">MODELO DE GRADE</th>
+                            <th style="width: 150px;">SEGMENTO</th>
+                            <th>VARIAÇÕES INCLUSAS</th>
+                            <th style="width: 100px; text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-grades">
+                        {% for g in grades %}
+                        <tr class="grade-row" data-id="{{ g.id }}" data-nome="{{ g.nome|upper }}" onclick='editarGrade("{{ g.id }}", {{ g.nome|tojson|safe }}, {{ g.itens|tojson|safe }}, "{{ g.categoria }}")'>
+                            <td style="padding: 12px 20px; font-weight: 800; color: #1e293b; font-size: 13px;">{{ g.nome }}</td>
+                            <td><span style="font-size: 9px; font-weight: 900; background: #f1f5f9; color: #64748b; padding: 3px 10px; border-radius: 20px;">{{ g.categoria }}</span></td>
+                            <td>
+                                <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                                    {% for item in g.itens[:8] %}
+                                    <span style="background: #fffcf0; color: #E67E22; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; border: 1.5px solid rgba(230,126,34,0.1);">{{ item }}</span>
+                                    {% endfor %}
+                                    {% if g.itens|length > 8 %}
+                                    <span style="font-size: 10px; font-weight: 900; color: #94a3b8; margin-left: 5px;">+{{ g.itens|length - 8 }}</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display:flex; gap:12px; justify-content: center;">
+                                    <button type="button" class="fp-btn-icon" style="color:#2980B9;"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fp-btn-icon" style="color:#ef4444;" onclick="event.stopPropagation(); excluirGrade('{{ g.id }}', this)"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            let tagsList = [];
+            const hiddenInput = document.getElementById('gra-itens-hidden');
+            const tagsListDiv = document.getElementById('gra-tags-list');
+            const tagInput    = document.getElementById('gra-tag-input');
+
+            window.renderTags = function() {
+                tagsListDiv.innerHTML = '';
+                tagsList.forEach((tag, i) => {
+                    $(tagsListDiv).append(`<div class="grade-chip-item"><span>${tag}</span><i class="fas fa-times" onclick="removeTag(${i})"></i></div>`);
+                });
+                hiddenInput.value = tagsList.join(',');
+            };
+
+            window.addTag = function(v) {
+                v = v.trim().toUpperCase().replace(/,/g, '');
+                if(v && !tagsList.includes(v)) { tagsList.push(v); renderTags(); }
+                tagInput.value = '';
+            };
+
+            window.removeTag = function(i) { tagsList.splice(i, 1); renderTags(); };
+
+            if(tagInput) {
+                tagInput.addEventListener('keydown', e => {
+                    if(e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(tagInput.value); }
+                    else if(e.key === 'Backspace' && !tagInput.value) { removeTag(tagsList.length - 1); }
+                });
+            }
+
+            window.novoRegistroGrade = function() {
+                document.getElementById('gra-form-titulo').textContent = 'NOVA GRADE';
+                document.getElementById('gra-id-hidden').value = '';
+                document.getElementById('gra-form').reset();
+                document.getElementById('gra-nome-input').focus();
+            };
+
+            window.fecharFormGrade = function() { novoRegistroGrade(); };
+
+            window.editarGrade = function(id, nome, itens, cat) {
+                document.getElementById('gra-form-titulo').textContent = 'EDITANDO: ' + nome;
+                document.getElementById('gra-id-hidden').value = id;
+                document.getElementById('gra-nome-input').value = nome;
+                document.getElementById('gra-cat-input').value = cat;
+                tagsList = Array.isArray(itens) ? itens : (itens ? itens.split(',') : []);
+                renderTags();
+                window.scrollTo({top:0, behavior:'smooth'});
+                setTimeout(() => document.getElementById('gra-nome-input').focus(), 300);
+            };
+
+            window.forceSubmitGrade = async function() {
+                const form = document.getElementById('gra-form');
+                if(!form.checkValidity() || tagsList.length === 0) { 
+                    if(tagsList.length === 0) arioneToast('Adicione itens à grade!', 'warning');
+                    form.reportValidity(); return; 
+                }
+                const btn = document.getElementById('btn-salvar-gra');
+                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                try {
+                    const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
+                    if(r.ok) { arioneToast('Grade salva!', 'success'); setTimeout(() => location.reload(), 600); }
+                } catch(e) { arioneToast('Erro.', 'danger'); }
+            };
+
+            window.filtrarGrades = function() {
+                const f = document.getElementById('gra-search-input').value.toUpperCase();
+                document.querySelectorAll('.grade-row').forEach(r => {
+                    r.style.display = r.dataset.nome.includes(f) ? '' : 'none';
+                });
+            };
+
+            window.excluirGrade = async function(id, btn) {
+                if(!confirm('Excluir grade?')) return;
+                const r = await fetch(`/cadastros/cards/grades/excluir/${id}`, {method:'POST'});
+                if(r.ok) { $(btn).closest('tr').fadeOut(); arioneToast('Removido.', 'info'); }
+            };
+            
+            window.focarBuscaGra = function() { document.getElementById('gra-search-input').focus(); };
+            window.exportarGrades = function() { arioneExportar({url:'/cadastros/cards/grades/dados-json', modulo:'Grades'}); };
+        })();
+    </script>
+
+    <style>
+        .fp-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); outline: none; }
+        .arione-table-hcm { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .arione-table-hcm th { padding: 12px; text-align: left; color: #64748b; font-weight: 800; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+        .arione-table-hcm td { padding: 8px; vertical-align: middle; }
+    </style>
+</div>
+{% endblock %}

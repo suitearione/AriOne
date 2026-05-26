@@ -1,0 +1,337 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fe-wrap">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="fe-flash fe-flash-{{ cat }}">
+          <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form id="form-novo-setor" method="POST">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione, info_icon %}
+
+        {# ── CABEÇALHO MESTRE STICKY (PAAv1 §12-B) ── #}
+        {{ cabecalho_mestre_arione(
+            titulo='Gestão de Setores',
+            subtitulo='Cadastros > Empresa > Macro Estrutura',
+            icone='fa-sitemap',
+            cor_tema='#2980B9',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='empresa') ~ "'",
+            form_id='form-novo-setor',
+            onclick_novo='submeterNovoSetor()',
+            onclick_save='submeterNovoSetor()',
+            onclick_search='focarPesquisaSetor()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            onclick_clonar='clonarSetorAtivo()',
+            onclick_export="arioneToast('Exportação em desenvolvimento para Setores.','info')",
+            onclick_import="arioneToast('Importação em desenvolvimento para Setores.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Setores')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Setores')",
+            status='Ativo',
+            ajuda='Gerencie a macro estrutura corporativa, criando e organizando setores da empresa.',
+            tamanho='medio'
+        ) }}
+
+        <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+        {# ══════════ CARD PRINCIPAL ══════════ #}
+        {% if setor %}<input type="hidden" name="id" value="{{ setor.id }}">{% endif %}
+        <div class="fe-card" id="card-form-setor" style="border-left: 4px solid #2980B9;">
+            <div class="fe-card-title" style="color:#2980B9; background:rgba(41,128,185,0.05);">
+                <i class="fas fa-id-card"></i> Identificação do Setor
+            </div>
+            <div class="fe-card-body">
+                <div class="fe-row">
+                    <div class="fe-group" style="max-width:150px;">
+                        <label class="fe-label">Código</label>
+                        <input class="fe-input" type="text" name="codigo" readonly placeholder="(Automático)" style="background:#f8fafc; cursor:not-allowed;" value="{{ setor.codigo if setor else '' }}">
+                    </div>
+                    <div class="fe-group fe-flex-3">
+                        <label class="fe-label">Nome do Setor <span class="fe-req">*</span> {{ info_icon('Nome da diretoria ou macro setor da empresa.') }}</label>
+                        <input class="fe-input" type="text" name="nome" id="setor_nome" required placeholder="Ex: Financeiro, Produção..." value="{{ setor.nome if setor else '' }}" onblur="checkDuplicateField(this, 'Setor', 'nome')">
+                    </div>
+                    <div class="fe-group fe-flex-1" style="max-width:120px;">
+                        <label class="fe-label">Sigla</label>
+                        <input class="fe-input" type="text" name="sigla" placeholder="Ex: FIN" value="{{ setor.sigla if setor else '' }}">
+                    </div>
+                </div>
+                
+                <div class="fe-row" style="justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="window.location.href='{{ url_for('gestao.card_setores') }}'">Limpar</button>
+                    <button type="button" id="btn-salvar-setor" class="fe-btn fe-btn-salvar-footer" style="background: #2980B9; color: #fff;" onclick="submeterNovoSetor()">
+                        <i class="fas fa-save"></i> {% if setor %}Atualizar Setor{% else %}Salvar Setor{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# ══════════ LISTAGEM ══════════ #}
+        <div class="fe-card" id="card-lista-setores" style="margin-top:12px; border-left: 4px solid #3399ee;">
+            <div class="fe-card-title" style="color:#3399ee; background:rgba(51,153,238,0.05);">
+                <i class="fas fa-list-ul"></i> Setores Cadastrados
+            </div>
+            <div class="fe-card-body" style="padding:0;">
+                <div style="padding:10px 15px; border-bottom:1px solid #eee;">
+                    <input type="text" id="filtro-setor" oninput="filtrarTabelaSetores()" placeholder="Pesquisar setor por nome..."
+                        style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13px; outline:none; font-weight:700;">
+                </div>
+                <table class="fe-table-listing" id="tabela-setores">
+                    <thead>
+                        <tr>
+                            <th style="width:100px;">Código</th>
+                            <th>Setor</th>
+                            <th style="width:100px;">Sigla</th>
+                            <th style="width:120px; text-align:center;">Departamentos</th>
+                            <th style="width:100px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in setores %}
+                        <tr>
+                            <td><span style="font-weight: 700; color: #2980B9;">{{ s.codigo }}</span></td>
+                            <td><strong style="font-size: 13px;">{{ s.nome }}</strong></td>
+                            <td><code style="font-family: monospace; font-weight: 700;">{{ s.sigla or '--' }}</code></td>
+                            <td style="text-align:center;">
+                                <span class="fe-badge-count" style="background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:10px; font-size:10px; font-weight: 700;">{{ s.subsetores|length }}</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px;" title="Editar" onclick="window.location.href='{{ url_for('gestao.card_setores') }}?id={{ s.id }}'"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px; color: #e74c3c;" title="Excluir" onclick="confirmarExcluirSetor({{ s.id }}, '{{ s.nome }}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding:30px; text-align:center; color:#94a3b8; font-style:italic;">Nenhum setor cadastrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        </div>{# /fe-form-stage-medio #}
+    </form>
+</div>
+
+<script>
+async function submeterNovoSetor() {
+    const form = document.getElementById('form-novo-setor');
+    const btn  = document.getElementById('btn-salvar-setor');
+    const nome = form.querySelector('[name="nome"]');
+
+    // Validação (PAAv1 §1-A)
+    nome.classList.remove('error');
+    if (!nome.value.trim()) {
+        nome.classList.add('error');
+        arioneToast('O nome do setor é obrigatório!', 'warning');
+        nome.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // Disable botão (PAAv1 §4-B)
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    }
+
+    try {
+        const response = await fetch('/cadastros/setores/novo', {
+            method: 'POST',
+            body: new URLSearchParams(new FormData(form))
+        });
+        if (response.ok) {
+            arioneToast('Setor salvo com sucesso!', 'success');
+            setTimeout(() => window.location.href='{{ url_for('gestao.card_setores') }}', 1000);
+        } else {
+            arioneToast('Erro ao salvar setor.', 'danger');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Salvar Setor';
+            }
+        }
+    } catch(e) {
+        arioneToast('Erro crítico na persistência.', 'danger');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Setor';
+        }
+    }
+}
+
+async function confirmarExcluirSetor(id, nome) {
+    if(!confirm('Deseja realmente excluir o setor "' + nome + '"?')) return;
+    
+    try {
+        const response = await fetch('/cadastros/setores/excluir/' + id);
+        if(response.ok) {
+            window.location.href='{{ url_for('gestao.card_setores') }}';
+        }
+    } catch(e) {
+        console.error("Erro ao excluir:", e);
+    }
+}
+
+function focarPesquisaSetor() {
+    const input = document.getElementById('filtro-setor');
+    if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => input.focus(), 350);
+        arioneToast('🔍 Campo de pesquisa ativado', 'info');
+    } else {
+        arioneToast('Campo de pesquisa não encontrado.', 'warning');
+    }
+}
+
+function abrirModalFiltrosAvancados() {
+    // Verifica se o modal já existe
+    let modal = document.getElementById('modal-filtros-setores');
+    if (modal) {
+        modal.style.display = 'flex';
+        return;
+    }
+
+    // Cria o modal
+    modal = document.createElement('div');
+    modal.id = 'modal-filtros-setores';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:10000;';
+    modal.innerHTML = `
+        <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:#2980B9; font-size:18px; font-weight:700;">Filtros Avançados</h3>
+                <button onclick="document.getElementById('modal-filtros-setores').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#999;">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Código</label>
+                    <input type="text" id="filtro-codigo" placeholder="Ex: 001" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Nome</label>
+                    <input type="text" id="filtro-nome" placeholder="Ex: Financeiro" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Sigla</label>
+                    <input type="text" id="filtro-sigla" placeholder="Ex: FIN" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Departamentos</label>
+                    <select id="filtro-deptos" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                        <option value="">Todos</option>
+                        <option value="0">Sem departamentos</option>
+                        <option value="1">Com departamentos</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:24px;">
+                <button onclick="aplicarFiltrosSetores()" style="flex:1; background:#2980B9; color:#fff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Aplicar</button>
+                <button onclick="limparFiltrosSetores()" style="flex:1; background:#f1f5f9; color:#64748b; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Limpar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function aplicarFiltrosSetores() {
+    const filtroCodigo = document.getElementById('filtro-codigo').value.toLowerCase();
+    const filtroNome = document.getElementById('filtro-nome').value.toLowerCase();
+    const filtroSigla = document.getElementById('filtro-sigla').value.toLowerCase();
+    const filtroDeptos = document.getElementById('filtro-deptos').value;
+
+    const table = document.getElementById('tabela-setores');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) {
+        const tds = tr[i].getElementsByTagName('td');
+        if (tds.length < 4) continue;
+
+        const codigo = (tds[0].textContent || '').toLowerCase();
+        const nome = (tds[1].textContent || '').toLowerCase();
+        const sigla = (tds[2].textContent || '').toLowerCase();
+        const deptosCount = parseInt(tds[3].textContent || '0');
+
+        let mostrar = true;
+
+        if (filtroCodigo && !codigo.includes(filtroCodigo)) mostrar = false;
+        if (filtroNome && !nome.includes(filtroNome)) mostrar = false;
+        if (filtroSigla && !sigla.includes(filtroSigla)) mostrar = false;
+        if (filtroDeptos === '0' && deptosCount > 0) mostrar = false;
+        if (filtroDeptos === '1' && deptosCount === 0) mostrar = false;
+
+        tr[i].style.display = mostrar ? '' : 'none';
+    }
+
+    document.getElementById('modal-filtros-setores').style.display = 'none';
+    arioneToast('Filtros aplicados com sucesso', 'success');
+}
+
+function limparFiltrosSetores() {
+    document.getElementById('filtro-codigo').value = '';
+    document.getElementById('filtro-nome').value = '';
+    document.getElementById('filtro-sigla').value = '';
+    document.getElementById('filtro-deptos').value = '';
+
+    const table = document.getElementById('tabela-setores');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+    for (let i = 1; i < tr.length; i++) {
+        tr[i].style.display = '';
+    }
+
+    document.getElementById('modal-filtros-setores').style.display = 'none';
+    arioneToast('Filtros limpos', 'info');
+}
+
+function alternarVisaoFormLista() {
+    const cardForm = document.getElementById('card-form-setor');
+    const lista = document.getElementById('card-lista-setores');
+    if (!cardForm || !lista) { arioneToast('Nenhum container localizado', 'warning'); return; }
+    if (cardForm.style.display === 'none') {
+        cardForm.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        arioneToast('Visualizando Formulário + Lista', 'info');
+    } else {
+        cardForm.style.display = 'none';
+        lista.scrollIntoView({ behavior: 'smooth' });
+        arioneToast('Visualizando Lista de Registros', 'info');
+    }
+}
+
+function clonarSetorAtivo() {
+    const form = document.getElementById('form-novo-setor');
+    const idInput = form ? form.querySelector('[name="id"]') : null;
+    if (!idInput || !idInput.value || idInput.value === 'new' || idInput.value === '0') {
+        arioneToast('Apenas registros salvos podem ser clonados.', 'info');
+        return;
+    }
+    if (!confirm('🛡️ AriOne: Deseja clonar este registro para criar um novo item idêntico?')) return;
+    idInput.value = 'new';
+    const nome = form.querySelector('[name="nome"]') || form.querySelector('[name="descricao"]');
+    if (nome && !nome.value.startsWith('CÓPIA - ')) nome.value = 'CÓPIA - ' + nome.value;
+    arioneToast('✅ Modo Clonagem Ativado! Ajuste os dados e salve como novo.', 'success');
+}
+
+function filtrarTabelaSetores() {
+    const input = document.getElementById('filtro-setor');
+    if (!input) return;
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('tabela-setores');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+    for (let i = 1; i < tr.length; i++) {
+        let td = tr[i].getElementsByTagName('td')[1];
+        if (td) {
+            let txtValue = td.textContent || td.innerText;
+            tr[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
+        }
+    }
+}
+</script>
+{% endblock %}

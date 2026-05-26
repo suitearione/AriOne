@@ -1,0 +1,475 @@
+{# =============================================================================
+   Caminho  : templates/operacoes/cards/vendas/form_vendas_tabelas_precos.html
+   Função   : Gestão de Tabelas de Preços (ARI-ONE OPERACIONAL GOLDEN)
+   Padrão   : Quiet Luxury / Dual Column Orchestrator
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<style>
+    /* 🛡️ BLINDAGEM PAA §12-E: O cabeçalho deve 'beijar' o topo */
+    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+</style>
+
+<div class="fe-wrap fp-wrap mod-vendas" style="background: #f4f6f9; min-height: 100vh; padding-top: 0 !important;">
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE (PAA §12-B) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Gestão de Tabelas de Preços",
+        subtitulo="Operações > Comercial > Precificação",
+        icone="fa-tags",
+        form_id="form-tabela-preco",
+        onclick_novo="novoRegistroTabela()",
+        onclick_save="arioneSalvarDocumento('tabela_preco', this, 'form-tabela-preco')",
+        cor_tema="#03A9F4",
+        func_fechar="fecharModalGlobal()",
+        aba_retorno="/operacoes/?aba=vendas",
+        status="Configurando Política Comercial"
+    ) }}
+
+    <form id="form-tabela-preco" method="POST" action="{{ url_for('operacoes.card_tabelas_precos') }}" novalidate>
+        <input type="hidden" name="id" id="tabela_id" value="{{ tabela.id if tabela else '' }}">
+
+        <div style="display: flex; flex-direction: column; gap: 24px; padding: 0 2px;">
+            
+            {# CONFIGURAÇÃO MESTRE (FULL WIDTH) #}
+            <div style="width: 100%;">
+                <div class="fp-card" style="margin: 0;">
+                    <div class="fp-card-title">
+                        <i class="fas fa-sliders-h"></i> Parâmetros da Política Comercial
+                    </div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Nome da Tabela de Preços</label>
+                                <input type="text" name="nome" class="fp-input" value="{{ tabela.nome if tabela else '' }}" placeholder="Ex: TABELA ATACADO — VERÃO 2026" style="font-weight: 800; color: #1e293b;">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Público / Perfil</label>
+                                <select name="perfil_cliente" class="fp-input" style="font-weight: 700;">
+                                    <option value="">SELECIONE UM PERFIL</option>
+                                    {% for p in perfis %}
+                                        <option value="{{ p.nome }}" {% if tabela and tabela.perfil_cliente == p.nome %}selected{% endif %}>{{ p.nome|upper }}</option>
+                                    {% endfor %}
+                                    <hr>
+                                    <option value="todos" {% if tabela and tabela.perfil_cliente == 'todos' %}selected{% endif %}>TODOS OS CLIENTES (GERAL)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Data Início (Vigência)</label>
+                                <input type="date" name="data_inicio" class="fp-input" value="{{ tabela.data_inicio.strftime('%Y-%m-%d') if tabela and tabela.data_inicio else '' }}">
+                            </div>
+                            <div class="fp-group fp-flex-1">
+                                <label class="fp-label">Data Fim (Expiração)</label>
+                                <input type="date" name="data_fim" class="fp-input" value="{{ tabela.data_fim.strftime('%Y-%m-%d') if tabela and tabela.data_fim else '' }}">
+                            </div>
+                        </div>
+
+                        {# BOX DE CÁLCULO (DESTAQUE ESTRATÉGICO) #}
+                        <div style="background: #fff; border: 2px solid #D35400; border-radius: 16px; padding: 25px; margin-top: 20px; position: relative; box-shadow: 0 10px 30px rgba(211, 84, 0, 0.08);">
+                            <div style="position: absolute; top: -12px; left: 20px; background: #D35400; color: #fff; padding: 2px 12px; border-radius: 20px; font-size: 10px; font-weight: 900;">MOTOR DE CÁLCULO ARIONE</div>
+                            
+                            <div class="fp-row" style="margin-bottom: 0;">
+                                <div class="fp-group fp-flex-1">
+                                    <label class="fp-label">Base de Cálculo</label>
+                                    <select name="base_calculo" class="fp-input" style="font-weight: 800; border-color: #D35400;">
+                                        <option value="venda_base" {% if tabela and tabela.base_calculo == 'venda_base' %}selected{% endif %}>PREÇO DE VENDA PADRÃO</option>
+                                        <option value="custo_base" {% if tabela and tabela.base_calculo == 'custo_base' %}selected{% endif %}>PREÇO DE CUSTO BRUTO</option>
+                                        <option value="custo_liquido" {% if tabela and tabela.base_calculo == 'custo_liquido' %}selected{% endif %}>PREÇO DE CUSTO LÍQUIDO</option>
+                                    </select>
+                                </div>
+                                <div class="fp-group fp-flex-1">
+                                    <label class="fp-label">Tipo de Ajuste</label>
+                                    <select name="ajuste_tipo" class="fp-input">
+                                        <option value="porcentagem" {% if tabela and tabela.ajuste_tipo == 'porcentagem' %}selected{% endif %}>PORCENTAGEM (%)</option>
+                                        <option value="fixo" {% if tabela and tabela.ajuste_tipo == 'fixo' %}selected{% endif %}>VALOR FIXO (R$)</option>
+                                    </select>
+                                </div>
+                                <div class="fp-group fp-flex-1">
+                                    <label class="fp-label">Variação (+ ou -)</label>
+                                    <input type="text" name="ajuste_valor" class="fp-input" style="font-weight: 900; color: #D35400; text-align: right; font-size: 18px;" value="{{ "{:,.2f}".format(tabela.ajuste_valor or 0).replace(',', 'X').replace('.', ',').replace('X', '.') if tabela else '0,00' }}" oninput="this.value = arioneMaskMoney(this.value)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fp-group" style="margin-top: 25px;">
+                            <label class="fp-label">Notas de Estratégia Comercial</label>
+                            <textarea name="descricao" class="fp-input" style="height: 80px; resize: none;" placeholder="Descreva aqui o objetivo desta política de preços...">{{ tabela.descricao if tabela else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {# ⚡ HUB DE INTEGRAÇÃO EM MASSA (ARIONE POWER) #}
+                <div class="fp-card" style="margin-top: 24px; background: #fffaf5; border: 1.5px dashed #D35400; box-shadow: none;">
+                    <div class="fp-card-title" style="color: #D35400; border: none; padding-bottom: 0;">
+                        <i class="fas fa-magic"></i> Ações de Integração em Massa
+                    </div>
+                    <div class="fp-card-body" style="padding: 15px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 150px; gap: 15px; align-items: flex-end;">
+                            <div class="fp-group" style="margin-bottom: 0;">
+                                <label class="fp-label" style="font-size: 10px;">Categoria</label>
+                                <select id="filtro-categoria" class="fp-input" style="height: 35px; font-size: 11px;">
+                                    <option value="">TODAS AS CATEGORIAS</option>
+                                    {% for cat in categorias %}
+                                        <option value="{{ cat.id }}">{{ cat.nome|upper }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="fp-group" style="margin-bottom: 0;">
+                                <label class="fp-label" style="font-size: 10px;">Subcategoria</label>
+                                <select id="filtro-subcategoria" class="fp-input" style="height: 35px; font-size: 11px;">
+                                    <option value="">TODAS AS SUB</option>
+                                    {% for sub in subcategorias %}
+                                        <option value="{{ sub.id }}">{{ sub.nome|upper }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="fp-group" style="margin-bottom: 0;">
+                                <label class="fp-label" style="font-size: 10px;">Fornecedor</label>
+                                <select id="filtro-fornecedor" class="fp-input" style="height: 35px; font-size: 11px;">
+                                    <option value="">TODOS FORNECEDORES</option>
+                                    <optgroup label="ESTRATÉGICOS (FP)">
+                                        {% for f in fornecedores if f.is_fp %}
+                                            <option value="{{ f.id }}">⭐ {{ (f.nome_fantasia or f.razao_social)|upper }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    <optgroup label="DEMAIS PARCEIROS">
+                                        {% for f in fornecedores if not f.is_fp %}
+                                            <option value="{{ f.id }}">{{ (f.nome_fantasia or f.razao_social)|upper }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="fp-group" style="margin-bottom: 0;">
+                                <label class="fp-label" style="font-size: 10px;">Filtro Especial</label>
+                                <select id="filtro-fp" class="fp-input" style="height: 35px; font-size: 11px; border: 1px solid #E67E22; color: #E67E22; font-weight: 700;">
+                                    <option value="todos">TODOS OS PRODUTOS</option>
+                                    <option value="somente_fp">APENAS FORNECEDORES FP</option>
+                                </select>
+                            </div>
+                            <button type="button" onclick="arioneIntegrarEmMassa()" class="fp-btn-full" style="background: #D35400; color: #fff; height: 35px; font-size: 10px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#A04000'" onmouseout="this.style.background='#D35400'">
+                                <i class="fas fa-plus-circle"></i> ADICIONAR LOTE
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px; text-align: center;">
+                            <a href="javascript:void(0)" onclick="arioneIntegrarTudo()" style="font-size: 10px; color: #64748b; text-decoration: none; font-weight: 700;">
+                                <i class="fas fa-sync"></i> OU ADICIONAR TODO O CATÁLOGO DE PRODUTOS
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {# RESUMO DE IMPACTO (DASHBOARD MINI) #}
+                <div class="fp-card" style="margin-top: 20px; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #fff; border: none; border-left: 6px solid #D35400;">
+                    <div class="fp-card-body" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 25px;">
+                        <div>
+                            <div style="font-size: 10px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Produtos Impactados</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #E67E22;" id="contagem-itens-tabela">{{ tabela.itens|length if tabela else 0 }} ITENS</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 10px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Margem Média Estimada</div>
+                            <div style="font-size: 22px; font-weight: 900; color: #27AE60;" id="margem-media-tabela">0.00%</div>
+                        </div>
+                    </div>
+                </div>
+
+                {# 📦 GRADE DE ITENS DA TABELA (ARI-ONE DYNAMIC GRID) #}
+                <div class="fp-card" style="margin-top: 20px;">
+                    <div class="fp-card-title" style="background: #f8fafc; border-bottom: 2px solid #D35400; display: flex; justify-content: space-between;">
+                        <span><i class="fas fa-boxes"></i> PRODUTOS NA TABELA</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="busca-produto-tabela" class="fp-input" placeholder="🔍 Buscar por SKU ou Nome..." list="lista-produtos-catalogo" style="width: 300px; height: 30px; font-size: 12px;" oninput="arioneAutoAddProdutoTabela(this)">
+                            <datalist id="lista-produtos-catalogo">
+                                {% for p in produtos_catalogo %}
+                                    <option value="{{ p.cod_interno or p.referencia }}">{{ p.descricao|upper }}</option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="fp-card-body" style="padding: 0;">
+                        <table class="fp-table" id="grade-itens-tabela" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f1f5f9; text-align: left;">
+                                    <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 120px;">SKU</th>
+                                    <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b;">Descrição do Produto</th>
+                                    <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 120px; text-align: right;">Preço Base</th>
+                                    <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 120px; text-align: right;">Preço Tabela</th>
+                                    <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 100px; text-align: center;">Margem</th>
+                                    <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-itens-tabela">
+                                {% if tabela %}
+                                    {% for item in tabela.itens %}
+                                    <tr class="item-row">
+                                        <td style="padding: 10px 12px; font-size: 12px; font-family: 'Roboto Mono', monospace;">{{ item.produto.cod_interno or item.produto.sku }}</td>
+                                        <td style="padding: 10px 12px; font-size: 12px; font-weight: 700;">{{ item.produto.descricao|upper }}</td>
+                                        <td style="padding: 10px 12px; font-size: 12px; text-align: right; color: #94a3b8;">R$ {{ "{:,.2f}".format(item.produto.valor_venda or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}</td>
+                                        <td style="padding: 10px 12px; text-align: right;">
+                                            <input type="text" name="item_preco[]" class="fp-input" value="{{ "{:,.2f}".format(item.preco_venda or 0).replace(',', 'X').replace('.', ',').replace('X', '.') }}" style="width: 100px; text-align: right; font-weight: 800; color: #D35400;" oninput="this.value = arioneMaskMoney(this.value)">
+                                            <input type="hidden" name="item_produto_id[]" value="{{ item.produto_id }}">
+                                        </td>
+                                        <td style="padding: 10px 12px; text-align: center;">
+                                            <span class="fe-badge-success" style="font-size: 9px; background: #27AE60; color: #fff; padding: 2px 6px; border-radius: 4px;">SALVO</span>
+                                        </td>
+                                        <td style="padding: 10px 12px; text-align: center;">
+                                            <button type="button" onclick="removerItemTabela(this)" style="background: none; border: none; color: #e53e3e; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                        
+                        <div id="vazio-grade-itens" style="padding: 40px; text-align: center; color: #94a3b8; {% if tabela and tabela.itens %}display: none;{% endif %}">
+                            <i class="fas fa-search-plus" style="font-size: 30px; opacity: 0.2; margin-bottom: 15px; display: block;"></i>
+                            <span style="font-size: 12px; font-weight: 600;">Use a busca acima para adicionar produtos a esta tabela</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# SEÇÃO DE LISTAGEM INFERIOR (TABELAS SALVAS) - REFORÇADA #}
+            <div style="width: 100%; margin-top: 40px; padding-bottom: 50px;">
+                <div class="fp-card" style="margin: 0; border: 2px solid #e2e8f0; background: #fff;">
+                    <div class="fp-card-title" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #1e293b; font-weight: 800;"><i class="fas fa-list-ul"></i> POLÍTICAS DE PREÇOS CADASTRADAS</span>
+                        <span style="background: #D35400; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px;">{{ tabelas|length }} TOTAL</span>
+                    </div>
+                    <div class="fp-card-body" style="padding: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;" id="grid-tabelas-salvas">
+                            {% if not tabelas %}
+                            <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #94a3b8;">
+                                <i class="fas fa-info-circle" style="font-size: 24px; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+                                <span style="font-size: 11px; font-weight: 600;">Nenhuma tabela localizada. Crie sua primeira política acima!</span>
+                            </div>
+                            {% endif %}
+
+                            {% for t in tabelas %}
+                            <div class="tabela-card-item {{ 'active' if tabela and t.id == tabela.id }}" 
+                                 onclick="window.location.href='?id={{ t.id }}&modal=1'"
+                                 style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <div style="font-size: 10px; font-weight: 800; color: #D35400; margin-bottom: 4px;">POLÍTICA #{{ t.id }}</div>
+                                        <div style="font-size: 14px; font-weight: 800; color: #1e293b;">{{ t.nome|upper }}</div>
+                                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">PERFIL: {{ t.perfil_cliente|upper }}</div>
+                                    </div>
+                                    <div style="background: #f0fdf4; color: #16a34a; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">
+                                        {{ t.ajuste_valor }}%
+                                    </div>
+                                </div>
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="display: flex; gap: 10px;">
+                                        <span style="font-size: 10px; color: #94a3b8;"><i class="fas fa-calendar-alt"></i> ATIVA</span>
+                                        <button type="button" onclick="arioneExcluirTabela('{{ t.id }}', event)" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 10px;" title="Excluir Tabela">
+                                            <i class="fas fa-trash-alt"></i> EXCLUIR
+                                        </button>
+                                    </div>
+                                    <span style="font-size: 10px; font-weight: 700; color: #D35400;">EDITAR <i class="fas fa-arrow-right"></i></span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<style>
+    .tabela-card-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: #D35400;
+    }
+    .tabela-card-item.active {
+        border: 2px solid #D35400;
+        background: #fffaf5;
+    }
+</style>
+    </form>
+</div>
+
+<style>
+    .item-row { border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
+    .item-row:hover { background: #fffcf0; }
+    .fp-table th { font-weight: 800; }
+</style>
+
+<script>
+    // 🎭 Motor de Automação de Itens (HCM DYNAMIC)
+    function arioneAutoAddProdutoTabela(input) {
+        const val = input.value.trim();
+        const list = document.getElementById('lista-produtos-catalogo');
+        if (!list || !val) return;
+        
+        const opt = [...list.options].find(o => o.value === val);
+        if (opt) {
+            adicionarItemNaGrade(val, opt.text);
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    function adicionarItemNaGrade(sku, descricao) {
+        const tbody = document.getElementById('tbody-itens-tabela');
+        const vazio = document.getElementById('vazio-grade-itens');
+        
+        // Verifica se já existe
+        const existe = [...tbody.querySelectorAll('td')].some(td => td.innerText === sku);
+        if (existe) {
+            arioneToast("Este produto já está na tabela!", "warning");
+            return;
+        }
+
+        vazio.style.display = 'none';
+
+        const tr = document.createElement('tr');
+        tr.className = 'item-row';
+        tr.innerHTML = `
+            <td style="padding: 10px 12px; font-size: 12px; font-family: 'Roboto Mono', monospace;">${sku}</td>
+            <td style="padding: 10px 12px; font-size: 12px; font-weight: 700;">${descricao.toUpperCase()}</td>
+            <td style="padding: 10px 12px; font-size: 12px; text-align: right; color: #94a3b8;">CALCULANDO...</td>
+            <td style="padding: 10px 12px; text-align: right;">
+                <input type="text" name="item_preco[]" class="fp-input" value="0,00" style="width: 100px; text-align: right; font-weight: 800; color: #D35400;" oninput="this.value = arioneMaskMoney(this.value)">
+                <input type="hidden" name="item_produto_id[]" value="${sku}">
+            </td>
+            <td style="padding: 10px 12px; text-align: center;">
+                <span class="fe-badge-info" style="font-size: 9px;">NOVO</span>
+            </td>
+            <td style="padding: 10px 12px; text-align: center;">
+                <button type="button" onclick="removerItemTabela(this)" style="background: none; border: none; color: #e53e3e; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        `;
+        tbody.prepend(tr);
+        arioneToast(`✅ ${sku} adicionado à tabela`, "success");
+        atualizarContadoresTabela();
+    }
+
+    function removerItemTabela(btn) {
+        btn.closest('tr').remove();
+        atualizarContadoresTabela();
+        const tbody = document.getElementById('tbody-itens-tabela');
+        if (tbody.children.length === 0) {
+            document.getElementById('vazio-grade-itens').style.display = 'block';
+        }
+    }
+
+    function atualizarContadoresTabela() {
+        const total = document.getElementById('tbody-itens-tabela').children.length;
+        document.getElementById('contagem-itens-tabela').innerText = `${total} ITENS`;
+    }
+
+    function novoRegistroTabela() {
+        const form = document.getElementById('form-tabela-preco');
+        form.reset();
+        document.getElementById('tabela_id').value = '';
+        document.querySelectorAll('.tabela-item').forEach(i => i.classList.remove('active'));
+        form.querySelector('[name="nome"]').focus();
+        
+        if(typeof arioneToast === 'function') arioneToast("Nova política comercial iniciada", "success");
+    }
+
+    function arioneMaskMoney(val) {
+        let v = val.replace(/\D/g, '');
+        v = (v / 100).toFixed(2) + '';
+        v = v.replace(".", ",");
+        v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return v;
+    }
+
+    // ── LÓGICA DE INTEGRAÇÃO EM MASSA (ARIONE POWER) ──
+    async function arioneIntegrarEmMassa(tudo = false) {
+        let cat = document.getElementById('filtro-categoria').value;
+        let sub = document.getElementById('filtro-subcategoria').value;
+        let fordec = document.getElementById('filtro-fornecedor').value;
+        let fp_filter = document.getElementById('filtro-fp').value;
+        
+        if (!tudo && !cat && !sub && !fordec && fp_filter === 'todos') {
+            if (confirm("🛡️ AriOne: Nenhum filtro selecionado. Deseja adicionar TODO o catálogo de produtos?")) {
+                tudo = true;
+            } else {
+                return;
+            }
+        }
+
+        const confirmMsg = tudo ? 
+            "🛡️ ATENÇÃO: Deseja realmente adicionar TODO o catálogo de produtos?" :
+            "🛡️ AriOne: Deseja adicionar os produtos filtrados a esta tabela?";
+
+        if (!tudo && !confirm(confirmMsg)) return;
+
+        if (window.arioneToast) window.arioneToast('⏳ Buscando e integrando produtos...', 'info');
+        
+        try {
+            const url = `/operacoes/api/comercial/buscar-lote-produtos?categoria=${cat}&subcategoria=${sub}&fornecedor=${fordec}&fp=${fp_filter}&tudo=${tudo}`;
+            const response = await fetch(url);
+            const result = await response.json();
+            
+            if (result.success && result.produtos.length > 0) {
+                result.produtos.forEach(p => {
+                    adicionarProdutoAoGrid(p.sku, p.descricao, p.preco_base, p.id);
+                });
+                arioneToast(`🚀 ${result.produtos.length} produtos integrados!`, 'success');
+            } else {
+                arioneToast('⚠️ Nenhum produto encontrado com estes filtros', 'warning');
+            }
+        } catch (e) {
+            console.error(e);
+            arioneToast('❌ Erro na integração em massa', 'danger');
+        }
+    }
+
+    function arioneIntegrarTudo() {
+        arioneIntegrarEmMassa(true);
+    }
+
+    function adicionarProdutoAoGrid(sku, descricao, precoBase, id) {
+        const tbody = document.getElementById('tbody-itens-tabela');
+        const vazio = document.getElementById('vazio-grade-itens');
+        
+        const existente = Array.from(tbody.querySelectorAll('input[name="item_produto_id[]"]'))
+                               .find(i => i.value == id);
+        if (existente) return;
+
+        if (vazio) vazio.style.display = 'none';
+
+        const tr = document.createElement('tr');
+        tr.className = 'item-row';
+        tr.innerHTML = `
+            <td style="padding: 10px 12px; font-size: 12px; font-family: 'Roboto Mono', monospace;">${sku}</td>
+            <td style="padding: 10px 12px; font-size: 12px; font-weight: 700;">${descricao.toUpperCase()}</td>
+            <td style="padding: 10px 12px; font-size: 12px; text-align: right; color: #94a3b8;">R$ ${precoBase.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+            <td style="padding: 10px 12px; text-align: right;">
+                <input type="text" name="item_preco[]" class="fp-input" value="${precoBase.toLocaleString('pt-BR', {minimumFractionDigits: 2})}" style="width: 100px; text-align: right; font-weight: 800; color: #D35400;" oninput="this.value = arioneMaskMoney(this.value)">
+                <input type="hidden" name="item_produto_id[]" value="${id}">
+            </td>
+            <td style="padding: 10px 12px; text-align: center;">
+                <span class="fe-badge-info" style="font-size: 9px;">NOVO</span>
+            </td>
+            <td style="padding: 10px 12px; text-align: center;">
+                <button type="button" onclick="removerItemTabela(this)" style="background: none; border: none; color: #e53e3e; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+            </td>
+        `;
+        tbody.prepend(tr);
+        atualizarContadoresTabela();
+    }
+
+    async function arioneExcluirTabela(id, event) {
+        if (event) event.stopPropagation();
+        
+        const ok = await arioneConfirm('🛡️ AriOne: Deseja realmente remover esta política comercial e todos os seus itens permanentemente?');
+        if (ok) {
+            window.location.href = `/operacoes/cards/vendas/tabelas-precos/excluir/${id}`;
+        }
+    }
+
+    console.log('📈 AriOne Elite: Motor de Precificação Operacional Ativo');
+</script>
+{% endblock %}

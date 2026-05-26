@@ -1,0 +1,95 @@
+<!-- templates/financeiro/grids/grid_caixas.html -->
+<div id="modal-overlay-cxa" class="ge-modal-overlay" onclick="fecharModalCxa(event)">
+    <div class="ge-modal" onclick="event.stopPropagation()">
+        <div class="ge-modal-header">
+            <div class="ge-modal-title"><i id="modal-icon-cxa" class="ge-modal-icon"></i><span id="modal-titulo-cxa">Formulário</span></div>
+            <button class="ge-modal-fechar" onclick="fecharModalCxa()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ge-modal-body" id="modal-body-cxa"></div>
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fas fa-cash-register"></i><span>Caixas</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_caixas') }}'" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
+            <i class="fas fa-cash-register ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-cash-register ge-card-icon"></i></div>
+            <span class="ge-card-label">Caixas</span><span class="ge-card-desc">Abertura e fechamento</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_fluxo_caixa') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+            <i class="fas fa-water ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-water ge-card-icon"></i></div>
+            <span class="ge-card-label">Fluxo de Caixa</span><span class="ge-card-desc">Análise de DRE e Saldo</span>
+        </div>
+
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_movimentacoes') }}'" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,0.10);">
+            <i class="fas fa-exchange-alt ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-exchange-alt ge-card-icon"></i></div>
+            <span class="ge-card-label">Movimentações</span><span class="ge-card-desc">Extrato Geral Consolidado</span>
+        </div>
+
+    </div>
+</div>
+
+<script>
+async function abrirModalCxa(tipo) {
+    let url = `/financeiro/card/${tipo}`;
+    let titulo = '';
+    let icone = '';
+
+    if (tipo === 'fluxo-caixa') {
+        titulo = 'Fluxo de Caixa Consolidado';
+        icone = 'fas fa-water';
+    } else if (tipo === 'movimentacoes') {
+        titulo = 'Extrato Geral de Movimentações';
+        icone = 'fas fa-exchange-alt';
+    }
+
+    try {
+        const response = await fetch(url);
+        const html = await response.text();
+        
+        document.getElementById('modal-titulo-cxa').textContent = titulo;
+        document.getElementById('modal-icon-cxa').className = icone + ' ge-modal-icon';
+        const body = document.getElementById('modal-body-cxa');
+        body.innerHTML = html;
+
+        // Blindagem de Scripts para o conteúdo carregado via AJAX
+        body.querySelectorAll('script').forEach(script => {
+            const novo = document.createElement('script');
+            [...script.attributes].forEach(attr => novo.setAttribute(attr.name, attr.value));
+            novo.appendChild(document.createTextNode(script.innerHTML));
+            script.parentNode.replaceChild(novo, script);
+        });
+
+        document.getElementById('modal-overlay-cxa').classList.add('ativo');
+        document.body.style.overflow = 'hidden';
+    } catch (e) {
+        console.error("Erro ao carregar card de caixas:", e);
+        if (typeof arioneToast === 'function') arioneToast("Erro ao carregar módulo", "danger");
+    }
+}
+function fecharModalCxa(e) { 
+    if (e && e.target !== document.getElementById('modal-overlay-cxa')) return;
+    document.getElementById('modal-overlay-cxa').classList.remove('ativo'); 
+    document.body.style.overflow = ''; 
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') fecharModalCxa(); });
+</script>
+
+<style>
+    .ge-cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: flex-start !important;
+        padding: 10px 0;
+    }
+    .ge-card {
+        width: 180px;
+        margin: 0 !important;
+    }
+</style>

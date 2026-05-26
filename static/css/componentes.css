@@ -1,0 +1,238 @@
+/* /static/css/componentes.css */
+
+/* --------------------------------------------------------------- */
+/* BLOCO: BARRAS SUPERIORES                                        */
+/* --------------------------------------------------------------- */
+
+.arione-bar-blue-new {
+    background-color: #7a2535;
+    height: 10px;
+    width: 100%;
+}
+
+.arione-bar-white-new {
+    background-color: #ffffff;
+    height: 60px;
+    width: 100%;
+    border-bottom: 1px solid #e2e8f0;
+    box-sizing: border-box;
+    position: sticky;
+    top: 10px;
+    z-index: 1000;
+}
+
+header {
+    flex-shrink: 0;
+}
+
+.arione-bar-inner-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    height: 100%;
+}
+
+/* --------------------------------------------------------------- */
+/* BLOCO: INFORMAÇÕES DA ESQUERDA                                  */
+/* --------------------------------------------------------------- */
+
+.arione-left-info-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.company-status-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.label-status {
+    font-size: 18px;
+    font-weight: 800;
+    color: #7a2535;
+    letter-spacing: 0.5px;
+}
+
+.arione-company-name-header {
+    font-weight: 700;
+    color: #333;
+    font-size: 15px;
+    text-transform: uppercase;
+}
+
+.info-divider {
+    color: #ddd;
+    font-size: 18px;
+    margin: 0 5px;
+}
+
+.arione-date-display {
+    color: #666;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------------- */
+/* BLOCO: INFORMAÇÕES DA DIREITA                                   */
+/* --------------------------------------------------------------- */
+
+.arione-right-info-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.arione-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.arione-search-wrapper i {
+    position: absolute;
+    left: 10px;
+    color: #999;
+    font-size: 12px;
+}
+
+.arione-global-search {
+    background-color: #f4f4f4;
+    border: 1px solid #7A255F;
+    border-radius: 20px;
+    padding: 6px 12px 6px 30px;
+    width: 220px;
+    font-size: 13px;
+}
+
+.arione-user-area-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.arione-user-name {
+    font-weight: 600;
+    color: #444;
+    font-size: 14px;
+}
+
+.arione-avatar-mini-circle {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #7A255F;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --------------------------------------------------------------- */
+/* BLOCO: CONTAINER DE PÁGINA (ABAS + CONTEÚDO)                    */
+/* --------------------------------------------------------------- */
+
+.arione-page-wrapper {
+    padding: 20px 25px;
+}
+
+.arione-tabs-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.arione-content-box {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 22px;
+    min-height: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+/* --------------------------------------------------------------- */
+/* BLOCO: ABAS PADRÃO ARIONE                                       */
+/* --------------------------------------------------------------- */
+
+.arione-abas-container {
+    display: flex;
+    gap: 6px;
+    padding: 0 6px;
+}
+
+.arione-aba {
+    border-radius: 10px 10px 0 0;
+    background-color: #f4f6f8;
+    color: #444;
+}
+
+.arione-aba.active {
+    background-color: rgba(122,37,95,0.08);
+    color: #7A255F;
+    font-weight: 800;
+}
+
+.arione-aba:hover {
+    background-color: #eef2f7;
+}
+
+/* --------------------------------------------------------------- */
+/* BLOCO: MODAIS GLOBAIS                                           */
+/* --------------------------------------------------------------- */
+
+.arione-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width, 230px);
+    width: calc(100vw - var(--sidebar-width, 230px));
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: all 0.3s ease;
+}
+
+.arione-modal-window {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    max-width: 1100px;
+    width: 95%;
+    max-height: 90vh;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalIn 0.2s ease-out;
+}
+
+#arione-modal-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#arione-modal-content iframe {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+

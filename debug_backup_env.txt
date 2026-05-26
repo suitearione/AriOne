@@ -1,0 +1,2 @@
+Executable: C:\AriOne\.venv\Scripts\python.exe
+Path: ['C:\\AriOneDEV', 'C:\\Users\\Arisvan\\AppData\\Local\\Python\\pythoncore-3.14-64\\python314.zip', 'C:\\Users\\Arisvan\\AppData\\Local\\Python\\pythoncore-3.14-64\\DLLs', 'C:\\Users\\Arisvan\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib', 'C:\\Users\\Arisvan\\AppData\\Local\\Python\\pythoncore-3.14-64', 'C:\\AriOne\\.venv', 'C:\\AriOne\\.venv\\Lib\\site-packages']

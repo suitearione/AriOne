@@ -1,0 +1,350 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fe-wrap">
+
+    {# ── Flash Messages (PAAv1 §1-C) ── #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="fe-flash fe-flash-{{ cat }}">
+          <i class="fas fa-{% if cat=='success' %}check-circle{% elif cat=='danger' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form id="form-novo-depto" method="POST">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione, info_icon, master_icon %}
+
+        {# ── CABEÇALHO MESTRE STICKY (PAAv1 §12-B) ── #}
+        {{ cabecalho_mestre_arione(
+            titulo='Gestão de Departamentos',
+            subtitulo='Cadastros > Empresa > Micro Estrutura',
+            icone='fa-network-wired',
+            cor_tema='#7F8C8D',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='empresa') ~ "'",
+            form_id='form-novo-depto',
+            onclick_novo='submeterNovoDepto()',
+            onclick_save='submeterNovoDepto()',
+            onclick_search='focarPesquisaDepto()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            onclick_clonar='clonarDeptoAtivo()',
+            onclick_export="arioneToast('Exportação em desenvolvimento para Departamentos.','info')",
+            onclick_import="arioneToast('Importação em desenvolvimento para Departamentos.','info')",
+            onclick_print="window.print()",
+            onclick_email="arioneEnviarEmailGenerico('Departamentos')",
+            onclick_whatsapp="arioneEnviarWhatsAppGenerico('Departamentos')",
+            status='Ativo',
+            ajuda='Gerencie a micro estrutura corporativa, criando departamentos vinculados aos setores.',
+            tamanho='medio'
+        ) }}
+
+        <div class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px;">
+
+        {# ══════════ CARD PRINCIPAL ══════════ #}
+        {% if depto %}<input type="hidden" name="id" value="{{ depto.id }}">{% endif %}
+        <div class="fe-card" id="card-form-depto" style="border-left: 4px solid #7F8C8D;">
+            <div class="fe-card-title" style="color:#7F8C8D; background:rgba(127,140,141,0.05);">
+                <i class="fas fa-link"></i> Vínculo e Identificação
+            </div>
+            <div class="fe-card-body">
+                <div class="fe-row">
+                    <div class="fe-group fe-flex-1">
+                        <label class="fe-label">Setor Pai (Macro) <span class="fe-req">*</span> {{ master_icon('setores', 'Ver Cadastro de Setores', 'window.location.href=\'' ~ url_for('gestao.card_setores') ~ '\'') }}</label>
+                        <select class="fe-input" name="parent_id" required>
+                            <option value="">-- Selecione o Setor --</option>
+                            {% for s in setores_pais %}
+                            <option value="{{ s.id }}" {% if depto and depto.parent_id == s.id %}selected{% endif %}>{{ s.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="fe-row" style="margin-top:15px;">
+                    <div class="fe-group" style="max-width:150px;">
+                        <label class="fe-label">Código</label>
+                        <input class="fe-input" type="text" name="codigo" readonly placeholder="(Automático)" style="background:#f8fafc; cursor:not-allowed;" value="{{ depto.codigo if depto else '' }}">
+                    </div>
+                    <div class="fe-group fe-flex-2">
+                        <label class="fe-label">Nome do Departamento <span class="fe-req">*</span> {{ info_icon('Nome do escritório ou sub-setor específico.') }}</label>
+                        <input class="fe-input" type="text" name="nome" id="depto_nome" required placeholder="Ex: Escritório, RH, Marketing..." value="{{ depto.nome if depto else '' }}" onblur="checkDuplicateField(this, 'Departamento', 'nome')">
+                    </div>
+                    <div class="fe-group fe-flex-1" style="max-width:120px;">
+                        <label class="fe-label">Sigla</label>
+                        <input class="fe-input" type="text" name="sigla" placeholder="Ex: ESC" value="{{ depto.sigla if depto else '' }}">
+                    </div>
+                </div>
+                
+                <div class="fe-row" style="justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="window.location.href='{{ url_for('gestao.card_departamentos') }}'">Limpar</button>
+                    <button type="button" id="btn-salvar-depto" class="fe-btn fe-btn-salvar-footer" style="background: #7F8C8D; color: #fff;" onclick="submeterNovoDepto()">
+                        <i class="fas fa-save"></i> {% if depto %}Atualizar Departamento{% else %}Gravar Departamento{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# ══════════ LISTAGEM ══════════ #}
+        <div class="fe-card" id="card-lista-deptos" style="margin-top:12px; border-left: 4px solid #3399ee;">
+            <div class="fe-card-title" style="color:#3399ee; background:rgba(51,153,238,0.05);">
+                <i class="fas fa-list-ul"></i> Departamentos Cadastrados
+            </div>
+            <div class="fe-card-body" style="padding:0;">
+                <div style="padding:10px 15px; border-bottom:1px solid #eee;">
+                    <input type="text" id="filtro-depto" oninput="filtrarTabelaDeptos()" placeholder="Pesquisar departamento por nome..."
+                        style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13px; outline:none; font-weight:700;">
+                </div>
+                <table class="fe-table-listing" id="tabela-deptos">
+                    <thead>
+                        <tr>
+                            <th style="width:100px;">Código</th>
+                            <th>Departamento</th>
+                            <th>Setor Vinculado</th>
+                            <th style="width:120px; text-align:center;">Equipe</th>
+                            <th style="width:100px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in departamentos %}
+                        <tr>
+                            <td><span style="font-weight: 700; color: #7F8C8D;">{{ d.codigo }}</span></td>
+                            <td><strong style="font-size: 13px;">{{ d.nome }}</strong></td>
+                            <td>
+                                <span style="font-size:11px; color:#64748b; text-transform: uppercase; font-weight: 700;">
+                                    <i class="fas fa-sitemap" style="font-size:9px; margin-right:4px;"></i> {{ d.pai.nome if d.pai else '--' }}
+                                </span>
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="fe-badge-count" style="background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:10px; font-size:10px; font-weight: 700;">{{ d.funcionarios_lista|length }}</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px;" title="Editar" onclick="window.location.href='{{ url_for('gestao.card_departamentos') }}?id={{ d.id }}'"><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="fe-btn fe-btn-ghost-dark" style="padding: 4px 8px; color: #e74c3c;" title="Excluir" onclick="confirmarExcluirDepto({{ d.id }}, '{{ d.nome }}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding:30px; text-align:center; color:#94a3b8; font-style:italic;">Nenhum departamento cadastrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>{# /fe-form-stage-medio #}
+    </form>
+</div>
+
+<script>
+async function submeterNovoDepto() {
+    const form = document.getElementById('form-novo-depto');
+    const btn  = document.getElementById('btn-salvar-depto');
+    const nome = form.querySelector('[name="nome"]');
+    const pai  = form.querySelector('[name="parent_id"]');
+    let ok = true;
+
+    nome.classList.remove('error'); pai.classList.remove('error');
+    if (!nome.value.trim()) { nome.classList.add('error'); ok = false; }
+    if (!pai.value) { pai.classList.add('error'); ok = false; }
+    if (!ok) {
+        arioneToast('Preencha os campos obrigatórios!', 'warning');
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    }
+
+    try {
+        const response = await fetch('/cadastros/departamentos/novo', {
+            method: 'POST', body: new URLSearchParams(new FormData(form))
+        });
+        if (response.ok) {
+            arioneToast('Departamento salvo com sucesso!', 'success');
+            setTimeout(() => window.location.href='{{ url_for('gestao.card_departamentos') }}', 1000);
+        } else {
+            arioneToast('Erro ao salvar departamento.', 'danger');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Gravar Departamento';
+            }
+        }
+    } catch(e) {
+        arioneToast('Erro crítico na persistência.', 'danger');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Gravar Departamento';
+        }
+    }
+}
+
+async function confirmarExcluirDepto(id, nome) {
+    if(!confirm('Deseja realmente excluir o departamento "' + nome + '"?')) return;
+    
+    try {
+        const response = await fetch('/cadastros/setores/excluir/' + id);
+        if(response.ok) {
+            window.location.href='{{ url_for('gestao.card_departamentos') }}';
+        }
+    } catch(e) {
+        console.error("Erro ao excluir:", e);
+    }
+}
+
+function focarPesquisaDepto() {
+    const input = document.getElementById('filtro-depto');
+    if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => input.focus(), 350);
+        arioneToast('🔍 Campo de pesquisa ativado', 'info');
+    } else {
+        arioneToast('Campo de pesquisa não encontrado.', 'warning');
+    }
+}
+
+function abrirModalFiltrosAvancados() {
+    let modal = document.getElementById('modal-filtros-deptos');
+    if (modal) {
+        modal.style.display = 'flex';
+        return;
+    }
+
+    modal = document.createElement('div');
+    modal.id = 'modal-filtros-deptos';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:10000;';
+    modal.innerHTML = `
+        <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:#7F8C8D; font-size:18px; font-weight:700;">Filtros Avançados</h3>
+                <button onclick="document.getElementById('modal-filtros-deptos').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#999;">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Código</label>
+                    <input type="text" id="filtro-codigo-depto" placeholder="Ex: 001" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Nome</label>
+                    <input type="text" id="filtro-nome-depto" placeholder="Ex: RH" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Sigla</label>
+                    <input type="text" id="filtro-sigla-depto" placeholder="Ex: RH" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; display:block;">Equipe</label>
+                    <select id="filtro-equipe-depto" style="width:100%; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px;">
+                        <option value="">Todos</option>
+                        <option value="0">Sem equipe</option>
+                        <option value="1">Com equipe</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:24px;">
+                <button onclick="aplicarFiltrosDeptos()" style="flex:1; background:#7F8C8D; color:#fff; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Aplicar</button>
+                <button onclick="limparFiltrosDeptos()" style="flex:1; background:#f1f5f9; color:#64748b; border:none; padding:10px 16px; border-radius:6px; font-weight:700; cursor:pointer;">Limpar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function aplicarFiltrosDeptos() {
+    const filtroCodigo = document.getElementById('filtro-codigo-depto').value.toLowerCase();
+    const filtroNome = document.getElementById('filtro-nome-depto').value.toLowerCase();
+    const filtroSigla = document.getElementById('filtro-sigla-depto').value.toLowerCase();
+    const filtroEquipe = document.getElementById('filtro-equipe-depto').value;
+
+    const table = document.getElementById('tabela-deptos');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < tr.length; i++) {
+        const tds = tr[i].getElementsByTagName('td');
+        if (tds.length < 4) continue;
+
+        const codigo = (tds[0].textContent || '').toLowerCase();
+        const nome = (tds[1].textContent || '').toLowerCase();
+        const sigla = (tds[2].textContent || '').toLowerCase();
+        const equipeCount = parseInt(tds[3].textContent || '0');
+
+        let mostrar = true;
+
+        if (filtroCodigo && !codigo.includes(filtroCodigo)) mostrar = false;
+        if (filtroNome && !nome.includes(filtroNome)) mostrar = false;
+        if (filtroSigla && !sigla.includes(filtroSigla)) mostrar = false;
+        if (filtroEquipe === '0' && equipeCount > 0) mostrar = false;
+        if (filtroEquipe === '1' && equipeCount === 0) mostrar = false;
+
+        tr[i].style.display = mostrar ? '' : 'none';
+    }
+
+    document.getElementById('modal-filtros-deptos').style.display = 'none';
+    arioneToast('Filtros aplicados com sucesso', 'success');
+}
+
+function limparFiltrosDeptos() {
+    document.getElementById('filtro-codigo-depto').value = '';
+    document.getElementById('filtro-nome-depto').value = '';
+    document.getElementById('filtro-sigla-depto').value = '';
+    document.getElementById('filtro-equipe-depto').value = '';
+
+    const table = document.getElementById('tabela-deptos');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+    for (let i = 1; i < tr.length; i++) {
+        tr[i].style.display = '';
+    }
+
+    document.getElementById('modal-filtros-deptos').style.display = 'none';
+    arioneToast('Filtros limpos', 'info');
+}
+
+function alternarVisaoFormLista() {
+    const cardForm = document.getElementById('card-form-depto');
+    const lista = document.getElementById('card-lista-deptos');
+    if (!cardForm || !lista) { arioneToast('Nenhum container localizado', 'warning'); return; }
+    if (cardForm.style.display === 'none') {
+        cardForm.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        arioneToast('Visualizando Formulário + Lista', 'info');
+    } else {
+        cardForm.style.display = 'none';
+        lista.scrollIntoView({ behavior: 'smooth' });
+        arioneToast('Visualizando Lista de Registros', 'info');
+    }
+}
+
+function clonarDeptoAtivo() {
+    const form = document.getElementById('form-novo-depto');
+    const idInput = form ? form.querySelector('[name="id"]') : null;
+    if (!idInput || !idInput.value || idInput.value === 'new' || idInput.value === '0') {
+        arioneToast('Apenas registros salvos podem ser clonados.', 'info');
+        return;
+    }
+    if (!confirm('🛡️ AriOne: Deseja clonar este registro para criar um novo item idêntico?')) return;
+    idInput.value = 'new';
+    const nome = form.querySelector('[name="nome"]') || form.querySelector('[name="descricao"]');
+    if (nome && !nome.value.startsWith('CÓPIA - ')) nome.value = 'CÓPIA - ' + nome.value;
+    arioneToast('✅ Modo Clonagem Ativado! Ajuste os dados e salve como novo.', 'success');
+}
+
+function filtrarTabelaDeptos() {
+    const input = document.getElementById('filtro-depto');
+    if (!input) return;
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('tabela-deptos');
+    if (!table) return;
+    const tr = table.getElementsByTagName('tr');
+    for (let i = 1; i < tr.length; i++) {
+        let td = tr[i].getElementsByTagName('td')[1];
+        if (td) {
+            let txtValue = td.textContent || td.innerText;
+            tr[i].style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
+        }
+    }
+}
+</script>
+{% endblock %}

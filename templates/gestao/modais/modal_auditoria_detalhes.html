@@ -1,0 +1,74 @@
+{# =============================================================================
+   Caminho  : templates/gestao/modais/modal_auditoria_detalhes.html
+   Função   : Relatório detalhado do Integrity Pulse (Protocolo PAA).
+============================================================================= #}
+
+<div class="arione-audit-report" style="padding: 10px;">
+    
+    <!-- HEADER DO RELATÓRIO -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <div>
+            <h3 style="margin: 0; color: #1e293b; font-size: 18px; font-weight: 800;">Relatório de Integridade AriOne</h3>
+            <p style="margin: 5px 0 0; color: #64748b; font-size: 12px;">Protocolo de Auditoria Ativa (PAA) — Varredura de Inconsistências</p>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 24px; font-weight: 900; color: {{ '#27AE60' if score > 80 else '#E67E22' if score > 50 else '#C0392B' }};">{{ score }}%</div>
+            <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #94a3b8;">Score Geral</div>
+        </div>
+    </div>
+
+    <!-- LISTA DE OCORRÊNCIAS -->
+    <div class="audit-list" style="display: flex; flex-direction: column; gap: 12px;">
+        {% if erros %}
+            {% for erro in erros %}
+            <div class="audit-item" style="display: flex; align-items: flex-start; gap: 15px; padding: 15px; background: #fff; border: 1px solid #edf2f7; border-radius: 10px; transition: all 0.2s; border-left: 4px solid {{ '#E53E3E' if erro.gravidade == 'Alta' else '#DD6B20' }};">
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: {{ '#fff5f5' if erro.gravidade == 'Alta' else '#fffaf0' }}; display: flex; align-items: center; justify-content: center; color: {{ '#C53030' if erro.gravidade == 'Alta' else '#C05621' }}; font-size: 16px;">
+                    <i class="fas {{ erro.icone }}"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #718096;">Módulo: {{ erro.modulo }}</span>
+                        <span style="font-size: 10px; font-weight: 700; color: {{ '#C53030' if erro.gravidade == 'Alta' else '#C05621' }}; background: {{ '#fff5f5' if erro.gravidade == 'Alta' else '#fffaf0' }}; padding: 2px 8px; border-radius: 4px;">Gravidade {{ erro.gravidade }}</span>
+                    </div>
+                    <div style="font-size: 13px; font-weight: 700; color: #2d3748;">{{ erro.tipo }}</div>
+                    <div style="font-size: 12px; color: #4a5568; margin-top: 2px;">{{ erro.descricao }}</div>
+                </div>
+                <button class="audit-fix-btn" style="background: #f1f5f9; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s;">
+                    CORRIGIR <i class="fas fa-arrow-right" style="margin-left: 5px; font-size: 9px;"></i>
+                </button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px; background: #f0fff4; border: 1px solid #c6f6d5; border-radius: 12px; color: #276749;">
+                <i class="fas fa-check-double" style="font-size: 40px; margin-bottom: 15px;"></i>
+                <div style="font-size: 16px; font-weight: 800;">Integridade Absoluta</div>
+                <p style="font-size: 13px; margin: 5px 0 0; opacity: 0.8;">Nenhuma inconsistência foi detectada pelo motor PAA nesta varredura.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- FOOTER -->
+    <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; display: flex; align-items: center; justify-content: space-between;">
+        <span>Próxima varredura automática em 15 minutos</span>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <span style="font-weight: 700; margin-right: 15px;">AriOne PAA v1.0</span>
+            <button onclick="document.getElementById('arione-modal-global').style.display='none'" 
+                    style="background: #7A255F; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(122,37,95,0.2);">
+                CONCLUIR AUDITORIA
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .audit-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #cbd5e0;
+    }
+    .audit-fix-btn:hover {
+        background: #1e293b !important;
+        color: #fff !important;
+    }
+</style>

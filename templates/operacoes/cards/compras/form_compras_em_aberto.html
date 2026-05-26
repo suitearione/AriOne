@@ -1,0 +1,89 @@
+{# =============================================================================
+   Arquivo  : form_comprasemaberto.html
+   Caminho  : templates/operacoes/cards/compras/form_comprasemaberto.html
+   Função   : Dashboard de pendências e atrasos de compras (Grid de Ação).
+============================================================================= #}
+{% extends "base_modal.html" if request.args.get('modal') else "base.html" %}
+{% block content %}
+<div class="ctx-ope-wrap">
+    <style>
+        :root { --ope-pri: #34495E; --ope-acc: #1ABC9C; }
+        .ctx-ope-header { background: linear-gradient(135deg, #34495E, #2C3E50); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-ope-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
+        
+        .ope-kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .ope-kpi-card { background: #f8fafc; border: 1.5px solid #edf2f7; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 12px; }
+        .ope-kpi-icon { width: 40px; height: 40px; background: rgba(52, 152, 219, 0.1); color: #3498DB; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        
+        .ope-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .ope-table th { text-align: left; padding: 12px; background: #f1f5f9; color: #475569; font-weight: 700; }
+        .ope-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+        .ope-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .ope-badge-atraso { background: #fee2e2; color: #ef4444; }
+        
+        .ope-btn-action { background: #3498DB; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+        .ope-btn-action:hover { opacity: 0.8; }
+    </style>
+
+    <div class="ctx-ope-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div>
+                <div style="font-weight: 800; font-size: 1rem;">Compras em Aberto</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Monitor de Pendências & Atrasos</div>
+            </div>
+        </div>
+        <button class="ge-btn-cancelar" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);" onclick="fecharModalOpe()">Sair</button>
+    </div>
+
+    <div class="ctx-ope-body">
+        <!-- KPIs de Pendências -->
+        <div class="ope-kpi-row">
+            <div class="ope-kpi-card">
+                <div class="ope-kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+                <div><span style="font-size:18px; font-weight:800; display:block;">12</span><span style="font-size:11px; color:#64748b; font-weight:700;">Pedidos Pendentes</span></div>
+            </div>
+            <div class="ope-kpi-card">
+                <div class="ope-kpi-icon" style="background:#fee2e2; color:#ef4444;"><i class="fas fa-exclamation-triangle"></i></div>
+                <div><span style="font-size:18px; font-weight:800; display:block;">05</span><span style="font-size:11px; color:#64748b; font-weight:700;">Pedidos Atrasados</span></div>
+            </div>
+            <div class="ope-kpi-card">
+                <div class="ope-kpi-icon" style="background:#dcfce7; color:#10b981;"><i class="fas fa-wallet"></i></div>
+                <div><span style="font-size:18px; font-weight:800; display:block;">R$ 45k</span><span style="font-size:11px; color:#64748b; font-weight:700;">Saldo a Receber</span></div>
+            </div>
+        </div>
+
+        <!-- Grid de Ação -->
+        <div style="border:1.5px solid #edf2f7; border-radius:12px; overflow:hidden;">
+            <table class="ope-table">
+                <thead>
+                    <tr>
+                        <th>Nº Pedido</th>
+                        <th>Fornecedor</th>
+                        <th>Prev. Entrega</th>
+                        <th>Atraso</th>
+                        <th>Saldo Pendente</th>
+                        <th style="text-align:center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>#2024-088</strong></td>
+                        <td>Metalúrgica Arisvan</td>
+                        <td>10/04/2024</td>
+                        <td><span class="ope-badge ope-badge-atraso">5 Dias</span></td>
+                        <td style="font-weight:700; color:#2C3E50;">R$ 1.250,00</td>
+                        <td style="text-align:center; display:flex; gap:5px; justify-content:center;">
+                            <button class="ope-btn-action" title="Reenviar E-mail de Cobrança"><i class="fas fa-envelope"></i></button>
+                            <button class="ope-btn-action" style="background:#e74c3c;" title="Cancelar Saldo"><i class="fas fa-times-circle"></i></button>
+                        </td>
+                    </tr>
+                    <!-- Mais linhas... -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

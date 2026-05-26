@@ -1,0 +1,174 @@
+{# =============================================================================
+   Arquivo  : form_gateway_rel_comercial.html
+   Caminho  : templates/cadastros/cards/gateway/rel_comercial.html
+   Função   : Gateway de Relatórios de Comercial (Nível 2)
+   Cor Tema : #F39C12 (AriOne Commercial)
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap">
+    <style>
+        .gateway-header {
+            padding: 22px 25px;
+            background: linear-gradient(90deg, #7A255F 0%, #27AE60 100%);
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .gateway-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .gateway-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; }
+        
+        .gateway-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .gateway-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px;
+            background: #fff;
+            border: 1.8px solid var(--c, #edf2f7);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            gap: 8px;
+        }
+
+        .gateway-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+            background: color-mix(in srgb, var(--c), white 96%);
+        }
+
+        .gateway-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--c-bg, rgba(243, 156, 18, 0.08));
+            color: var(--c, #F39C12);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .gateway-item:hover .gateway-icon {
+            background: var(--c);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .gateway-label { font-size: 14px; font-weight: 800; color: #2d3748; }
+        .gateway-desc { font-size: 10px; color: #a0aec0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+
+        /* Botão Voltar Glass */
+        .btn-voltar-glass {
+            background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn-voltar-glass:hover { background: rgba(255,255,255,0.3); transform: translateX(-3px); }
+    </style>
+
+    <div class="gateway-header">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <button type="button" class="btn-voltar-glass" onclick="voltarGatewayMestre()"><i class="fas fa-arrow-left"></i></button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-folder-open" style="font-size: 1.4rem; color: #BDBDBD;"></i>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div class="gateway-title" style="gap:0; color: #BDBDBD;">Central de Relatórios: Comercial</div>
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.85); font-weight: 600; letter-spacing: 0.3px;"><i class="fas fa-print"></i> Parceiros e Vendas</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="font-size: 10px; font-weight: 800; letter-spacing: 1px; opacity: 0.7; margin-right: 15px;">CARDs</span>
+            {% if config.IS_DEV or sistema_nome == 'AriOneDEV' %}
+            <button type="button" onclick="toggleDebugFloating()" class="btn-voltar-glass" title="Auditoria de Integridade (Audit)"><i class="fas fa-microscope"></i></button>
+            {% endif %}
+            <button type="button" class="btn-voltar-glass" onclick="voltarGatewayMestre()"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="gateway-body">
+        <div class="gateway-grid">
+            
+            <!-- Ministérios -->
+            <div class="gateway-item" style="--c:#7A255F; --c-bg:rgba(122,37,95,0.08);" onclick="alert('Funcionalidade em desenvolvimento')">
+                <div class="gateway-icon"><i class="fas fa-church"></i></div>
+                <span class="gateway-label"><i class="fas fa-print"></i> Ministérios</span>
+                <span class="gateway-desc">Institucional / Igrejas</span>
+            </div>
+
+            <!-- Parcerias -->
+            <div class="gateway-item" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.08);" onclick="alert('Funcionalidade em desenvolvimento')">
+                <div class="gateway-icon"><i class="fas fa-handshake-alt"></i></div>
+                <span class="gateway-label"><i class="fas fa-print"></i> Parcerias</span>
+                <span class="gateway-desc">Alianças Estratégicas</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- INTERNAL USE ONLY - Floating Debug Card -->
+    {% if config.IS_DEV or sistema_nome == 'AriOneDEV' %}
+    <div id="debug-floating-card" style="display:none; position:absolute; top:110px; left:50%; transform:translateX(-50%); width:300px; background:#fff; border-radius:14px; box-shadow:0 20px 50px rgba(0,0,0,0.25); z-index:1000; border:2px solid #6366f1; overflow:hidden; animation: slideInDebug 0.3s ease;">
+        <div style="background:#6366f1; color:#fff; padding:12px 15px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:space-between;">
+            <span><i class="fas fa-microscope" style="margin-right:8px;"></i> AUDITORIA DE INTEGRIDADE (AUDIT)</span>
+            <i class="fas fa-times" onclick="toggleDebugFloating()" style="cursor:pointer; opacity:0.8;"></i>
+        </div>
+        <div style="padding:15px;">
+            <div style="font-size:10px; font-weight:800; color:#94a3b8; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">Checklist Comercial</div>
+            <div class="debug-list">
+                <div class="debug-item" onclick="alert('Teste de Ministérios')"><i class="fas fa-church"></i> <span>1. Ministérios</span></div>
+                <div class="debug-item" onclick="alert('Teste de Parcerias')"><i class="fas fa-handshake-alt"></i> <span>2. Parcerias</span></div>
+                
+                <div style="margin: 10px 0; border-top: 1.5px dashed #e2e8f0;"></div>
+                <div class="debug-item" onclick="toggleDebugFloating()" style="color:#7A255F; background:rgba(122,37,95,0.05);">
+                    <i class="fas fa-times-circle"></i> <span style="font-weight:800;">Fechar Painel de Validação</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleDebugFloating() {
+    const card = document.getElementById('debug-floating-card');
+    if (card) card.style.display = (card.style.display === 'none' || card.style.display === '') ? 'block' : 'none';
+}
+
+function voltarGatewayMestre() {
+    const url = "{{ url_for('cadastros.gateway_modulos_cadastro') }}";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url).then(res => res.text()).then(html => {
+            content.innerHTML = html;
+            content.style.opacity = '1';
+            content.querySelectorAll('script').forEach(script => {
+                const novoScript = document.createElement('script');
+                Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                novoScript.appendChild(document.createTextNode(script.innerHTML));
+                script.parentNode.replaceChild(novoScript, script);
+            });
+        });
+    }
+}
+</script>
+
+<style>
+    @keyframes slideInDebug { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    .debug-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: #475569; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 4px; }
+    .debug-item:hover { background: rgba(99,102,241,0.08); color: #6366f1; transform: translateX(5px); }
+    .debug-item i { width: 16px; text-align: center; font-size: 14px; opacity: 0.7; }
+</style>

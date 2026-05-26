@@ -1,0 +1,175 @@
+{# =============================================================================
+   Arquivo  : rel_painel_ticket.html
+   Caminho  : templates/operacoes/cards/vendas/rel_painel_ticket.html
+   Função   : Painel Executivo de Ticket Médio (Nível 3).
+   Cor Tema : #27AE60 (Ticket Médio)
+   ============================================================================= #}
+
+<div class="ctx-gateway-wrap" style="animation: feFadeUp 0.3s ease;">
+    <style>
+        .rel-header-ticket {
+            padding: 22px 25px;
+            background: linear-gradient(90deg, #27AE60, #2ECC71); 
+            color: #fff;
+            border-radius: 14px 14px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .rel-title { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 12px; }
+        .rel-body { padding: 30px; background: #fff; border-radius: 0 0 14px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        .ticket-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+
+        .ticket-kpi-card {
+            background: linear-gradient(135deg, #f8fafc, #fff);
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            transition: 0.2s;
+        }
+
+        .ticket-kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(39,174,96,0.08);
+            border-color: #27AE60;
+        }
+
+        .ticket-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: rgba(39,174,96,0.1);
+            color: #27AE60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .ticket-label { font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .ticket-value { font-size: 22px; font-weight: 900; color: #1e293b; margin-top: 4px; }
+        .ticket-sub { font-size: 11px; color: #94a3b8; font-weight: 700; margin-top: 4px; }
+
+        .rel-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .rel-table th { background: #f1f5f9; color: #475569; font-weight: 800; font-size: 11px; text-transform: uppercase; padding: 14px 16px; text-align: left; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.5px; }
+        .rel-table th:first-child { border-top-left-radius: 10px; }
+        .rel-table th:last-child { border-top-right-radius: 10px; }
+        .rel-table td { padding: 16px; font-size: 13px; color: #334155; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+        .rel-table tr:hover td { background: #f8fafc; }
+        .rel-table tr:last-child td { border-bottom: none; }
+    </style>
+
+    <div class="rel-header-ticket">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button type="button" onclick="voltarParaPIV()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; transition:0.2s;"><i class="fas fa-arrow-left"></i></button>
+            <div class="rel-title"><i class="fas fa-tags"></i> Painel de Ticket Médio</div>
+        </div>
+        <button type="button" class="ge-modal-fechar" onclick="voltarParaPIV()" style="background: rgba(255,255,255,0.2); border:none; width: 32px; height: 32px; border-radius: 8px; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center; transition:0.2s;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="rel-body">
+        <div class="ticket-kpi-grid">
+            <!-- Faturamento -->
+            <div class="ticket-kpi-card">
+                <div class="ticket-icon"><i class="fas fa-sack-dollar"></i></div>
+                <div>
+                    <div class="ticket-label">Faturamento Total</div>
+                    <div class="ticket-value" style="color: #27AE60;">R$ {{ "{:,.2f}".format(dados.vendas_mes or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                    <div class="ticket-sub">Acumulado do Mês Atual</div>
+                </div>
+            </div>
+
+            <!-- Pedidos -->
+            <div class="ticket-kpi-card">
+                <div class="ticket-icon" style="background: rgba(52,152,219,0.1); color: #3498DB;"><i class="fas fa-shopping-cart"></i></div>
+                <div>
+                    <div class="ticket-label">Quantidade de Pedidos</div>
+                    <div class="ticket-value" style="color: #3498DB;">{{ dados.qtd_pedidos_mes }}</div>
+                    <div class="ticket-sub">Pedidos Confirmados no Mês</div>
+                </div>
+            </div>
+
+            <!-- Ticket Médio -->
+            <div class="ticket-kpi-card">
+                <div class="ticket-icon" style="background: rgba(142,68,173,0.1); color: #8E44AD;"><i class="fas fa-receipt"></i></div>
+                <div>
+                    <div class="ticket-label">Ticket Médio Mensal</div>
+                    <div class="ticket-value" style="color: #8E44AD;">R$ {{ "{:,.2f}".format(dados.ticket_medio_mes or 0).replace(',','v').replace('.',',').replace('v','.') }}</div>
+                    <div class="ticket-sub">Média por Pedido no Mês</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 25px;">
+            <h3 style="font-size: 15px; font-weight: 800; color: #1e293b; margin-bottom: 20px;"><i class="fas fa-history" style="color: #27AE60; margin-right: 8px;"></i> Amostra Recente para Composição do Ticket</h3>
+            <div style="overflow-x: auto;">
+                <table class="rel-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Pedido #</th>
+                            <th style="width: 35%;">Cliente</th>
+                            <th style="width: 25%;">Data / Hora</th>
+                            <th style="width: 25%; text-align: right;">Valor Líquido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in dados.ultimos_pedidos %}
+                        <tr>
+                            <td><strong>{{ p.numero or ('#{:04d}'.format(p.id)) }}</strong></td>
+                            <td style="font-weight: 700; color: #334155;">{{ p.cliente.nome if p.cliente else 'Cliente não informado' }}</td>
+                            <td>{{ p.data_pedido.strftime('%d/%m/%Y %H:%M') if p.data_pedido else '--/--/----' }}</td>
+                            <td style="text-align: right; font-weight: 900; color: #27AE60;">R$ {{ "{:,.2f}".format(p.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8; font-weight: 700;">Nenhum pedido recente registrado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function voltarParaPIV() {
+    const url = "/operacoes/cards/relatorios?modulo=vendas&modal=1";
+    const content = document.getElementById('arione-modal-content');
+    if (content) {
+        content.style.opacity = '0.4';
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                content.innerHTML = html;
+                content.style.opacity = '1';
+                content.querySelectorAll('script').forEach(script => {
+                    const novoScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => novoScript.setAttribute(attr.name, attr.value));
+                    novoScript.appendChild(document.createTextNode(script.innerHTML));
+                    script.parentNode.replaceChild(novoScript, script);
+                });
+            })
+            .catch(err => {
+                console.error("Erro ao voltar para PIV:", err);
+                content.style.opacity = '1';
+                window.location.href = url;
+            });
+    } else {
+        window.location.href = url;
+    }
+}
+</script>

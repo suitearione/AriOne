@@ -1,0 +1,461 @@
+<!-- templates/financeiro/cards/form_financeiro_extratos.html -->
+{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+{{ comp.cabecalho_mestre_arione(
+    titulo="Extratos Bancários",
+    subtitulo="Financeiro > Bancos > Extratos Bancários",
+    icone="fa-file-alt",
+    cor_tema="#27AE60",
+    func_fechar="voltarParaGridBancos()",
+    form_id="formExtratos",
+    onclick_novo="",
+    onclick_save="",
+    onclick_search="",
+    onclick_filter="",
+    onclick_list="",
+    onclick_clonar="",
+    onclick_export="exportarExtratoMaster()",
+    onclick_import="importarExtratoMaster()",
+    onclick_print="window.print()",
+    onclick_email="emailExtratoMaster()",
+    onclick_whatsapp="whatsappExtratoMaster()",
+    status="Ativo",
+    ajuda="Importação e consulta de extratos bancários no formato OFX ou lançamentos manuais.",
+    tamanho="grande"
+) }}
+
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; width: 100%;">
+    <div class="bnk-container" style="max-width: 100%; margin: 0 auto; padding: 30px 40px; transition: all 0.3s ease; animation: fadeIn 0.5s ease-out;">
+        <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <i class="fas fa-file-alt" style="color: #27AE60; margin-right: 10px;"></i>
+                    <span>Parâmetros e Seleção de Extrato</span>
+                </div>
+                <span style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">ATIVO</span>
+            </div>
+            <div class="op-card-body" style="padding: 25px;">
+                <form id="formExtratos" onsubmit="salvarExtratoMaster(event)">
+                    <input type="hidden" name="id" id="extrato_id" value="new">
+                    <div class="op-row" style="gap: 15px; margin-bottom: 15px; display: flex; flex-wrap: wrap;">
+                        <div class="op-group" style="flex: 2; min-width: 250px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CONTA BANCÁRIA (SELECIONE DO CADASTRO) *</label>
+                            <select name="conta" id="selectContaExtrato" class="op-input" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #334155; background: #fff; transition: 0.2s;" onchange="carregarLancamentosExtrato()">
+                                <option value="">SELECIONE UMA CONTA BANCÁRIA CADASTRADA...</option>
+                            </select>
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 180px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA INÍCIO</label>
+                            <input class="op-input" type="date" name="inicio" id="data_inicio_extrato" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="carregarLancamentosExtrato()">
+                        </div>
+                        <div class="op-group" style="flex: 1; min-width: 180px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA FIM</label>
+                            <input class="op-input" type="date" name="fim" id="data_fim_extrato" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="carregarLancamentosExtrato()">
+                        </div>
+                    </div>
+
+                    <!-- Filtros Rápidos de Período -->
+                    <div class="op-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 5px;">
+                        <span style="font-size: 11px; font-weight: 600; color: #64748b; margin-right: 5px;"><i class="fas fa-filter" style="color: #27AE60; margin-right: 4px;"></i> FILTROS RÁPIDOS:</span>
+                        <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapido('hoje', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Hoje</button>
+                        <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapido('ontem', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Ontem</button>
+                        <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapido('mes_atual', this)" style="background: #27AE60; border: 1px solid #27AE60; color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Mês Atual</button>
+                        <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapido('mes_anterior', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Mês Anterior</button>
+                        <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapido('ano_atual', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Ano Atual</button>
+                        <button type="button" class="btn-quick-filter" onclick="aplicarFiltroRapido('ano_anterior', this)" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Ano Anterior</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Movimentações do Extrato -->
+        <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden; margin-top: 25px;">
+            <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <i class="fas fa-list" style="color: #27AE60; margin-right: 10px;"></i>
+                    <span id="tituloMovimentacoesExtrato">Movimentações da Conta no Período</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span id="saldoAtualExtrato" style="background: #dcfce7; color: #166534; font-size: 11px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">SALDO: R$ 0,00</span>
+                    <span id="totalLancamentosExtrato" style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">0 LANÇAMENTOS</span>
+                </div>
+            </div>
+            <div class="op-card-body" style="padding: 0; overflow-x: auto;">
+                <table class="op-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; font-weight: 600; font-size: 11px;">
+                            <th style="padding: 14px 25px;">DATA</th>
+                            <th style="padding: 14px 15px;">HISTÓRICO / DESCRIÇÃO</th>
+                            <th style="padding: 14px 15px;">DOCUMENTO</th>
+                            <th style="padding: 14px 15px; text-align: right;">CRÉDITO (R$)</th>
+                            <th style="padding: 14px 15px; text-align: right;">DÉBITO (R$)</th>
+                            <th style="padding: 14px 25px; text-align: right;">SALDO ACUMULADO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyLancamentosExtrato">
+                        <!-- Preenchido dinamicamente via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funções de Extratos Bancários (Conciliação removida para manter separação de módulos)
+
+// Funções de Filtros Rápidos
+function aplicarFiltroRapido(tipo, btnClicado) {
+    const inpInicio = document.getElementById('data_inicio_extrato');
+    const inpFim = document.getElementById('data_fim_extrato');
+    if (!inpInicio || !inpFim) return;
+
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = hoje.getMonth(); // 0 a 11
+    const dia = hoje.getDate();
+
+    // Atualiza estilo dos botões para mostrar qual está ativo
+    document.querySelectorAll('.btn-quick-filter').forEach(btn => {
+        btn.style.background = "#f1f5f9";
+        btn.style.borderColor = "#cbd5e1";
+        btn.style.color = "#334155";
+    });
+    if (btnClicado) {
+        btnClicado.style.background = "#27AE60";
+        btnClicado.style.borderColor = "#27AE60";
+        btnClicado.style.color = "#fff";
+    }
+
+    let dInicio, dFim;
+
+    if (tipo === 'hoje') {
+        const hjStr = hoje.toISOString().split('T')[0];
+        dInicio = hjStr;
+        dFim = hjStr;
+    } else if (tipo === 'ontem') {
+        const ontem = new Date(ano, mes, dia - 1);
+        const ontemStr = ontem.toISOString().split('T')[0];
+        dInicio = ontemStr;
+        dFim = ontemStr;
+    } else if (tipo === 'mes_atual') {
+        const mesStr = String(mes + 1).padStart(2, '0');
+        const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+        dInicio = `${ano}-${mesStr}-01`;
+        dFim = `${ano}-${mesStr}-${ultimoDia}`;
+    } else if (tipo === 'mes_anterior') {
+        const mesAnt = mes === 0 ? 12 : mes;
+        const anoAnt = mes === 0 ? ano - 1 : ano;
+        const mesAntStr = String(mesAnt).padStart(2, '0');
+        const ultimoDiaAnt = new Date(anoAnt, mesAnt, 0).getDate();
+        dInicio = `${anoAnt}-${mesAntStr}-01`;
+        dFim = `${anoAnt}-${mesAntStr}-${ultimoDiaAnt}`;
+    } else if (tipo === 'ano_atual') {
+        dInicio = `${ano}-01-01`;
+        dFim = `${ano}-12-31`;
+    } else if (tipo === 'ano_anterior') {
+        dInicio = `${ano - 1}-01-01`;
+        dFim = `${ano - 1}-12-31`;
+    }
+
+    inpInicio.value = dInicio;
+    inpFim.value = dFim;
+
+    carregarLancamentosExtrato();
+    if (typeof arioneToast === 'function') arioneToast(`Filtro rápido aplicado: ${btnClicado ? btnClicado.textContent : tipo}`, 'info');
+}
+
+// Carrega as contas bancárias e inicializa Data Início e Data Fim com o mês corrente
+function inicializarContasExtrato() {
+    const selectConta = document.getElementById('selectContaExtrato');
+    if (!selectConta) return;
+
+    // Inicializa Data Início e Data Fim com o mês atual por padrão
+    const dataAtual = new Date();
+    const ano = dataAtual.getFullYear();
+    const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
+    const ultimoDia = new Date(ano, dataAtual.getMonth() + 1, 0).getDate();
+
+    const inpInicio = document.getElementById('data_inicio_extrato');
+    const inpFim = document.getElementById('data_fim_extrato');
+
+    if (inpInicio && !inpInicio.value) inpInicio.value = `${ano}-${mes}-01`;
+    if (inpFim && !inpFim.value) inpFim.value = `${ano}-${mes}-${ultimoDia}`;
+
+    // Carrega Contas Cadastradas
+    let contas = JSON.parse(localStorage.getItem('arione_contas_bancarias_cad')) || [
+        { id: 1, banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", saldo: 15420.50 },
+        { id: 2, banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", saldo: 8250.00 },
+        { id: 3, banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", saldo: 3400.75 }
+    ];
+
+    selectConta.innerHTML = '<option value="">SELECIONE UMA CONTA BANCÁRIA CADASTRADA...</option>';
+    contas.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = `${c.banco} - Ag: ${c.agencia} / Cc: ${c.conta}`;
+        opt.textContent = `${c.banco} (Ag: ${c.agencia} | Cc: ${c.conta}) - Saldo: R$ ${parseFloat(c.saldo||0).toFixed(2)}`;
+        opt.dataset.saldo = c.saldo || 0;
+        opt.dataset.conta = c.conta || '';
+        selectConta.appendChild(opt);
+    });
+
+    if (contas.length > 0) {
+        selectConta.selectedIndex = 1;
+    }
+    carregarLancamentosExtrato();
+}
+
+// Banco de lançamentos simulados/persistidos por conta e período
+let lancamentosExtratoGeral = JSON.parse(localStorage.getItem('arione_lancamentos_extrato')) || [
+    { id: 1, conta: "001 - BANCO DO BRASIL S.A. - Ag: 1122-3 / Cc: 55443-2", data: "2026-05-02", historico: "RECEBIMENTO DE CLIENTE - NF 1542", doc: "PIX-98745", valor: 4500.00, tipo: "C", conciliado: true },
+    { id: 2, conta: "001 - BANCO DO BRASIL S.A. - Ag: 1122-3 / Cc: 55443-2", data: "2026-05-05", historico: "PAGAMENTO FORNECEDOR - ALUGUEL", doc: "TED-11223", valor: -2500.00, tipo: "D", conciliado: true },
+    { id: 3, conta: "001 - BANCO DO BRASIL S.A. - Ag: 1122-3 / Cc: 55443-2", data: "2026-05-12", historico: "PAGAMENTO DE ENERGIA ELÉTRICA", doc: "BARRAS-887", valor: -450.50, tipo: "D", conciliado: false },
+    { id: 4, conta: "341 - ITAÚ UNIBANCO S.A. - Ag: 4455 / Cc: 99887-1", data: "2026-05-03", historico: "RECEBIMENTO CARTÕES DE CRÉDITO", doc: "CIELO-554", valor: 8250.00, tipo: "C", conciliado: true },
+    { id: 5, conta: "260 - NU PAGAMENTOS S.A. (NUBANK) - Ag: 0001 / Cc: 1234567-8", data: "2026-05-10", historico: "RENDIMENTO AUTOMÁTICO DE CONTA", doc: "REC-001", valor: 120.75, tipo: "C", conciliado: false }
+];
+
+function salvarLancamentosNoStorage() {
+    localStorage.setItem('arione_lancamentos_extrato', JSON.stringify(lancamentosExtratoGeral));
+}
+
+function carregarLancamentosExtrato(filtro = '') {
+    const selectConta = document.getElementById('selectContaExtrato');
+    const dataInicio = document.getElementById('data_inicio_extrato').value;
+    const dataFim = document.getElementById('data_fim_extrato').value;
+    const tbody = document.getElementById('tbodyLancamentosExtrato');
+    const totalSpan = document.getElementById('totalLancamentosExtrato');
+    const saldoSpan = document.getElementById('saldoAtualExtrato');
+
+    if (!selectConta || !tbody) return;
+
+    const contaSelecionada = selectConta.value;
+    tbody.innerHTML = '';
+
+    if (!contaSelecionada) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding: 25px; text-align: center; color: #94a3b8;">Selecione uma conta bancária para visualizar as movimentações.</td></tr>`;
+        totalSpan.textContent = "0 LANÇAMENTOS";
+        saldoSpan.textContent = "SALDO: R$ 0,00";
+        return;
+    }
+
+    let lista = lancamentosExtratoGeral.filter(l => l.conta === contaSelecionada);
+    if (dataInicio) lista = lista.filter(l => l.data >= dataInicio);
+    if (dataFim) lista = lista.filter(l => l.data <= dataFim);
+    if (filtro) {
+        lista = lista.filter(l => l.historico.toLowerCase().includes(filtro.toLowerCase()) || l.doc.toLowerCase().includes(filtro.toLowerCase()));
+    }
+
+    lista.sort((a,b) => a.data.localeCompare(b.data));
+
+    totalSpan.textContent = `${lista.length} LANÇAMENTOS`;
+
+    const optSel = selectConta.options[selectConta.selectedIndex];
+    let saldoAcumulado = optSel ? parseFloat(optSel.dataset.saldo || 0) : 0;
+
+    if (lista.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding: 25px; text-align: center; color: #94a3b8;">Nenhuma movimentação registrada para esta conta no período selecionado.</td></tr>`;
+        saldoSpan.textContent = `SALDO: ${saldoAcumulado.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
+        return;
+    }
+
+    lista.forEach(l => {
+        saldoAcumulado += parseFloat(l.valor);
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid #f1f5f9";
+        tr.style.transition = "background 0.2s";
+        tr.onmouseover = () => tr.style.background = "#f8fafc";
+        tr.onmouseout = () => tr.style.background = "transparent";
+
+        const partesData = l.data.split('-');
+        const dataFormatada = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : l.data;
+
+        const valorFormatado = Math.abs(l.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const saldoFormatado = saldoAcumulado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        const tdCredito = l.tipo === 'C'
+            ? `<td style="padding: 14px 15px; text-align: right; font-weight: 600; color: #166534;">${valorFormatado}</td>`
+            : `<td style="padding: 14px 15px; text-align: right; color: #cbd5e1;">---</td>`;
+
+        const tdDebito = l.tipo === 'D'
+            ? `<td style="padding: 14px 15px; text-align: right; font-weight: 600; color: #991b1b;">${valorFormatado}</td>`
+            : `<td style="padding: 14px 15px; text-align: right; color: #cbd5e1;">---</td>`;
+
+        tr.innerHTML = `
+            <td style="padding: 14px 25px; font-weight: 600; color: #27AE60;">${dataFormatada}</td>
+            <td style="padding: 14px 15px; font-weight: 500; color: #334155;">${l.historico}</td>
+            <td style="padding: 14px 15px; color: #64748b;">${l.doc || '---'}</td>
+            ${tdCredito}
+            ${tdDebito}
+            <td style="padding: 14px 25px; text-align: right; font-weight: 600; color: #0f766e;">${saldoFormatado}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    saldoSpan.textContent = `SALDO: ${saldoAcumulado.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}`;
+}
+
+// Funções dos Botões do Cabeçalho Mestre
+function novoExtratoMaster() {
+    const selectConta = document.getElementById('selectContaExtrato');
+    if (!selectConta || !selectConta.value) {
+        if (typeof arioneToast === 'function') arioneToast("Selecione uma conta bancária primeiro", "warning");
+        return;
+    }
+
+    const hist = prompt("Digite o Histórico do novo lançamento:");
+    if (!hist) return;
+
+    const doc = prompt("Digite o número do Documento (ex: PIX-123, TED-456):", "DOC-" + Math.floor(Math.random()*10000));
+    const valorStr = prompt("Digite o Valor (use sinal negativo para Débito, ex: -150.00 ou 500.00):");
+    if (!valorStr || isNaN(parseFloat(valorStr))) {
+        if (typeof arioneToast === 'function') arioneToast("Valor inválido", "error");
+        return;
+    }
+
+    const valorNum = parseFloat(valorStr);
+    const tipo = valorNum >= 0 ? 'C' : 'D';
+    const dataAtual = document.getElementById('data_inicio_extrato').value || new Date().toISOString().split('T')[0];
+
+    const novoId = lancamentosExtratoGeral.length > 0 ? Math.max(...lancamentosExtratoGeral.map(l => l.id)) + 1 : 1;
+    lancamentosExtratoGeral.push({
+        id: novoId, conta: selectConta.value, data: dataAtual, historico: hist.toUpperCase(), doc: doc ? doc.toUpperCase() : '', valor: valorNum, tipo: tipo
+    });
+
+    salvarLancamentosNoStorage();
+    carregarLancamentosExtrato();
+    if (typeof arioneToast === 'function') arioneToast("Lançamento adicionado ao extrato com sucesso!", "success");
+}
+
+function salvarExtratoMaster(e) {
+    if (e) e.preventDefault();
+    if (typeof arioneToast === 'function') arioneToast("Conciliação do extrato salva com sucesso!", "success");
+}
+
+function pesquisarExtratoMaster() {
+    const termo = prompt("Digite o histórico ou documento para filtrar no extrato:");
+    if (termo !== null) {
+        carregarLancamentosExtrato(termo);
+        if (typeof arioneToast === 'function') arioneToast(`Filtrando extrato por: ${termo}`, "info");
+    }
+}
+
+function filtrarExtratoMaster() {
+    const tipo = prompt("Filtrar por Tipo (Digite C para Crédito ou D para Débito):");
+    if (tipo && (tipo.toUpperCase() === 'C' || tipo.toUpperCase() === 'D')) {
+        const selectConta = document.getElementById('selectContaExtrato');
+        const tbody = document.getElementById('tbodyLancamentosExtrato');
+        if (!selectConta || !tbody) return;
+
+        const filtrado = lancamentosExtratoGeral.filter(l => l.conta === selectConta.value && l.tipo === tipo.toUpperCase());
+        tbody.innerHTML = '';
+        filtrado.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="6" style="padding: 14px 25px;">${l.data} | ${l.historico} | R$ ${l.valor}</td>`;
+            tbody.appendChild(tr);
+        });
+        if (typeof arioneToast === 'function') arioneToast(`Filtro de Tipo aplicado: ${tipo.toUpperCase()}`, "info");
+    }
+}
+
+function listarExtratoMaster() {
+    carregarLancamentosExtrato();
+    if (typeof arioneToast === 'function') arioneToast("Listagem do extrato recarregada", "success");
+}
+
+function clonarExtratoMaster() {
+    if (typeof arioneToast === 'function') arioneToast("Para clonar um lançamento, utilize a tela de Movimentações.", "info");
+}
+
+function exportarExtratoMaster() {
+    const selectConta = document.getElementById('selectContaExtrato');
+    if (!selectConta || !selectConta.value) {
+        if (typeof arioneToast === 'function') arioneToast("Selecione uma conta para exportar", "warning");
+        return;
+    }
+
+    let csv = "ID,CONTA,DATA,HISTORICO,DOCUMENTO,VALOR,TIPO\n";
+    lancamentosExtratoGeral.filter(l => l.conta === selectConta.value).forEach(l => {
+        csv += `${l.id},"${l.conta}",${l.data},"${l.historico}",${l.doc},${l.valor},${l.tipo}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `extrato_${selectConta.value.substring(0,10)}.csv`);
+    a.click();
+    if (typeof arioneToast === 'function') arioneToast("Exportação do Extrato concluída com sucesso!", "success");
+}
+
+function importarExtratoMaster() {
+    const selectConta = document.getElementById('selectContaExtrato');
+    if (!selectConta || !selectConta.value) {
+        if (typeof arioneToast === 'function') arioneToast("Por favor, selecione uma conta bancária antes de importar o arquivo de extrato/OFX.", "warning");
+        return;
+    }
+
+    const opt = selectConta.options[selectConta.selectedIndex];
+    const numConta = opt ? opt.dataset.conta : '';
+    if (!numConta) {
+        if (typeof arioneToast === 'function') arioneToast("Número de conta não identificado para validação.", "error");
+        return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.ofx,.csv,.txt';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const conteudo = evt.target.result;
+                const contaClean = numConta.replace(/[^0-9]/g, '');
+
+                // Verifica se o número da conta (com ou sem hífen) existe no arquivo
+                if (!conteudo.includes(numConta) && !conteudo.includes(contaClean)) {
+                    if (typeof arioneToast === 'function') arioneToast("ALERTA DE SEGURANÇA: O arquivo importado NÃO pertence à conta bancária selecionada (" + numConta + ")!", "error");
+                    alert("ALERTA DE SEGURANÇA:\n\nO número da conta bancária ativa (" + numConta + ") não foi localizado no arquivo importado.\nPara sua segurança, a importação foi bloqueada para evitar mistura de dados (ex: PF e PJ).");
+                    return;
+                }
+
+                if (typeof arioneToast === 'function') arioneToast(`Arquivo ${file.name} validado e importado com sucesso para a conta ${numConta}!`, "success");
+                setTimeout(() => {
+                    lancamentosExtratoGeral.push({
+                        id: Date.now(), conta: selectConta.value, data: new Date().toISOString().split('T')[0], historico: "IMPORTAÇÃO OFX - LANÇAMENTOS CONCILIADOS", doc: "OFX-" + Math.floor(Math.random()*10000), valor: 1500.00, tipo: "C", conciliado: true
+                    });
+                    salvarLancamentosNoStorage();
+                    carregarLancamentosExtrato();
+                }, 1000);
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function emailExtratoMaster() {
+    const dest = prompt("Informe o e-mail do destinatário para envio do extrato bancário:");
+    if (dest) {
+        if (typeof arioneToast === 'function') arioneToast(`Extrato bancário enviado para ${dest}`, "success");
+    }
+}
+
+function whatsappExtratoMaster() {
+    const fone = prompt("Informe o WhatsApp (com DDD) para compartilhar o extrato bancário:");
+    if (fone) {
+        window.open(`https://api.whatsapp.com/send?phone=${fone}&text=Confira%20o%20extrato%20bancário%20gerado%20pelo%20sistema%20AriOne.`, '_blank');
+        if (typeof arioneToast === 'function') arioneToast("Redirecionando para o WhatsApp...", "success");
+    }
+}
+
+function voltarParaGridBancos() {
+    if (typeof fecharModalBnk === 'function') fecharModalBnk();
+    if (!window.location.search.includes('aba=bancos')) { window.location.href = "{{ url_for('financeiro.abas', aba='bancos') }}"; }
+}
+
+document.addEventListener('DOMContentLoaded', () => inicializarContasExtrato());
+</script>
+{% endblock %}

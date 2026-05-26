@@ -1,0 +1,219 @@
+<div class="arione-bar-white-new"
+     style="display:flex; align-items:center; justify-content:flex-start; padding:0 24px; height:60px; gap: 20px; border-radius: 12px 12px 0 0; background: #fff;">
+
+    <!-- EMPRESA ATIVA -->
+    <div class="arione-left-info-group"
+         style="flex:1; display:flex; align-items:center; position:relative; z-index:1900; gap:20px;">
+        <div style="cursor:pointer; display:flex; align-items:center;" onclick="window.abrirTrocarEmpresa()" title="Clique ou pressione F2 para trocar de empresa">
+            <i class="fas fa-exchange-alt" style="color:#7A255F; font-size:12px; opacity:0.6;"></i>
+            <span class="arione-company-name-header"
+                  style="font-weight:900; font-size:15px;
+                         text-transform:uppercase; white-space:nowrap;
+                         display:inline-block !important; margin-left:8px;">
+                {{ session.get('nome_empresa', 'AriOne') }}    
+            </span>
+        </div>
+
+        <!-- MONITOR DE BACKUP (DINÂMICO) -->
+        <div id="arione-backup-monitor" style="display:none; align-items:center; gap:8px; background:rgba(26,188,156,0.1); padding:6px 14px; border-radius:20px; border:1px solid #1ABC9C; animation: pulseBackup 2s infinite;">
+            <i class="fas fa-cloud-upload-alt fa-spin" style="color:#1ABC9C; font-size:14px;"></i>
+            <span id="backup-monitor-text" style="font-size:11px; font-weight:800; color:#1ABC9C; text-transform:uppercase; letter-spacing:0.5px;">Backup em andamento...</span>
+        </div>
+    </div>
+
+    <!-- DIREITA: RELÓGIO + BUSCA + USUÁRIO -->
+    <div class="arione-right-info-group"
+         style="display:flex; align-items:center; gap:15px; flex: 1; justify-content: flex-end;">
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div id="arione-global-clock"
+                 style="color:#5A2EA6; font-weight:600; font-size:0.9rem; white-space:nowrap;">
+            </div>
+
+            <!-- Global Dark Mode Toggle -->
+            <button type="button" id="global-dark-toggle" onclick="toggleGlobalDarkMode()" 
+                    style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s;"
+                    title="Alternar Modo Escuro/Claro">
+                <i class="fas fa-moon" id="global-dark-icon"></i>
+            </button>
+        </div>
+
+        <span style="color:#eee;">|</span>
+
+        <div class="arione-search-wrapper"
+             style="display:flex; justify-content:flex-start; width: 180px;">
+            <input type="text"
+                   placeholder="Pesquisar..."
+                   class="arione-global-search"
+                   style="width: 100%; padding:6px 16px; border:1px solid #e2e8f0;
+                          border-radius:20px; font-size: 13px;">
+        </div>
+
+        <div class="arione-user-area-right"
+             style="display:flex; align-items:center; gap:10px; padding-right:15px;">
+
+            <!-- ✅ Nome e Perfil do usuário -->
+            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                <span style="font-size:13px; font-weight:700; color:#444; line-height: 1.2;">
+                    {% if current_user.is_authenticated %}
+                        {{ current_user.nome_exibicao }}
+                    {% endif %}
+                </span>
+                <span style="font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.3px; opacity:0.8;">
+                    {% if current_user.is_authenticated %}
+                        {{ current_user.perfil_obj.nome if current_user.perfil_obj else 'Sistema' }}
+                    {% endif %}
+                </span>
+            </div>
+
+            <!-- ✅ Foto do usuário ou avatar padrão -->
+            <div class="arione-avatar-mini-circle"
+                 style="width:48px; height:48px; border-radius:10px;
+                        overflow:hidden; border:2px solid #7A255F; cursor:pointer;
+                        box-shadow: 0 2px 8px rgba(122, 37, 95, 0.2);"
+                 title="{{ current_user.nome if current_user.is_authenticated else '' }}">
+                {% if current_user.is_authenticated %}
+                    <img src="{{ url_for('static', filename=current_user.foto_url) }}"
+                         style="width:100%; height:100%; object-fit:cover;"
+                         onerror="this.src='{{ url_for('static', filename='usuarios/avatar.png') }}'">
+                {% else %}
+                    <img src="{{ url_for('static', filename='usuarios/avatar.png') }}"
+                         style="width:100%; height:100%; object-fit:cover;">
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulseLed {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 0; }
+    }
+    .pulse-anim {
+        animation: pulseLed 2s infinite;
+    }
+    #global-pulse-trigger:hover {
+        background: rgba(0,0,0,0.06) !important;
+        transform: scale(1.05);
+    }
+    body.dark-mode #global-pulse-trigger {
+        background: rgba(255,255,255,0.05) !important;
+    }
+
+<style>
+
+
+    /* ESTILOS GLOBAIS DARK MODE (BODY) */
+    body.dark-mode {
+        background-color: #0f172a !important; /* Cor de fundo global ultra escura */
+    }
+
+    .arione-company-name-header { color: #7A255F; transition: all 0.3s; }
+
+    /* Ajuste da InfoBar no Dark Mode */
+    body.dark-mode .arione-bar-white-new {
+        background: rgb(15, 23, 42) !important;
+        border-bottom: none !important;
+    }
+    body.dark-mode #arione-global-clock { color: #94a3b8 !important; }
+    body.dark-mode .arione-company-name-header { color: #f8fafc !important; }
+    body.dark-mode .arione-left-info-group i { color: #94a3b8 !important; }
+    body.dark-mode .arione-global-search { 
+        background: rgb(30, 41, 59) !important; 
+        border-color: rgb(51, 65, 85) !important; 
+        color: #fff !important; 
+    }
+    body.dark-mode .arione-user-area-right span { color: #cbd5e1 !important; }
+    
+    body.dark-mode #global-dark-toggle {
+        background: rgb(51, 65, 85) !important;
+        border-color: rgb(71, 85, 105) !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* Ajuste de Contêineres Principais */
+    body.dark-mode .arione-new-header-container {
+        background: rgb(15, 23, 42) !important;
+    }
+
+    /* Modal Global em Dark Mode */
+    body.dark-mode .arione-modal-window {
+        background: #1e293b !important;
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+    }
+
+    @keyframes pulseBackup {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+<script>
+    function toggleGlobalDarkMode() {
+        const body = document.body;
+        const icon = document.getElementById('global-dark-icon');
+        body.classList.toggle('dark-mode');
+        
+        if (body.classList.contains('dark-mode')) {
+            icon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('arione-dark-mode', 'enabled');
+        } else {
+            icon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('arione-dark-mode', 'disabled');
+        }
+        
+        // Sincroniza com os wrappers dos módulos locais
+        document.querySelectorAll('.arione-page-wrapper').forEach(w => {
+            if (body.classList.contains('dark-mode')) w.classList.add('dark-mode');
+            else w.classList.remove('dark-mode');
+        });
+    }
+
+    function startTopClock() {
+        const el = document.getElementById('arione-global-clock');
+        if (el) {
+            setInterval(() => {
+                el.innerHTML = new Date().toLocaleString('pt-BR');
+            }, 1000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Monitor de Backup Global
+        function checkBackupProgress() {
+            const monitor = document.getElementById('arione-backup-monitor');
+            const text = document.getElementById('backup-monitor-text');
+            
+            fetch('/sistema/armazenamento/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.global_status && data.global_status.running) {
+                        monitor.style.display = 'flex';
+                        text.textContent = data.global_status.message || 'Backup em andamento...';
+                    } else {
+                        monitor.style.display = 'none';
+                    }
+                })
+                .catch(() => {});
+        }
+
+        startTopClock();
+        checkBackupProgress();
+        setInterval(checkBackupProgress, 10000); // Polling a cada 10s
+        
+        // Aplicar estado inicial do Dark Mode
+        if (localStorage.getItem('arione-dark-mode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            const icon = document.getElementById('global-dark-icon');
+            if (icon) icon.classList.replace('fa-moon', 'fa-sun');
+            
+            // Garantir que módulos também iniciem em dark mode
+            document.querySelectorAll('.arione-page-wrapper').forEach(w => w.classList.add('dark-mode'));
+        }
+    });
+</script>
