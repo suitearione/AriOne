@@ -26,12 +26,12 @@ RUN mkdir -p logs
 RUN mkdir -p instance
 
 # Define variáveis de ambiente
-ENV FLASK_APP=app.app:create_app
+ENV PYTHONPATH=/app
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
 # Expõe porta
 EXPOSE 5000
 
-# Comando de inicialização
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "app.app:create_app()"]
+# Comando de inicialização - aponta para factory em app/__init__.py
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:create_app()"]
