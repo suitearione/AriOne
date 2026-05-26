@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, redirect, url_for
-from config import Config
+from app.config import Config
 from app.extensions import db, migrate, login_manager
 
 def create_app(config_class=Config):
