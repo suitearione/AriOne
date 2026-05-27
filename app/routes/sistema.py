@@ -75,19 +75,20 @@ def form_status(id=None):
     return render_template('sistema/cards/administracao/form_status.html', 
                            status=status, status_lista=status_lista, is_modal=is_modal)
 
-@sistema_bp.before_app_request
-def setup_versoes():
-    """Auto-migração para a tabela de versões."""
-    from sqlalchemy import text
-    try:
-        with db.engine.begin() as conn:
-            result = conn.execute(text("PRAGMA table_info(versoes)"))
-            cols_existentes = [row[1] for row in result]
-            if 'data_previsao' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE versoes ADD COLUMN data_previsao DATETIME'))
-                except: pass
-    except:
-        pass
+# Comentado para deploy no Render - migração SQLite não funciona em produção
+# @sistema_bp.before_app_request
+# def setup_versoes():
+#     """Auto-migração para a tabela de versões."""
+#     from sqlalchemy import text
+#     try:
+#         with db.engine.begin() as conn:
+#             result = conn.execute(text("PRAGMA table_info(versoes)"))
+#             cols_existentes = [row[1] for row in result]
+#             if 'data_previsao' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE versoes ADD COLUMN data_previsao DATETIME'))
+#                 except: pass
+#     except:
+#         pass
 
 
 # ══════════════════════════════════════════════════════════════════════════════

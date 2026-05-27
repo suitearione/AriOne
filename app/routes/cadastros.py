@@ -82,157 +82,157 @@ def debug_sync_db():
 # ── Comercial: Ministérios e Parcerias ────────────────────────────────────
 from sqlalchemy import text
 
-@cadastros_bp.before_app_request
-def setup_parametros():
-    """Auto-migração para a tabela de parâmetros."""
-    try:
-        with db.engine.begin() as conn:
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS sistema_parametros (
-                    id INTEGER PRIMARY KEY,
-                    chave VARCHAR(50) UNIQUE NOT NULL,
-                    valor VARCHAR(255),
-                    descricao TEXT,
-                    grupo VARCHAR(50)
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS cat_depositos (
-                    id INTEGER PRIMARY KEY,
-                    nome VARCHAR(100) NOT NULL,
-                    sigla VARCHAR(20),
-                    endereco VARCHAR(255),
-                    tipo VARCHAR(50) DEFAULT 'proprio',
-                    ativa BOOLEAN DEFAULT 1,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS cat_depositos_prateleiras (
-                    id INTEGER PRIMARY KEY,
-                    deposito_id INTEGER NOT NULL,
-                    nome VARCHAR(50) NOT NULL,
-                    ativa BOOLEAN DEFAULT 1,
-                    FOREIGN KEY (deposito_id) REFERENCES cat_depositos(id)
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS cat_atributos (
-                    id INTEGER PRIMARY KEY,
-                    nome VARCHAR(100) UNIQUE NOT NULL,
-                    descricao VARCHAR(255),
-                    ativa BOOLEAN DEFAULT 1
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS cat_materiaprima_tipos (
-                    id INTEGER PRIMARY KEY,
-                    nome VARCHAR(100) UNIQUE NOT NULL,
-                    ativa BOOLEAN DEFAULT 1
-                )
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS sistema_status (
-                    id INTEGER PRIMARY KEY,
-                    nome VARCHAR(50) NOT NULL,
-                    tipo VARCHAR(50) NOT NULL,
-                    cor VARCHAR(20) DEFAULT '#2980B9',
-                    icone VARCHAR(50) DEFAULT 'fas fa-circle',
-                    ordem INTEGER DEFAULT 0,
-                    ativa BOOLEAN DEFAULT 1,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
-            # ── Auto-Migração Inteligente: cat_produtos ──
-            result = conn.execute(text("PRAGMA table_info(cat_produtos)"))
-            cols_existentes = [row[1] for row in result]
-            if 'composicao' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN composicao JSON'))
-                except: pass
-            if 'grade_id' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_id INTEGER REFERENCES cat_grades_modelos(id)'))
-                except: pass
-            if 'grade_cores' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_cores JSON'))
-                except: pass
-            if 'grade_tamanhos' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_tamanhos JSON'))
-                except: pass
-            if 'grade_label_adicional' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_label_adicional VARCHAR(50)'))
-                except: pass
-            if 'grade_valores_adicional' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_valores_adicional JSON'))
-                except: pass
-            if 'cod_interno' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN cod_interno VARCHAR(50)'))
-                except: pass
-            if 'referencia' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN referencia VARCHAR(100)'))
-                except: pass
-            if 'modelo' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN modelo VARCHAR(100)'))
-                except: pass
-            if 'grade_matrix' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_matrix JSON'))
-                except: pass
-            if 'origem_produto' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN origem_produto VARCHAR(50)'))
-                except: pass
-            if 'regra_cod_interno' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN regra_cod_interno VARCHAR(20)'))
-                except: pass
-            if 'tipo_material_id' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN tipo_material_id INTEGER'))
-                except: pass
-            if 'categoria_id' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN categoria_id INTEGER'))
-                except: pass
-            if 'subcategoria_id' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN subcategoria_id INTEGER'))
-                except: pass
-            if 'has_composicao' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN has_composicao BOOLEAN DEFAULT 0'))
-                except: pass
-            if 'fornecedor_id' not in cols_existentes:
-                try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN fornecedor_id INTEGER'))
-                except: pass
-
-            # ── Auto-Migração Inteligente: cat_materiaprima ──
-            result_mp = conn.execute(text("PRAGMA table_info(cat_materiaprima)"))
-            cols_mp = [row[1] for row in result_mp]
-            if 'tipo_id' not in cols_mp:
-                try: conn.execute(text('ALTER TABLE cat_materiaprima ADD COLUMN tipo_id INTEGER'))
-                except: pass
-            # ── Auto-Migração Inteligente: fornecedores ──
-            result_for = conn.execute(text("PRAGMA table_info(fornecedores)"))
-            cols_for = [row[1] for row in result_for]
-            if 'is_fp' not in cols_for:
-                try: conn.execute(text('ALTER TABLE fornecedores ADD COLUMN is_fp BOOLEAN DEFAULT 0'))
-                except: pass
-
-            # ── Auto-Migração Inteligente: Vendas (Nº Documento) ──
-            res_orc = conn.execute(text("PRAGMA table_info(op_vendas_orcamentos)"))
-            cols_orc = [row[1] for row in res_orc]
-            if 'numero' not in cols_orc:
-                try: conn.execute(text('ALTER TABLE op_vendas_orcamentos ADD COLUMN numero VARCHAR(20)'))
-                except: pass
-            
-            res_ped = conn.execute(text("PRAGMA table_info(op_vendas_pedidos)"))
-            cols_ped = [row[1] for row in res_ped]
-            if 'numero' not in cols_ped:
-                try: conn.execute(text('ALTER TABLE op_vendas_pedidos ADD COLUMN numero VARCHAR(20)'))
-                except: pass
-
-            # ── DIAGNÓSTICO TEMPORÁRIO ──
-            with open(r'c:\AriOneDEV\brain\da801964-c686-458e-9b7d-456cee1bd16e\scratch\db_log.txt', 'w') as f:
-                f.write(f"cat_produtos cols: {cols_existentes}\n")
-                f.write(f"fornecedores cols: {cols_for}\n")
-
-    except Exception as ex_mig:
-        with open(r'c:\AriOneDEV\brain\da801964-c686-458e-9b7d-456cee1bd16e\scratch\db_log.txt', 'a') as f:
-            f.write(f"MIGRATION ERROR: {str(ex_mig)}\n")
-        pass
+# Comentado para deploy no Render - migração SQLite não funciona em produção
+# @cadastros_bp.before_app_request
+# def setup_parametros():
+#     """Auto-migração para a tabela de parâmetros."""
+#     try:
+#         with db.engine.begin() as conn:
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS sistema_parametros (
+#                     id INTEGER PRIMARY KEY,
+#                     chave VARCHAR(50) UNIQUE NOT NULL,
+#                     valor VARCHAR(255),
+#                     descricao TEXT,
+#                     grupo VARCHAR(50)
+#                 )
+#             """))
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS cat_depositos (
+#                     id INTEGER PRIMARY KEY,
+#                     nome VARCHAR(100) NOT NULL,
+#                     sigla VARCHAR(20),
+#                     endereco VARCHAR(255),
+#                     tipo VARCHAR(50) DEFAULT 'proprio',
+#                     ativa BOOLEAN DEFAULT 1,
+#                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+#                 )
+#             """))
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS cat_depositos_prateleiras (
+#                     id INTEGER PRIMARY KEY,
+#                     deposito_id INTEGER NOT NULL,
+#                     nome VARCHAR(50) NOT NULL,
+#                     ativa BOOLEAN DEFAULT 1,
+#                     FOREIGN KEY (deposito_id) REFERENCES cat_depositos(id)
+#                 )
+#             """))
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS cat_atributos (
+#                     id INTEGER PRIMARY KEY,
+#                     nome VARCHAR(100) UNIQUE NOT NULL,
+#                     descricao VARCHAR(255),
+#                     ativa BOOLEAN DEFAULT 1
+#                 )
+#             """))
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS cat_materiaprima_tipos (
+#                     id INTEGER PRIMARY KEY,
+#                     nome VARCHAR(100) UNIQUE NOT NULL,
+#                     ativa BOOLEAN DEFAULT 1
+#                 )
+#             """))
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS sistema_status (
+#                     id INTEGER PRIMARY KEY,
+#                     nome VARCHAR(50) NOT NULL,
+#                     tipo VARCHAR(50) NOT NULL,
+#                     cor VARCHAR(20) DEFAULT '#2980B9',
+#                     icone VARCHAR(50) DEFAULT 'fas fa-circle',
+#                     ordem INTEGER DEFAULT 0,
+#                     ativa BOOLEAN DEFAULT 1,
+#                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+#                 )
+#             """))
+#             # ── Auto-Migração Inteligente: cat_produtos ──
+#             result = conn.execute(text("PRAGMA table_info(cat_produtos)"))
+#             cols_existentes = [row[1] for row in result]
+#             if 'composicao' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN composicao JSON'))
+#                 except: pass
+#             if 'grade_id' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_id INTEGER REFERENCES cat_grades_modelos(id)'))
+#                 except: pass
+#             if 'grade_cores' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_cores JSON'))
+#                 except: pass
+#             if 'grade_tamanhos' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_tamanhos JSON'))
+#                 except: pass
+#             if 'grade_label_adicional' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_label_adicional VARCHAR(50)'))
+#                 except: pass
+#             if 'grade_valores_adicional' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_valores_adicional JSON'))
+#                 except: pass
+#             if 'cod_interno' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN cod_interno VARCHAR(50)'))
+#                 except: pass
+#             if 'referencia' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN referencia VARCHAR(100)'))
+#                 except: pass
+#             if 'modelo' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN modelo VARCHAR(100)'))
+#                 except: pass
+#             if 'grade_matrix' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN grade_matrix JSON'))
+#                 except: pass
+#             if 'origem_produto' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN origem_produto VARCHAR(50)'))
+#                 except: pass
+#             if 'regra_cod_interno' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN regra_cod_interno VARCHAR(20)'))
+#                 except: pass
+#             if 'tipo_material_id' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN tipo_material_id INTEGER'))
+#                 except: pass
+#             if 'categoria_id' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN categoria_id INTEGER'))
+#                 except: pass
+#             if 'subcategoria_id' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN subcategoria_id INTEGER'))
+#                 except: pass
+#             if 'has_composicao' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN has_composicao BOOLEAN DEFAULT 0'))
+#                 except: pass
+#             if 'fornecedor_id' not in cols_existentes:
+#                 try: conn.execute(text('ALTER TABLE cat_produtos ADD COLUMN fornecedor_id INTEGER'))
+#                 except: pass
+# 
+#             # ── Auto-Migração Inteligente: cat_materiaprima ──
+#             result_mp = conn.execute(text("PRAGMA table_info(cat_materiaprima)"))
+#             cols_mp = [row[1] for row in result_mp]
+#             if 'tipo_id' not in cols_mp:
+#                 try: conn.execute(text('ALTER TABLE cat_materiaprima ADD COLUMN tipo_id INTEGER'))
+#                 except: pass
+#             # ── Auto-Migração Inteligente: fornecedores ──
+#             result_for = conn.execute(text("PRAGMA table_info(fornecedores)"))
+#             cols_for = [row[1] for row in result_for]
+#             if 'is_fp' not in cols_for:
+#                 try: conn.execute(text('ALTER TABLE fornecedores ADD COLUMN is_fp BOOLEAN DEFAULT 0'))
+#                 except: pass
+# 
+#             # ── Auto-Migração Inteligente: Vendas (Nº Documento) ──
+#             res_orc = conn.execute(text("PRAGMA table_info(op_vendas_orcamentos)"))
+#             cols_orc = [row[1] for row in res_orc]
+#             if 'numero' not in cols_orc:
+#                 try: conn.execute(text('ALTER TABLE op_vendas_orcamentos ADD COLUMN numero VARCHAR(20)'))
+#                 except: pass
+#             
+#             res_ped = conn.execute(text("PRAGMA table_info(op_vendas_pedidos)"))
+#             cols_ped = [row[1] for row in res_ped]
+#             if 'numero' not in cols_ped:
+#                 try: conn.execute(text('ALTER TABLE op_vendas_pedidos ADD COLUMN numero VARCHAR(20)'))
+#                 except: pass
+# 
+#             # ── DIAGNÓSTICO TEMPORÁRIO ──
+#             with open(r'c:\AriOneDEV\brain\da801964-c686-458e-9b7d-456cee1bd16e\scratch\db_log.txt', 'w') as f:
+#                 f.write(f"cat_produtos cols: {cols_existentes}\n")
+#                 f.write(f"fornecedores cols: {cols_for}\n")
+# 
+#     except Exception as ex_mig:
+#         with open(r'c:\AriOneDEV\brain\da801964-c686-458e-9b7d-456cee1bd16e\scratch\db_log.txt', 'a') as f:
+#             f.write(f"MIGRATION ERROR: {str(ex_mig)}\n")
 
 @cadastros_bp.route('/parametros/salvar', methods=['POST'])
 @login_required
@@ -318,17 +318,19 @@ def get_parametros():
 @login_required
 def card_ministerios():
     try:
-        # Auto-Migração Inteligente
-        with db.engine.begin() as conn:
-            result = conn.execute(text("PRAGMA table_info(comercial_ministerios)"))
-            cols_existentes = [row[1] for row in result]
-            for col, spec in [
-                ('email', 'VARCHAR(100)'), ('whatsapp', 'VARCHAR(20)'), ('registro', 'VARCHAR(50)'), ('foto', 'VARCHAR(255)'),
-                ('tipo', 'VARCHAR(50)'), ('ativa', 'BOOLEAN DEFAULT 1')
-            ]:
-                if col not in cols_existentes:
-                    try: conn.execute(text(f'ALTER TABLE comercial_ministerios ADD COLUMN {col} {spec}'))
-                    except: pass
+        # Comentado para deploy no Render - migração SQLite não funciona em produção
+        # # Auto-Migração Inteligente
+        # with db.engine.begin() as conn:
+        #     result = conn.execute(text("PRAGMA table_info(comercial_ministerios)"))
+        #     cols_existentes = [row[1] for row in result]
+        #     for col, spec in [
+        #         ('email', 'VARCHAR(100)'), ('whatsapp', 'VARCHAR(20)'), ('registro', 'VARCHAR(50)'), ('foto', 'VARCHAR(255)'),
+        #         ('tipo', 'VARCHAR(50)'), ('ativa', 'BOOLEAN DEFAULT 1')
+        #     ]:
+        #         if col not in cols_existentes:
+        #             try: conn.execute(text(f'ALTER TABLE comercial_ministerios ADD COLUMN {col} {spec}'))
+        #             except: pass
+        pass
 
         if request.method == 'POST':
             min_id = request.form.get('id')
@@ -368,30 +370,32 @@ def card_ministerios():
 @login_required
 def card_parcerias():
     try:
-        # Auto-Migração Inteligente (Pilar Integridade)
-        with db.engine.begin() as conn:
-            # Verifica colunas existentes
-            result = conn.execute(text("PRAGMA table_info(comercial_parcerias_ministeriais)"))
-            cols_existentes = [row[1] for row in result]
-            
-            # Colunas necessárias segundo o modelo
-            cols_necessarias = [
-                ('ministerio_id', 'INTEGER'),
-                ('valor', 'FLOAT DEFAULT 0.0'), 
-                ('frequencia', 'VARCHAR(50)'),
-                ('tipo_cobranca', 'VARCHAR(50)'),
-                ('data_assinatura', 'DATE'),
-                ('data_inicio', 'DATE'),
-                ('data_fim', 'DATE'),
-                ('anexos_json', 'TEXT'),
-                ('created_at', 'DATETIME')
-            ]
-            
-            for col, spec in cols_necessarias:
-                if col not in cols_existentes:
-                    try:
-                        conn.execute(text(f'ALTER TABLE comercial_parcerias_ministeriais ADD COLUMN {col} {spec}'))
-                    except: pass
+        # Comentado para deploy no Render - migração SQLite não funciona em produção
+        # # Auto-Migração Inteligente (Pilar Integridade)
+        # with db.engine.begin() as conn:
+        #     # Verifica colunas existentes
+        #     result = conn.execute(text("PRAGMA table_info(comercial_parcerias_ministeriais)"))
+        #     cols_existentes = [row[1] for row in result]
+        #     
+        #     # Colunas necessárias segundo o modelo
+        #     cols_necessarias = [
+        #         ('ministerio_id', 'INTEGER'),
+        #         ('valor', 'FLOAT DEFAULT 0.0'), 
+        #         ('frequencia', 'VARCHAR(50)'),
+        #         ('tipo_cobranca', 'VARCHAR(50)'),
+        #         ('data_assinatura', 'DATE'),
+        #         ('data_inicio', 'DATE'),
+        #         ('data_fim', 'DATE'),
+        #         ('anexos_json', 'TEXT'),
+        #         ('created_at', 'DATETIME')
+        #     ]
+        #     
+        #     for col, spec in cols_necessarias:
+        #         if col not in cols_existentes:
+        #             try:
+        #                 conn.execute(text(f'ALTER TABLE comercial_parcerias_ministeriais ADD COLUMN {col} {spec}'))
+        #             except: pass
+        pass
 
         if request.method == 'POST':
             parc_id = request.form.get('id')
@@ -488,19 +492,21 @@ def _parse_date(valor):
 @cadastros_bp.route('', methods=['GET', 'POST'])
 @cadastros_bp.route('/abas', methods=['GET', 'POST'])
 def abas():
-    # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
-    try:
-        with db.engine.begin() as conn:
-            from sqlalchemy import text
-            result = conn.execute(text("PRAGMA table_info(empresas)"))
-            cols_existentes = [row[1] for row in result]
-            for col in ['end_fat_referencia', 'end_ent_referencia', 'end_cor_referencia']:
-                if col not in cols_existentes:
-                    try:
-                        conn.execute(text(f'ALTER TABLE empresas ADD COLUMN {col} VARCHAR(200)'))
-                    except: pass
-    except Exception as e:
-        print(f"Erro na auto-migração de empresas (abas): {e}")
+    # Comentado para deploy no Render - migração SQLite não funciona em produção
+    # # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
+    # try:
+    #     with db.engine.begin() as conn:
+    #         from sqlalchemy import text
+    #         result = conn.execute(text("PRAGMA table_info(empresas)"))
+    #         cols_existentes = [row[1] for row in result]
+    #         for col in ['end_fat_referencia', 'end_ent_referencia', 'end_cor_referencia']:
+    #             if col not in cols_existentes:
+    #                 try:
+    #                     conn.execute(text(f'ALTER TABLE empresas ADD COLUMN {col} VARCHAR(200)'))
+    #                 except: pass
+    # except Exception as e:
+    #     print(f"Erro na auto-migração de empresas (abas): {e}")
+    pass
 
     abas_disponiveis = [
         {'id': 'empresa',    'label': 'Empresa',     'icon': 'business'},
@@ -634,19 +640,21 @@ def form_branding():
 @cadastros_bp.route('/empresa/form', methods=['GET', 'POST'])
 @cadastros_bp.route('/empresa/form/<int:id>', methods=['GET', 'POST'])
 def form_empresa(id=None):
-    # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
-    try:
-        with db.engine.begin() as conn:
-            from sqlalchemy import text
-            result = conn.execute(text("PRAGMA table_info(empresas)"))
-            cols_existentes = [row[1] for row in result]
-            for col in ['end_fat_referencia', 'end_ent_referencia', 'end_cor_referencia']:
-                if col not in cols_existentes:
-                    try:
-                        conn.execute(text(f'ALTER TABLE empresas ADD COLUMN {col} VARCHAR(200)'))
-                    except: pass
-    except Exception as e:
-        print(f"Erro na auto-migração de empresas: {e}")
+    # Comentado para deploy no Render - migração SQLite não funciona em produção
+    # # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
+    # try:
+    #     with db.engine.begin() as conn:
+    #         from sqlalchemy import text
+    #         result = conn.execute(text("PRAGMA table_info(empresas)"))
+    #         cols_existentes = [row[1] for row in result]
+    #         for col in ['end_fat_referencia', 'end_ent_referencia', 'end_cor_referencia']:
+    #             if col not in cols_existentes:
+    #                 try:
+    #                     conn.execute(text(f'ALTER TABLE empresas ADD COLUMN {col} VARCHAR(200)'))
+    #                 except: pass
+    # except Exception as e:
+    #     print(f"Erro na auto-migração de empresas: {e}")
+    pass
 
     empresa        = Empresa.query.get(id) if id else None
     empresas_lista = Empresa.query.order_by(Empresa.razao_social).all()
@@ -965,19 +973,21 @@ def card_status_workflow():
     from app.models.sistema.status import StatusWorkflow
     from sqlalchemy import text
     
-    # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
-    try:
-        with db.engine.begin() as conn:
-            result = conn.execute(text("PRAGMA table_info(sistema_status)"))
-            cols = [row[1] for row in result]
-            if 'dashboard_conta' not in cols:
-                conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_conta BOOLEAN DEFAULT 0"))
-            if 'dashboard_modulo' not in cols:
-                conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_modulo VARCHAR(50)"))
-            if 'dashboard_indicador' not in cols:
-                conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_indicador VARCHAR(50)"))
-    except Exception as e:
-        print(f"Erro na migração de status: {e}")
+    # Comentado para deploy no Render - migração SQLite não funciona em produção
+    # # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
+    # try:
+    #     with db.engine.begin() as conn:
+    #         result = conn.execute(text("PRAGMA table_info(sistema_status)"))
+    #         cols = [row[1] for row in result]
+    #         if 'dashboard_conta' not in cols:
+    #             conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_conta BOOLEAN DEFAULT 0"))
+    #         if 'dashboard_modulo' not in cols:
+    #             conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_modulo VARCHAR(50)"))
+    #         if 'dashboard_indicador' not in cols:
+    #             conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_indicador VARCHAR(50)"))
+    # except Exception as e:
+    #     print(f"Erro na migração de status: {e}")
+    pass
 
     status_lista = StatusWorkflow.query.order_by(
         StatusWorkflow.dashboard_modulo, 

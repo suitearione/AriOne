@@ -36,28 +36,29 @@ def _dados_dashboard():
     from app.models.sistema.status import StatusWorkflow
     from sqlalchemy import text
     
-    # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
-    try:
-        with db.engine.begin() as conn:
-            result = conn.execute(text("PRAGMA table_info(sistema_status)"))
-            cols = [row[1] for row in result]
-            if 'dashboard_conta' not in cols:
-                conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_conta BOOLEAN DEFAULT 0"))
-            if 'dashboard_modulo' not in cols:
-                conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_modulo VARCHAR(50)"))
-            if 'dashboard_indicador' not in cols:
-                conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_indicador VARCHAR(50)"))
-            
-            # 🛡️ Auto-Migração Pedidos/Produção (Garante que colunas 'numero' existam)
-            res_ped = conn.execute(text("PRAGMA table_info(op_vendas_pedidos)"))
-            if 'numero' not in [r[1] for r in res_ped]:
-                conn.execute(text("ALTER TABLE op_vendas_pedidos ADD COLUMN numero VARCHAR(20)"))
-                
-            res_prod = conn.execute(text("PRAGMA table_info(op_producao_ordens)"))
-            if 'numero' not in [r[1] for r in res_prod]:
-                conn.execute(text("ALTER TABLE op_producao_ordens ADD COLUMN numero VARCHAR(20)"))
-    except Exception as e:
-        pass # Silencioso no dashboard para não travar a UI
+    # Comentado para deploy no Render - migração SQLite não funciona em produção
+    # # 🛡️ Auto-Migração Inteligente AriOne (Pilar Integridade)
+    # try:
+    #     with db.engine.begin() as conn:
+    #         result = conn.execute(text("PRAGMA table_info(sistema_status)"))
+    #         cols = [row[1] for row in result]
+    #         if 'dashboard_conta' not in cols:
+    #             conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_conta BOOLEAN DEFAULT 0"))
+    #         if 'dashboard_modulo' not in cols:
+    #             conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_modulo VARCHAR(50)"))
+    #         if 'dashboard_indicador' not in cols:
+    #             conn.execute(text("ALTER TABLE sistema_status ADD COLUMN dashboard_indicador VARCHAR(50)"))
+    #         
+    #         # 🛡️ Auto-Migração Pedidos/Produção (Garante que colunas 'numero' existam)
+    #         res_ped = conn.execute(text("PRAGMA table_info(op_vendas_pedidos)"))
+    #         if 'numero' not in [r[1] for r in res_ped]:
+    #             conn.execute(text("ALTER TABLE op_vendas_pedidos ADD COLUMN numero VARCHAR(20)"))
+    #             
+    #         res_prod = conn.execute(text("PRAGMA table_info(op_producao_ordens)"))
+    #         if 'numero' not in [r[1] for r in res_prod]:
+    #             conn.execute(text("ALTER TABLE op_producao_ordens ADD COLUMN numero VARCHAR(20)"))
+    # except Exception as e:
+    #     pass # Silencioso no dashboard para não travar a UI
 
     status_config = StatusWorkflow.query.filter_by(dashboard_conta=True).all()
     
