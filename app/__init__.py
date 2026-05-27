@@ -403,6 +403,32 @@ def create_app():
             tem_permissao=tem_permissao
         )
 
+    # ── Health Check (diagnóstico no Render) ────────────────────────────────
+    @app.route('/health')
+    def health():
+        import traceback
+        checks = {}
+        checks['database_url'] = app.config['SQLALCHEMY_DATABASE_URI'][:30] + '...'
+        try:
+            db.session.execute(db.text('SELECT 1'))
+            checks['db_connection'] = 'OK'
+        except Exception as e:
+            checks['db_connection'] = f'ERRO: {str(e)}'
+        try:
+            count = Empresa.query.count()
+            checks['empresas_table'] = f'OK ({count} registros)'
+        except Exception as e:
+            checks['empresas_table'] = f'ERRO: {str(e)}'
+        return checks, 200
+
+    # ── Error Handler (mostra traceback no log) ───────────────────────────
+    @app.errorhandler(500)
+    def internal_error(e):
+        import traceback
+        tb = traceback.format_exc()
+        print(f"\n{'='*50}\n500 ERROR TRACEBACK:\n{tb}\n{'='*50}\n")
+        return f"Internal Server Error - verifique /health para diagnóstico", 500
+
     # ── Rota raiz ──────────────────────────────────────────────────────────
     @app.route('/')
     def index():
