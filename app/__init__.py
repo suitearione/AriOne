@@ -35,7 +35,13 @@ def create_app():
     )
 
     # ── Configurações ──────────────────────────────────────────────────────
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{BASE_DIR / 'instance' / 'arione.db'}"
+    database_url = os.environ.get('DATABASE_URL', '')
+    if database_url:
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{BASE_DIR / 'instance' / 'arione.db'}"
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'arione_dev_2026_secret')
     app.config['TEMPLATES_AUTO_RELOAD'] = True  # ← PAAv1: força reload de templates sem reiniciar
 
