@@ -120,7 +120,11 @@ def create_app():
     start_backup_scheduler()
 
     # ── Auto-Sync do Banco de Dados ──
-    # Comentado para deploy no Render - db.create_all() deve ser executado via migrations
+    # Cria tabelas no PostgreSQL (Render) ou SQLite (local)
+    with app.app_context():
+        db.create_all()
+
+    # Comentado para deploy no Render - seed e migrações SQLite removidas
     # with app.app_context():
     #     from app.models.cadastros import EmpresaContato
     #     from app.models.comercial.models import CanalVenda
