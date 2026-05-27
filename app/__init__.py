@@ -114,224 +114,226 @@ def create_app():
     start_backup_scheduler()
 
     # ── Auto-Sync do Banco de Dados ──
-    with app.app_context():
-        from app.models.cadastros import EmpresaContato
-        from app.models.comercial.models import CanalVenda
-        db.create_all()
-        
-        try:
-            if not CanalVenda.query.first():
-                seed_canais = [
-                    CanalVenda(nome="WHATSAPP SUPORTE OFICIAL", tipo="WhatsApp API", status="ATIVO", departamento="Suporte N1", identificador="+55 (11) 99999-8888", api_token="EAAK_SUPORTE_999", webhook_url="https://api.arione.com/v1/webhook/chatone", ativar_ia="SIM", sla_minutos=15, mensagem_ausencia="Nosso horário de atendimento é de Seg a Sex das 08h às 18h."),
-                    CanalVenda(nome="WEBCHAT PORTAL MATRIZ", tipo="Webchat", status="ATIVO", departamento="Comercial B2C", identificador="Widget SiteOne (JS)", api_token="EAAK_WEBCHAT_888", webhook_url="https://api.arione.com/v1/webhook/chatone", ativar_ia="SIM", sla_minutos=10, mensagem_ausencia="Nosso horário de atendimento é de Seg a Sex das 08h às 18h."),
-                    CanalVenda(nome="INSTAGRAM DIRECT SAC", tipo="Instagram", status="QR_CODE", departamento="Geral", identificador="@arione.software", api_token="EAAK_INSTA_777", webhook_url="https://api.arione.com/v1/webhook/chatone", ativar_ia="NAO", sla_minutos=30, mensagem_ausencia="Nosso horário de atendimento é de Seg a Sex das 08h às 18h.")
-                ]
-                db.session.bulk_save_objects(seed_canais)
-                db.session.commit()
-        except Exception:
-            db.session.rollback()
-
-        # Sincronização manual de colunas para SQLite (ALTER TABLE)
-        try:
-            from sqlalchemy import text
-            cols = [
-                ('tipo_pessoa', 'VARCHAR(2) DEFAULT "PJ"'), ('cpf', 'VARCHAR(14)'),
-                ('rg', 'VARCHAR(20)'), ('data_nascimento', 'DATE'),
-                ('profissao', 'VARCHAR(100)'), ('pis_pasep', 'VARCHAR(15)'),
-                ('regime_tributario', 'VARCHAR(50)'), ('natureza_juridica', 'VARCHAR(10)'),
-                ('cnae_principal', 'VARCHAR(10)'), ('cnae_secundario', 'VARCHAR(10)'),
-                ('retencao_irrf', 'VARCHAR(50)'), ('declaracao_ir', 'VARCHAR(50)'),
-                ('setor_id', 'INTEGER'), ('departamento_id', 'INTEGER'), ('cargo_id', 'INTEGER')
-            ]
-            for col, tipo in cols:
-                try:
-                    db.session.execute(text(f"ALTER TABLE empresas ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-            
-            # Sincronização para a tabela usuarios
-            try:
-                db.session.execute(text("ALTER TABLE usuarios ADD COLUMN usuario VARCHAR(50)"))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-
-            # Sincronização para a tabela setores (Hierarquia HCM)
-            cols_setores = [
-                ('codigo', 'VARCHAR(20)'), ('sigla', 'VARCHAR(10)'),
-                ('parent_id', 'INTEGER REFERENCES setores(id)')
-            ]
-            for col, tipo in cols_setores:
-                try:
-                    db.session.execute(text(f"ALTER TABLE setores ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-
-            # Sincronização para a tabela empresas_contatos
-            cols_contatos = [('setor_id', 'INTEGER'), ('departamento_id', 'INTEGER')]
-            for col, tipo in cols_contatos:
-                try:
-                    db.session.execute(text(f"ALTER TABLE empresas_contatos ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-
-            # Sincronização para a tabela cargos
-            cols_cargos = [('codigo', 'VARCHAR(20)')]
-            for col, tipo in cols_cargos:
-                try:
-                    db.session.execute(text(f"ALTER TABLE cargos ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-
-            # Sincronização para a tabela centros_custo
-            try:
-                db.session.execute(text("ALTER TABLE centros_custo ADD COLUMN pix VARCHAR(100)"))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-
-            # Sincronização para a tabela funcionarios
-            cols_func = [
-                ('rg_orgao', 'VARCHAR(20)'), ('rg_data_emissao', 'DATE'),
-                ('pis_pasep', 'VARCHAR(20)'), ('nome_mae', 'VARCHAR(100)'),
-                ('nome_pai', 'VARCHAR(100)'), ('titulo_eleitor', 'VARCHAR(20)'),
-                ('reservista', 'VARCHAR(20)'), ('tipo_sanguineo', 'VARCHAR(5)'),
-                ('alergias', 'VARCHAR(255)'), ('email_corporativo', 'VARCHAR(100)'),
-                ('whatsapp', 'VARCHAR(20)'), ('matricula', 'VARCHAR(20)'),
-                ('cnh', 'VARCHAR(20)'), ('cnh_categoria', 'VARCHAR(10)'),
-                ('tipo_contrato', 'VARCHAR(50)'), ('status', 'VARCHAR(20)'),
-                ('gestor_id', 'INTEGER'), ('nivel_hierarquico', 'VARCHAR(50)'),
-                ('unidade_negocio', 'VARCHAR(100)'), ('turno', 'VARCHAR(50)'),
-                ('regime_escala', 'VARCHAR(20)'), ('ponto_tolerancia', 'INTEGER'),
-                ('centro_custo_id', 'INTEGER'), ('aso_data', 'DATE'),
-                ('aso_validade', 'DATE'), ('epi_entregues', 'TEXT'),
-                ('salario_base', 'NUMERIC'), ('peridiocidade', 'VARCHAR(20)'),
-                ('banco', 'VARCHAR(100)'), ('tipo_conta', 'VARCHAR(50)'),
-                ('agencia', 'VARCHAR(10)'), ('conta', 'VARCHAR(20)'),
-                ('pix', 'VARCHAR(100)'), ('foto', 'VARCHAR(255)'),
-                ('path_documentos', 'VARCHAR(255)'), ('usuario_id', 'INTEGER')
-            ]
-            for col, tipo in cols_func:
-                try:
-                    db.session.execute(text(f"ALTER TABLE funcionarios ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-
-            # Sincronização para a tabela clientes
-            cols_cli = [
-                ('end_res_obs', 'VARCHAR(255)'), ('end_ent_obs', 'VARCHAR(255)'),
-                ('limite_compras', 'NUMERIC(16, 2) DEFAULT 0.0'), ('banco', 'VARCHAR(150)'),
-                ('foto', 'VARCHAR(255)')
-            ]
-            for col, tipo in cols_cli:
-                try:
-                    db.session.execute(text(f"ALTER TABLE clientes ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-
-            # Sincronização para a tabela fornecedores
-            cols_forn = [
-                ('pix_tipo', 'VARCHAR(20)'), ('foto', 'VARCHAR(255)')
-            ]
-            for col, tipo in cols_forn:
-                try:
-                    db.session.execute(text(f"ALTER TABLE fornecedores ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-
-            # Sincronização para tabelas comerciais
-            cols_rev = [
-                ('whatsapp', 'VARCHAR(20)'), ('foto', 'VARCHAR(255)'), 
-                ('categoria', 'VARCHAR(50)'), ('tipo_revenda', 'VARCHAR(50)'), 
-                ('comissao', 'FLOAT DEFAULT 0.0'), ('regiao', 'VARCHAR(100)'),
-                ('rating', 'VARCHAR(10)'), ('limite_credito', 'FLOAT DEFAULT 0.0'),
-                ('ativa', 'BOOLEAN DEFAULT 1'), ('created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
-            ]
-            for col, tipo in cols_rev:
-                try:
-                    db.session.execute(text(f"ALTER TABLE comercial_revendedores ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception: db.session.rollback()
-
-            cols_inf = [
-                ('handle', 'VARCHAR(50)'), ('nicho', 'VARCHAR(50)'), ('alcance', 'INTEGER'), 
-                ('seguidores', 'VARCHAR(20)'), ('whatsapp', 'VARCHAR(20)'), ('email', 'VARCHAR(100)'), 
-                ('instagram', 'VARCHAR(100)'), ('plataforma', 'VARCHAR(50)'), ('foto', 'VARCHAR(255)'), 
-                ('status_contrato', 'VARCHAR(20) DEFAULT "ATIVO"'),
-                ('ativa', 'BOOLEAN DEFAULT 1'), ('created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
-            ]
-            for col, tipo in cols_inf:
-                try:
-                    db.session.execute(text(f"ALTER TABLE comercial_influenciadores ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception: db.session.rollback()
-
-            cols_est = [
-                ('especialidade', 'VARCHAR(100)'), ('portfólio_url', 'VARCHAR(255)'), 
-                ('whatsapp', 'VARCHAR(20)'), ('email', 'VARCHAR(100)'), ('foto', 'VARCHAR(255)'), 
-                ('disponibilidade', 'VARCHAR(50)'),
-                ('ativa', 'BOOLEAN DEFAULT 1'), ('created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
-            ]
-            for col, tipo in cols_est:
-                try:
-                    db.session.execute(text(f"ALTER TABLE comercial_estilistas ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception: db.session.rollback()
-
-            # ── SINCRONIZAÇÃO COMERCIAL E VENDAS (CANAIS DE VENDA) ──
-            try:
-                db.session.execute(text("ALTER TABLE comercial_vendedores ADD COLUMN canais_venda VARCHAR(255)"))
-                db.session.commit()
-            except Exception: db.session.rollback()
-
-            try:
-                db.session.execute(text("ALTER TABLE op_vendas_orcamentos ADD COLUMN canal_venda VARCHAR(100)"))
-                db.session.commit()
-            except Exception: db.session.rollback()
-
-            try:
-                db.session.execute(text("ALTER TABLE op_vendas_pedidos ADD COLUMN canal_venda VARCHAR(100)"))
-                db.session.commit()
-            except Exception: db.session.rollback()
-
-            # ── SINCRONIZAÇÃO SERVIÇOS (CATÁLOGOS) ──
-            cols_srv = [
-                ('tipo_item', 'VARCHAR(2) DEFAULT "09"'), ('codigo', 'VARCHAR(50)'),
-                ('observacoes', 'VARCHAR(255)'), ('preco_custo', 'FLOAT DEFAULT 0.0'),
-                ('preco_venda', 'FLOAT DEFAULT 0.0'), ('qtd_minima', 'FLOAT DEFAULT 1.0'),
-                ('tempo_execucao', 'VARCHAR(100)'), ('comissao', 'FLOAT DEFAULT 0.0'),
-                ('descricao_detalhada', 'TEXT'), ('garantia', 'VARCHAR(100)'),
-                ('validade_proposta', 'VARCHAR(100)'), ('forma_pagamento', 'VARCHAR(50)'),
-                ('ncm', 'VARCHAR(10)'), ('cest', 'VARCHAR(10)'),
-                ('codigo_servico', 'VARCHAR(100)')
-            ]
-            for col, tipo in cols_srv:
-                try:
-                    db.session.execute(text(f"ALTER TABLE cat_servicos ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception: db.session.rollback()
-
-            # ── SINCRONIZAÇÃO PLANO DE CONTAS (GERENCIAL) ──
-            cols_pc = [
-                ('grupo_gerencial', 'VARCHAR(1)'),
-                ('vida_util_meses', 'INTEGER DEFAULT 0'),
-                ('valor_residual_percent', 'FLOAT DEFAULT 0.0')
-            ]
-            for col, tipo in cols_pc:
-                try:
-                    db.session.execute(text(f"ALTER TABLE financeiro_plano_contas ADD COLUMN {col} {tipo}"))
-                    db.session.commit()
-                except Exception: db.session.rollback()
-
-        except Exception:
-            pass
+    # Comentado para deploy no Render - db.create_all() deve ser executado via migrations
+    # with app.app_context():
+    #     from app.models.cadastros import EmpresaContato
+    #     from app.models.comercial.models import CanalVenda
+    #     db.create_all()
+    #     
+    #     try:
+    #         if not CanalVenda.query.first():
+    #             seed_canais = [
+    #                 CanalVenda(nome="WHATSAPP SUPORTE OFICIAL", tipo="WhatsApp API", status="ATIVO", departamento="Suporte N1", identificador="+55 (11) 99999-8888", api_token="EAAK_SUPORTE_999", webhook_url="https://api.arione.com/v1/webhook/chatone", ativar_ia="SIM", sla_minutos=15, mensagem_ausencia="Nosso horário de atendimento é de Seg a Sex das 08h às 18h."),
+    #                 CanalVenda(nome="WEBCHAT PORTAL MATRIZ", tipo="Webchat", status="ATIVO", departamento="Comercial B2C", identificador="Widget SiteOne (JS)", api_token="EAAK_WEBCHAT_888", webhook_url="https://api.arione.com/v1/webhook/chatone", ativar_ia="SIM", sla_minutos=10, mensagem_ausencia="Nosso horário de atendimento é de Seg a Sex das 08h às 18h."),
+    #                 CanalVenda(nome="INSTAGRAM DIRECT SAC", tipo="Instagram", status="QR_CODE", departamento="Geral", identificador="@arione.software", api_token="EAAK_INSTA_777", webhook_url="https://api.arione.com/v1/webhook/chatone", ativar_ia="NAO", sla_minutos=30, mensagem_ausencia="Nosso horário de atendimento é de Seg a Sex das 08h às 18h.")
+    #             ]
+    #             db.session.bulk_save_objects(seed_canais)
+    #             db.session.commit()
+    #     except Exception:
+    #         db.session.rollback()
+    #
+    #     # Sincronização manual de colunas para SQLite (ALTER TABLE)
+    #     # Comentado para deploy no Render - deve ser executado via migrations
+    #     # try:
+    #     #     from sqlalchemy import text
+    #     #     cols = [
+    #     #         ('tipo_pessoa', 'VARCHAR(2) DEFAULT "PJ"'), ('cpf', 'VARCHAR(14)'),
+    #     #         ('rg', 'VARCHAR(20)'), ('data_nascimento', 'DATE'),
+    #     #         ('profissao', 'VARCHAR(100)'), ('pis_pasep', 'VARCHAR(15)'),
+    #     #         ('regime_tributario', 'VARCHAR(50)'), ('natureza_juridica', 'VARCHAR(10)'),
+    #     #         ('cnae_principal', 'VARCHAR(10)'), ('cnae_secundario', 'VARCHAR(10)'),
+    #     #         ('retencao_irrf', 'VARCHAR(50)'), ('declaracao_ir', 'VARCHAR(50)'),
+    #     #         ('setor_id', 'INTEGER'), ('departamento_id', 'INTEGER'), ('cargo_id', 'INTEGER')
+    #     #     ]
+    #     #     for col, tipo in cols:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE empresas ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception:
+    #     #             db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela usuarios
+    #     #     try:
+    #     #         db.session.execute(text("ALTER TABLE usuarios ADD COLUMN usuario VARCHAR(50)"))
+    #     #         db.session.commit()
+    #     #     except Exception:
+    #     #         db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela setores (Hierarquia HCM)
+    #     #     cols_setores = [
+    #     #         ('codigo', 'VARCHAR(20)'), ('sigla', 'VARCHAR(10)'),
+    #     #         ('parent_id', 'INTEGER REFERENCES setores(id)')
+    #     #     ]
+    #     #     for col, tipo in cols_setores:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE setores ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception:
+    #     #             db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela empresas_contatos
+    #     #     cols_contatos = [('setor_id', 'INTEGER'), ('departamento_id', 'INTEGER')]
+    #     #     for col, tipo in cols_contatos:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE empresas_contatos ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception:
+    #     #             db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela cargos
+    #     #     cols_cargos = [('codigo', 'VARCHAR(20)')]
+    #     #     for col, tipo in cols_cargos:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE cargos ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception:
+    #     #             db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela centros_custo
+    #     #     try:
+    #     #         db.session.execute(text("ALTER TABLE centros_custo ADD COLUMN pix VARCHAR(100)"))
+    #     #         db.session.commit()
+    #     #     except Exception:
+    #     #         db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela funcionarios
+    #     #     cols_func = [
+    #     #         ('rg_orgao', 'VARCHAR(20)'), ('rg_data_emissao', 'DATE'),
+    #     #         ('pis_pasep', 'VARCHAR(20)'), ('nome_mae', 'VARCHAR(100)'),
+    #     #         ('nome_pai', 'VARCHAR(100)'), ('titulo_eleitor', 'VARCHAR(20)'),
+    #     #         ('reservista', 'VARCHAR(20)'), ('tipo_sanguineo', 'VARCHAR(5)'),
+    #     #         ('alergias', 'VARCHAR(255)'), ('email_corporativo', 'VARCHAR(100)'),
+    #     #         ('whatsapp', 'VARCHAR(20)'), ('matricula', 'VARCHAR(20)'),
+    #     #         ('cnh', 'VARCHAR(20)'), ('cnh_categoria', 'VARCHAR(10)'),
+    #     #         ('tipo_contrato', 'VARCHAR(50)'), ('status', 'VARCHAR(20)'),
+    #     #         ('gestor_id', 'INTEGER'), ('nivel_hierarquico', 'VARCHAR(50)'),
+    #     #         ('unidade_negocio', 'VARCHAR(100)'), ('turno', 'VARCHAR(50)'),
+    #     #         ('regime_escala', 'VARCHAR(20)'), ('ponto_tolerancia', 'INTEGER'),
+    #     #         ('centro_custo_id', 'INTEGER'), ('aso_data', 'DATE'),
+    #     #         ('aso_validade', 'DATE'), ('epi_entregues', 'TEXT'),
+    #     #         ('salario_base', 'NUMERIC'), ('peridiocidade', 'VARCHAR(20)'),
+    #     #         ('banco', 'VARCHAR(100)'), ('tipo_conta', 'VARCHAR(50)'),
+    #     #         ('agencia', 'VARCHAR(10)'), ('conta', 'VARCHAR(20)'),
+    #     #         ('pix', 'VARCHAR(100)'), ('foto', 'VARCHAR(255)'),
+    #     #         ('path_documentos', 'VARCHAR(255)'), ('usuario_id', 'INTEGER')
+    #     #     ]
+    #     #     for col, tipo in cols_func:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE funcionarios ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception:
+    #     #             db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela clientes
+    #     #     cols_cli = [
+    #     #         ('end_res_obs', 'VARCHAR(255)'), ('end_ent_obs', 'VARCHAR(255)'),
+    #     #         ('limite_compras', 'NUMERIC(16, 2) DEFAULT 0.0'), ('banco', 'VARCHAR(150)'),
+    #     #         ('foto', 'VARCHAR(255)')
+    #     #     ]
+    #     #     for col, tipo in cols_cli:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE clientes ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception:
+    #     #             db.session.rollback()
+    #     # 
+    #     #     # Sincronização para a tabela fornecedores
+    #     #     cols_forn = [
+    #     #         ('pix_tipo', 'VARCHAR(20)'), ('foto', 'VARCHAR(255)')
+    #     #     ]
+    #     #     for col, tipo in cols_forn:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE fornecedores ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception:
+    #     #             db.session.rollback()
+    #     # 
+    #     #     # Sincronização para tabelas comerciais
+    #     #     cols_rev = [
+    #     #         ('whatsapp', 'VARCHAR(20)'), ('foto', 'VARCHAR(255)'), 
+    #     #         ('categoria', 'VARCHAR(50)'), ('tipo_revenda', 'VARCHAR(50)'), 
+    #     #         ('comissao', 'FLOAT DEFAULT 0.0'), ('regiao', 'VARCHAR(100)'),
+    #     #         ('rating', 'VARCHAR(10)'), ('limite_credito', 'FLOAT DEFAULT 0.0'),
+    #     #         ('ativa', 'BOOLEAN DEFAULT 1'), ('created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
+    #     #     ]
+    #     #     for col, tipo in cols_rev:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE comercial_revendedores ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception: db.session.rollback()
+    #     # 
+    #     #     cols_inf = [
+    #     #         ('handle', 'VARCHAR(50)'), ('nicho', 'VARCHAR(50)'), ('alcance', 'INTEGER'), 
+    #     #         ('seguidores', 'VARCHAR(20)'), ('whatsapp', 'VARCHAR(20)'), ('email', 'VARCHAR(100)'), 
+    #     #         ('instagram', 'VARCHAR(100)'), ('plataforma', 'VARCHAR(50)'), ('foto', 'VARCHAR(255)'), 
+    #     #         ('status_contrato', 'VARCHAR(20) DEFAULT "ATIVO"'),
+    #     #         ('ativa', 'BOOLEAN DEFAULT 1'), ('created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
+    #     #     ]
+    #     #     for col, tipo in cols_inf:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE comercial_influenciadores ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception: db.session.rollback()
+    #     # 
+    #     #     cols_est = [
+    #     #         ('especialidade', 'VARCHAR(100)'), ('portfólio_url', 'VARCHAR(255)'), 
+    #     #         ('whatsapp', 'VARCHAR(20)'), ('email', 'VARCHAR(100)'), ('foto', 'VARCHAR(255)'), 
+    #     #         ('disponibilidade', 'VARCHAR(50)'),
+    #     #         ('ativa', 'BOOLEAN DEFAULT 1'), ('created_at', 'DATETIME DEFAULT CURRENT_TIMESTAMP')
+    #     #     ]
+    #     #     for col, tipo in cols_est:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE comercial_estilistas ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception: db.session.rollback()
+    #     # 
+    #     #     # ── SINCRONIZAÇÃO COMERCIAL E VENDAS (CANAIS DE VENDA) ──
+    #     #     try:
+    #     #         db.session.execute(text("ALTER TABLE comercial_vendedores ADD COLUMN canais_venda VARCHAR(255)"))
+    #     #         db.session.commit()
+    #     #     except Exception: db.session.rollback()
+    #     # 
+    #     #     try:
+    #     #         db.session.execute(text("ALTER TABLE op_vendas_orcamentos ADD COLUMN canal_venda VARCHAR(100)"))
+    #     #         db.session.commit()
+    #     #     except Exception: db.session.rollback()
+    #     # 
+    #     #     try:
+    #     #         db.session.execute(text("ALTER TABLE op_vendas_pedidos ADD COLUMN canal_venda VARCHAR(100)"))
+    #     #         db.session.commit()
+    #     #     except Exception: db.session.rollback()
+    #     # 
+    #     #     # ── SINCRONIZAÇÃO SERVIÇOS (CATÁLOGOS) ──
+    #     #     cols_srv = [
+    #     #         ('tipo_item', 'VARCHAR(2) DEFAULT "09"'), ('codigo', 'VARCHAR(50)'),
+    #     #         ('observacoes', 'VARCHAR(255)'), ('preco_custo', 'FLOAT DEFAULT 0.0'),
+    #     #         ('preco_venda', 'FLOAT DEFAULT 0.0'), ('qtd_minima', 'FLOAT DEFAULT 1.0'),
+    #     #         ('tempo_execucao', 'VARCHAR(100)'), ('comissao', 'FLOAT DEFAULT 0.0'),
+    #     #         ('descricao_detalhada', 'TEXT'), ('garantia', 'VARCHAR(100)'),
+    #     #         ('validade_proposta', 'VARCHAR(100)'), ('forma_pagamento', 'VARCHAR(50)'),
+    #     #         ('ncm', 'VARCHAR(10)'), ('cest', 'VARCHAR(10)'),
+    #     #         ('codigo_servico', 'VARCHAR(100)')
+    #     #     ]
+    #     #     for col, tipo in cols_srv:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE cat_servicos ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception: db.session.rollback()
+    #     # 
+    #     #     # ── SINCRONIZAÇÃO PLANO DE CONTAS (GERENCIAL) ──
+    #     #     cols_pc = [
+    #     #         ('grupo_gerencial', 'VARCHAR(1)'),
+    #     #         ('vida_util_meses', 'INTEGER DEFAULT 0'),
+    #     #         ('valor_residual_percent', 'FLOAT DEFAULT 0.0')
+    #     #     ]
+    #     #     for col, tipo in cols_pc:
+    #     #         try:
+    #     #             db.session.execute(text(f"ALTER TABLE financeiro_plano_contas ADD COLUMN {col} {tipo}"))
+    #     #             db.session.commit()
+    #     #         except Exception: db.session.rollback()
+    #     # 
+    #     # except Exception:
+    #     #     pass
 
     # ── Context Processor para Versão do Sistema ───────────────────────
     @app.context_processor
