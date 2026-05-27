@@ -6,117 +6,118 @@ from sqlalchemy import case
 
 financeiro_bp = Blueprint("financeiro", __name__, url_prefix="/financeiro")
 
-@financeiro_bp.before_app_request
-def setup_financeiro():
-    """Auto-migração para tabelas financeiras."""
-    from sqlalchemy import text
-    try:
-        with db.engine.begin() as conn:
-            # Operadoras Financeiras
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS comercial_operadoras_financeiras (
-                    id INTEGER PRIMARY KEY,
-                    nome VARCHAR(100) NOT NULL,
-                    nome_fantasia VARCHAR(100),
-                    cnpj VARCHAR(20),
-                    site VARCHAR(255),
-                    email_suporte VARCHAR(100),
-                    telefone_suporte VARCHAR(20),
-                    taxa_debito FLOAT DEFAULT 0,
-                    taxa_pix FLOAT DEFAULT 0,
-                    taxa_credito_vista FLOAT DEFAULT 0,
-                    taxa_credito_parcelado FLOAT DEFAULT 0,
-                    taxa_antecipacao FLOAT DEFAULT 0,
-                    taxas_parcelamento TEXT,
-                    icone VARCHAR(50) DEFAULT 'fas fa-landmark',
-                    cor VARCHAR(20) DEFAULT '#2980B9',
-                    ativa BOOLEAN DEFAULT 1,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
-            
-            # Formas de Pagamento
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS comercial_formas_pagamento (
-                    id INTEGER PRIMARY KEY,
-                    nome VARCHAR(100) NOT NULL,
-                    agrupador_operacional VARCHAR(50) DEFAULT 'OUTROS',
-                    baixa_automatica BOOLEAN DEFAULT 0,
-                    tipo VARCHAR(50) DEFAULT 'DINHEIRO',
-                    operadora_id INTEGER,
-                    max_parcelas INTEGER DEFAULT 1,
-                    intervalo_dias INTEGER DEFAULT 0,
-                    parcela_minima FLOAT DEFAULT 0,
-                    taxa_juros FLOAT DEFAULT 0,
-                    percentual_desconto FLOAT DEFAULT 0,
-                    icone VARCHAR(50) DEFAULT 'fas fa-money-bill-wave',
-                    cor VARCHAR(20) DEFAULT '#2ECC71',
-                    ativa BOOLEAN DEFAULT 1,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (operadora_id) REFERENCES comercial_operadoras_financeiras(id)
-                )
-            """))
-            
-            # Verificações de Migração Incremental
-            result = conn.execute(text("PRAGMA table_info(comercial_operadoras_financeiras)"))
-            cols = [row[1] for row in result]
-            if 'taxa_pix' not in cols:
-                try: conn.execute(text('ALTER TABLE comercial_operadoras_financeiras ADD COLUMN taxa_pix FLOAT DEFAULT 0'))
-                except: pass
-            if 'taxas_parcelamento' not in cols:
-                try: conn.execute(text('ALTER TABLE comercial_operadoras_financeiras ADD COLUMN taxas_parcelamento TEXT'))
-                except: pass
-            
-            # Verifica se a coluna agrupador_operacional existe (Migração Incremental)
-            result = conn.execute(text("PRAGMA table_info(comercial_formas_pagamento)"))
-            cols = [row[1] for row in result]
-            if 'agrupador_operacional' not in cols:
-                try: conn.execute(text('ALTER TABLE comercial_formas_pagamento ADD COLUMN agrupador_operacional VARCHAR(50) DEFAULT "OUTROS"'))
-                except: pass
-            
-            if 'baixa_automatica' not in cols:
-                try: conn.execute(text('ALTER TABLE comercial_formas_pagamento ADD COLUMN baixa_automatica BOOLEAN DEFAULT 0'))
-                except: pass
-            
-            if 'operadora_id' not in cols:
-                try: conn.execute(text('ALTER TABLE comercial_formas_pagamento ADD COLUMN operadora_id INTEGER REFERENCES comercial_operadoras_financeiras(id)'))
-                except: pass
-
-            # 🏢 Centros de Custo (Migração Híbrida)
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS centros_custo (
-                    id INTEGER PRIMARY KEY,
-                    empresa_id INTEGER,
-                    pai_id INTEGER,
-                    codigo VARCHAR(20) NOT NULL UNIQUE,
-                    nome VARCHAR(100) NOT NULL,
-                    tipo VARCHAR(20) DEFAULT 'Operacional',
-                    orcamento_mensal DECIMAL(15,2) DEFAULT 0,
-                    ativo BOOLEAN DEFAULT 1,
-                    contabil_cod VARCHAR(50),
-                    pix VARCHAR(100),
-                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
-            
-            result = conn.execute(text("PRAGMA table_info(centros_custo)"))
-            cols = [row[1] for row in result]
-            if 'empresa_id' not in cols:
-                try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN empresa_id INTEGER REFERENCES empresas(id)"))
-                except: pass
-            if 'pai_id' not in cols:
-                try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN pai_id INTEGER REFERENCES centros_custo(id)"))
-                except: pass
-            if 'orcamento_mensal' not in cols:
-                try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN orcamento_mensal DECIMAL(15,2) DEFAULT 0"))
-                except: pass
-            if 'atualizado_em' not in cols:
-                try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP"))
-                except: pass
-
-    except Exception as e:
-        print(f"Erro na migração financeira: {e}")
+# Comentado para deploy no Render - migração SQLite não funciona em produção
+# @financeiro_bp.before_app_request
+# def setup_financeiro():
+#     """Auto-migração para tabelas financeiras."""
+#     from sqlalchemy import text
+#     try:
+#         with db.engine.begin() as conn:
+#             # Operadoras Financeiras
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS comercial_operadoras_financeiras (
+#                     id INTEGER PRIMARY KEY,
+#                     nome VARCHAR(100) NOT NULL,
+#                     nome_fantasia VARCHAR(100),
+#                     cnpj VARCHAR(20),
+#                     site VARCHAR(255),
+#                     email_suporte VARCHAR(100),
+#                     telefone_suporte VARCHAR(20),
+#                     taxa_debito FLOAT DEFAULT 0,
+#                     taxa_pix FLOAT DEFAULT 0,
+#                     taxa_credito_vista FLOAT DEFAULT 0,
+#                     taxa_credito_parcelado FLOAT DEFAULT 0,
+#                     taxa_antecipacao FLOAT DEFAULT 0,
+#                     taxas_parcelamento TEXT,
+#                     icone VARCHAR(50) DEFAULT 'fas fa-landmark',
+#                     cor VARCHAR(20) DEFAULT '#2980B9',
+#                     ativa BOOLEAN DEFAULT 1,
+#                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+#                 )
+#             """))
+#             
+#             # Formas de Pagamento
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS comercial_formas_pagamento (
+#                     id INTEGER PRIMARY KEY,
+#                     nome VARCHAR(100) NOT NULL,
+#                     agrupador_operacional VARCHAR(50) DEFAULT 'OUTROS',
+#                     baixa_automatica BOOLEAN DEFAULT 0,
+#                     tipo VARCHAR(50) DEFAULT 'DINHEIRO',
+#                     operadora_id INTEGER,
+#                     max_parcelas INTEGER DEFAULT 1,
+#                     intervalo_dias INTEGER DEFAULT 0,
+#                     parcela_minima FLOAT DEFAULT 0,
+#                     taxa_juros FLOAT DEFAULT 0,
+#                     percentual_desconto FLOAT DEFAULT 0,
+#                     icone VARCHAR(50) DEFAULT 'fas fa-money-bill-wave',
+#                     cor VARCHAR(20) DEFAULT '#2ECC71',
+#                     ativa BOOLEAN DEFAULT 1,
+#                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+#                     FOREIGN KEY (operadora_id) REFERENCES comercial_operadoras_financeiras(id)
+#                 )
+#             """))
+#             
+#             # Verificações de Migração Incremental
+#             result = conn.execute(text("PRAGMA table_info(comercial_operadoras_financeiras)"))
+#             cols = [row[1] for row in result]
+#             if 'taxa_pix' not in cols:
+#                 try: conn.execute(text('ALTER TABLE comercial_operadoras_financeiras ADD COLUMN taxa_pix FLOAT DEFAULT 0'))
+#                 except: pass
+#             if 'taxas_parcelamento' not in cols:
+#                 try: conn.execute(text('ALTER TABLE comercial_operadoras_financeiras ADD COLUMN taxas_parcelamento TEXT'))
+#                 except: pass
+#             
+#             # Verifica se a coluna agrupador_operacional existe (Migração Incremental)
+#             result = conn.execute(text("PRAGMA table_info(comercial_formas_pagamento)"))
+#             cols = [row[1] for row in result]
+#             if 'agrupador_operacional' not in cols:
+#                 try: conn.execute(text('ALTER TABLE comercial_formas_pagamento ADD COLUMN agrupador_operacional VARCHAR(50) DEFAULT "OUTROS"'))
+#                 except: pass
+#             
+#             if 'baixa_automatica' not in cols:
+#                 try: conn.execute(text('ALTER TABLE comercial_formas_pagamento ADD COLUMN baixa_automatica BOOLEAN DEFAULT 0'))
+#                 except: pass
+#             
+#             if 'operadora_id' not in cols:
+#                 try: conn.execute(text('ALTER TABLE comercial_formas_pagamento ADD COLUMN operadora_id INTEGER REFERENCES comercial_operadoras_financeiras(id)'))
+#                 except: pass
+# 
+#             # 🏢 Centros de Custo (Migração Híbrida)
+#             conn.execute(text("""
+#                 CREATE TABLE IF NOT EXISTS centros_custo (
+#                     id INTEGER PRIMARY KEY,
+#                     empresa_id INTEGER,
+#                     pai_id INTEGER,
+#                     codigo VARCHAR(20) NOT NULL UNIQUE,
+#                     nome VARCHAR(100) NOT NULL,
+#                     tipo VARCHAR(20) DEFAULT 'Operacional',
+#                     orcamento_mensal DECIMAL(15,2) DEFAULT 0,
+#                     ativo BOOLEAN DEFAULT 1,
+#                     contabil_cod VARCHAR(50),
+#                     pix VARCHAR(100),
+#                     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+#                     atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+#                 )
+#             """))
+#             
+#             result = conn.execute(text("PRAGMA table_info(centros_custo)"))
+#             cols = [row[1] for row in result]
+#             if 'empresa_id' not in cols:
+#                 try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN empresa_id INTEGER REFERENCES empresas(id)"))
+#                 except: pass
+#             if 'pai_id' not in cols:
+#                 try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN pai_id INTEGER REFERENCES centros_custo(id)"))
+#                 except: pass
+#             if 'orcamento_mensal' not in cols:
+#                 try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN orcamento_mensal DECIMAL(15,2) DEFAULT 0"))
+#                 except: pass
+#             if 'atualizado_em' not in cols:
+#                 try: conn.execute(text("ALTER TABLE centros_custo ADD COLUMN atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP"))
+#                 except: pass
+# 
+#     except Exception as e:
+#         print(f"Erro na migração financeira: {e}")
 
 @financeiro_bp.route("/")
 def abas():
