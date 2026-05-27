@@ -436,13 +436,14 @@ def create_app():
             checks['empresas_table'] = f'ERRO: {str(e)}'
         return checks, 200
 
-    # ── Error Handler (mostra traceback no log) ───────────────────────────
+    # ── Error Handler (mostra traceback na tela para debug) ─────────────
     @app.errorhandler(500)
     def internal_error(e):
         import traceback
         tb = traceback.format_exc()
+        original = getattr(e, 'original_exception', e)
         print(f"\n{'='*50}\n500 ERROR TRACEBACK:\n{tb}\n{'='*50}\n")
-        return f"Internal Server Error - verifique /health para diagnóstico", 500
+        return f"<pre>500 ERROR:\n{original}\n\n{tb}</pre>", 500
 
     # ── Rota raiz ──────────────────────────────────────────────────────────
     @app.route('/')
