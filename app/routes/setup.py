@@ -58,30 +58,37 @@ def salvar():
         return render_template('setup/setup.html', erro_admin=True, concluido=False)
 
     # ── Cria Empresa ──
-    empresa = Empresa(
-        razao_social       = razao_social,
-        nome_fantasia      = nome_fantasia,
-        cnpj               = cnpj,
-        ie                 = ie,
-        whatsapp           = telefone,        # campo telefone → whatsapp
-        email_contato      = email_empresa,   # campo email_empresa → email_contato
-        end_fat_logradouro = endereco,        # campo endereco → end_fat_logradouro
-    )
-    db.session.add(empresa)
-    db.session.flush()  # garante empresa.id antes de criar o admin
+    try:
+        empresa = Empresa(
+            razao_social       = razao_social,
+            nome_fantasia      = nome_fantasia,
+            cnpj               = cnpj,
+            ie                 = ie,
+            whatsapp           = telefone,        # campo telefone → whatsapp
+            email_contato      = email_empresa,   # campo email_empresa → email_contato
+            end_fat_logradouro = endereco,        # campo endereco → end_fat_logradouro
+        )
+        db.session.add(empresa)
+        db.session.flush()  # garante empresa.id antes de criar o admin
 
-    # ── Cria Usuário Admin ──
-    admin = Usuario(
-        nome       = admin_nome,
-        email      = admin_email,
-        empresa_id = empresa.id,  # ✅ FK correta
-        perfil     = 'admin',
-    )
-    admin.set_password(admin_senha)
-    db.session.add(admin)
-    db.session.commit()
+        # ── Cria Usuário Admin ──
+        admin = Usuario(
+            nome       = admin_nome,
+            email      = admin_email,
+            empresa_id = empresa.id,  # ✅ FK correta
+            perfil     = 'admin',
+        )
+        admin.set_password(admin_senha)
+        db.session.add(admin)
+        db.session.commit()
 
-    return redirect(url_for('setup.concluido'))
+        return redirect(url_for('setup.concluido'))
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        tb = traceback.format_exc()
+        print(f"SETUP ERROR: {tb}")
+        return f"<pre>Erro no setup:\n{tb}</pre>", 500
 
 
 @setup_bp.route('/setup/concluido')
