@@ -128,6 +128,13 @@ def create_app():
     # Cria tabelas no PostgreSQL (Render) ou SQLite (local)
     with app.app_context():
         db.create_all()
+        # Fix: ajustar coluna senha_hash para 256 chars (scrypt hash é maior que 128)
+        if database_url:
+            try:
+                db.session.execute(db.text('ALTER TABLE usuarios ALTER COLUMN senha_hash TYPE VARCHAR(256)'))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
 
     # Comentado para deploy no Render - seed e migrações SQLite removidas
     # with app.app_context():
