@@ -363,11 +363,11 @@ def create_app():
         from app.utils.sistema_matriz import SISTEMA_MATRIZ
         from app.utils.permissoes import tem_permissao
         from datetime import datetime, date
+        v = None
         try:
             from app.models.sistema.versao import Versao
             v = Versao.query.order_by(Versao.id.desc()).first()
             if v:
-                # Lógica: Se não for 'publicada', adiciona " DEV" ao número
                 suffix = " DEV" if v.status != 'publicada' and app.config['IS_DEV'] else ""
                 numero = f"{v.numero}{suffix}"
                 nome = "AriOne" if v.status == 'publicada' else "AriOneDEV"
@@ -378,8 +378,13 @@ def create_app():
             numero = "v1.0"
             nome = "AriOneDEV"
         
-        from app.utils.progress import get_standardization_progress, is_ari_dev
-        progress = get_standardization_progress()
+        try:
+            from app.utils.progress import get_standardization_progress, is_ari_dev
+            progress = get_standardization_progress()
+            ari_dev = is_ari_dev()
+        except Exception:
+            progress = {}
+            ari_dev = False
         
         # ── INTEGRITY PULSE GLOBAL (Cálculo Leve) ──
         try:
@@ -387,17 +392,15 @@ def create_app():
             from sqlalchemy import func
             
             issues_count = 0
-            # Checagem rápida de duplicidade (exemplo)
             dupes = db.session.query(Funcionario.cpf).group_by(Funcionario.cpf).having(func.count(Funcionario.id) > 1).count()
             issues_count += dupes
             
-            # Checagem de órfãos
             orfaos = Funcionario.query.filter(Funcionario.empresa_id == None).count()
             if orfaos > 0: issues_count += 1
             
             global_integrity = 100 - (issues_count * 10)
             if global_integrity < 0: global_integrity = 0
-        except:
+        except Exception:
             global_integrity = 100
         
         return dict(
@@ -409,7 +412,7 @@ def create_app():
             sistema_versao_suffix=" DEV" if (v and v.status != 'publicada' and app.config['IS_DEV']) or (not v) else "",
             sistema_status=v.status if v else 'dev',
             ari_progress=progress,
-            is_ari_dev=is_ari_dev(),
+            is_ari_dev=ari_dev,
             global_integrity=global_integrity,
             SISTEMA_MATRIZ=SISTEMA_MATRIZ,
             tem_permissao=tem_permissao
