@@ -183,6 +183,97 @@
         }
     }
 
+    function abrirTrocarEmpresa() {
+        const modal = document.getElementById('arione-modal-global');
+        const content = document.getElementById('arione-modal-content');
+        const titleEl = document.getElementById('arione-modal-title');
+
+        if (modal && content) {
+            if (titleEl) {
+                titleEl.innerText = 'Alternar Empresa';
+                titleEl.style.display = 'block';
+            }
+            modal.style.display = 'flex';
+            content.innerHTML = '<div style="flex:1; display:flex; align-items:center; justify-content:center; color:#64748B;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+
+            fetch('/sistema/modal-trocar-empresa', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.text())
+                .then(html => {
+                    content.innerHTML = html;
+                })
+                .catch(err => {
+                    content.innerHTML = `<div style="padding:20px; color:#EF4444;">Erro ao carregar conteúdo: ${err}</div>`;
+                });
+        } else {
+            console.error('Modal global não encontrado');
+        }
+    }
+
+    // Função global para seleção de empresa
+    window.selecionarEmpresa = function(id) {
+        console.log('Clicou na empresa ID:', id);
+        fetch('/sistema/trocar-empresa/' + id, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => {
+            console.log('Resposta status:', r.status);
+            return r.json();
+        })
+        .then(data => {
+            console.log('Dados recebidos:', data);
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Erro ao trocar empresa');
+            }
+        })
+        .catch(err => {
+            console.error('Erro:', err);
+            alert('Erro ao trocar empresa: ' + err);
+        });
+    }
+
+    // Função global para alternar visão formulário/lista (para formulários de cadastro)
+    window.alternarVisaoFormLista = function(formId, listId) {
+        // IDs padrão para Sócios se não fornecidos
+        formId = formId || 'area-formulario-socio';
+        listId = listId || 'card-lista-socios';
+
+        let cardForm = document.getElementById(formId);
+        let lista = document.getElementById(listId);
+
+        // Tenta no parent se não encontrar no documento atual
+        if (!cardForm && window.parent && window.parent.document) {
+            cardForm = window.parent.document.getElementById(formId);
+        }
+        if (!lista && window.parent && window.parent.document) {
+            lista = window.parent.document.getElementById(listId);
+        }
+
+        console.log('alternarVisaoFormLista - cardForm:', cardForm, 'lista:', lista);
+
+        if (!cardForm || !lista) {
+            console.warn('Elementos não encontrados para alternar visão:', formId, listId);
+            return;
+        }
+
+        if (cardForm.style.display === 'none' || cardForm.style.display === '') {
+            cardForm.style.display = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            cardForm.style.display = 'none';
+            lista.style.display = 'block';
+            lista.style.visibility = 'visible';
+            lista.style.opacity = '1';
+            lista.style.height = 'auto';
+            lista.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         // Monitor de Backup Global
         function checkBackupProgress() {
@@ -215,5 +306,13 @@
             // Garantir que módulos também iniciem em dark mode
             document.querySelectorAll('.arione-page-wrapper').forEach(w => w.classList.add('dark-mode'));
         }
+
+        // Atalho F2 para trocar empresa
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                abrirTrocarEmpresa();
+            }
+        });
     });
 </script>

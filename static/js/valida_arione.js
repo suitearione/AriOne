@@ -56,6 +56,20 @@ validador_Email: function(email) {
         } else {
             input.value = v.replace(/^(\d*)/, '($1$1');
         }
+    },
+
+    /* ANOTAÇÃO DE LINHA: Formata Telefone para WhatsApp (Regra 8) */
+    /* Remove caracteres não numéricos e adiciona prefixo 55 se necessário */
+    /* Retorno: apenas números (ex: 5585999999999) */
+    formatarWhatsApp: function(telefone) {
+        if (!telefone) return null;
+        // Remove todos os caracteres não numéricos
+        let numeros = telefone.replace(/\D/g, '');
+        // Se não tiver prefixo 55, adiciona
+        if (!numeros.startsWith('55')) {
+            numeros = '55' + numeros;
+        }
+        return numeros;
     }
 };
 

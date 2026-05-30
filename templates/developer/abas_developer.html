@@ -1,0 +1,263 @@
+{# =============================================================================
+   Caminho  : templates/developer/abas_developer.html
+   Arquivo  : abas_developer.html
+   Função   : Módulo DEVELOPER - Ambiente exclusivo para desenvolvedores
+   Descrição: Centraliza ferramentas de deploy, laboratório DEV e grid
+              de desenvolvimento, separado dos módulos normais do sistema.
+============================================================================= #}
+{% extends "base.html" %}
+{% import "macros/abas_cadastro.html" as nav %}
+
+{% block content %}
+<style>
+    /* 1. BLINDAGEM DE NAVEGAÇÃO (FORTRESS) */
+    #header-action-status, .fp-header-status { display: none !important; }
+    
+    .arione-nav-fortress {
+        position: sticky !important; 
+        top: -20px !important;
+        z-index: 99999999 !important; 
+        background: #1a1a2e !important; 
+        padding: 20px 20px 10px 20px !important;
+        margin: -20px -20px 0 -20px !important;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15) !important;
+        border-bottom: 2px solid #e2e8f0;
+        width: calc(100% + 40px);
+    }
+
+    .arione-nav-fortress::before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: #1a1a2e !important;
+        z-index: -1;
+    }
+
+    .arione-tabs-system {
+        margin-top: 12px; 
+        background: #fff !important; 
+        height: 55px; 
+        display: flex; 
+        align-items: center;
+        padding: 0 15px; 
+        border-radius: 12px; 
+        border: 1px solid #edf2f7 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+    }
+
+    .arione-content-area { position: relative !important; z-index: 10 !important; padding-top: 10px !important; }
+</style>
+
+<div class="arione-page-wrapper" style="position: relative; background: #f1f5f9; min-height: 100%;">
+    
+    {% set sidebar_color = '#FF6B6B' %} {# Cor Padrão Developer #}
+    {% set center_color  = '#FF8E8E' %} {# Iluminação Padrão Central #}
+    {% set icon_color    = '#ffffff' %} {# Identidade Cromática da Fonte #}
+
+    {% set current_gradient = 'linear-gradient(90deg, ' + sidebar_color + ' 0%, ' + center_color + ' 50%, ' + sidebar_color + ' 100%)' %}
+
+    <div class="fe-header" style="background: {{ current_gradient }}; margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: {{ icon_color }}; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: {{ icon_color }}; border: 1px solid rgba(255,255,255,0.05);">
+                <i class="fas fa-code"></i>
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: {{ icon_color }}; font-family: 'Outfit', sans-serif; text-transform: uppercase;">
+                    Console de Desenvolvimento
+                </h1>
+                <p style="margin: 0; font-size: 10px; font-weight: 700; opacity: 1; letter-spacing: 1px; text-transform: uppercase; color: #ffffff; margin-top: 5px;">
+                    DEVELOPER > DEPLOY > LAB DEV
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="{{ url_for('gestao.dashboard') }}" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 7px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; cursor: pointer; text-decoration: none;" onmouseover="this.style.background='rgba(0,0,0,0.15)';" onmouseout="this.style.background='rgba(0,0,0,0.05)';" title="Voltar ao Dashboard">
+                <img src="/static/img/dashboard/dashboard.png" style="height: 20px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+            </a>
+        </div>
+    </div>
+
+    <div class="arione-tabs-system" style="margin-top: 15px;">
+        {{ nav.gerar_abas_arione(abas, aba_ativa, 'developer') }}
+    </div>
+
+    <!-- AREA DE CONTEUDO DINAMICO -->
+    <div class="arione-content-area">
+        {% if aba_ativa == 'deploy' %}
+            <div style="padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2 style="color: #FF6B6B; margin: 0;">Deploy - Serviços Render</h2>
+                    <button onclick="abrirConfigRender()" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #64748b; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;">
+                        <i class="fas fa-cog"></i> Configurar Webhook
+                    </button>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                    {% for servico in deploy_data.servicos %}
+                    <div style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: {{ '#27AE60' if servico.status == 'ativo' else '#E74C3C' }}; box-shadow: 0 0 8px {{ '#27AE60' if servico.status == 'ativo' else '#E74C3C' }}40;"></div>
+                            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">{{ servico.nome }}</h3>
+                        </div>
+                        <p style="margin: 5px 0; color: #64748b; font-size: 13px;"><strong>Branch:</strong> {{ servico.branch }}</p>
+                        <p style="margin: 5px 0; color: #64748b; font-size: 13px;"><strong>Status:</strong> {{ servico.status|upper }}</p>
+                        <p style="margin: 5px 0; color: #64748b; font-size: 13px;"><strong>Banco:</strong> {{ servico.banco }}</p>
+                        {% if servico.descricao %}
+                        <p style="margin: 5px 0; color: #94a3b8; font-size: 12px; font-style: italic;">{{ servico.descricao }}</p>
+                        {% endif %}
+                        
+                        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a href="{{ servico.url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #FF6B6B; color: white; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 600; transition: 0.2s;">
+                                <i class="fas fa-external-link-alt"></i> Acessar
+                            </a>
+                            <button onclick="triggerDeploy('{{ servico.nome }}')" id="deploy-btn-{{ servico.nome }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #27AE60; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;">
+                                <i class="fas fa-upload"></i> Deploy
+                            </button>
+                            <a href="https://dashboard.render.com/web/services/{{ servico.nome }}/logs" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f1f5f9; color: #475569; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; transition: 0.2s;">
+                                <i class="fas fa-terminal"></i> Logs
+                            </a>
+                            <a href="https://dashboard.render.com/web/services/{{ servico.nome }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f1f5f9; color: #475569; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #e2e8f0; transition: 0.2s;">
+                                <i class="fas fa-cog"></i> Config
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% elif aba_ativa == 'developer' %}
+            {% include 'developer/grids/grid_developer.html' %}
+        {% elif aba_ativa == 'lab_dev' %}
+            {% include 'developer/grids/grid_lab_dev.html' %}
+        {% elif aba_ativa == 'progresso_dev' %}
+            {% include 'developer/grids/grid_progresso_dev.html' %}
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Modal de Configuração do Render -->
+<div id="modal-config-render" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #1e293b; font-size: 18px; font-weight: 700;">Configurar Webhook Render</h3>
+            <button onclick="fecharConfigRender()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #64748b;">URL do Webhook</label>
+            <input type="text" id="webhook-url" placeholder="https://api.render.com/deploy/srv-xxxxx?key=xxxxx" 
+                   style="width: 100%; padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none;">
+            <p style="margin-top: 8px; font-size: 11px; color: #94a3b8;">
+                <i class="fas fa-info-circle"></i> Cole a URL do webhook do Render para habilitar deploy automático
+            </p>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="fecharConfigRender()" style="padding: 10px 20px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                Cancelar
+            </button>
+            <button onclick="salvarConfigRender()" style="padding: 10px 20px; background: #FF6B6B; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                Salvar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirConfigRender() {
+    document.getElementById('modal-config-render').style.display = 'flex';
+    // Carregar configuração atual
+    fetch('/developer/api/render-config')
+        .then(r => r.json())
+        .then(data => {
+            if (data.configurado) {
+                document.getElementById('webhook-url').value = data.url_preview;
+            }
+        })
+        .catch(() => {});
+}
+
+function fecharConfigRender() {
+    document.getElementById('modal-config-render').style.display = 'none';
+}
+
+function salvarConfigRender() {
+    const webhookUrl = document.getElementById('webhook-url').value.trim();
+    
+    if (!webhookUrl) {
+        arioneToast('URL do webhook é obrigatória', 'error');
+        return;
+    }
+    
+    fetch('/developer/api/render-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webhook_url: webhookUrl })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            arioneToast('Configuração salva com sucesso!', 'success');
+            fecharConfigRender();
+        } else {
+            arioneToast(data.erro, 'error');
+        }
+    })
+    .catch(() => {
+        arioneToast('Erro ao salvar configuração', 'error');
+    });
+}
+
+function triggerDeploy(servicoNome) {
+    const btn = document.getElementById(`deploy-btn-${servicoNome}`);
+    const originalText = btn.innerHTML;
+    
+    // Desabilitar botão e mostrar loading
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando...';
+    btn.style.opacity = '0.7';
+    
+    fetch('/developer/api/trigger-deploy', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Deploy Iniciado';
+            btn.style.background = '#27AE60';
+            arioneToast('Deploy iniciado com sucesso! Verifique os logs.', 'success');
+            
+            // Redirecionar para logs após 2 segundos
+            setTimeout(() => {
+                window.open(`https://dashboard.render.com/web/services/${servicoNome}/logs`, '_blank');
+            }, 2000);
+        } else {
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro';
+            btn.style.background = '#E74C3C';
+            arioneToast(`Erro: ${data.erro}`, 'error');
+        }
+    })
+    .catch(error => {
+        btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro';
+        btn.style.background = '#E74C3C';
+        arioneToast('Erro ao conectar com servidor', 'error');
+    })
+    .finally(() => {
+        // Reabilitar botão após 5 segundos
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            btn.style.opacity = '1';
+        }, 5000);
+    });
+}
+</script>
+
+{% endblock %}

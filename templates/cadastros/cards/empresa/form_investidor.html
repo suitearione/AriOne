@@ -40,7 +40,7 @@
           onclick_save='submeterInvestidor()',
           onclick_search='focarPesquisaInvestidor()',
           onclick_filter='abrirModalFiltrosAvancados()',
-          onclick_list='alternarVisaoFormLista()',
+          onclick_list='alternarVisaoFormLista("area-formulario-investidor", "card-lista-investidores")',
           onclick_clonar='clonarInvestidorAtivo()',
           onclick_export="arioneToast('Exportação em desenvolvimento para Investidores.','info')",
           onclick_import="arioneToast('Importação em desenvolvimento para Investidores.','info')",
@@ -644,7 +644,7 @@
   </form>
 
   {# ══════════ LISTA DE INVESTIDORES — abaixo do formulário ══════════ #}
-  <div class="fe-card" id="card-lista-investidores" style="margin-top:20px;">
+  <div class="fe-card" id="card-lista-investidores" style="margin-top:20px; display: block;">
     <div class="fe-card-title" style="color:#27AE60; background:#f0fff4;">
       <i class="fas fa-hand-holding-usd"></i> Investidores Cadastrados
     </div>
@@ -1302,20 +1302,7 @@ function limparFiltrosInvestidores() {
     arioneToast('Filtros limpos', 'info');
 }
 
-function alternarVisaoFormLista() {
-    const cardForm = document.getElementById('area-formulario-investidor');
-    const lista = document.getElementById('card-lista-investidores');
-    if (!cardForm || !lista) { arioneToast('Nenhum container localizado', 'warning'); return; }
-    if (cardForm.style.display === 'none') {
-        cardForm.style.display = '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        arioneToast('Visualizando Formulário + Lista', 'info');
-    } else {
-        cardForm.style.display = 'none';
-        lista.scrollIntoView({ behavior: 'smooth' });
-        arioneToast('Visualizando Lista de Registros', 'info');
-    }
-}
+// Função alternarVisaoFormLista movida para _info_bar.html (global)
 
 function clonarInvestidorAtivo() {
     const form = document.getElementById('form-investidor');

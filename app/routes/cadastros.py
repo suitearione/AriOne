@@ -1233,9 +1233,10 @@ def excluir_doc(id, nome):
 def form_socio(id=None):
     socioID = id
     socio = Socio.query.get(id) if id else None
+    print(f"DEBUG form_socio: id={id}, socio={socio}, socio.nome={socio.nome if socio else 'None'}")
     lista_socios = Socio.query.order_by(Socio.nome).all()
     empresas_lista = Empresa.query.order_by(Empresa.razao_social).all()
-    
+
     # Pre-seleção via query string (vindo do form da empresa)
     empresa_id_pre = request.args.get('empresa_id', type=int)
 
@@ -1560,7 +1561,33 @@ def form_cliente(id=None):
         try:
             db.session.add(cliente)
             db.session.commit()
-            
+
+            # ── Sincroniza Cliente → LeadOne Pipeline ──────────────────────
+            try:
+                from app.models.digital.lead import Lead
+                telefone_lead = cliente.whatsapp or cliente.telefone
+                if telefone_lead:
+                    # Evita duplicidade por telefone
+                    existente = Lead.query.filter(
+                        db.or_(Lead.telefone == telefone_lead, Lead.telefone == cliente.telefone)
+                    ).first()
+                    if not existente:
+                        lead = Lead(
+                            nome=cliente.nome,
+                            email=cliente.email,
+                            telefone=telefone_lead,
+                            etapa='Contato Feito',
+                            origem=cliente.origem or 'Cadastro de Cliente',
+                            observacoes=f'Cliente sincronizado do Cadastro (ID: {cliente.id})'
+                        )
+                        db.session.add(lead)
+                        db.session.commit()
+            except Exception as sync_err:
+                db.session.rollback()
+                # Não quebra o fluxo principal; apenas loga
+                print(f'[LeadOne Sync] Erro ao criar lead para cliente {cliente.id}: {sync_err}')
+            # ─────────────────────────────────────────────────────────────
+
             # Atualiza pedidos após commit (caso seja novo ou tenha mudado)
             pedidos = PedidoVenda.query.filter_by(cliente_id=cliente.id).order_by(PedidoVenda.data_pedido.desc()).all() if cliente else []
             
@@ -3672,7 +3699,7 @@ def card_categorias(id=None):
         db.session.rollback()
 
     if request.method == 'POST':
-        cat_id = request.form.get('cat_id')
+        cat_id = request.form.get('id')
         categoria = Categoria.query.get(cat_id) if cat_id else None
         
         nome = request.form.get('nome_categoria')

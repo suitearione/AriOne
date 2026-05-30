@@ -171,7 +171,7 @@
 .menu-link {
     display: flex;
     align-items: center;
-    padding: 8px 18px;
+    padding: 8px 50px;
     color: rgba(255, 255, 255, 0.80);
     font-size: 13px;
     font-weight: 600;
@@ -219,6 +219,7 @@
 .icon-relatorios { color: #82B1FF; opacity: 1; }
 .icon-digital    { color: #42A5F5; opacity: 1; text-shadow: 0 0 5px rgba(66,165,245,0.2); }
 .icon-sistema    { color: #90A4AE; opacity: 1; text-shadow: 0 0 5px rgba(144,164,174,0.2); }
+.icon-develop    { color: #FF6B6B; opacity: 1; text-shadow: 0 0 5px rgba(255,107,107,0.2); }
 
 /* ─── DINAMISMO DE COR NO ATIVO ────────────────────────── */
 .menu-link-ativo {
@@ -261,6 +262,10 @@
 
 .menu-item:has(.icon-sistema) .menu-link-ativo {
     border-left-color: #7A255F !important;
+}
+
+.menu-item:has(.icon-develop) .menu-link-ativo {
+    border-left-color: #FF6B6B !important;
 }
 
 /* Ícones com Brilho de Identidade (Glow) no Estado Ativo */
@@ -316,4 +321,10 @@
     color: #ffffff !important;
     opacity: 1 !important;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.menu-link-ativo .icon-develop {
+    color: #FF6B6B !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
 }

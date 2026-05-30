@@ -99,6 +99,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'arione_dev_2026_secret')
 
     app.config['TEMPLATES_AUTO_RELOAD'] = True  # ← PAAv1: força reload de templates sem reiniciar
+    app.config['DEBUG'] = True  # ← Força debug mode para reload
 
 
 
@@ -147,6 +148,8 @@ def create_app():
 
     from app.routes.imprimir  import imprimir_bp
 
+    from app.routes.developer import developer_bp
+
     
 
     
@@ -175,17 +178,19 @@ def create_app():
 
     app.register_blueprint(imprimir_bp)
 
+    app.register_blueprint(developer_bp)
+
 
 
     # ── DEBUG: Listar todas as rotas registradas ──
 
     print("\n" + "="*50)
 
-    print("🛡️ AriOne: ROTAS REGISTRADAS NO FLASK:")
+    print("AriOne: ROTAS REGISTRADAS NO FLASK:")
 
     for rule in app.url_map.iter_rules():
 
-        print(f"📍 {rule.endpoint:30} | {rule.rule}")
+        print(f"{rule.endpoint:30} | {rule.rule}")
 
     print("="*50 + "\n")
 
@@ -256,6 +261,25 @@ def create_app():
     with app.app_context():
 
         db.create_all()
+
+        if not database_url:
+
+            captura_cols = [
+                ('slug', 'VARCHAR(100)'),
+                ('mensagem_sucesso', 'VARCHAR(250) DEFAULT "Obrigado! Entraremos em contato."')
+            ]
+
+            for col, tipo in captura_cols:
+
+                try:
+
+                    db.session.execute(db.text(f'ALTER TABLE capturas ADD COLUMN {col} {tipo}'))
+
+                    db.session.commit()
+
+                except Exception:
+
+                    db.session.rollback()
 
         # Fix: ajustar coluna senha_hash para 256 chars (scrypt hash é maior que 128)
 
@@ -733,7 +757,22 @@ def create_app():
 
             from app.models.sistema.versao import Versao
 
-            v = Versao.query.order_by(Versao.id.desc()).first()
+            # Em DEV: mostrar última versão em DEV, ou última publicada se não houver DEV
+            # Em PROD: mostrar última versão PUBLICADA
+            if app.config['IS_DEV']:
+                # Primeiro tenta pegar última versão em DEV
+                v = Versao.query.filter_by(status='dev')\
+                               .order_by(Versao.id.desc())\
+                               .first()
+                # Se não houver versão em DEV, pega última publicada
+                if not v:
+                    v = Versao.query.filter_by(status='publicada')\
+                                   .order_by(Versao.data_publicacao.desc())\
+                                   .first()
+            else:
+                v = Versao.query.filter_by(status='publicada')\
+                               .order_by(Versao.data_publicacao.desc())\
+                               .first()
 
             if v:
 

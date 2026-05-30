@@ -255,6 +255,60 @@
                 finally { btn.disabled = false; btn.innerHTML = originalText; }
             };
 
+            window.salvarCategoria = function() {
+                submitCategoria();
+            };
+
+            window.resetFormCategoria = function() {
+                novoRegistroCat();
+            };
+
+            window.focarPesquisaCategoria = function() {
+                focarBuscaCat();
+            };
+
+            window.abrirModalFiltrosAvancados = function() {
+                toggleFiltroCat();
+            };
+
+            window.alternarVisaoFormLista = function() {
+                const formArea = document.getElementById('cat-form-area');
+                const listArea = document.getElementById('cat-list-area');
+                if (formArea && listArea) {
+                    if (formArea.style.display === 'none') {
+                        formArea.style.display = 'block';
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        formArea.style.display = 'none';
+                        listArea.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            };
+
+            window.clonarCategoriaAtivo = function() {
+                arioneToast('Função de clonar categoria em desenvolvimento.', 'info');
+            };
+
+            window.exportarCategoriaCSV = function() {
+                exportarCategorias();
+            };
+
+            window.abrirModalImportacaoXML = function() {
+                arioneToast('Importação XML em desenvolvimento.', 'info');
+            };
+
+            window.imprimirRelatorioCategoria = function() {
+                window.print();
+            };
+
+            window.enviarCategoriaEmail = function() {
+                arioneEnviarEmailGenerico('Categorias');
+            };
+
+            window.enviarCategoriaWhatsApp = function() {
+                arioneEnviarWhatsAppGenerico('Categorias');
+            };
+
             window.toggleAcc = function(id) {
                 $(`#acc-body-${id}`).slideToggle();
                 const icon = document.getElementById(`chevron-${id}`);

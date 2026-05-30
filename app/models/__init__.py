@@ -25,6 +25,12 @@ from app.models.sistema.parametro import ParametroSistema
 from app.models.sistema.licenca   import Licenca
 from app.models.sistema.status    import StatusWorkflow
 
+# ── Digital ─────────────────────────────────────────────────────────────────
+from app.models.digital.lead import Lead
+from app.models.digital.captura import Captura
+from app.models.digital.automacao import Automacao
+from app.models.digital.conversao import Conversao
+
 # ── Catálogos ────────────────────────────────────────────────────────────────
 from app.models.catalogos import (Marca, Categoria, Subcategoria, UnidadeMedida,
                                    Etiqueta, Insumo, Acessorio, Embalagem, MateriaPrima,

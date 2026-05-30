@@ -72,13 +72,15 @@
         .arione-bar-blue-new {
             height: 10px !important;
             background: linear-gradient(to right, #7A255F, #00B7EE) !important;
-            width: 100% !important;
+            /* Subtrai os 230px do sidebar da largura total (100%) */
+            width: calc(100% - 230px) !important;
             position: fixed !important;
             top: 0 !important;
-            left: 0 !important;
+            /* Empurra a barra para a direita, começando após o sidebar */
+            left: 200px !important;
             z-index: 9999 !important;
             display: block !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+            box-shadow: 0 230px 20px rgba(0,0,0,0.1) !important;
         }
 
         /* 🏛️ PADRÃO INDUSTRIAL ARIONE: UPPERCASE GLOBAL */
@@ -183,10 +185,11 @@
     </div>
     
     <!-- ✅ Modal Global AriOne (para F2 e outros chamados dinâmicos) -->
-    <div id="arione-modal-global" class="arione-modal-backdrop" 
+    <div id="arione-modal-global" class="arione-modal-backdrop"
          onclick="if(event.target === this) this.style.display='none'"
          style="display:none;">
         <div class="arione-modal-window">
+            <div id="arione-modal-title" style="display:none;"></div>
             <div id="arione-modal-content"></div>
         </div>
     </div>

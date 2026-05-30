@@ -26,60 +26,32 @@
                 <span class="kpi-subtext">{{ em_dev[0].numero if em_dev else 'Nenhum' }} em andamento</span>
             </div>
         </div>
-        <div class="ge-kpi-card" style="--kpi-cor: #27ae60;">
-            <div class="kpi-icon-bg"><i class="fas fa-cloud-upload-alt"></i></div>
-            <div class="kpi-content">
-                <span class="kpi-label">Ambiente PROD</span>
-                <span class="kpi-value">Sincronizado</span>
-                <span class="kpi-subtext">Integridade Golden Seal OK</span>
-            </div>
-        </div>
     </div>
 
-    <!-- 🚀 CENTRAL DE SINCRONIZAÇÃO (QUIET LUXURY STANDARD) -->
-    <div class="ge-sync-zone" style="background: #ffffff; padding: 25px 35px; border-radius: 16px; color: #1e293b; margin-bottom: 30px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 20px; width: 100%; box-sizing: border-box;">
+    <!-- 🚀 CONTROLES DE VERSÃO (QUIET LUXURY STANDARD) -->
+    <div class="ge-sync-zone" style="background: #ffffff; padding: 25px 35px; border-radius: 16px; color: #1e293b; margin-bottom: 30px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box;">
         
-        <div style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2;">
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <div style="width: 50px; height: 50px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #2980b9; border: 1.5px solid #e2e8f0;">
-                    <i class="fas fa-sync-alt"></i>
-                </div>
-                <div>
-                    <h2 style="font-size: 17px; font-weight: 800; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                        Sincronização em Tempo Real {{ comp.info_icon("Publica as alterações do ambiente de desenvolvimento para o ambiente de produção.") }}
-                    </h2>
-                    <p style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
-                        <span style="color: #7A255F;">DEV</span> 
-                        <i class="fas fa-long-arrow-alt-right" style="font-size: 12px; opacity: 0.5;"></i> 
-                        <span style="color: #27ae60;">PRODUÇÃO (C:\AriOne)</span>
-                    </p>
-                </div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="width: 50px; height: 50px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #2980b9; border: 1.5px solid #e2e8f0;">
+                <i class="fas fa-code-branch"></i>
             </div>
-            
-            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                <button onclick="window.location.href='{{ url_for('sistema.form_versao') }}'" class="ge-action-btn-luxury" style="background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-plus-circle" style="color: #2980b9;"></i> NOVA VERSÃO
-                </button>
-                <button onclick="window.open('{{ url_for('sistema.visualizar_log_sincronia') }}', '_blank')" class="ge-action-btn-luxury" style="background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;" title="Ver log detalhado da última cópia física">
-                    <i class="fas fa-file-invoice" style="color: #64748b;"></i> RELATÓRIO
-                </button>
-                <button onclick="dispararSincronizacaoFisica(event)" class="ge-sync-btn-luxury" style="background: #2980b9; color: #fff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 11px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(41, 128, 185, 0.2); display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-cloud-upload-alt"></i> SINCRONIZAR AGORA
-                </button>
+            <div>
+                <h2 style="font-size: 17px; font-weight: 800; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                    Controle de Versões {{ comp.info_icon("Gerencie as versões do sistema e changelog.") }}
+                </h2>
+                <p style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;">
+                    Sistema de Versionamento
+                </p>
             </div>
         </div>
-
-        <div id="arione-deploy-progress-container" style="display: none; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; animation: feFadeIn 0.5s ease;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="spinner-sync" style="width: 14px; height: 14px; border: 2px solid #e2e8f0; border-top: 2px solid #2980b9; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <span id="arione-deploy-msg" style="font-size: 9px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1.5px;">Deploy em Execução...</span>
-                </div>
-                <span id="arione-deploy-perc" style="font-size: 14px; font-weight: 900; color: #2980b9; font-family: 'JetBrains Mono', monospace;">0%</span>
-            </div>
-            <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden;">
-                <div id="arione-deploy-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2980b9 0%, #34d399 100%); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(41, 128, 185, 0.2);"></div>
-            </div>
+        
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <button onclick="window.location.href='{{ url_for('sistema.form_versao') }}'" class="ge-action-btn-luxury" style="background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-plus-circle" style="color: #2980b9;"></i> NOVA VERSÃO
+            </button>
+            <button onclick="window.open('{{ url_for('sistema.visualizar_log_sincronia') }}', '_blank')" class="ge-action-btn-luxury" style="background: #fff; color: #475569; border: 1.5px solid #e2e8f0; padding: 10px 20px; border-radius: 12px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px;" title="Ver log detalhado da última cópia física">
+                <i class="fas fa-file-invoice" style="color: #64748b;"></i> RELATÓRIO
+            </button>
         </div>
     </div>
 

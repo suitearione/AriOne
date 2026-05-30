@@ -2,8 +2,14 @@
 # .gitignore - AriOne ERP
 # =============================================================================
 
+# Config pessoal do editor
+.windsurfrules
+
 # Python
 __pycache__/
+*.pyc
+.venv/
+*.env
 *.py[cod]
 *$py.class
 *.so
@@ -76,3 +82,14 @@ scratch/
 *.zip
 *.tar
 AriOneDEV*
+
+# Prints/imagens locais
+prints/
+
+# Logs e resultados temporários
+resultado_limpeza.txt
+scripts/import_result.txt
+
+# Scripts avulsos de verificação
+check_clientes.py
+

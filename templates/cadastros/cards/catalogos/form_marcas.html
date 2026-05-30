@@ -223,12 +223,17 @@
         const formData = new FormData(form);
         const url = form.action;
 
+        console.log('forceSubmitMarca - URL:', url);
+        console.log('forceSubmitMarca - FormData entries:', [...formData.entries()]);
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 body: formData,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
+
+            console.log('forceSubmitMarca - Response status:', response.status);
 
             if (response.ok) {
                 arioneToast('Marca salva com sucesso!', 'success');
@@ -237,6 +242,7 @@
                 }, 1000);
             } else {
                 const err = await response.json().catch(() => ({}));
+                console.error('Erro na resposta:', err);
                 arioneToast('Erro de Integridade: ' + (err.message || 'Falha ao salvar.'), 'danger');
             }
         } catch (e) {
@@ -410,19 +416,23 @@
         window.location.href = "{{ url_for('cadastros.card_marcas') }}";
     }
 
-    function salvarMarca() {
+    window.salvarMarca = function() {
         forceSubmitMarca();
-    }
+    };
 
-    function focarPesquisaMarca() {
+    window.resetFormMarca = function() {
+        window.location.href = "{{ url_for('cadastros.card_marcas') }}";
+    };
+
+    window.focarPesquisaMarca = function() {
         focarBuscaMarca();
-    }
+    };
 
-    function abrirModalFiltrosAvancados() {
+    window.abrirModalFiltrosAvancados = function() {
         toggleFiltroMarca();
-    }
+    };
 
-    function alternarVisaoFormLista() {
+    window.alternarVisaoFormLista = function() {
         const formArea = document.getElementById('mar-form-area');
         const listArea = document.getElementById('mar-list-area');
         if (formArea && listArea) {
@@ -434,11 +444,13 @@
                 listArea.scrollIntoView({ behavior: 'smooth' });
             }
         }
-    }
+    };
 
-    function clonarMarcaAtivo() {
+    window.clonarMarcaAtivo = function() {
         arioneToast('Função de clonar marca em desenvolvimento.', 'info');
-    }
+    };
+
+    // Funções locais removidas - agora usando window.* para global
 
     function exportarMarcaCSV() {
         exportarMarcas();

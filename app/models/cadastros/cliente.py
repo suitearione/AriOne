@@ -19,12 +19,14 @@ class Cliente(db.Model):
     cpf_cnpj        = db.Column(db.String(20), unique=True, nullable=False)
     rg_ie           = db.Column(db.String(30)) # RG ou Inscrição Estadual
     data_nascimento = db.Column(db.Date)
+    data_abertura   = db.Column(db.Date)       # Data de abertura para PJ
     genero          = db.Column(db.String(50))
     
     # ── Contato ────────────────────────────────────────────────────────────
     whatsapp = db.Column(db.String(20))
     telefone = db.Column(db.String(20))
     email    = db.Column(db.String(120))
+    site     = db.Column(db.String(255))       # Website do cliente
     instagram = db.Column(db.String(100))
     
     # ── Perfil Comercial ───────────────────────────────────────────────────

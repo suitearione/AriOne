@@ -194,6 +194,7 @@
                 document.getElementById('gra-id-hidden').value = id;
                 document.getElementById('gra-nome-input').value = nome;
                 document.getElementById('gra-cat-input').value = cat;
+                document.getElementById('gra-form').action = `/cadastros/cards/grades/${id}`;
                 tagsList = Array.isArray(itens) ? itens : (itens ? itens.split(',') : []);
                 renderTags();
                 window.scrollTo({top:0, behavior:'smooth'});

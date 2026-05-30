@@ -165,6 +165,14 @@ Função  : Módulo de Abas Complementares (Preços, Fiscal, PDV, Imagens)
       if (!preview) return;
       if (input.files) {
           const currentCount = preview.children.length;
+          const maxImages = 3;
+
+          if (currentCount + input.files.length > maxImages) {
+              alert(`Máximo de ${maxImages} imagens permitidas. Você já tem ${currentCount} e está tentando adicionar ${input.files.length}.`);
+              input.value = '';
+              return;
+          }
+
           [...input.files].forEach((file, index) => {
               const reader = new FileReader();
               reader.onload = function(e) {

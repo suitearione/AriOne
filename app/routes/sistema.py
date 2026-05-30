@@ -148,8 +148,6 @@ def abas():
     
     # Abas Exclusivas de Desenvolvimento
     if ari_dev:
-        lista_abas.append({'id': 'developer',    'label': 'Developer',    'icon': 'fas fa-laptop-code'})
-        lista_abas.append({'id': 'lab_dev',      'label': 'Lab DEV',      'icon': 'fas fa-flask'})
         lista_abas.append({'id': 'versoes',      'label': 'Versões',      'icon': 'fas fa-code-branch'})
         lista_abas.append({'id': 'sobre',      'label': 'Sobre AriOne', 'icon': 'fas fa-info-circle'})
         lista_abas.append({'id': 'seguranca',  'label': 'Segurança',     'icon': 'fas fa-shield-alt'})
@@ -220,19 +218,7 @@ def seguranca():
 @sistema_bp.route('/matrix-dev')
 @login_required
 def matrix_dev():
-    return redirect(url_for('sistema.abas', aba='matrix_dev'))
-
-@sistema_bp.route('/cards/developer/cores')
-@login_required
-def card_developer_cores():
-    """Card de laboratório para testes de cores do Padrão Ouro"""
-    return render_template('sistema/cards/Developer/form_developer_cores.html', modulos=ARIONE_MODULOS)
-
-@sistema_bp.route('/cards/developer/vendas-premium')
-@login_required
-def card_developer_vendas_premium():
-    is_modal = request.args.get('modal') == '1'
-    return render_template('sistema/cards/Developer/form_developer_vendas_premium.html', is_modal=is_modal)
+    return redirect(url_for('developer.abas', aba='progresso_dev'))
 
 @sistema_bp.route('/cards/armazenamento/volume-dados')
 @login_required
@@ -926,8 +912,8 @@ def publicar_versao(id):
         
         # 🚀 DISPARO DO MOTOR DE SINCRONIZAÇÃO (DEPLOY INDUSTRIAL)
         try:
-            # Localiza o script na raiz do projeto (um nível acima da pasta app)
-            script_path = os.path.abspath(os.path.join(current_app.root_path, "..", "publicar.py"))
+            # Localiza o script na pasta scripts/manutencao
+            script_path = os.path.abspath(os.path.join(current_app.root_path, "..", "scripts", "manutencao", "publicar.py"))
             
             if os.path.exists(script_path):
                 # Dispara como processo independente (Desvinculado do Flask)
@@ -955,15 +941,26 @@ def sincronizar_fisico():
     """Dispara apenas a sincronização física (Robocopy) sem alterar dados"""
     import sys
     import subprocess
+    from app.models.sistema.versao import Versao
+    
     if not is_development():
         return jsonify({'success': False, 'message': 'Não permitido em produção.'}), 403
+    
+    # VALIDAÇÃO DE SEGURANÇA: Bloquear deploy se houver versões em DEV
+    versoes_dev = Versao.query.filter_by(status='dev').all()
+    if versoes_dev:
+        versoes_lista = ', '.join([v.numero for v in versoes_dev])
+        return jsonify({
+            'success': False,
+            'message': f'🛡️ BLOQUEIO DE SEGURANÇA: Há versões em desenvolvimento ({versoes_lista}). Publique todas as versões antes de fazer deploy para produção.'
+        }), 403
     
     try:
         # Reset do status antes de começar
         status_path = os.path.join(current_app.root_path, '..', 'instance', 'deploy_status.json')
         if os.path.exists(status_path): os.remove(status_path)
         
-        script_path = os.path.abspath(os.path.join(current_app.root_path, "..", "publicar.py"))
+        script_path = os.path.abspath(os.path.join(current_app.root_path, "..", "scripts", "manutencao", "publicar.py"))
         if os.path.exists(script_path):
             subprocess.Popen([sys.executable, script_path], 
                              stdout=subprocess.DEVNULL, 
@@ -1248,24 +1245,39 @@ def modal_trocar_empresa():
     
     return render_template('sistema/modal_trocar_empresa.html', empresas=empresas)
 
-@sistema_bp.route('/trocar-empresa/<int:id>')
+@sistema_bp.route('/trocar-empresa/<int:id>', methods=['GET', 'POST'])
 @login_required
 def trocar_empresa(id):
     """Efetiva a troca de empresa na sessão"""
-    ids_acesso = []
-    if current_user.empresas_acesso:
-        ids_acesso = [int(i.strip()) for i in current_user.empresas_acesso.split(',') if i.strip()]
-    
-    if id not in ids_acesso and id != current_user.empresa_id:
-        flash('Você não tem acesso a esta empresa.', 'danger')
-        return redirect(request.referrer or url_for('cadastros.abas'))
+    # Admin/Master tem acesso a todas as empresas
+    is_admin = False
+    if current_user.perfil_obj and current_user.perfil_obj.nome in ['Administrador', 'Master', 'Sistema']:
+        is_admin = True
+
+    if not is_admin:
+        ids_acesso = []
+        if current_user.empresas_acesso:
+            ids_acesso = [int(i.strip()) for i in current_user.empresas_acesso.split(',') if i.strip()]
+
+        # Se não houver IDs, mas o usuário estiver vinculado a uma empresa, permite trocar para ela
+        if not ids_acesso and current_user.empresa_id:
+            ids_acesso = [current_user.empresa_id]
+
+        if id not in ids_acesso and id != current_user.empresa_id:
+            if request.method == 'POST':
+                return jsonify({'success': False, 'message': 'Você não tem acesso a esta empresa.'})
+            flash('Você não tem acesso a esta empresa.', 'danger')
+            return redirect(request.referrer or url_for('cadastros.abas'))
 
     empresa = Empresa.query.get(id)
     if empresa:
         session['empresa_id'] = empresa.id
         session['nome_empresa'] = empresa.razao_social
+
+        if request.method == 'POST':
+            return jsonify({'success': True, 'message': f'Empresa alterada para {empresa.razao_social}'})
         flash(f'Empresa alterada para {empresa.razao_social}', 'success')
-    
+
     # Redireciona para a mesma página anterior ou home
     return redirect(request.referrer or url_for('cadastros.abas'))
 
@@ -1294,46 +1306,7 @@ def visualizar_protocolo(nome):
 @sistema_bp.route('/progresso-dev')
 @login_required
 def progresso_dev():
-    return redirect(url_for('sistema.abas', aba='matrix_dev'))
-
-import json as _json
-
-PROGRESSO_DEV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'progresso_dev.json')
-
-def _ler_progresso():
-    try:
-        os.makedirs(os.path.dirname(PROGRESSO_DEV_FILE), exist_ok=True)
-        if os.path.exists(PROGRESSO_DEV_FILE):
-            with open(PROGRESSO_DEV_FILE, 'r', encoding='utf-8') as f:
-                return _json.load(f)
-    except Exception:
-        pass
-    return {}
-
-def _salvar_progresso(data):
-    os.makedirs(os.path.dirname(PROGRESSO_DEV_FILE), exist_ok=True)
-    with open(PROGRESSO_DEV_FILE, 'w', encoding='utf-8') as f:
-        _json.dump(data, f, ensure_ascii=False)
-
-@sistema_bp.route('/api/progresso-dev/toggle', methods=['POST'])
-@login_required
-def api_progresso_dev_toggle():
-    """Salva o estado pronto/não-pronto de um card no servidor."""
-    dados = request.get_json()
-    card_id = dados.get('id', '').strip()
-    pronto = dados.get('pronto', False)
-    if not card_id:
-        return jsonify({'erro': 'ID inválido'}), 400
-    progresso = _ler_progresso()
-    progresso[card_id] = pronto
-    _salvar_progresso(progresso)
-    return jsonify({'ok': True, 'id': card_id, 'pronto': pronto})
-
-@sistema_bp.route('/api/progresso-dev/status', methods=['GET'])
-@login_required
-def api_progresso_dev_status():
-    """Retorna o estado de todos os cards marcados como prontos."""
-    return jsonify(_ler_progresso())
+    return redirect(url_for('developer.abas', aba='progresso_dev'))
 
 @sistema_bp.route('/migrar-setores-db')
 def migrar_setores_db():

@@ -120,10 +120,10 @@
     <div class="sw-body">
         <div class="sw-grid">
             {% for emp in empresas %}
-            <a href="{{ url_for('sistema.trocar_empresa', id=emp.id) }}" 
+            <div onclick="selecionarEmpresa({{ emp.id }})"
                class="sw-card {% if session.get('empresa_id') == emp.id %}active{% endif %}"
                tabindex="0">
-               
+
                 {% if session.get('empresa_id') == emp.id %}
                 <div class="sw-badge-ativa">
                     <i class="fas fa-check" style="font-size: 7px;"></i> ATIVA
@@ -133,12 +133,12 @@
                 <div class="sw-icon">
                     <i class="fas fa-building"></i>
                 </div>
-                
+
                 <div class="sw-info">
                     <div class="sw-name">{{ emp.razao_social }}</div>
                     <div class="sw-cnpj">{{ emp.cnpj_formatado if emp.cnpj_formatado else emp.cnpj or 'PJ' }}</div>
                 </div>
-            </a>
+            </div>
             {% else %}
             <div style="text-align: center; padding: 40px; color: #94a3b8;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px; opacity: 0.5;"></i>

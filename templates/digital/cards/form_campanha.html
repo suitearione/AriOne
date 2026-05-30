@@ -1,0 +1,156 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fp-wrap mod-campanhas" id="ctx-camp-{{ camp_id|default('new') }}">
+    <style>
+        .arione-page { padding: 0 !important; }
+        .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
+    </style>
+
+    {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0 24px; margin: 0; border-bottom: 2px solid #e2e8f0; transition: none !important;">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+        {{ cabecalho_mestre_arione(
+            titulo='LeadOne: Gestão de Campanhas',
+            subtitulo='Marketing > Formas de Anunciar',
+            icone='fa-bullseye',
+            cor_tema='#1A237E',
+            func_fechar="window.location.href='" ~ url_for('leadone.dashboard') ~ "'",
+            form_id='camp-form-area',
+            onclick_novo='resetFormCampanha()',
+            onclick_save='salvarCampanha()',
+            onclick_search='focarPesquisaCampanha()',
+            onclick_filter='abrirModalFiltrosAvancados()',
+            onclick_list='alternarVisaoFormLista()',
+            status='Ativo',
+            ajuda='Configure suas campanhas de anúncios para roteamento automático de leads.',
+            tamanho='medio'
+        ) }}
+    </div>
+
+    <div id="area-formulario-campanhas" class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px; background: #f4f6f9;">
+        <div id="camp-form-area" style="animation: feFadeUp 0.6s ease-out;">
+            <form id="camp-form" method="POST" action="{{ url_for('leadone.salvar_campanha') }}">
+                <div class="fp-card" style="border-left: 4px solid #1A237E;">
+                    <div class="fp-card-title" style="background: rgba(26, 35, 126, 0.03); color: #1A237E;"><i class="fas fa-bullseye"></i> Detalhes da Campanha</div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Nome da Campanha <span class="fp-req">*</span></label>
+                                <input type="text" class="fp-input fp-track" name="nome_campanha" id="camp-nome-input" required placeholder="Ex: Promoção Dia das Mães">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Status</label>
+                                <select class="fp-input fp-track" name="status">
+                                    <option value="1">Ativa</option>
+                                    <option value="0">Pausada</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="fp-row" style="margin-top: 15px;">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Identificador Webhook (Meta ID) <span class="fp-req">*</span></label>
+                                <input type="text" class="fp-input fp-track" name="identificador_webhook" required placeholder="ID que o Meta envia no Webhook">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Vendedor Responsável</label>
+                                <select class="fp-input fp-track" name="vendedor_id" required>
+                                    <option value="">Selecione um vendedor...</option>
+                                    {% for v in vendedores %}
+                                    <option value="{{ v.id }}">{{ v.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="fp-row" style="margin-top: 15px;">
+                            <div class="fp-group">
+                                <label class="fp-label">Investimento Estimado (R$)</label>
+                                <input type="number" step="0.01" class="fp-input fp-track" name="investimento_estimado" placeholder="0.00">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Data de Início</label>
+                                <input type="date" class="fp-input fp-track" name="data_inicio">
+                                <label class="fp-label">Data de Término</label>
+                                <input type="date" class="fp-input fp-track" name="data_termino">   
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="fp-footer-actions" style="display: flex; justify-content: flex-end; gap: 12px; padding: 10px 0 20px;">
+                    <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="window.location.reload()">Cancelar</button>
+                    <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-camp" onclick="forceSubmitCampanha()">
+                        <i class="fas fa-save"></i> Confirmar e Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# ── LISTA DE CONSULTA ── #}
+        <div id="camp-list-area" class="fp-card" style="margin-top: 15px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px 20px;">
+                <span><i class="fas fa-table"></i> Campanhas Cadastradas</span>
+                <input type="text" id="camp-search-input" oninput="executarFiltroCampanhas()" placeholder="Pesquisa rápida..." style="padding: 6px 10px; border: 1.5px solid #ddd; border-radius: 20px; font-size: 12px; width: 200px;">
+            </div>
+            <table class="fp-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Webhook ID</th>
+                        <th>Vendedor</th>
+                        <th>Status</th>
+                        <th style="text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-campanhas">
+                    {% for c in campanhas %}
+                    <tr class="camp-row" data-nome="{{ c.nome_campanha|upper }}">
+                        <td><strong>{{ c.nome_campanha }}</strong></td>
+                        <td><code>{{ c.identificador_webhook }}</code></td>
+                        <td>{{ c.vendedor.nome }}</td>
+                        <td>
+                            <span style="font-size: 9px; padding: 2px 8px; border-radius: 10px; background: {{ '#e8f5e9' if c.status else '#fff5f5' }}; color: {{ '#2e7d32' if c.status else '#c62828' }}; font-weight: 700;">
+                                {{ 'ATIVA' if c.status else 'PAUSADA' }}
+                            </span>
+                        </td>
+                        <td class="fp-actions" style="text-align: center;">
+                            <button type="button" class="fp-btn-icon" onclick='editarCampanha("{{ c.id }}", {{ c.nome_campanha|tojson|safe }})'><i class="fas fa-edit"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function forceSubmitCampanha() {
+        const form = document.getElementById('camp-form');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const btn = document.getElementById('btn-salvar-camp');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(form.action, { method: 'POST', body: formData });
+            if (response.ok) {
+                arioneToast('Campanha salva com sucesso!', 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                arioneToast('Erro ao salvar campanha.', 'danger');
+            }
+        } catch (e) { arioneToast('Erro crítico.', 'danger'); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Confirmar e Salvar'; }
+    }
+
+    function executarFiltroCampanhas() {
+        const query = document.getElementById('camp-search-input').value.toUpperCase();
+        document.querySelectorAll('.camp-row').forEach(row => {
+            row.style.display = row.getAttribute('data-nome').includes(query) ? '' : 'none';
+        });
+    }
+
+    function resetFormCampanha() { window.location.href = "{{ url_for('leadone.campanhas') }}"; }
+    window.salvarCampanha = forceSubmitCampanha;
+</script>
+{% endblock %}

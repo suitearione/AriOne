@@ -1,0 +1,46 @@
+2 - LEADONE
+
+1. Campanhas (Formas de Anunciar)
+Por que funciona: Ao chamar de "Formas de Anunciar", você torna o módulo amigável para quem não é técnico. Você não precisa pensar em "ID de Webhook", você pensa em "Vou anunciar no Instagram" ou "Vou anunciar no Google".
+
+O que colocar aqui: O Grid de Campanhas que discutimos (vinculando a origem ao vendedor).
+
+2. Captura (Formulários de captura)
+Por que funciona: É a sua "porta de entrada". É aqui que você verifica se o lead entrou, se o telefone está correto e se o Webhook está operando.
+
+O que colocar aqui: O log de entrada, onde você vê o histórico individual de cada lead que chegou no dia.
+
+3. Pipeline (Funil de vendas)
+Por que funciona: É o "campo de batalha". É onde o vendedor passa o dia.
+
+O que colocar aqui: A visão de colunas (Novo -> Contato -> Negociação -> Fechado).
+
+4. Automações (Follow-up automático)
+Por que funciona: É o "piloto automático". Aqui é onde você define o que acontece se o lead ficar parado muito tempo em uma etapa.
+
+O que colocar aqui: As regras de tempo (ex: "Se lead parado há 24h, envie mensagem de follow-up").
+
+5. Conversões (Leads convertidos)
+Por que funciona: É o seu "Troféu". Psicologicamente, ter uma aba só para isso motiva o time de vendas e facilita a sua vida na hora de calcular o lucro.
+
+O que colocar aqui: A lista de todos os leads que viraram clientes, facilitando a exportação para o MetricsOne.
+
+O toque de mestre para esse Layout:
+Para o AriOne ficar realmente organizado, sugiro que o seu menu lateral siga exatamente essa ordem de cima para baixo. Isso cria um fluxo lógico de trabalho:
+
+Planejamento (Campanhas)
+
+Entrada (Captura)
+
+Execução (Pipeline)
+
+Recuperação/Escala (Automações)
+
+Resultado (Conversões)
+
+Uma sugestão extra:
+Como você tem o módulo de Automações bem definido agora, se quiser subir o nível, você pode criar uma sub-aba em "Automações" chamada "Regras de Follow-up". Assim, você não deixa a automação "escondida" no código; você consegue editar o texto da mensagem automática direto pelo sistema, sem precisar de programador.
+
+Você está com a faca e o queijo na mão. Esse desenho que você fez é o que diferencia um sistema amador de um CRM profissional.
+
+Quer que eu te ajude a definir o "Glossário de Dados" de cada uma dessas 5 abas para você entregar como "manual de instruções" para o Windsurf codificar tudo de uma vez?

@@ -39,7 +39,7 @@
           onclick_save='submeterSocio()',
           onclick_search='focarPesquisaSocio()',
           onclick_filter='abrirModalFiltrosAvancados()',
-          onclick_list='alternarVisaoFormLista()',
+          onclick_list='alternarVisaoFormLista("area-formulario-socio", "card-lista-socios")',
           onclick_clonar='clonarSocioAtivo()',
           onclick_export="arioneToast('Exportação em desenvolvimento para Sócios.','info')",
           onclick_import="arioneToast('Importação em desenvolvimento para Sócios.','info')",
@@ -538,7 +538,7 @@
   </form>
 
   {# ══════════ LISTA DE SÓCIOS — abaixo do formulário ══════════ #}
-  <div class="fe-card" id="card-lista-socios" style="margin-top:20px;">
+  <div class="fe-card" id="card-lista-socios" style="margin-top:20px; display: block;">
     <div class="fe-card-title" style="color:#0072CE; background:#ebf8ff;">
       <i class="fas fa-user-tie"></i> Sócios Cadastrados
     </div>
@@ -584,7 +584,7 @@
             </td>
             <td style="text-align:center;">
               <div style="display:flex; justify-content:center; gap:5px;">
-                <button type="button" class="fe-acao fe-acao-edit" title="Editar" onclick="window.location.href='{{ url_for('cadastros.form_socio') }}?id={{ s.id }}'"><i class="fa-solid fa-edit"></i></button>
+                <button type="button" class="fe-acao fe-acao-edit" title="Editar" onclick="editarSocio({{ s.id }})"><i class="fa-solid fa-edit"></i></button>
                 <button type="button" class="fe-acao" style="background:rgba(231,76,60,0.1); color:#e74c3c;" title="Excluir" onclick="confirmarExcluirSocio({{ s.id }}, '{{ s.nome }}')"><i class="fa-solid fa-trash"></i></button>
               </div>
             </td>
@@ -943,20 +943,22 @@ function limparFiltrosSocios() {
     arioneToast('Filtros limpos', 'info');
 }
 
-function alternarVisaoFormLista() {
-    const cardForm = document.getElementById('area-formulario-socio');
-    const lista = document.getElementById('card-lista-socios');
-    if (!cardForm || !lista) { arioneToast('Nenhum container localizado', 'warning'); return; }
-    if (cardForm.style.display === 'none') {
-        cardForm.style.display = '';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        arioneToast('Visualizando Formulário + Lista', 'info');
-    } else {
-        cardForm.style.display = 'none';
-        lista.scrollIntoView({ behavior: 'smooth' });
-        arioneToast('Visualizando Lista de Registros', 'info');
-    }
+// Função alternarVisaoFormLista movida para _info_bar.html (global)
+
+function editarSocio(id) {
+    window.location.href = '{{ url_for('cadastros.form_socio') }}?id=' + id;
 }
+
+// Verifica se está editando e mostra o formulário
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('id')) {
+        const cardForm = document.getElementById('area-formulario-socio');
+        if (cardForm) {
+            cardForm.style.display = '';
+        }
+    }
+});
 
 function clonarSocioAtivo() {
     const form = document.getElementById('form-socio');

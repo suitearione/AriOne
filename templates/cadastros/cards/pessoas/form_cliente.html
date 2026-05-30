@@ -117,10 +117,11 @@
         cor_tema='#BDBDBD',
         func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='pessoas') ~ "'",
         form_id='area-formulario-cliente',
+        list_id='grid-clientes',
         onclick_novo='limparFormCliente()',
         onclick_save='forceSubmitCliente()',
         onclick_search='toggleFilterClientes()',
-        onclick_list='toggleFormView',
+        onclick_list="arioneAlternarVisualizacao('area-formulario-cliente', 'grid-clientes')",
         onclick_export='exportarListaClientes()',
         onclick_import='importarXMLCliente()',
         onclick_print='imprimirFichaCliente()',
@@ -203,6 +204,19 @@
                                        style="font-weight: 700; border: none; border-bottom: 1.5px solid #f1f5f9; background: transparent; font-size: 15px;">
                             </div>
 
+                            <div style="min-width: 180px; {{ 'display:none;' if cliente and cliente.tipo_pessoa == 'J' else '' }}" id="cliente-date-nascimento-row">
+                                <label class="fe-label">Data de Nascimento</label>
+                                <input class="fe-input" type="date" name="data_nascimento" id="inp-data-nascimento"
+                                       value="{{ cliente.data_nascimento.strftime('%Y-%m-%d') if cliente and cliente.data_nascimento else '' }}"
+                                       style="font-weight: 700; border: none; border-bottom: 1.5px solid #f1f5f9; background: transparent; font-size: 15px;">
+                            </div>
+                            <div style="min-width: 180px; {{ '' if cliente and cliente.tipo_pessoa == 'J' else 'display:none;' }}" id="cliente-date-abertura-row">
+                                <label class="fe-label">Data de Abertura</label>
+                                <input class="fe-input" type="date" name="data_abertura" id="inp-data-abertura"
+                                       value="{{ cliente.data_abertura.strftime('%Y-%m-%d') if cliente and cliente.data_abertura else '' }}"
+                                       style="font-weight: 700; border: none; border-bottom: 1.5px solid #f1f5f9; background: transparent; font-size: 15px;">
+                            </div>
+
                             <div style="min-width: 140px;">
                                 <label class="fe-label">Status</label>
                                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -230,8 +244,12 @@
                         <label class="fe-label">Telefone Fixo</label>
                         <input class="gf-input mask-phone" type="text" name="telefone" value="{{ cliente.telefone if cliente else '' }}">
                       </div>
+                      <div class="fe-group fe-flex-2">
+                        <label class="fe-label">Site</label>
+                        <input class="gf-input" type="url" name="website" value="{{ cliente.website if cliente else '' }}" placeholder="https://www.seusite.com.br" style="text-transform: lowercase;">
+                      </div>
                       <div class="fe-group fe-flex-3">
-                        <label class="fe-label">E-mail de Faturamento</label>
+                        <label class="fe-label">E-mail</label>
                         <input class="gf-input" type="email" name="email" value="{{ cliente.email if cliente else '' }}" placeholder="exemplo@dominio.com.br" style="text-transform: lowercase;">
                       </div>
                     </div>
@@ -448,6 +466,7 @@
                               <th class="col-foto" style="width: 50px; text-align: center;">Foto</th>
                               <th class="col-id">#</th>
                               <th class="col-nome">Nome do Cliente</th>
+                              <th class="col-cidade">Cidade/Estado</th>
                               <th class="col-doc">Documento</th>
                               <th class="col-rating">Rating</th>
                               <th class="col-status">Status</th>
@@ -471,6 +490,10 @@
                             <td class="col-nome">
                                 <div style="font-weight: 800; color: #1e293b; font-size: 14px;">{{ c.nome }}</div>
                                 <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">{{ c.apelido or '' }}</div>
+                            </td>
+                            <td class="col-cidade">
+                                <div style="font-weight: 700; color: #475569; font-size: 13px;">{{ c.end_res_cidade or '---' }}</div>
+                                <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">{{ c.end_res_uf or '' }}</div>
                             </td>
                             <td class="col-doc"><code style="background:#f1f5f9; padding:3px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace; font-size:12px; color:#475569;">{{ c.cpf_cnpj or '---' }}</code></td>
                             <td class="col-rating">
@@ -698,8 +721,20 @@ function importarXMLCliente() {
 function alternarTipoPessoa(){
   const tipo=document.getElementById('sel-tipo-pessoa').value;
   const doc = document.getElementById('inp-doc');
-  if(!doc) return;
-  doc.placeholder = tipo==='J' ? '00.000.000/0000-00' : '000.000.000-00';
+  const rowNascimento = document.getElementById('cliente-date-nascimento-row');
+  const rowAbertura = document.getElementById('cliente-date-abertura-row');
+  if(doc) {
+      doc.placeholder = tipo==='J' ? '00.000.000/0000-00' : '000.000.000-00';
+  }
+  if(rowNascimento && rowAbertura) {
+      if(tipo === 'J') {
+          rowNascimento.style.display = 'none';
+          rowAbertura.style.display = 'block';
+      } else {
+          rowNascimento.style.display = 'block';
+          rowAbertura.style.display = 'none';
+      }
+  }
   initMasksCliente();
 }
 
@@ -746,6 +781,7 @@ function initMasksCliente() {
 // Init
 (function() {
     initMasksCliente();
+    alternarTipoPessoa();
     if (typeof checkGoldenStandardGlobal === 'function') {
         checkGoldenStandardGlobal('Gestão Clientes', 'CADASTROS — Pessoas', 'Clientes');
     }
