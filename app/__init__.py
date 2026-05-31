@@ -262,6 +262,30 @@ def create_app():
 
         db.create_all()
 
+        # ── Auto-Seed de Versão ────────────────────────────────────────────────
+        # Para lançar nova versão: atualize VERSAO_ATUAL e faça git push.
+        # O Render registra automaticamente no banco ao iniciar.
+        VERSAO_ATUAL = 'v2.00.02'  # ← SÓ MUDE ESTE NÚMERO A CADA RELEASE
+
+        try:
+            ja_existe = Versao.query.filter_by(numero=VERSAO_ATUAL, status='publicada').first()
+            if not ja_existe:
+                nova = Versao(
+                    numero=VERSAO_ATUAL,
+                    titulo=f'Release {VERSAO_ATUAL}',
+                    status='publicada',
+                    data_publicacao=datetime.now(),
+                    autor='Sistema'
+                )
+                db.session.add(nova)
+                db.session.commit()
+                print(f'[AriOne] ✅ Versão {VERSAO_ATUAL} publicada no banco!')
+            else:
+                print(f'[AriOne] ℹ️ Versão {VERSAO_ATUAL} já existe.')
+        except Exception as e:
+            print(f'[AriOne] ⚠️ Erro ao registrar versão: {e}')
+            db.session.rollback()
+
         if not database_url:
 
             captura_cols = [

@@ -1,7 +1,7 @@
 """add cod_empresa e perfil
 
 Revision ID: 5d1e167d1099
-Revises: 
+Revises: add_objeto_social_email
 Create Date: 2026-03-19 17:17:46.448255
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '5d1e167d1099'
-down_revision = None
+down_revision = 'add_objeto_social_email'
 branch_labels = None
 depends_on = None
 

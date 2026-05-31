@@ -14,7 +14,7 @@
             subtitulo='Marketing > Formas de Anunciar',
             icone='fa-bullseye',
             cor_tema='#1A237E',
-            func_fechar="window.location.href='" ~ url_for('leadone.dashboard') ~ "'",
+            func_fechar="window.location.href='" ~ url_for('digital.abas', aba='leadone') ~ "'",
             form_id='camp-form-area',
             onclick_novo='resetFormCampanha()',
             onclick_save='salvarCampanha()',
@@ -29,7 +29,8 @@
 
     <div id="area-formulario-campanhas" class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px; background: #f4f6f9;">
         <div id="camp-form-area" style="animation: feFadeUp 0.6s ease-out;">
-            <form id="camp-form" method="POST" action="{{ url_for('leadone.salvar_campanha') }}">
+            <form id="camp-form" method="POST" action="{{ url_for('digital.campanhas') }}">
+                <input type="hidden" name="id" id="camp-id-input">
                 <div class="fp-card" style="border-left: 4px solid #1A237E;">
                     <div class="fp-card-title" style="background: rgba(26, 35, 126, 0.03); color: #1A237E;"><i class="fas fa-bullseye"></i> Detalhes da Campanha</div>
                     <div class="fp-card-body">
@@ -41,22 +42,24 @@
                             <div class="fp-group">
                                 <label class="fp-label">Status</label>
                                 <select class="fp-input fp-track" name="status">
-                                    <option value="1">Ativa</option>
-                                    <option value="0">Pausada</option>
+                                    <option value="Ativa">Ativa</option>
+                                    <option value="Pausada">Pausada</option>
+                                    <option value="Aguardando">Aguardando</option>
+                                    <option value="Inativa">Inativa</option>
                                 </select>
                             </div>
                         </div>
                         <div class="fp-row" style="margin-top: 15px;">
                             <div class="fp-group fp-flex-2">
                                 <label class="fp-label">Identificador Webhook (Meta ID) <span class="fp-req">*</span></label>
-                                <input type="text" class="fp-input fp-track" name="identificador_webhook" required placeholder="ID que o Meta envia no Webhook">
+                                <input type="text" class="fp-input fp-track" name="identificador_webhook" id="camp-webhook-input" required placeholder="ID que o Meta envia no Webhook">
                             </div>
                             <div class="fp-group">
                                 <label class="fp-label">Vendedor Responsável</label>
                                 <select class="fp-input fp-track" name="vendedor_id" required>
                                     <option value="">Selecione um vendedor...</option>
                                     {% for v in vendedores %}
-                                    <option value="{{ v.id }}">{{ v.nome }}</option>
+                                    <option value="{{ v.id }}">{{ v.nome_exibivel }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -64,13 +67,21 @@
                         <div class="fp-row" style="margin-top: 15px;">
                             <div class="fp-group">
                                 <label class="fp-label">Investimento Estimado (R$)</label>
-                                <input type="number" step="0.01" class="fp-input fp-track" name="investimento_estimado" placeholder="0.00">
+                                <input type="text" class="fp-input fp-track mask-moeda" name="investimento_estimado" placeholder="R$ 0,00" data-mask="R$ #.##0,00">
                             </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Valor Diário (R$)</label>
+                                <input type="text" class="fp-input fp-track mask-moeda" name="valor_diario" placeholder="R$ 0,00" data-mask="R$ #.##0,00">
+                            </div>
+                        </div>
+                        <div class="fp-row" style="margin-top: 15px;">
                             <div class="fp-group">
                                 <label class="fp-label">Data de Início</label>
                                 <input type="date" class="fp-input fp-track" name="data_inicio">
-                                <label class="fp-label">Data de Término</label>
-                                <input type="date" class="fp-input fp-track" name="data_termino">   
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Data Final</label>
+                                <input type="date" class="fp-input fp-track" name="data_final">
                             </div>
                         </div>
                     </div>
@@ -103,13 +114,20 @@
                 </thead>
                 <tbody id="tbody-campanhas">
                     {% for c in campanhas %}
-                    <tr class="camp-row" data-nome="{{ c.nome_campanha|upper }}">
+                    <tr class="camp-row" data-id="{{ c.id }}" data-nome="{{ c.nome_campanha|upper }}" data-status="{{ c.status }}" data-webhook="{{ c.identificador_webhook|e }}" data-vendedor="{{ c.vendedor_id or '' }}" data-investimento="{{ '%.2f'|format(c.investimento_estimado or 0) }}" data-valor="{{ '%.2f'|format(c.valor_diario or 0) }}" data-inicio="{{ c.data_inicio.strftime('%Y-%m-%d') if c.data_inicio else '' }}" data-final="{{ c.data_final.strftime('%Y-%m-%d') if c.data_final else '' }}">
                         <td><strong>{{ c.nome_campanha }}</strong></td>
                         <td><code>{{ c.identificador_webhook }}</code></td>
-                        <td>{{ c.vendedor.nome }}</td>
+                        <td>{{ c.vendedor.nome_exibivel if c.vendedor else '-' }}</td>
                         <td>
-                            <span style="font-size: 9px; padding: 2px 8px; border-radius: 10px; background: {{ '#e8f5e9' if c.status else '#fff5f5' }}; color: {{ '#2e7d32' if c.status else '#c62828' }}; font-weight: 700;">
-                                {{ 'ATIVA' if c.status else 'PAUSADA' }}
+                            {% set status_colors = {
+                                'Ativa': ('#e8f5e9', '#2e7d32'),
+                                'Pausada': ('#fff5f5', '#c62828'),
+                                'Aguardando': ('#fff3cd', '#856404'),
+                                'Inativa': ('#f1f5f9', '#64748b')
+                            } %}
+                            {% set bg, cor = status_colors.get(c.status, ('#f1f5f9', '#64748b')) %}
+                            <span style="font-size: 9px; padding: 2px 8px; border-radius: 10px; background: {{ bg }}; color: {{ cor }}; font-weight: 700;">
+                                {{ c.status|string|upper }}
                             </span>
                         </td>
                         <td class="fp-actions" style="text-align: center;">
@@ -150,7 +168,50 @@
         });
     }
 
-    function resetFormCampanha() { window.location.href = "{{ url_for('leadone.campanhas') }}"; }
+    function resetFormCampanha() { window.location.href = "{{ url_for('digital.campanhas') }}"; }
+
+    function formatCurrency(value) {
+        const number = Number(value) || 0;
+        const parts = number.toFixed(2).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return 'R$ ' + parts.join(',');
+    }
+
+    function editarCampanha(id, nome) {
+        const row = document.querySelector(`.camp-row[data-id="${id}"]`);
+        if (!row) return;
+        document.getElementById('camp-id-input').value = id;
+        document.getElementById('camp-nome-input').value = nome;
+        document.querySelector('[name="status"]').value = row.dataset.status || '1';
+        document.getElementById('camp-webhook-input').value = row.dataset.webhook || '';
+        document.querySelector('[name="vendedor_id"]').value = row.dataset.vendedor || '';
+        document.querySelector('[name="investimento_estimado"]').value = formatCurrency(row.dataset.investimento || '0');
+        document.querySelector('[name="valor_diario"]').value = formatCurrency(row.dataset.valor || '0');
+        document.querySelector('[name="data_inicio"]').value = row.dataset.inicio || '';
+        document.querySelector('[name="data_final"]').value = row.dataset.final || '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Aplicar máscara de moeda
+    document.querySelectorAll('.mask-moeda').forEach(input => {
+        input.addEventListener('input', function() {
+            let val = this.value.replace(/\D/g, '');
+            if (val.length === 0) {
+                this.value = 'R$ 0,00';
+            } else if (val.length <= 2) {
+                this.value = 'R$ 0,' + val.padStart(2, '0');
+            } else {
+                let intPart = val.slice(0, -2);
+                let decPart = val.slice(-2);
+                intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                this.value = 'R$ ' + intPart + ',' + decPart;
+            }
+        });
+        input.addEventListener('blur', function() {
+            if (this.value === 'R$ 0,') this.value = 'R$ 0,00';
+        });
+    });
+    
     window.salvarCampanha = forceSubmitCampanha;
 </script>
 {% endblock %}

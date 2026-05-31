@@ -6,29 +6,16 @@
 ==================================================
 -->
 
-<style>
-:root {
-  --pri:#7A255F; --pri-l:#a8357f; --azul:#0072CE; --verde:#27AE60;
-  --laranja:#E67E22; --bg:#f0f2f5; --card:#ffffff;
-  --text:#1a202c; --muted:#718096; --border:#e8ecf0;
-  --radius:14px; --shadow:0 2px 16px rgba(0,0,0,0.05); --tr:0.2s ease;
-}
-@keyframes dbEntrar { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-.db-grid-content { animation:dbEntrar .45s both; max-width: 1550px; margin: 0 auto; }
-
-/* SAUDAÇÃO */
-.db-greeting {
-  display:flex; align-items:center; justify-content:space-between;
-  background: linear-gradient(135deg, #7A255F 0%, #0072CE 100%);
-  border-radius: var(--radius); padding: 20px 26px; margin-bottom: 20px;
-  box-shadow: 0 8px 24px rgba(0, 114, 206, 0.12); position: relative; overflow: hidden;
-}
-.db-greeting::before { content:''; position:absolute; top:-40px; right:-40px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,0.06); }
-.db-greeting::after  { content:''; position:absolute; bottom:-60px; left:30%; width:240px; height:240px; border-radius:50%; background:rgba(255,255,255,0.04); }
-.db-greeting-left { display:flex; align-items:center; gap:16px; z-index:1; }
-.db-avatar  { width:48px; height:48px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; backdrop-filter: blur(5px); }
-.db-hello   { margin:0; font-size:19px; font-weight: 700; color:#fff; letter-spacing: -0.3px; }
-.db-sub     { margin:3px 0 0; font-size:12.5px; color:rgba(255,255,255,0.85); font-weight: 500; }
+  
+  <style>
+  :root {
+    --pri:#7A255F; --pri-l:#a8357f; --azul:#0072CE; --verde:#27AE60;
+    --laranja:#E67E22; --bg:#f0f2f5; --card:#ffffff;
+    --text:#1a202c; --muted:#718096; --border:#e8ecf0;
+    --radius:14px; --shadow:0 2px 16px rgba(0,0,0,0.05); --tr:0.2s ease;
+  }
+  @keyframes dbEntrar { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .db-grid-content { animation:dbEntrar .45s both; max-width: 1550px; margin: 0 auto; }
 
 /* SEÇÃO */
 .db-section-title { font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:7px; }
@@ -111,21 +98,7 @@
 
 <div class="db-grid-content">
 
-  {# ══════════ SAUDAÇÃO ══════════ #}
-  <div class="db-greeting">
-    <div class="db-greeting-left">
-      <div class="db-avatar"><i class="fas fa-user-tie"></i></div>
-      <div>
-        <h2 class="db-hello"><span id="db-saudacao-horario">Olá!</span> Bem-vindo à Central Estratégica.</h2>
-        <p class="db-sub">Acompanhe a liquidez, metas e indicadores operacionais em tempo real.</p>
-      </div>
-    </div>
-    <div style="z-index:1; text-align:right; color:#fff;">
-      <div style="font-size:14px; font-weight:700;" id="db-datetime">Carregando data...</div>
-      <div style="font-size:11px; color:rgba(255,255,255,0.8); margin-top:4px; font-weight:600;">PAAv1 • QUIET LUXURY</div>
-    </div>
-  </div>
-
+  
   {# ══════════ ACESSO RÁPIDO DE GESTÃO ══════════ #}
   <div class="db-section-title">
     <i class="fas fa-bolt" style="color: #F59E0B;"></i> Acesso Rápido Operacional

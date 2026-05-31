@@ -101,24 +101,20 @@
 
     <div class="fe-header" style="background: {{ current_gradient }}; margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: {{ icon_color }}; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: {{ icon_color }}; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: {{ icon_color }}; border: 1px solid rgba(255,255,255,0.05);">
                 <i class="fas fa-wallet"></i>
             </div>
             <div>
-                <h1 style="margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: {{ icon_color }}; font-family: 'Outfit', sans-serif; text-transform: uppercase;">
-                    Gestão Financeira e Fluxo de Caixa
-                </h1>
-                <p style="margin: 0; font-size: 10px; font-weight: 700; opacity: 1; letter-spacing: 1px; text-transform: uppercase; color: #ffffff; margin-top: 5px;">
-                    CONTAS A PAGAR • RECEBER • FLUXO DE CAIXA • DRE
-                </p>
+                <h2 style="margin: 0; font-size: 18px; font-weight: 800; font-family: 'Outfit', sans-serif; letter-spacing: 0.8px; text-transform: uppercase; line-height: 1; color: {{ icon_color }};">GESTÃO FINANCEIRA E FLUXO DE CAIXA</h2>
+                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-top: 5px; color: #ffffff; opacity: 1;">CONTAS A PAGAR • RECEBER • FLUXO DE CAIXA • DRE</div>
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
             <button type="button" onclick="abrirModalRelatoriosFinanceiro()" style="background: transparent; color: {{ icon_color }}; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: 700; font-size: 9.5px; display: flex; align-items: center; gap: 6px; border: none; transition: all 0.3s ease; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;" onmouseover="this.style.opacity='1'; this.style.background='rgba(0,0,0,0.1)';" onmouseout="this.style.opacity='0.8'; this.style.background='transparent';">
                 Central de Relatórios <i class="fas fa-wallet" style="font-size: 8px;"></i>
             </button>
-            <a href="{{ url_for('gestao.dashboard') }}" style="width: 36px; height: 36px; background: rgba(0,0,0,0.05); border-radius: 7px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; cursor: pointer; text-decoration: none;" onmouseover="this.style.background='rgba(0,0,0,0.15)';" onmouseout="this.style.background='rgba(0,0,0,0.05)';" title="Voltar ao Dashboard">
-                <img src="/static/img/dashboard/dashboard.png" style="height: 20px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+            <a href="{{ url_for('gestao.abas') }}" style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; cursor: pointer; text-decoration: none;" onmouseover="this.style.background='rgba(0,0,0,0.25)';" onmouseout="this.style.background='rgba(0,0,0,0.15)';" title="Voltar ao Dashboard">
+                <img src="{{ url_for('static', filename='img/dashboard/dashboard.png') }}" style="height: 20px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
             </a>
         </div>
     </div>

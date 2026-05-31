@@ -1,8 +1,26 @@
 # app/routes/digital.py
+import re
+from datetime import datetime
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, jsonify
 from flask_login import login_required
+from app.models.digital.campanha import Campanha
 
 digital_bp = Blueprint("digital", __name__, url_prefix="/digital")
+
+def parse_currency(value):
+    if not value:
+        return 0.0
+    value = str(value).strip()
+    value = value.replace('R$', '').replace('r$', '').strip()
+    value = re.sub(r'[^0-9,.-]', '', value)
+    if value.count(',') and value.count('.'):
+        value = value.replace('.', '')
+    value = value.replace(',', '.')
+    try:
+        return float(value)
+    except ValueError:
+        return 0.0
+
 
 @digital_bp.route("/")
 @login_required
@@ -11,7 +29,6 @@ def abas():
     from app.models.digital.captura import Captura
     from app.models.digital.automacao import Automacao
     from app.models.digital.conversao import Conversao
-    from app.models.digital.campanha import Campanha
 
     abas = [
         {"id": "linkone",    "label": "LinkOne",    "icon": "fas fa-link"},
@@ -728,10 +745,12 @@ def campanhas():
         campanha_id = request.form.get('id')
         nome_campanha = request.form.get('nome_campanha', '').strip()
         identificador_webhook = request.form.get('identificador_webhook', '').strip()
-        status = request.form.get('status', '1') == '1'
+        status = request.form.get('status', 'Ativa')
         vendedor_id = request.form.get('vendedor_id')
-        investimento_estimado = request.form.get('investimento_estimado', 0)
+        investimento_estimado = parse_currency(request.form.get('investimento_estimado', '0'))
+        valor_diario = parse_currency(request.form.get('valor_diario', '0'))
         data_inicio = request.form.get('data_inicio')
+        data_final = request.form.get('data_final')
 
         if not nome_campanha:
             flash('Nome da campanha é obrigatório.', 'error')
@@ -748,7 +767,9 @@ def campanhas():
                 camp.status = status
                 camp.vendedor_id = vendedor_id if vendedor_id else None
                 camp.investimento_estimado = float(investimento_estimado) if investimento_estimado else 0.0
+                camp.valor_diario = float(valor_diario) if valor_diario else 0.0
                 camp.data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date() if data_inicio else None
+                camp.data_final = datetime.strptime(data_final, '%Y-%m-%d').date() if data_final else None
                 flash(f'Campanha "{nome_campanha}" atualizada com sucesso!', 'success')
         else:
             camp = Campanha(
@@ -757,7 +778,9 @@ def campanhas():
                 status=status,
                 vendedor_id=vendedor_id if vendedor_id else None,
                 investimento_estimado=float(investimento_estimado) if investimento_estimado else 0.0,
-                data_inicio=datetime.strptime(data_inicio, '%Y-%m-%d').date() if data_inicio else None
+                valor_diario=float(valor_diario) if valor_diario else 0.0,
+                data_inicio=datetime.strptime(data_inicio, '%Y-%m-%d').date() if data_inicio else None,
+                data_final=datetime.strptime(data_final, '%Y-%m-%d').date() if data_final else None
             )
             db.session.add(camp)
             flash(f'Campanha "{nome_campanha}" cadastrada com sucesso!', 'success')
@@ -802,7 +825,7 @@ def webhook_meta_leadone():
 
         config_campanha = Campanha.query.filter_by(
             identificador_webhook=camp_webhook_id, 
-            status=True
+            status='Ativa'
         ).first()
 
         if not config_campanha:

@@ -67,6 +67,8 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
             <input type="text" id="filtro-razao" class="fe-input" style="flex: 1; min-width: 180px; padding: 6px 10px; font-size: 11px;" placeholder="Razão Social..." onkeyup="aplicarFiltrosEmpresa()">
             <input type="text" id="filtro-cidade" class="fe-input" style="width: 140px; padding: 6px 10px; font-size: 11px;" placeholder="Cidade..." onkeyup="aplicarFiltrosEmpresa()">
             <select id="filtro-tipo" class="fe-input" style="width: 100px; padding: 6px 10px; font-size: 11px;" onchange="aplicarFiltrosEmpresa()">
+
+
                 <option value="">Tipo</option>
                 <option value="PF">PF</option>
                 <option value="PJ">PJ</option>
@@ -81,6 +83,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
             <div style="background: #fff; border-bottom: 1px solid #e2e8f0; padding: 45px 40px; flex-shrink: 0;">
                 <div class="op-container-fluid" style="max-width: 1600px; margin: 0 auto;">
                     <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
+                        
                         {# ── BLOCO 1: IDENTIFICAÇÃO MASTER (ENCAIXADO NO CABEÇALHO) ── #}
                         <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
                             <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
@@ -205,6 +208,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                         </div>
 
                         {# CARD: CONTATOS (ENCAIXADO NO CABEÇALHO) #}
+                       
                         <div class="op-card" style="flex: 1; min-width: 400px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
                             <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
                                 <div>
@@ -255,6 +259,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                 </div>
             </div>
 
+            
             {# ── NAVEGAÇÃO DE ABAS (TOP POSITION - ARIONE STANDARD) ── #}
             <div class="fe-tabs-wrap" style="position: sticky; top: 60px; z-index: 998; margin: 0 0 10px 0; padding: 0 40px;">
                 <div class="fe-tabs-nav">
@@ -262,7 +267,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                         <i class="fas fa-map-marker-alt"></i> Endereços
                     </button>
                     <button type="button" class="fe-tab" data-tab="digital">
-                        <i class="fas fa-fingerprint"></i> Digital
+                        <i class="fas fa-building"></i> Logo Marca Digital
                     </button>
                     <button type="button" class="fe-tab" data-tab="documentos">
                         <i class="fas fa-file-pdf"></i> Arquivos
@@ -271,8 +276,13 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
             </div>
 
             <div class="fe-tabs-panels" style="min-height: auto; padding-bottom: 10px; padding: 0 40px;">
-
-                    {# ── ABA ENDEREÇOS ── #}
+            
+            
+            {# ── ABAS DE ENDEREÇOS -  Endereço Principal -  Endereço Logístico - Endereço Fiscal ── #}
+            
+            
+                {# ── ABA ENDEREÇOS ── #}
+            
                     <div class="fe-tab-panel active" id="tab-identidade">
                         <div class="fe-addr-grid"
                             style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
@@ -462,6 +472,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                     </div>
 
                     {# ── ABA DIGITAL ── #}
+                    
                     <div class="fe-tab-panel" id="tab-digital">
                         <div class="fe-card">
                             <div class="fe-card-title"><i class="fas fa-image"></i> Identidade Visual</div>
@@ -489,6 +500,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                     </div>
 
                     {# ── ABA ARQUIVOS ── #}
+                    
                     <div class="fe-tab-panel" id="tab-documentos">
                         <div class="fe-doc-upload-area" id="drop-area-emp"
                             ondragover="event.preventDefault(); this.classList.add('drag-over')"
@@ -544,8 +556,8 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                     <tbody>
                         {% for emp in empresas_lista %}
                         <tr>
-                            <td style="font-weight: 700; color: var(--pri);">{{ emp.id }}</td>
-                            <td style="font-weight: 800;">{{ emp.razao_social }}</td>
+                            <td style="font-weight: 600; color: var(--pri);">{{ emp.id }}</td>
+                            <td style="font-weight: 600;">{{ emp.razao_social }}</td>
                             <td style="font-size: 11px; color: var(--muted); text-transform: uppercase;">{{
                                 emp.nome_fantasia or '---' }}</td>
                             <td style="font-family: monospace; font-size: 11px;">{{ emp.cnpj or emp.cpf or '---' }}</td>
@@ -573,36 +585,52 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
 
 
 <script>
-    // Funções de Ação do Cabeçalho Mestre (PAA §12-B)
-    function resetFormEmpresa() {
+   
+   // Funções de Ação do Cabeçalho Mestre (PAA §12-B)
+   
+   function resetFormEmpresa() {
         const form = document.getElementById('form-empresa-mestre');
         if (form) {
             form.reset();
+          
             // Limpa ID para forçar novo registro
+          
             const idInput = form.querySelector('input[name="id"]');
             if (idInput) idInput.value = '';
+          
             // Limpa logo
+          
             const logoPreview = document.getElementById('logo-preview');
             const logoPlaceholder = document.getElementById('logo-placeholder');
             if (logoPreview) { logoPreview.src = ''; logoPreview.style.display = 'none'; }
             if (logoPlaceholder) logoPlaceholder.style.display = 'block';
+          
             // Limpa TODOS os inputs de texto, select e textarea (incluindo endereços)
+          
             form.querySelectorAll('input:not([type="hidden"]):not([type="file"]), select, textarea').forEach(el => {
                 if (el.tagName === 'SELECT') el.selectedIndex = 0;
                 else el.value = '';
             });
+          
             // Limpa campos hidden (exceto csrf)
+          
             form.querySelectorAll('input[type="hidden"]').forEach(el => {
                 if (!el.name.includes('csrf')) el.value = '';
             });
+          
             // Limpa preview de documentos
+          
             const previewDocs = document.getElementById('preview-docs-emp');
             const previewLista = document.getElementById('preview-lista-emp');
             if (previewDocs) previewDocs.style.display = 'none';
             if (previewLista) previewLista.innerHTML = '';
+          
             // Reseta arquivos acumulados
+          
             if (window._empresaArquivosAcumulados) window._empresaArquivosAcumulados = [];
+          
             // Foca no primeiro campo
+          
             const razaoInput = form.querySelector('input[name="razao_social"]');
             if (razaoInput) razaoInput.focus();
             if (typeof arioneToast === 'function') arioneToast('✨ Formulário limpo para novo cadastro!', 'success');
@@ -628,6 +656,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
 
         const subject = encodeURIComponent(`Dados Cadastrais: ${razao || fantasia}`);
         const corpo = [
+
             `DADOS DA EMPRESA - AriOne`,
             `─────────────────────────`,
             razao ? `Razão Social: ${razao}` : '',
@@ -665,6 +694,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
     }
 
     // Função para alternar entre PJ e PF
+    
     function toggleTipoPessoa() {
         const tipoPessoa = document.getElementById('tipo_pessoa').value;
         const rowPj = document.getElementById('row-pj');
@@ -793,14 +823,13 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                 method: 'POST',
                 body: new FormData(form)
             });
+          
             if (response.ok) {
                 arioneToast('Unidade salva com sucesso!', 'success');
-                // Permanece no formulário e limpa para novo cadastro
                 setTimeout(() => {
-                    resetFormEmpresa();
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-save" style="font-size: 14px;"></i>';
-                }, 1200);
+                   window.location.href = response.url; // recarrega na URL final do redirect
+            }, 1200);
+          
             } else {
                 arioneToast('Erro ao salvar. Verifique os dados.', 'danger');
                 btn.disabled = false;

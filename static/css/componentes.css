@@ -170,6 +170,7 @@ header {
     border-radius: 10px 10px 0 0;
     background-color: #f4f6f8;
     color: #444;
+    margin-right: 12px;
 }
 
 .arione-aba.active {

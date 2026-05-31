@@ -1,7 +1,7 @@
 """add objeto_social and email to empresas
 
 Revision ID: add_objeto_social_email
-Revises: 38f5ca33d12a
+Revises: 005_add_valor_diario_data_final_campanhas
 Create Date: 2024-05-22
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_objeto_social_email'
-down_revision = '38f5ca33d12a'
+down_revision = '005_add_valor_diario_data_final_campanhas'
 branch_labels = None
 depends_on = None
 

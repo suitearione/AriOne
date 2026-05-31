@@ -204,7 +204,7 @@
                                     {% if vendedor %}<input type="hidden" name="funcionario_id" value="{{ vendedor.funcionario_id }}">{% endif %}
                                 </div>
                                 <div class="fe-group" style="flex: 2;">
-                                    <label class="fe-label">Nome Comercial / Exibível (Luxury Name)</label>
+                                    <label class="fe-label">Nome para Campanhas (LeadOne)</label>
                                     <input type="text" name="nome_exibivel" class="gf-input" value="{{ vendedor.nome_exibivel or '' }}" placeholder="EX: CONSULTOR {{ current_user.nome|upper if not vendedor else '' }}">
                                 </div>
                                 <div class="fe-group" style="flex: 1;">

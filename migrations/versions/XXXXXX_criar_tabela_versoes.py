@@ -9,17 +9,17 @@
 """Criar tabela versoes
 
 Revision ID: criar_tabela_versoes
-Revises: 
+Revises: 1f268e9fc294
 Create Date: 2026-01-04
 
-"""
+\"\"\"
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
 revision = 'criar_tabela_versoes'
-down_revision = None
+down_revision = '1f268e9fc294'
 branch_labels = None
 depends_on = None
 

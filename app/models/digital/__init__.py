@@ -8,3 +8,4 @@ from .lead import Lead
 from .captura import Captura
 from .automacao import Automacao
 from .conversao import Conversao
+from .campanha import Campanha
