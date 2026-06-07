@@ -95,8 +95,36 @@
     <style>
         /* ⚡ Responsividade global para mobile/tablet */
         @media (max-width: 1200px) {
-            .arione-sidebar { display: none !important; }
-            .arione-bar-blue-new { width: 100% !important; left: 0 !important; }
+            .arione-sidebar {
+                display: block !important;
+                position: relative !important;
+                width: 100% !important;
+                height: auto !important;
+                left: 0 !important;
+                top: 0 !important;
+                overflow: visible !important;
+                border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+                background: #7A255F !important;
+            }
+            .arione-sidebar .menu-scroll-container {
+                max-height: none !important;
+            }
+            .arione-sidebar .menu-lista {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 8px !important;
+            }
+            .arione-sidebar .menu-item {
+                margin: 4px !important;
+                flex: 0 1 auto !important;
+            }
+            .arione-sidebar .menu-link {
+                padding: 10px 14px !important;
+                border-left: none !important;
+                border-radius: 12px !important;
+            }
             .arione-main-wrapper { margin-left: 0 !important; }
             .arione-new-header-container main.arione-page { padding: 14px 12px !important; }
             .arione-new-header-container header { padding: 10px 12px !important; }
@@ -143,6 +171,8 @@
             .op-col,
             .fp-group,
             .fe-col { width: 100% !important; }
+            .arione-sidebar .menu-lista { flex-direction: column !important; }
+            .arione-sidebar .menu-item { width: 100% !important; }
         }
 
         @media (max-width: 768px) {
@@ -190,7 +220,33 @@
         /* Ensure tables and grids scroll horizontally on small screens */
         @media (max-width: 480px) {
             .arione-page, .arione-page-wrapper { padding-left: 8px !important; padding-right: 8px !important; }
-            .arione-sidebar { display: none !important; }
+            .arione-sidebar {
+                display: block !important;
+                position: relative !important;
+                width: 100% !important;
+                height: auto !important;
+                left: 0 !important;
+                top: 0 !important;
+                overflow: visible !important;
+                border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+                background: #7A255F !important;
+            }
+            .arione-sidebar .menu-lista {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: space-between !important;
+                gap: 6px !important;
+            }
+            .arione-sidebar .menu-item {
+                flex: 1 1 48% !important;
+                min-width: 48% !important;
+            }
+            .arione-sidebar .menu-link {
+                padding: 10px 12px !important;
+                border-left: none !important;
+                border-radius: 10px !important;
+            }
             .arione-bar-blue-new { width: 100% !important; left: 0 !important; }
             .fp-card-body,
             .fe-card-body,
