@@ -4456,6 +4456,7 @@ def pesquisa_acessorios():
 
 @cadastros_bp.route('/cards/embalagens', methods=['GET', 'POST'])
 @cadastros_bp.route('/cards/embalagens/<int:id>', methods=['GET', 'POST'])
+@login_required
 def card_embalagens(id=None):
     from app.models.catalogos import Embalagem, UnidadeMedida, FornecedorEmbalagem, ClassificacaoEmbalagem
     from app.models.cadastros.fornecedor import Fornecedor
