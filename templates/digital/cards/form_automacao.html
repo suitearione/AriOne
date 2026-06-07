@@ -1,0 +1,123 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fp-wrap mod-automacoes">
+    {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+    <div style="position: sticky; top:0; z-index:2000; background:#f4f6f9; padding:0 24px; border-bottom:2px solid #e2e8f0;">
+        {{ cabecalho_mestre_arione(
+            titulo='LeadOne: Automações',
+            subtitulo='Ações automatizadas para Leads',
+            icone='fa-robot',
+            cor_tema='#1A237E',
+            func_fechar="window.location.href='" ~ url_for('digital.abas', aba='leadone') ~ "'",
+            form_id='automacao-form-area',
+            onclick_novo='resetFormAutomacao()',
+            onclick_save='salvarAutomacao()',
+            onclick_list='alternarVisaoFormLista()'
+        ) }}
+    </div>
+
+    <div id="area-formulario-automacoes" class="fe-form-stage-medio" style="max-width:1000px; margin:12px auto; padding:12px 24px; background:#f4f6f9;">
+        <div id="automacao-form-area" style="animation:feFadeUp 0.6s ease-out;">
+            <form id="automacao-form" method="POST" action="{{ url_for('digital.automacoes') }}">
+                <input type="hidden" name="id" id="auto-id-input">
+                <div class="fp-card" style="border-left:4px solid #1A237E;">
+                    <div class="fp-card-title" style="background: rgba(26,35,126,0.03); color:#1A237E;"><i class="fas fa-robot"></i> Detalhes da Automação</div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Nome da Automação <span class="fp-req">*</span></label>
+                                <input type="text" class="fp-input fp-track" name="nome" id="auto-nome-input" required placeholder="Ex: Follow-up 24h">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Gatilho</label>
+                                <input type="text" class="fp-input fp-track" name="gatilho" placeholder="Ex: Lead Capturado">
+                            </div>
+                        </div>
+                        <div class="fp-row" style="margin-top:12px;">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Ação</label>
+                                <input type="text" class="fp-input fp-track" name="acao" placeholder="Ex: Enviar Mensagem WhatsApp">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Delay (horas)</label>
+                                <input type="number" class="fp-input fp-track" name="delay" min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; padding:10px 0 20px;">
+                    <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="window.location.reload()">Cancelar</button>
+                    <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-auto" onclick="forceSubmitAutomacao()"><i class="fas fa-save"></i> Confirmar e Salvar</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="auto-list-area" class="fp-card" style="margin-top:15px; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;">
+            <div class="fp-card-title" style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:15px 20px;">
+                <span><i class="fas fa-table"></i> Automações Cadastradas</span>
+                <input type="text" id="auto-search-input" oninput="executarFiltroAutomacoes()" placeholder="Pesquisa rápida..." style="padding:6px 10px; border:1.5px solid #ddd; border-radius:20px; font-size:12px; width:220px;">
+            </div>
+            <table class="fp-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Gatilho</th>
+                        <th>Ação</th>
+                        <th>Delay (h)</th>
+                        <th style="text-align:center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-automacoes">
+                    {% for a in automacoes %}
+                    <tr class="auto-row" data-id="{{ a.id }}" data-nome="{{ a.nome|e }}" data-gatilho="{{ a.gatilho|e }}" data-acao="{{ a.acao|e }}" data-delay="{{ a.delay_horas }}">
+                        <td><strong>{{ a.nome }}</strong></td>
+                        <td>{{ a.gatilho or '-' }}</td>
+                        <td>{{ a.acao or '-' }}</td>
+                        <td style="text-align:center;">{{ a.delay_horas or 0 }}</td>
+                        <td class="fp-actions" style="text-align:center;">
+                            <button type="button" class="fp-btn-icon" onclick='editarAutomacao({{ a.id }})'><i class="fas fa-edit"></i></button>
+                            <form method="POST" action="{{ url_for('digital.delete_automacao', id=a.id) }}" style="display:inline;" onsubmit="return confirm('Remover automação?');">
+                                <button type="submit" class="fp-btn-icon"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function forceSubmitAutomacao() {
+        const form = document.getElementById('automacao-form'); if (!form.checkValidity()) { form.reportValidity(); return; }
+        const btn = document.getElementById('btn-salvar-auto'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(form.action, { method: 'POST', body: formData });
+            if (response.ok) { arioneToast('Automação salva com sucesso!', 'success'); setTimeout(()=>window.location.reload(),800); }
+            else { arioneToast('Erro ao salvar automação.', 'danger'); }
+        } catch(e) { arioneToast('Erro crítico.', 'danger'); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Confirmar e Salvar'; }
+    }
+
+    function executarFiltroAutomacoes() {
+        const q = document.getElementById('auto-search-input').value.toLowerCase();
+        document.querySelectorAll('.auto-row').forEach(row => { row.style.display = row.getAttribute('data-nome').toLowerCase().includes(q) ? '' : 'none'; });
+    }
+
+    function editarAutomacao(id) {
+        const row = document.querySelector(`.auto-row[data-id="${id}"]`); if (!row) return;
+        document.getElementById('auto-id-input').value = id;
+        document.getElementById('auto-nome-input').value = row.dataset.nome || '';
+        document.querySelector('[name="gatilho"]').value = row.dataset.gatilho || '';
+        document.querySelector('[name="acao"]').value = row.dataset.acao || '';
+        document.querySelector('[name="delay"]').value = row.dataset.delay || 0;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetFormAutomacao() { window.location.href = "{{ url_for('digital.automacoes') }}"; }
+    window.salvarAutomacao = forceSubmitAutomacao;
+</script>
+{% endblock %}

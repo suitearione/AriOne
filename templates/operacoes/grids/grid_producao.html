@@ -6,7 +6,7 @@
 </div>
 
 <div class="ge-grid-wrapper">
-    <div class="ge-section-title"><i class="fas fa-industry"></i><span>Produção</span></div>
+    <div class="ge-section-title"><i class="fas fa-industry"></i><span>Produção Interna</span></div>
     <div class="ge-cards-container">
 
         <div class="ge-card" onclick="abrirModalPrd('parametros')" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,0.10);">
@@ -18,7 +18,7 @@
         <div class="ge-card" onclick="abrirModalPrd('ops')" style="--card-cor:#E67E22;--card-cor-bg:rgba(230,126,34,0.10);">
             <i class="fas fa-cogs ge-card-bg-icon"></i>
             <div class="ge-card-icon-wrap"><i class="fas fa-cogs ge-card-icon"></i></div>
-            <span class="ge-card-label">Ordens de Produção</span><span class="ge-card-desc">OPs abertas</span>
+            <span class="ge-card-label">Ordens de Produção</span><span class="ge-card-desc">Abertura e OP abertas</span>
         </div>
 
         <div class="ge-card" onclick="abrirModalPrd('pca')" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
@@ -39,24 +39,30 @@
             <span class="ge-card-label">Visual VMC</span><span class="ge-card-desc">Controle visual</span>
         </div>
 
-        <div class="ge-card" onclick="abrirModalPrd('envio_oficinas')" style="--card-cor:#16A085;--card-cor-bg:rgba(22,160,133,0.10);">
-            <i class="fas fa-paper-plane ge-card-bg-icon"></i>
-            <div class="ge-card-icon-wrap"><i class="fas fa-paper-plane ge-card-icon"></i></div>
-            <span class="ge-card-label">Envio Oficinas</span><span class="ge-card-desc">Envio para produção</span>
-        </div>
-
-        <div class="ge-card" onclick="abrirModalPrd('retorno_oficinas')" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,0.10);">
-            <i class="fas fa-reply ge-card-bg-icon"></i>
-            <div class="ge-card-icon-wrap"><i class="fas fa-reply ge-card-icon"></i></div>
-            <span class="ge-card-label">Retorno Oficinas</span><span class="ge-card-desc">Retorno de produção</span>
-        </div>
-
         <div class="ge-card" onclick="abrirModalPrd('insumos')" style="--card-cor:#C0392B;--card-cor-bg:rgba(192,57,43,0.10);">
             <i class="fas fa-flask ge-card-bg-icon"></i>
             <div class="ge-card-icon-wrap"><i class="fas fa-flask ge-card-icon"></i></div>
             <span class="ge-card-label">Controle de Insumos</span><span class="ge-card-desc">Insumos consumidos</span>
         </div>
 
+    </div>
+</div>
+
+<div class="ge-grid-wrapper">
+    <div class="ge-section-title"><i class="fa-spinner fa-pulse"></i><span>Produção Externa</span></div>
+    <div class="ge-cards-container">
+
+        <div class="ge-card" onclick="abrirModalPrd('envio_oficinas')" style="--card-cor:#16A085;--card-cor-bg:rgba(22,160,133,0.10);">
+            <i class="fas fa-paper-plane ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-paper-plane ge-card-icon"></i></div>
+            <span class="ge-card-label">Envio para Oficinas</span><span class="ge-card-desc">Envio para produção Externa</span>
+        </div>
+
+        <div class="ge-card" onclick="abrirModalPrd('retorno_oficinas')" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,0.10);">
+            <i class="fas fa-reply ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-reply ge-card-icon"></i></div>
+            <span class="ge-card-label">Retorno das Oficinas</span><span class="ge-card-desc">Retorno de produção Externa</span>
+        </div>
     </div>
 </div>
 

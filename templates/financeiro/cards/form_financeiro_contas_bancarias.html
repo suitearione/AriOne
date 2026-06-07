@@ -26,6 +26,22 @@
     tamanho="medio"
 ) }}
 
+<style>
+    .op-input:focus,
+    .op-input-luxury:focus,
+    select:focus,
+    textarea:focus {
+        outline: none !important;
+        border-color: #2980B9 !important;
+        box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.18) !important;
+    }
+    .selected-forma-item:focus-within {
+        border-color: #2980B9 !important;
+        background: #eff6ff;
+        box-shadow: 0 0 0 4px rgba(41, 128, 185, 0.15) !important;
+    }
+</style>
+
 <div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; width: 100%;">
     <div class="bnk-container" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease; animation: fadeIn 0.5s ease-out;">
         <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
@@ -40,6 +56,42 @@
                 <form id="formContasBancarias" onsubmit="salvarContaBancariaMaster(event)">
                     <input type="hidden" name="id" id="conta_id" value="new">
                     
+                    <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                        <div class="op-group" style="flex: 1; min-width: 280px;">
+                            <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">FORMAS DE PAGAMENTO ACEITAS</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <select id="conta_formas_pagamento_selector" class="op-input" style="flex: 1; width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 12px;">
+                                    <option value="">Selecione uma forma</option>
+                                    {% for fp in formas_pagamento %}
+                                    <option value="{{ fp.id }}">{{ fp.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" onclick="adicionarFormaConta()" style="height: 40px; padding: 0 15px; border-radius: 8px; border: none; background: #7A255F; color: #fff; cursor: pointer; font-weight: 700; font-size: 12px;">Adicionar</button>
+                            </div>
+                            <datalist id="lista-plano-contas">
+                                {% for pc in plano_contas %}
+                                <option data-id="{{ pc.id }}" value="{{ pc.codigo }} - {{ pc.descricao }}"></option>
+                                {% endfor %}
+                            </datalist>
+                            <div id="conta_formas_pagamento_header" style="display: grid; grid-template-columns: minmax(140px, 1.8fr) repeat(6, minmax(48px, 1fr)) minmax(58px, 1fr) minmax(58px, 1fr) minmax(58px, 1fr) minmax(34px, 1fr); gap: 8px; padding: 14px 10px; border-radius: 10px; background: #f8fafc; color: #475569; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; align-items: center;">
+                                <div title="Nome e descrição da forma de pagamento aceita.">Descrição <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Quantidade de parcelas permitidas para a condição de pagamento." style="text-align:center;">Parcel. <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Intervalo entre parcelas em dias." style="text-align:center;">Interv. <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Valor ou dia da primeira parcela." style="text-align:center;">1ª Parc. <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Percentual de administração aplicado à forma de pagamento." style="text-align:center;">% Adm. <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Percentual de antecipação para a forma de pagamento." style="text-align:center;">% Ant. <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Valor fixo aplicado à condição de pagamento." style="text-align:center;">Vl Fixo <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Classificação interna para agrupamento ou regra contábil." style="text-align:center;">Classif. <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Aplica-se esta forma de pagamento nas compras?" style="text-align:center;">Compras? <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div title="Aplica-se esta forma de pagamento nas vendas?" style="text-align:center;">Vendas? <i class="fas fa-info-circle" style="font-size: 10px; margin-left: 4px; color: #94a3b8; cursor: help;"></i></div>
+                                <div></div>
+                            </div>
+                            <div id="conta_formas_pagamento_selected_list" style="margin-top: 10px; display: grid; gap: 10px; overflow-x: auto;"></div>
+                            <div style="font-size: 10px; color: #64748b; margin-top: 6px;">Clique em Adicionar para incluir a forma no cadastro. Use o X para remover.</div>
+                            <div id="conta_formas_pagamento_inputs"></div>
+                        </div>
+                    </div>
+
                     <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
                         <div class="op-group" style="flex: 2; min-width: 250px;">
                             <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">BANCO (BUSCAR POR NOME OU CÓDIGO) *</label>
@@ -152,6 +204,111 @@ function carregarDatalistBancosEmpresa() {
     });
 }
 
+window.conta_formas_pagamento_disponiveis = {{ formas_pagamento|tojson | safe }};
+
+function getFormasPagamentoDisponiveis() {
+    return window.conta_formas_pagamento_disponiveis || [];
+}
+
+function carregarSelectFormasPagamento() {
+    const select = document.getElementById('conta_formas_pagamento_selector');
+    if (!select) return;
+    const optionsHtml = ['<option value="">Selecione uma forma</option>'];
+    getFormasPagamentoDisponiveis().forEach(fp => {
+        optionsHtml.push(`<option value="${fp.id}">${fp.nome}</option>`);
+    });
+    select.innerHTML = optionsHtml.join('');
+}
+
+function getContaFormasAceitas() {
+    return [...document.querySelectorAll('#conta_formas_pagamento_selected_list .selected-forma-item')].map(item => item.dataset.id);
+}
+
+function selecionarPlanoContasFormaPagamento(input, hiddenId) {
+    const hidden = document.getElementById(hiddenId) || document.querySelector(`input[name='${hiddenId}']`);
+    const list = document.getElementById('lista-plano-contas');
+    if (!hidden || !list) return;
+    const value = input.value || '';
+    hidden.value = '';
+    for (const option of Array.from(list.options)) {
+        if (option.value === value) {
+            hidden.value = option.dataset.id || '';
+            break;
+        }
+    }
+}
+
+function renderContaFormasFromIds(ids) {
+    const listContainer = document.getElementById('conta_formas_pagamento_selected_list');
+    const inputsContainer = document.getElementById('conta_formas_pagamento_inputs');
+    if (!listContainer || !inputsContainer) return;
+
+    listContainer.innerHTML = '';
+    inputsContainer.innerHTML = '';
+
+    const uniqueIds = Array.from(new Set(ids.map(id => String(id))));
+    uniqueIds.forEach(id => {
+        const option = document.querySelector(`#conta_formas_pagamento_selector option[value='${id}']`);
+        const label = option ? option.text : `Forma ${id}`;
+
+        const item = document.createElement('div');
+        item.className = 'selected-forma-item';
+        item.dataset.id = id;
+        item.style.cssText = 'display: grid; grid-template-columns: minmax(140px, 1.8fr) repeat(6, minmax(48px, 1fr)) minmax(58px, 1fr) minmax(58px, 1fr) minmax(58px, 1fr) minmax(34px, 1fr); gap: 8px; align-items: center; padding: 10px 8px; border-radius: 12px; background: #ffffff; border: 1px solid #e2e8f0;';
+        item.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <input type="text" name="forma_aceita_descricao_${id}" value="${label}" placeholder="Descrição" class="op-input" style="width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; color: #334155; background: #f8fafc;">
+            </div>
+            <input type="text" name="forma_aceita_parcel_${id}" placeholder="Parcel." class="op-input" style="width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; text-align: center; background: #f8fafc;">
+            <input type="text" name="forma_aceita_interv_${id}" placeholder="Interv." class="op-input" style="width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; text-align: center; background: #f8fafc;">
+            <input type="text" name="forma_aceita_1a_parc_${id}" placeholder="1ª Parc." class="op-input" style="width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; text-align: center; background: #f8fafc;">
+            <input type="text" name="forma_aceita_pct_adm_${id}" placeholder="% Adm." class="op-input" style="width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; text-align: center; background: #f8fafc;">
+            <input type="text" name="forma_aceita_pct_ant_${id}" placeholder="% Ant." class="op-input" style="width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; text-align: center; background: #f8fafc;">
+            <input type="text" name="forma_aceita_valor_${id}" placeholder="Vl Fixo" class="op-input" style="width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; text-align: center; background: #f8fafc;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <input list="lista-plano-contas" name="forma_aceita_classif_nome_${id}" placeholder="Classif." class="op-input" style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; color: #334155; background: #f8fafc;" oninput="selecionarPlanoContasFormaPagamento(this, 'forma_aceita_classif_id_${id}')" onchange="selecionarPlanoContasFormaPagamento(this, 'forma_aceita_classif_id_${id}')" autocomplete="off">
+                <input type="hidden" name="forma_aceita_classif_id_${id}" id="forma_aceita_classif_id_${id}">
+            </div>
+            <label style="display: flex; justify-content: center; align-items: center; cursor: pointer;">
+                <input type="checkbox" name="forma_aceita_compras_${id}" style="width: 18px; height: 18px; accent-color: #27ae60;">
+            </label>
+            <label style="display: flex; justify-content: center; align-items: center; cursor: pointer;">
+                <input type="checkbox" name="forma_aceita_vendas_${id}" style="width: 18px; height: 18px; accent-color: #2980B9;">
+            </label>
+            <button type="button" onclick="removerFormaConta('${id}')" style="background: transparent; border: none; color: #ef4444; font-size: 18px; cursor: pointer;">&times;</button>
+        `;
+        listContainer.appendChild(item);
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'formas_pagamento_ids';
+        input.value = id;
+        inputsContainer.appendChild(input);
+    });
+}
+
+function adicionarFormaConta() {
+    const select = document.getElementById('conta_formas_pagamento_selector');
+    if (!select) return;
+    const id = select.value;
+    if (!id) {
+        if (typeof arioneToast === 'function') arioneToast('Selecione uma forma de pagamento antes de adicionar.', 'warning');
+        return;
+    }
+    const currentIds = getContaFormasAceitas();
+    if (currentIds.includes(id)) {
+        if (typeof arioneToast === 'function') arioneToast('Essa forma já está adicionada à conta.', 'info');
+        return;
+    }
+    renderContaFormasFromIds([...currentIds, id]);
+    select.value = '';
+}
+
+function removerFormaConta(id) {
+    const currentIds = getContaFormasAceitas().filter(itemId => itemId !== id);
+    renderContaFormasFromIds(currentIds);
+}
+
 function selecionarBancoMestre(val) {
     if (!val) return;
     const form = document.getElementById('formContasBancarias');
@@ -199,9 +356,9 @@ function buscarBancoFebrabanContas(cod) {
 
 // Gestão de Listagem e Persistência Local
 let contasCadastradas = JSON.parse(localStorage.getItem('arione_contas_bancarias_cad')) || [
-    { id: 1, cod: "001", banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", chave_pix: "00.000.000/0001-00", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 15420.50 },
-    { id: 2, cod: "341", banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", chave_pix: "financeiro@arione.com.br", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 8250.00 },
-    { id: 3, cod: "260", banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", chave_pix: "11999998888", tipo: "POUPANCA", modalidade_banco: "DIGITAL", status: "ATIVO", saldo: 3400.75 }
+    { id: 1, cod: "001", banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", chave_pix: "00.000.000/0001-00", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 15420.50, formas_pagamento_ids: ['1', '2', '4'] },
+    { id: 2, cod: "341", banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", chave_pix: "financeiro@arione.com.br", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 8250.00, formas_pagamento_ids: ['1', '4'] },
+    { id: 3, cod: "260", banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", chave_pix: "11999998888", tipo: "POUPANCA", modalidade_banco: "DIGITAL", status: "ATIVO", saldo: 3400.75, formas_pagamento_ids: ['2', '4'] }
 ];
 
 function salvarContasNoStorage() {
@@ -277,17 +434,18 @@ function salvarContaBancariaMaster(e) {
     const modalidadeVal = form.querySelector('[name="modalidade_banco"]').value;
     const statusVal = form.querySelector('[name="status"]').value;
     const saldoVal = parseFloat(form.querySelector('[name="saldo"]').value || 0);
+    const formasAceitas = getContaFormasAceitas();
 
     if (idVal === 'new') {
         const novoId = contasCadastradas.length > 0 ? Math.max(...contasCadastradas.map(c => c.id)) + 1 : 1;
         contasCadastradas.push({
-            id: novoId, cod: codVal, banco: bancoVal, agencia: agenciaVal, conta: contaVal, chave_pix: chavePixVal, tipo: tipoVal, modalidade_banco: modalidadeVal, status: statusVal, saldo: saldoVal
+            id: novoId, cod: codVal, banco: bancoVal, agencia: agenciaVal, conta: contaVal, chave_pix: chavePixVal, tipo: tipoVal, modalidade_banco: modalidadeVal, status: statusVal, saldo: saldoVal, formas_pagamento_ids: formasAceitas
         });
         if (typeof arioneToast === 'function') arioneToast("Conta bancária cadastrada com sucesso!", "success");
     } else {
         const c = contasCadastradas.find(item => item.id == idVal);
         if (c) {
-            c.cod = codVal; c.banco = bancoVal; c.agencia = agenciaVal; c.conta = contaVal; c.chave_pix = chavePixVal; c.tipo = tipoVal; c.modalidade_banco = modalidadeVal; c.status = statusVal; c.saldo = saldoVal;
+            c.cod = codVal; c.banco = bancoVal; c.agencia = agenciaVal; c.conta = contaVal; c.chave_pix = chavePixVal; c.tipo = tipoVal; c.modalidade_banco = modalidadeVal; c.status = statusVal; c.saldo = saldoVal; c.formas_pagamento_ids = formasAceitas;
         }
         if (typeof arioneToast === 'function') arioneToast("Conta bancária atualizada com sucesso!", "success");
     }
@@ -312,6 +470,7 @@ function editarContaMaster(id) {
     form.querySelector('[name="modalidade_banco"]').value = c.modalidade_banco || 'FISICO';
     form.querySelector('[name="status"]').value = c.status || 'ATIVO';
     form.querySelector('[name="saldo"]').value = c.saldo || 0;
+    renderContaFormasFromIds(c.formas_pagamento_ids || []);
     form.scrollIntoView({ behavior: 'smooth' });
     if (typeof arioneToast === 'function') arioneToast(`Editando conta: ${c.banco}`, "info");
 }
@@ -330,6 +489,7 @@ function novaContaBancariaMaster() {
     const form = document.getElementById('formContasBancarias');
     form.reset();
     form.querySelector('[name="id"]').value = 'new';
+    renderContaFormasFromIds([]);
     form.scrollIntoView({ behavior: 'smooth' });
     if (typeof arioneToast === 'function') arioneToast("Formulário limpo para nova conta bancária", "info");
 }
@@ -445,6 +605,7 @@ function voltarParaGridBancos() {
 // Inicializa a tabela ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
     carregarDatalistBancosEmpresa();
+    carregarSelectFormasPagamento();
     carregarContasBancarias();
 });
 </script>

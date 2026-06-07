@@ -751,13 +751,6 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                             </div>
                         </div>
                     </div>
-
-                    {# Estado Vazio #}
-                    <div id="frete-info-empty"
-                        style="text-align:center; padding:25px; background:#f8fafc; border-radius:10px; border:1.5px dashed #e2e8f0;">
-                        <i class="fas fa-truck-fast" style="font-size:28px; color:#cbd5e1; display:block; margin-bottom:8px;"></i>
-                        <div style="font-size:12px; color:#94a3b8; font-weight:600;">Selecione o tipo de frete (CIF ou FOB) para carregar as transportadoras disponíveis automaticamente.</div>
-                    </div>
                 </div>
 
                 {# ── ABA 2: FORMA DE PAGAMENTO ── #}
@@ -810,6 +803,48 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                         </div>
                     </div>
 
+                    {# ══ DESTINAÇÃO DO RECEBIMENTO: Local → Agente → Forma ══ #}
+                    <div id="painel-destinacao-venda" style="margin-bottom:16px; padding:14px; background:#f0f7ff; border-radius:10px; border:1.5px solid #0072CE30; display:none;">
+                        <div style="font-size:10px; font-weight:800; color:#0072CE; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                            <i class="fas fa-map-pin"></i> Forma de Recebimento / Pagamento
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:12px;">
+                            <div>
+                                <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                    <span style="background:#0072CE; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">1</span>
+                                    Local <span style="color:#e74c3c;">*</span>
+                                </div>
+                                <select id="orc_local_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="orcCarregarAgentes(this.value)">
+                                    <option value="">Selecione...</option>
+                                    <option value="CAIXA">Caixas</option>
+                                    <option value="BANCO">Bancos</option>
+                                    <option value="OPERADORA">Operadoras</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                    <span style="background:#94a3b8; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">2</span>
+                                    Agente Operador <span style="color:#e74c3c;">*</span>
+                                </div>
+                                <select id="orc_agente_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="orcCarregarFormasPagamento(this.value)">
+                                    <option value="">Busque ou selecione...</option>
+                                </select>
+                                <input type="hidden" name="local_recebimento" id="orc_local_receb_hidden">
+                                <input type="hidden" name="agente_recebimento_id" id="orc_agente_receb_hidden">
+                            </div>
+                            <div>
+                                <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                    <span style="background:#94a3b8; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">3</span>
+                                    Forma de Pagamento <span style="color:#e74c3c;">*</span>
+                                </div>
+                                <select id="orc_forma_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="orcAtualizarResumoDest()">
+                                    <option value="">Busque ou selecione...</option>
+                                </select>
+                                <input type="hidden" name="forma_recebimento_id" id="orc_forma_receb_hidden">
+                            </div>
+                        </div>
+                    </div>
+
                     {# Simulador de Parcelamento (aparece ao selecionar) #}
                     <div id="painel-parcelamento" style="display:none; background:#f8fafc; border-radius:10px; padding:16px; border:1px solid #e2e8f0;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -819,7 +854,13 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                             </div>
                             <div id="pag-ajuste-badge" style="font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; display:none;"></div>
                         </div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;" id="grid-parcelas"></div>
+                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;" id="grid-parcelas">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <label for="orc_parcelas_select" style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase;">Parcelas</label>
+                                <select id="orc_parcelas_select" class="fp-input" style="height:36px; min-width:120px; display:none;" onchange="orcOnParcelasSelected(this.value)">
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     {# Resumo da seleção #}
@@ -1856,6 +1897,9 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
         });
         const cor = card.dataset.cor || '#0072CE';
         card.classList.add('selected'); card.style.borderColor=cor; card.style.background=cor+'08'; card.style.boxShadow=`0 4px 20px ${cor}25`;
+        // Exibe painel de destinação ao selecionar card
+        const painelDest = document.getElementById('painel-destinacao-venda');
+        if (painelDest) painelDest.style.display = 'block';
         const id=card.dataset.id, nome=card.dataset.nome;
         const maxParcelas=parseInt(card.dataset.parcelas)||1;
         const juros=parseFloat(card.dataset.juros)||0, desconto=parseFloat(card.dataset.desconto)||0;
@@ -2020,6 +2064,184 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
         } catch (e) {
             arioneToast('Erro de rede ao sincronizar.', 'danger');
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 💳 DESTINAÇÃO DE RECEBIMENTO: Local → Agente Operador → Forma de Pgto
+    // Módulo Financeiro — mesma lógica de Entradas & Saídas / Transferências
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function getContasBancariasLocal() {
+        const defaultContas = [
+            { id: 1, nome: "001 - BANCO DO BRASIL S.A. / 55443-2", banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", chave_pix: "00.000.000/0001-00", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 15420.50, formas_pagamento_ids: [] },
+            { id: 2, nome: "341 - ITAÚ UNIBANCO S.A. / 99887-1", banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", chave_pix: "financeiro@arione.com.br", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 8250.00, formas_pagamento_ids: [] },
+            { id: 3, nome: "260 - NU PAGAMENTOS S.A. (NUBANK) / 1234567-8", banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", chave_pix: "11999998888", tipo: "POUPANCA", modalidade_banco: "DIGITAL", status: "ATIVO", saldo: 3400.75, formas_pagamento_ids: [] }
+        ];
+
+        try {
+            const raw = localStorage.getItem('arione_contas_bancarias_cad');
+            if (!raw) {
+                return defaultContas;
+            }
+
+            const contas = JSON.parse(raw);
+            return Array.isArray(contas) ? contas : defaultContas;
+        } catch (e) {
+            console.warn('[ORC] Erro ao ler contas bancárias locais:', e);
+            return defaultContas;
+        }
+    }
+
+    async function orcCarregarAgentes(local) {
+        const selectAgente = document.getElementById('orc_agente_receb');
+        const selectForma  = document.getElementById('orc_forma_receb');
+        const painelParcelamento = document.getElementById('painel-parcelamento');
+        if (painelParcelamento) painelParcelamento.style.display = 'none';
+        selectAgente.innerHTML = '<option value="">Busque ou selecione...</option>';
+        selectForma.innerHTML  = '<option value="">Busque ou selecione...</option>';
+        document.getElementById('orc_agente_receb_hidden').value = '';
+        document.getElementById('orc_forma_receb_hidden').value  = '';
+        document.getElementById('orc_local_receb_hidden').value  = local;
+
+        if (!local) return;
+
+        try {
+            let data = [];
+            if (local === 'BANCO') {
+                data = getContasBancariasLocal().filter(item => String(item.status || 'ATIVO').toUpperCase() === 'ATIVO');
+            } else {
+                const res  = await fetch(`/financeiro/api/agentes?local=${local}`);
+                data = await res.json();
+            }
+
+            if (!Array.isArray(data) || data.length === 0) {
+                selectAgente.innerHTML = '<option value="">Nenhum agente disponível</option>';
+                return;
+            }
+
+            selectAgente.innerHTML = '<option value="">Selecione...</option>';
+            data.forEach(item => {
+                selectAgente.innerHTML += `<option value="${item.id}">${item.nome || item.banco || item.nome_fantasia || item.descricao || `ID ${item.id}`}</option>`;
+            });
+        } catch (e) {
+            console.error('[ORC] Erro ao carregar agentes:', e);
+            arioneToast('Erro ao carregar agentes operadores.', 'danger');
+        }
+    }
+
+    async function orcCarregarFormasPagamento(agenteId) {
+        const selectForma = document.getElementById('orc_forma_receb');
+        const painelParcelamento = document.getElementById('painel-parcelamento');
+        if (painelParcelamento) painelParcelamento.style.display = 'none';
+        selectForma.innerHTML = '<option value="">Busque ou selecione...</option>';
+        document.getElementById('orc_forma_receb_hidden').value  = '';
+        document.getElementById('orc_agente_receb_hidden').value = agenteId;
+
+        if (!agenteId) return;
+
+        const local = document.getElementById('orc_local_receb').value || '';
+
+        try {
+            const res  = await fetch(`/financeiro/api/formas-pagamento?agente_id=${encodeURIComponent(agenteId)}&local=${encodeURIComponent(local)}`);
+            let data = await res.json();
+
+            if (local === 'BANCO') {
+                const conta = getContasBancariasLocal().find(item => String(item.id) === String(agenteId));
+                const acceptedIds = (conta && Array.isArray(conta.formas_pagamento_ids)) ? conta.formas_pagamento_ids.map(String) : [];
+                if (acceptedIds.length > 0) {
+                    data = data.filter(item => acceptedIds.includes(String(item.id)));
+                }
+            }
+
+            if (!Array.isArray(data) || data.length === 0) {
+                selectForma.innerHTML = '<option value="">Nenhuma forma de pagamento disponível</option>';
+                return;
+            }
+
+            selectForma.innerHTML = '<option value="">Busque ou selecione...</option>';
+            data.forEach(item => {
+                const parcelasList = Array.isArray(item.parcelas) ? item.parcelas : [];
+                const parcelas = parcelasList.length > 0 ? parcelasList.length : (item.max_parcelas || 1);
+                const sufixo = parcelas > 1 ? `${parcelas}x` : 'À VISTA';
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.nome} (${sufixo})`;
+                option.dataset.parcelas = parcelas;
+                option.dataset.parcelasJson = JSON.stringify(parcelasList);
+                option.dataset.nome = item.nome;
+                selectForma.appendChild(option);
+            });
+        } catch (e) {
+            console.error('[ORC] Erro ao carregar formas de pagamento:', e);
+            arioneToast('Erro ao carregar formas de pagamento.', 'danger');
+        }
+    }
+
+    function orcAtualizarResumoDest() {
+        const selectForma = document.getElementById('orc_forma_receb');
+        const formaId = selectForma.value;
+        const selectedOption = selectForma.options[selectForma.selectedIndex];
+        const parcelas = selectedOption?.dataset?.parcelas || '1';
+        const parcelasJson = selectedOption?.dataset?.parcelasJson ? JSON.parse(selectedOption.dataset.parcelasJson) : null;
+        const formaNome = selectedOption?.dataset?.nome || selectedOption?.text || '';
+        document.getElementById('orc_forma_receb_hidden').value = formaId;
+        document.getElementById('parcelas_selecionadas_hidden').value = parcelas;
+
+        const painelParcelamento = document.getElementById('painel-parcelamento');
+        if (!formaId) {
+            if (painelParcelamento) painelParcelamento.style.display = 'none';
+            return;
+        }
+
+        if (painelParcelamento) painelParcelamento.style.display = 'block';
+        atualizarParcelasOrcamento(parcelasJson || parseInt(parcelas, 10) || 1);
+        const parcelaLabel = document.getElementById('resumo-forma-parcelas');
+        if (parcelaLabel) parcelaLabel.textContent = parcelas + 'x';
+        document.getElementById('pag-nome-display').textContent = formaNome;
+    }
+
+    function atualizarParcelasOrcamento(parcelas) {
+        const select = document.getElementById('orc_parcelas_select');
+        if (!select) return;
+        select.innerHTML = '';
+
+        if (Array.isArray(parcelas) && parcelas.length > 0) {
+            parcelas.forEach(op => {
+                const option = document.createElement('option');
+                option.value = op.numero;
+                option.textContent = op.nome || (op.numero === 1 ? 'À VISTA' : `${op.numero}x`);
+                select.appendChild(option);
+            });
+        } else {
+            const max = parseInt(parcelas, 10) || 1;
+            for (let i = 1; i <= max; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i === 1 ? 'À VISTA' : `${i}x`;
+                select.appendChild(option);
+            }
+        }
+
+        select.value = select.options[0]?.value || '1';
+        select.style.display = 'inline-block';
+    }
+
+    function orcOnParcelasSelected(value) {
+        const parcelas = value || '1';
+        document.getElementById('parcelas_selecionadas_hidden').value = parcelas;
+        const parcelaLabel = document.getElementById('resumo-forma-parcelas');
+        if (parcelaLabel) parcelaLabel.textContent = parcelas + 'x';
+    }
+
+    function orcValidarDestinoRecebimento() {
+        const local  = document.getElementById('orc_local_receb').value;
+        const agente = document.getElementById('orc_agente_receb').value;
+        const forma  = document.getElementById('orc_forma_receb').value;
+        if (!local || !agente || !forma) {
+            arioneToast('Preencha Local, Agente Operador e Forma de Pagamento.', 'warning');
+            return false;
+        }
+        return true;
     }
 </script>
 {% endblock %}

@@ -385,7 +385,7 @@
     padding: 9px 14px;
     border: none;
     background: transparent;
-    cursor: pointer;
+    cursor: pointer !important;
     font-size: 12px;
     font-weight: 600;
     color: var(--muted);
@@ -397,6 +397,10 @@
     align-items: center;
     gap: 6px;
     white-space: nowrap;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
+    opacity: 1 !important;
 }
 
 .fp-tab:hover { color: var(--pri); background: rgba(122, 37, 95, .05); }

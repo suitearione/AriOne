@@ -29,9 +29,17 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
             overflow: visible !important;
             padding: 0 !important;
         }
+
+        #cnae_select_pj {
+            display: flex;
+        }
+
+        #cnae_input_pf {
+            display: none;
+        }
     </style>
 
-    <form id="form-empresa-mestre" method="POST" enctype="multipart/form-data" novalidate>
+    <form id="form-empresa-mestre" method="POST" action="/cadastros/empresa/salvar" enctype="multipart/form-data">
         {# Hidden: ID do registro (edição vs. novo) #}
         <input type="hidden" name="id" value="{{ empresa.id|default('', true) }}">
         {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
@@ -143,8 +151,62 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                             </div>
                             <div class="fe-group fe-flex-2">
                                 <label class="fe-label">CNAE Principal</label>
-                                <input class="fe-input" type="text" name="cnae"
-                                    value="{{ empresa.cnae|default('', true) }}" placeholder="0000-0/00">
+                                <select class="fe-input" name="cnae" id="cnae_select_pj" onchange="atualizarCnaeDisplay()">
+                                    <option value="" selected disabled>Selecione o CNAE...</option>
+                                    <option value="1310-1/00" data-nome="Preparação e Fiação de Fibras Têxteis">1310-1/00 - Preparação e Fiação de Fibras Têxteis</option>
+                                    <option value="1321-7/00" data-nome="Tecelagem">1321-7/00 - Tecelagem</option>
+                                    <option value="1330-6/00" data-nome="Acabamento em Fios, Tecidos e Artigos Têxteis">1330-6/00 - Acabamento em Fios, Tecidos e Artigos Têxteis</option>
+                                    <option value="1410-8/00" data-nome="Confecção de Artigos do Vestuário e Acessórios">1410-8/00 - Confecção de Artigos do Vestuário e Acessórios</option>
+                                    <option value="1412-6/01" data-nome="Confecção de peças de vestuário, exceto roupas íntimas e as confeccionadas sob medida">1412-6/01 - Confecção de peças de vestuário, exceto roupas íntimas e as confeccionadas sob medida</option>
+                                    <option value="1412-6/03" data-nome="Facção de peças do vestuário, exceto roupas íntimas">1412-6/03 - Facção de peças do vestuário, exceto roupas íntimas</option>
+                                    <option value="1421-3/00" data-nome="Fabricação de Artigos de Malharia e Tricotagem">1421-3/00 - Fabricação de Artigos de Malharia e Tricotagem</option>
+                                    <option value="1510-4/00" data-nome="Curtimento e Outras Preparações de Couro">1510-4/00 - Curtimento e Outras Preparações de Couro</option>
+                                    <option value="2029-8/00" data-nome="Fabricação de Outros Produtos Químicos Não Especificados">2029-8/00 - Fabricação de Outros Produtos Químicos Não Especificados</option>
+                                    <option value="2331-9/00" data-nome="Fabricação de Estruturas de Concreto Pré-Moldado">2331-9/00 - Fabricação de Estruturas de Concreto Pré-Moldado</option>
+                                    <option value="2512-4/00" data-nome="Fabricação de Tratores Agrícolas">2512-4/00 - Fabricação de Tratores Agrícolas</option>
+                                    <option value="2520-0/00" data-nome="Fabricação de Estruturas Metálicas">2520-0/00 - Fabricação de Estruturas Metálicas</option>
+                                    <option value="2540-5/00" data-nome="Fabricação de Boilers (Caldeiras) para Aquecimento Central">2540-5/00 - Fabricação de Boilers (Caldeiras) para Aquecimento Central</option>
+                                    <option value="2591-6/00" data-nome="Fabricação de Forjados de Ferro ou Aço">2591-6/00 - Fabricação de Forjados de Ferro ou Aço</option>
+                                    <option value="2720-9/00" data-nome="Fabricação de Pilhas, Baterias e Acumuladores Elétricos">2720-9/00 - Fabricação de Pilhas, Baterias e Acumuladores Elétricos</option>
+                                    <option value="2813-2/00" data-nome="Fabricação de Tratores Agrícolas">2813-2/00 - Fabricação de Máquinas Agrícolas</option>
+                                    <option value="3110-2/00" data-nome="Geração de Energia Elétrica">3110-2/00 - Geração de Energia Elétrica</option>
+                                    <option value="3220-6/00" data-nome="Telecomunicações">3220-6/00 - Telecomunicações</option>
+                                    <option value="4111-4/00" data-nome="Comércio Atacadista de Têxteis">4111-4/00 - Comércio Atacadista de Têxteis</option>
+                                    <option value="4120-3/00" data-nome="Comércio Atacadista de Roupas e Acessórios">4120-3/00 - Comércio Atacadista de Roupas e Acessórios</option>
+                                    <option value="4130-0/00" data-nome="Comércio Atacadista de Couros, Peles e Afins">4130-0/00 - Comércio Atacadista de Couros, Peles e Afins</option>
+                                    <option value="4230-7/00" data-nome="Comércio Atacadista de Máquinas e Equipamentos">4230-7/00 - Comércio Atacadista de Máquinas e Equipamentos</option>
+                                    <option value="4621-3/01" data-nome="Comércio Varejista de Artigos do Vestuário e Acessórios">4621-3/01 - Comércio Varejista de Artigos do Vestuário e Acessórios</option>
+                                    <option value="4711-3/01" data-nome="Comércio Varejista de Mercadorias em Geral">4711-3/01 - Comércio Varejista de Mercadorias em Geral</option>
+                                    <option value="4721-1/01" data-nome="Comércio Varejista de Tecidos">4721-1/01 - Comércio Varejista de Tecidos</option>
+                                    <option value="4729-6/99" data-nome="Comércio Varejista em Lojas de Conveniência">4729-6/99 - Comércio Varejista em Lojas de Conveniência</option>
+                                    <option value="4751-2/03" data-nome="Comércio Varejista de Peças e Acessórios para Veículos">4751-2/03 - Comércio Varejista de Peças e Acessórios para Veículos</option>
+                                    <option value="5111-9/01" data-nome="Cinema, Produção de Filmes e Vídeos">5111-9/01 - Cinema, Produção de Filmes e Vídeos</option>
+                                    <option value="5620-2/01" data-nome="Bares">5620-2/01 - Bares</option>
+                                    <option value="5621-0/01" data-nome="Restaurantes">5621-0/01 - Restaurantes</option>
+                                    <option value="5811-2/01" data-nome="Edição de Livros">5811-2/01 - Edição de Livros</option>
+                                    <option value="6201-4/00" data-nome="Desenvolvimento de Programas de Computador">6201-4/00 - Desenvolvimento de Programas de Computador</option>
+                                    <option value="6202-2/00" data-nome="Consultoria em Tecnologia da Informação">6202-2/00 - Consultoria em Tecnologia da Informação</option>
+                                    <option value="6209-0/01" data-nome="Suporte Técnico, Manutenção e Outros Serviços em TI">6209-0/01 - Suporte Técnico, Manutenção e Outros Serviços em TI</option>
+                                    <option value="6911-1/00" data-nome="Atividades Jurídicas">6911-1/00 - Atividades Jurídicas</option>
+                                    <option value="6912-0/00" data-nome="Atividades de Contabilidade">6912-0/00 - Atividades de Contabilidade</option>
+                                    <option value="7020-1/00" data-nome="Atividades de Consultoria em Gestão Empresarial">7020-1/00 - Atividades de Consultoria em Gestão Empresarial</option>
+                                    <option value="7312-5/00" data-nome="Agências de Publicidade">7312-5/00 - Agências de Publicidade</option>
+                                    <option value="7490-7/00" data-nome="Atividades de Outros Profissionais Especializados">7490-7/00 - Atividades de Outros Profissionais Especializados</option>
+                                    <option value="7711-0/00" data-nome="Aluguel de Imóveis por Pessoa Jurídica">7711-0/00 - Aluguel de Imóveis por Pessoa Jurídica</option>
+                                    <option value="7722-7/00" data-nome="Aluguel de Equipamentos de Transporte sem Condutor">7722-7/00 - Aluguel de Equipamentos de Transporte</option>
+                                    <option value="7810-1/00" data-nome="Agências de Viagens">7810-1/00 - Agências de Viagens</option>
+                                    <option value="8111-9/00" data-nome="Serviços de Administração da Saúde">8111-9/00 - Serviços de Administração da Saúde</option>
+                                    <option value="8211-5/01" data-nome="Serviços de Administração de Escritórios">8211-5/01 - Serviços de Administração de Escritórios</option>
+                                    <option value="8219-1/00" data-nome="Fotocópia e Outros Serviços de Apoio Administrativo">8219-1/00 - Fotocópia e Outros Serviços de Apoio Administrativo</option>
+                                    <option value="8230-1/00" data-nome="Atividades de Teleatendimento">8230-1/00 - Atividades de Teleatendimento</option>
+                                    <option value="8512-1/00" data-nome="Educação Profissional de Nível Técnico">8512-1/00 - Educação Profissional de Nível Técnico</option>
+                                    <option value="8592-0/00" data-nome="Educação de Apoio">8592-0/00 - Educação de Apoio</option>
+                                    <option value="4511-7/02" data-nome="Construção de Edifícios">4511-7/02 - Construção de Edifícios</option>
+                                    <option value="4520-6/00" data-nome="Construção de Obras de Engenharia Civil">4520-6/00 - Construção de Obras de Engenharia Civil</option>
+                                    <option value="4530-3/00" data-nome="Demolição e Preparação de Canteiros">4530-3/00 - Demolição e Preparação de Canteiros</option>
+                                    <option value="9601-1/00" data-nome="Limpeza em Prédios e Domicílios">9601-1/00 - Limpeza em Prédios e Domicílios</option>
+                                </select>
+                                <small id="cnae_display" style="display:none; margin-top: 4px; font-size: 11px; color: #64748b; font-style: italic;"></small>
                             </div>
                             <div class="fe-group fe-flex-2">
                                 <label class="fe-label">Início Atividade</label>
@@ -166,7 +228,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                             </div>
                             <div class="fe-group fe-flex-2">
                                 <label class="fe-label" id="label-cnae-ssp">SSP</label>
-                                <input class="fe-input" type="text" name="cnae"
+                                <input class="fe-input" type="text" name="cnae" id="cnae_input_pf"
                                     value="{{ empresa.cnae|default('', true) }}" placeholder="SSP">
                             </div>
                             <div class="fe-group fe-flex-2">
@@ -471,6 +533,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                         </div>
                     </div>
 
+
                     {# ── ABA DIGITAL ── #}
                     
                     <div class="fe-tab-panel" id="tab-digital">
@@ -517,6 +580,8 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                             <div id="preview-lista-emp" class="fe-doc-lista"></div>
                         </div>
                     </div>
+
+                    
 
                 </div>{# /fe-tabs-panels #}
             </div>{# /fe-tabs-panels #}
@@ -693,8 +758,6 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
         if (typeof arioneToast === 'function') arioneToast(`💬 Abrindo WhatsApp Web para ${whats}...`, 'success');
     }
 
-    // Função para alternar entre PJ e PF
-    
     function toggleTipoPessoa() {
         const tipoPessoa = document.getElementById('tipo_pessoa').value;
         const rowPj = document.getElementById('row-pj');
@@ -702,6 +765,8 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
         const cnpjInput = document.querySelector('input[name="cnpj"]');
         const cpfInput = document.querySelector('input[name="cpf"]');
         const labelCnaeSsp = document.getElementById('label-cnae-ssp');
+        const cnaeSelectPj = document.getElementById('cnae_select_pj');
+        const cnaeInputPf = document.getElementById('cnae_input_pf');
 
         if (tipoPessoa === 'PF') {
             rowPj.style.display = 'none';
@@ -710,8 +775,9 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
             if (cpfInput) cpfInput.required = true;
             if (labelCnaeSsp) {
                 labelCnaeSsp.textContent = 'SSP';
-                document.querySelector('input[name="cnae"]').placeholder = 'SSP';
             }
+            if (cnaeSelectPj) cnaeSelectPj.style.display = 'none';
+            if (cnaeInputPf) cnaeInputPf.style.display = 'block';
         } else {
             rowPj.style.display = 'flex';
             rowPf.style.display = 'none';
@@ -719,7 +785,36 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
             if (cpfInput) cpfInput.required = false;
             if (labelCnaeSsp) {
                 labelCnaeSsp.textContent = 'CNAE Principal';
-                document.querySelector('input[name="cnae"]').placeholder = '0000-0/00';
+            }
+            if (cnaeSelectPj) cnaeSelectPj.style.display = 'block';
+            if (cnaeInputPf) cnaeInputPf.style.display = 'none';
+        }
+    }
+
+    // Função para atualizar o display do CNAE selecionado
+    function atualizarCnaeDisplay() {
+        const selectPj = document.getElementById('cnae_select_pj');
+        const display = document.getElementById('cnae_display');
+        
+        if (selectPj && display) {
+            const selectedOption = selectPj.options[selectPj.selectedIndex];
+            const code = selectPj.value;
+            const nome = selectedOption.getAttribute('data-nome');
+            
+            if (code) {
+                // Atualiza o display com código e nome
+                display.textContent = `📋 ${code} - ${nome}`;
+                display.style.display = 'block';
+                
+                // Garante que o valor correto está no campo de dados
+                const cnaeInputs = document.querySelectorAll('input[name="cnae"]');
+                cnaeInputs.forEach(input => {
+                    if (input !== document.getElementById('cnae_input_pf')) {
+                        input.value = code;
+                    }
+                });
+            } else {
+                display.style.display = 'none';
             }
         }
     }
@@ -727,6 +822,19 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
     // Inicializar tipo de pessoa ao carregar a página
     document.addEventListener('DOMContentLoaded', function() {
         toggleTipoPessoa();
+        
+        // Inicializa o CNAE se já existe um valor armazenado
+        const selectPj = document.getElementById('cnae_select_pj');
+        const cnaeValue = '{{ empresa.cnae|default("", true) }}';
+        if (selectPj && cnaeValue) {
+            // Tenta encontrar e selecionar a opção com esse código
+            Array.from(selectPj.options).forEach(option => {
+                if (option.value === cnaeValue) {
+                    selectPj.value = cnaeValue;
+                    atualizarCnaeDisplay();
+                }
+            });
+        }
     });
 
     // Navegação de Abas
@@ -1119,3 +1227,4 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
     }
 </script>
 {% endblock %}
+

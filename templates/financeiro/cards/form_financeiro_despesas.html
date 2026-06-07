@@ -96,9 +96,66 @@
                     </div>
                 </div>
             </div>
+
+            <div class="fin-section">
+                <div class="fin-label" style="margin-bottom: 10px; color: var(--fin-pri);">FORMA DE PAGAMENTO</div>
+                <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">Local de Pagamento *</label>
+                        <select id="local_pagamento" class="fin-input" onchange="carregarAgentes(this.value, 'agente_pagamento')">
+                            <option value="">Selecione...</option>
+                            <option value="CAIXA">Caixas</option>
+                            <option value="BANCO">Bancos</option>
+                            <option value="OPERADORA">Operadoras</option>
+                        </select>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Agente Operador *</label>
+                        <select id="agente_pagamento" class="fin-input" onchange="carregarFormasPagamento(this.value, 'forma_pagamento_pagamento')">
+                            <option value="">Busque ou selecione...</option>
+                        </select>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Forma de Pagamento *</label>
+                        <select id="forma_pagamento_pagamento" class="fin-input">
+                            <option value="">Busque ou selecione...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 
     </div>
 </div>
+
+<script>
+    async function carregarAgentes(local, selectId) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Busque ou selecione...</option>';
+        
+        if (!local) return;
+        
+        const response = await fetch(`/financeiro/api/agentes?local=${local}`);
+        const data = await response.json();
+        
+        data.forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.nome}</option>`;
+        });
+    }
+
+    async function carregarFormasPagamento(agenteId, selectId) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Busque ou selecione...</option>';
+        
+        if (!agenteId) return;
+        
+        const response = await fetch(`/financeiro/api/formas-pagamento?agente_id=${agenteId}`);
+        const data = await response.json();
+        
+        data.forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.nome}</option>`;
+        });
+    }
+</script>
 {% endblock %}

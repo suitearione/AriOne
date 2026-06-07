@@ -47,11 +47,9 @@ from app.models.sistema.versao  import Versao
 from app.models.comercial import *
 
 from app.models.gestao.plano_contas import PlanoContas
-
 from app.models.gestao.patrimonio import Patrimonio
-
 from app.models.gestao.lancamento import Lancamento
-
+from app.models.gestao.parametros_financeiros import ParametrosFinanceiros
 
 
 

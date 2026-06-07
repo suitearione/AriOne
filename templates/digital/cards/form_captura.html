@@ -1,0 +1,137 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fp-wrap mod-capturas">
+    {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+    <div style="position: sticky; top: 0; z-index:2000; background: #f4f6f9; padding: 0 24px; border-bottom: 2px solid #e2e8f0;">
+        {{ cabecalho_mestre_arione(
+            titulo='LeadOne: Capturas',
+            subtitulo='Formulários públicos para captura de leads',
+            icone='fa-file-signature',
+            cor_tema='#1A237E',
+            func_fechar="window.location.href='" ~ url_for('digital.abas', aba='leadone') ~ "'",
+            form_id='captura-form-area',
+            onclick_novo='resetFormCaptura()',
+            onclick_save='salvarCaptura()',
+            onclick_list='alternarVisaoFormLista()'
+        ) }}
+    </div>
+
+    <div id="area-formulario-capturas" class="fe-form-stage-medio" style="max-width: 1000px; margin: 12px auto; padding: 12px 24px; background: #f4f6f9;">
+        <div id="captura-form-area" style="animation: feFadeUp 0.6s ease-out;">
+            <form id="captura-form" method="POST" action="{{ url_for('digital.capturas') }}">
+                <input type="hidden" name="id" id="capt-id-input">
+                <div class="fp-card" style="border-left: 4px solid #1A237E;">
+                    <div class="fp-card-title" style="background: rgba(26,35,126,0.03); color: #1A237E;"><i class="fas fa-file-signature"></i> Detalhes da Captura</div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Nome da Captura <span class="fp-req">*</span></label>
+                                <input type="text" class="fp-input fp-track" name="nome" id="capt-nome-input" required placeholder="Ex: Inscrição Newsletter">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Destino</label>
+                                <input type="text" class="fp-input fp-track" name="destino" placeholder="Ex: Pipeline">
+                            </div>
+                        </div>
+
+                        <div class="fp-row" style="margin-top: 12px;">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Integração</label>
+                                <input type="text" class="fp-input fp-track" name="integracao" placeholder="Ex: CRM, Planilha">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Mensagem de Sucesso</label>
+                                <input type="text" class="fp-input fp-track" name="mensagem_sucesso" placeholder="Obrigado! Entraremos em contato.">
+                            </div>
+                        </div>
+
+                        <div class="fp-row" style="margin-top:12px;">
+                            <div class="fp-group" style="width:100%;">
+                                <label class="fp-label">Campos (JSON)<span class="fp-req">*</span></label>
+                                <textarea class="fp-input fp-track" name="campos" id="capt-campos-input" rows="4" placeholder='[{"label":"Nome","name":"nome","type":"text","required":true}]'></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; padding:10px 0 20px;">
+                    <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="window.location.reload()">Cancelar</button>
+                    <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-capt" onclick="forceSubmitCaptura()"><i class="fas fa-save"></i> Confirmar e Salvar</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="capt-list-area" class="fp-card" style="margin-top: 15px; border-radius:12px; overflow: hidden; border:1px solid #e2e8f0;">
+            <div class="fp-card-title" style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:15px 20px;">
+                <span><i class="fas fa-table"></i> Capturas Cadastradas</span>
+                <input type="text" id="capt-search-input" oninput="executarFiltroCapturas()" placeholder="Pesquisa rápida..." style="padding:6px 10px; border:1.5px solid #ddd; border-radius:20px; font-size:12px; width:220px;">
+            </div>
+            <table class="fp-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Destino</th>
+                        <th>Integração</th>
+                        <th>Ativo</th>
+                        <th style="text-align:center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-capturas">
+                    {% for c in capturas %}
+                    <tr class="capt-row" data-id="{{ c.id }}" data-nome="{{ c.nome|e }}" data-destino="{{ c.destino|e }}" data-integracao="{{ c.integracao|e }}" data-campos='{{ c.campos|tojson|safe }}' data-mensagem='{{ c.mensagem_sucesso|e }}'>
+                        <td><strong>{{ c.nome }}</strong></td>
+                        <td>{{ c.destino or '-' }}</td>
+                        <td>{{ c.integracao or '-' }}</td>
+                        <td>{{ 'Sim' if c.ativo else 'Não' }}</td>
+                        <td class="fp-actions" style="text-align:center;">
+                            <button type="button" class="fp-btn-icon" onclick='editarCaptura({{ c.id }})'><i class="fas fa-edit"></i></button>
+                            <form method="POST" action="{{ url_for('digital.delete_captura', id=c.id) }}" style="display:inline;" onsubmit="return confirm('Remover captura?');">
+                                <button type="submit" class="fp-btn-icon"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function forceSubmitCaptura() {
+        const form = document.getElementById('captura-form');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const btn = document.getElementById('btn-salvar-capt');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(form.action, { method: 'POST', body: formData });
+            if (response.ok) { arioneToast('Captura salva com sucesso!', 'success'); setTimeout(()=>window.location.reload(), 800); }
+            else { arioneToast('Erro ao salvar captura.', 'danger'); }
+        } catch(e) { arioneToast('Erro crítico.', 'danger'); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Confirmar e Salvar'; }
+    }
+
+    function executarFiltroCapturas() {
+        const q = document.getElementById('capt-search-input').value.toLowerCase();
+        document.querySelectorAll('.capt-row').forEach(row => {
+            row.style.display = row.getAttribute('data-nome').toLowerCase().includes(q) ? '' : 'none';
+        });
+    }
+
+    function editarCaptura(id) {
+        const row = document.querySelector(`.capt-row[data-id="${id}"]`);
+        if (!row) return;
+        document.getElementById('capt-id-input').value = id;
+        document.getElementById('capt-nome-input').value = row.dataset.nome || '';
+        document.querySelector('[name="destino"]').value = row.dataset.destino || '';
+        document.querySelector('[name="integracao"]').value = row.dataset.integracao || '';
+        document.querySelector('[name="mensagem_sucesso"]').value = row.dataset.mensagem || '';
+        try { document.getElementById('capt-campos-input').value = JSON.stringify(JSON.parse(row.dataset.campos), null, 2); } catch(e) { document.getElementById('capt-campos-input').value = row.dataset.campos || ''; }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetFormCaptura() { window.location.href = "{{ url_for('digital.capturas') }}"; }
+    window.salvarCaptura = forceSubmitCaptura;
+</script>
+{% endblock %}

@@ -37,7 +37,7 @@
             <span class="ge-card-label">Operadoras</span><span class="ge-card-desc">Gateways de cartões</span>
         </div>
 
-        <div class="ge-card" onclick="abrirModalGer('formapagamentos')" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
+        <div class="ge-card" onclick="window.location.href='{{ url_for('financeiro.card_formas_pagamento') }}'" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,0.10);">
             <i class="fas fa-credit-card ge-card-bg-icon"></i>
             <div class="ge-card-icon-wrap"><i class="fas fa-credit-card ge-card-icon"></i></div>
             <span class="ge-card-label">Formas de Pagamento</span><span class="ge-card-desc">Formas e Regras</span>
@@ -55,13 +55,11 @@ async function abrirModalGer(tipo) {
     let icone = '';
 
     if (tipo === 'operadoras') {
-        url = '{{ url_for("financeiro.card_operadoras") }}';
-        titulo = 'Operadoras Financeiras';
-        icone = 'fas fa-landmark';
+        window.location.href = '{{ url_for("financeiro.card_operadoras") }}';
+        return;
     } else if (tipo === 'formapagamentos') {
-        url = '{{ url_for("financeiro.card_formas_pagamento") }}';
-        titulo = 'Formas de Pagamento';
-        icone = 'fas fa-credit-card';
+        window.location.href = '{{ url_for("financeiro.card_formas_pagamento") }}';
+        return;
     }
 
     if (url) {

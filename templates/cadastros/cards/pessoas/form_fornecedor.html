@@ -11,12 +11,26 @@
     .fp-card-title { padding: 11px 18px; font-size: 13px; font-weight: 700; color: #27AE60; border-bottom: 1px solid #f1f5f9; background: rgba(39, 174, 96, 0.02); display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
     .fp-card-body { padding: 18px 22px; }
 
-    .fe-tabs-wrap { display: flex; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 15px; }
-    .fp-tab { flex: 1; padding: 8px 12px; font-size: 11px; font-weight: 700; color: #64748b; border: none; background: transparent; cursor: pointer; transition: 0.2s; border-radius: 7px; display: flex; align-items: center; gap: 6px; justify-content: center; }
-    .fp-tab:hover { color: #27AE60; background: rgba(255,255,255,0.5); }
-    .fp-tab.active { background: #fff; color: #27AE60; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .fe-tabs-wrap { display: flex; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 15px; position: relative; z-index: 100; }
+    .fp-tab { flex: 1; padding: 8px 12px; font-size: 11px; font-weight: 700; color: #64748b; border: none; background: rgba(255,255,255,0.3); cursor: pointer !important; transition: 0.3s ease; border-radius: 7px; display: flex; align-items: center; gap: 6px; justify-content: center; pointer-events: auto !important; z-index: 101; position: relative; }
+    .fp-tab:not(:disabled):hover { color: #27AE60; background: rgba(255,255,255,0.9); transform: translateY(-1px); font-weight: 800; }
+    .fp-tab.active { background: #fff; color: #27AE60; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.15); font-weight: 800; pointer-events: auto !important; }
+    .fp-tab:disabled { opacity: 0.5; cursor: not-allowed !important; pointer-events: none; }
+    
+    /* ✅ MOSTRAR PAINÉIS DAS ABAS */
+    .fp-tab-panel { display: none; padding: 0; margin: 0; visibility: hidden; opacity: 0; transition: opacity 0.2s ease; }
+    .fp-tab-panel.active { display: block; visibility: visible; opacity: 1; }
+    .fp-tab-content { display: block; width: 100%; }
 
     .fe-table th { padding: 10px 15px; background: #f8fafc; color: #64748b; font-weight: 700; text-align: left; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+    
+    /* ✅ ESTILOS PARA FORMULÁRIOS */
+    .fp-row { display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-start; }
+    .fp-group { flex: 1; display: flex; flex-direction: column; }
+    .fp-flex-1 { flex: 1; }
+    .fp-flex-2 { flex: 2; }
+    .fp-flex-3 { flex: 3; }
+    .fp-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
 </style>
 
     {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE (PAA §12-B) ── #}
@@ -25,11 +39,13 @@
         titulo='Gestão de Fornecedores',
         subtitulo='Cadeia de Suprimentos & Parceiros Estratégicos',
         icone='fa-truck-fast',
-        form_id='form-fornecedor',
+        form_id='form-fornecedor-wrapper',
         onclick_novo="limparFormFornecedor()",
         onclick_save='forceSubmitFornecedor(event)',
         onclick_search='executarFiltroFornecedor()',
-        onclick_list="arioneAlternarVisualizacao('form-fornecedor', 'grid-fornecedores-wrap')",
+        onclick_filter="arioneToggleFilter('filter-bar-fornecedor', this)",
+        list_id='grid-fornecedores-wrap',
+        onclick_list="arioneAlternarVisualizacao('form-fornecedor-wrapper', 'grid-fornecedores-wrap')",
         onclick_export='exportarListaFornecedores()',
         onclick_import='importarXMLFornecedor()',
         onclick_print='imprimirFichaFornecedor()',
@@ -44,7 +60,7 @@
 
     <form method="POST" action="{% if fornecedor %}{{ url_for('cadastros.form_fornecedor', id=fornecedor.id) }}{% else %}{{ url_for('cadastros.form_fornecedor') }}{% endif %}" enctype="multipart/form-data" id="form-fornecedor" novalidate>
         
-        <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 24px;">
+        <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 24px;" id="form-fornecedor-wrapper">
             
             {# CARD 1: IDENTIFICAÇÃO MASTER #}
             <div class="fp-card">
@@ -82,11 +98,18 @@
                                 <div class="fp-group fp-flex-1">
                                     <label class="fp-label">Situação</label>
                                     <div style="height: 42px; display: flex; align-items: center;">
-                                        {% if fornecedor and not fornecedor.ativo %}
-                                            <span class="fe-badge-danger" style="background: #fee2e2; color: #991b1b; padding: 6px 15px; border-radius: 20px; font-size: 11px; font-weight: 800;">INATIVO</span>
-                                        {% else %}
-                                            <span class="fe-badge-success" style="background: #dcfce7; color: #166534; padding: 6px 15px; border-radius: 20px; font-size: 11px; font-weight: 800;">ATIVO</span>
-                                        {% endif %}
+                                        <button type="button" id="btn-situacao" 
+                                            onclick="alternarSituacaoFornecedor({{ fornecedor.id if fornecedor else 'null' }})" 
+                                            style="background: none; border: none; cursor: pointer; padding: 6px 15px; border-radius: 20px; font-size: 11px; font-weight: 800; transition: 0.3s; padding: 6px 15px; border-radius: 20px; font-size: 11px; font-weight: 800;"
+                                            title="Clique para alternar situação"
+                                            onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)';"
+                                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                                            {% if fornecedor and not fornecedor.ativo %}
+                                                <span style="background: #fee2e2; color: #991b1b; padding: 6px 15px; border-radius: 20px; display: block;">INATIVO</span>
+                                            {% else %}
+                                                <span style="background: #dcfce7; color: #166534; padding: 6px 15px; border-radius: 20px; display: block;">ATIVO</span>
+                                            {% endif %}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -157,17 +180,17 @@
             </div>
 
             {# SEÇÃO DE TABS (PADRÃO HCM) #}
-            <div class="fe-tabs-wrap">
-                    <button type="button" class="fp-tab active" onclick="switchOpeTab(this, 'tab-localizacao')">
+            <div class="fe-tabs-wrap" style="z-index: 100; position: relative;">
+                    <button type="button" class="fp-tab active" tabindex="0" style="z-index: 101; pointer-events: auto !important;" onclick="switchOpeTab(this, 'tab-localizacao')">
                         <i class="fas fa-map-marker-alt"></i> Localização
                     </button>
-                    <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-financeiro')">
+                    <button type="button" class="fp-tab" tabindex="0" style="z-index: 101; pointer-events: auto !important;" onclick="switchOpeTab(this, 'tab-financeiro')">
                         <i class="fas fa-dollar-sign"></i> Financeiro
                     </button>
-                    <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-documentos')">
+                    <button type="button" class="fp-tab" tabindex="0" style="z-index: 101; pointer-events: auto !important;" onclick="switchOpeTab(this, 'tab-documentos')">
                         <i class="fas fa-file-invoice"></i> Documentos
                     </button>
-                    <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-observacoes')">
+                    <button type="button" class="fp-tab" tabindex="0" style="z-index: 101; pointer-events: auto !important;" onclick="switchOpeTab(this, 'tab-observacoes')">
                         <i class="fas fa-sticky-note"></i> Observações
                     </button>
             </div>
@@ -212,9 +235,30 @@
 
                     {# TAB: FINANCEIRO #}
                     <div id="tab-financeiro" class="fp-tab-panel">
+                        <div class="fp-card">
+                            <div class="fp-card-title"><i class="fas fa-dollar-sign"></i> Resumo Financeiro</div>
+                            <div class="fp-card-body">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">💰 Total a Pagar</label>
+                                        <input type="number" step="0.01" name="saldo_a_pagar" class="fp-input" value="{{ fornecedor.saldo_a_pagar or 0 if fornecedor else 0 }}" placeholder="0.00" style="font-weight: 800; color: #e53e3e; font-size: 16px;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">✅ Total Pago</label>
+                                        <input type="number" step="0.01" name="total_pago" class="fp-input" value="{{ fornecedor.total_pago or 0 if fornecedor else 0 }}" placeholder="0.00" style="font-weight: 800; color: #27AE60; font-size: 16px;">
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">📋 Total de Pedidos</label>
+                                        <input type="number" step="0.01" name="total_pedidos" class="fp-input" value="{{ fornecedor.total_pedidos or 0 if fornecedor else 0 }}" placeholder="0.00" style="font-weight: 800; color: #3b82f6; font-size: 16px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div class="fp-card" style="box-shadow: none; border: 1px solid #e2e8f0;">
-                                <div class="fp-card-title" style="font-size: 11px;">Condições Comerciais</div>
+                            {# CONDIÇÕES COMERCIAIS #}
+                            <div class="fp-card">
+                                <div class="fp-card-title"><i class="fas fa-handshake"></i> Condições Comerciais</div>
                                 <div class="fp-card-body">
                                     <div class="fp-group">
                                         <label class="fp-label">Prazo de Pagamento</label>
@@ -229,10 +273,20 @@
                                             {% endfor %}
                                         </select>
                                     </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Moeda</label>
+                                        <select name="moeda" class="fp-input">
+                                            <option value="BRL" {% if fornecedor and fornecedor.moeda=='BRL' %}selected{% endif %}>BRL - Real Brasileiro</option>
+                                            <option value="USD" {% if fornecedor and fornecedor.moeda=='USD' %}selected{% endif %}>USD - Dólar Americano</option>
+                                            <option value="EUR" {% if fornecedor and fornecedor.moeda=='EUR' %}selected{% endif %}>EUR - Euro</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="fp-card" style="box-shadow: none; border: 1px solid #e2e8f0;">
-                                <div class="fp-card-title" style="font-size: 11px;">Dados Bancários / PIX</div>
+
+                            {# DADOS BANCÁRIOS #}
+                            <div class="fp-card">
+                                <div class="fp-card-title"><i class="fas fa-bank"></i> Dados Bancários / PIX</div>
                                 <div class="fp-card-body">
                                     <div class="fp-row">
                                         <div class="fp-group fp-flex-1">
@@ -252,24 +306,91 @@
                                     </div>
                                     <div class="fp-group">
                                         <label class="fp-label">Banco</label>
-                                        <input type="text" name="banco_nome" class="fp-input" value="{{ fornecedor.banco_nome or '' if fornecedor else '' }}" list="lista-bancos-febraban">
+                                        <input type="text" name="banco_nome" class="fp-input" value="{{ fornecedor.banco_nome or '' if fornecedor else '' }}" list="lista-bancos-febraban" placeholder="Nome do banco">
+                                    </div>
+                                    <div class="fp-row">
+                                        <div class="fp-group fp-flex-1">
+                                            <label class="fp-label">Agência</label>
+                                            <input type="text" name="banco_agencia" class="fp-input" value="{{ fornecedor.banco_agencia or '' if fornecedor else '' }}" placeholder="0000">
+                                        </div>
+                                        <div class="fp-group fp-flex-1">
+                                            <label class="fp-label">Conta</label>
+                                            <input type="text" name="banco_conta" class="fp-input" value="{{ fornecedor.banco_conta or '' if fornecedor else '' }}" placeholder="00000-0">
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {# HISTÓRICO DE PEDIDOS #}
+                        <div class="fp-card">
+                            <div class="fp-card-title"><i class="fas fa-receipt"></i> Histórico de Orçamentos & Pedidos</div>
+                            <div class="fp-card-body">
+                                <textarea name="historico_pedidos" class="fp-input" style="height: 120px; resize: none; font-family: 'Courier New', monospace; font-size: 11px;" placeholder="Registre aqui os pedidos, orçamentos e datas de transações&#10;Ex: 15/05/2026 - Pedido PO-2026-001 - R$ 5.000,00 - Status: ENTREGUE">{{ fornecedor.historico_pedidos or '' if fornecedor else '' }}</textarea>
                             </div>
                         </div>
                     </div>
 
                     {# TAB: DOCUMENTOS #}
                     <div id="tab-documentos" class="fp-tab-panel">
-                        <div class="fp-card" style="border: 2px dashed #cbd5e1; box-shadow: none; background: #f8fafc;">
-                            <div class="fp-card-body" style="text-align: center; padding: 60px;">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #cbd5e1; margin-bottom: 20px;"></i>
-                                <h3 style="margin: 0; color: #475569; font-weight: 800;">Upload de Documentos</h3>
-                                <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">Arraste contratos, certidões ou propostas comerciais aqui.</p>
-                                <button type="button" class="fp-btn" style="background: #27AE60; color: #fff;" onclick="document.getElementById('input-docs').click()">
-                                    <i class="fas fa-folder-open"></i> SELECIONAR ARQUIVOS
-                                </button>
-                                <input type="file" name="documentos" id="input-docs" multiple style="display: none;">
+                        <div class="fp-card">
+                            <div class="fp-card-title"><i class="fas fa-file-contract"></i> Upload & Catalogação de Documentos</div>
+                            <div class="fp-card-body">
+                                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                    <div class="fp-group">
+                                        <label class="fp-label">Tipo de Documento</label>
+                                        <select id="doc-tipo" class="fp-input" onchange="atualizarListaDocumentos()">
+                                            <option value="">SELECIONE...</option>
+                                            <option value="Contrato">📋 Contrato</option>
+                                            <option value="Certidão">✓ Certidão (Negativa/Positiva)</option>
+                                            <option value="Procuração">🔐 Procuração</option>
+                                            <option value="Proposta">💼 Proposta Comercial</option>
+                                            <option value="Pedido">🛒 Pedido de Compra</option>
+                                            <option value="Nota Fiscal">📄 Nota Fiscal / RPS</option>
+                                            <option value="Outros">📎 Outros Documentos</option>
+                                        </select>
+                                    </div>
+                                    <div class="fp-group">
+                                        <label class="fp-label">Data do Documento</label>
+                                        <input type="date" id="doc-data" class="fp-input">
+                                    </div>
+                                    <div class="fp-group" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                                        <button type="button" class="fp-input" style="background: #27AE60; color: #fff; border: none; cursor: pointer; font-weight: 800; padding: 8px; border-radius: 7px;" onclick="abrirSeletorDocumentos()">
+                                            <i class="fas fa-upload"></i> ADICIONAR
+                                        </button>
+                                        <input type="file" id="doc-file" style="display: none;" onchange="adicionarDocumentoTabela()">
+                                    </div>
+                                </div>
+
+                                {# TABELA DE DOCUMENTOS ADICIONADOS #}
+                                <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                        <thead style="background: #f1f5f9;">
+                                            <tr>
+                                                <th style="padding: 10px; text-align: left; font-weight: 700; color: #64748b;">TIPO</th>
+                                                <th style="padding: 10px; text-align: left; font-weight: 700; color: #64748b;">DATA</th>
+                                                <th style="padding: 10px; text-align: left; font-weight: 700; color: #64748b;">ARQUIVO</th>
+                                                <th style="padding: 10px; text-align: center; font-weight: 700; color: #64748b;">TAMANHO</th>
+                                                <th style="padding: 10px; text-align: center; font-weight: 700; color: #64748b;">AÇÃO</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabela-documentos">
+                                            <tr style="text-align: center; color: #cbd5e1; padding: 40px;">
+                                                <td colspan="5" style="padding: 30px;"><i class="fas fa-inbox"></i> Nenhum documento adicionado</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <textarea name="catalogo_documentos" id="catalogo-docs" style="display: none;"></textarea>
+                            </div>
+                        </div>
+
+                        {# NOTAS SOBRE DOCUMENTAÇÃO #}
+                        <div class="fp-card">
+                            <div class="fp-card-title"><i class="fas fa-info-circle"></i> Notas & Observações sobre Documentação</div>
+                            <div class="fp-card-body">
+                                <textarea name="observacoes_documentos" class="fp-input" style="height: 100px; resize: none;" placeholder="Registre observações sobre a documentação, prazos de validade, renovações necessárias, etc.">{{ fornecedor.observacoes_documentos or '' if fornecedor else '' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -297,6 +418,7 @@
             </div>
 
             {# LISTAGEM DE FORNECEDORES (GRID HCM) #}
+
             <div id="grid-fornecedores-wrap" class="fp-card" style="margin-top: 20px; {% if fornecedor %}display: none;{% endif %}">
                 <div class="fp-card-title" style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-bottom: 2px solid #27AE60;">
                     <span><i class="fas fa-list-ul"></i> Carteira de Fornecedores</span>
@@ -304,17 +426,20 @@
                         <input type="text" id="input-busca-master" onkeyup="executarFiltroFornecedor()" placeholder="🔍 BUSCA RÁPIDA..." style="width: 250px; height: 32px; font-size: 11px; border-radius: 8px; border: 1px solid #cbd5e1; padding: 0 12px; outline: none; font-weight: 700;">
                     </div>
                 </div>
-                <div class="fp-card-body" style="padding: 0;">
-                    <table class="fe-table" id="grid-fornecedores" style="width: 100%; border-collapse: collapse;">
+                <div class="fp-card-body" style="padding: 0; overflow-x: auto;">
+                    <table class="fe-table" id="grid-fornecedores" style="width: 100%; border-collapse: collapse; min-width: 1400px;">
                         <thead>
                             <tr style="background: #f1f5f9;">
                                 <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 60px;">FOTO</th>
                                 <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 60px;">ID</th>
                                 <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b;">NOME / RAZÃO SOCIAL</th>
-                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 150px;">DOCUMENTO</th>
-                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 80px; text-align: center;">RATING</th>
-                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 100px; text-align: center;">STATUS</th>
-                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 50px;"></th>
+                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 130px;">DOCUMENTO</th>
+                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 120px;">CIDADE - ESTADO</th>
+                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 120px;">CELULAR</th>
+                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 130px;">RESPONSÁVEL</th>
+                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 60px; text-align: center;">RATING</th>
+                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 80px; text-align: center;">STATUS</th>
+                                <th style="padding: 12px; font-size: 10px; text-transform: uppercase; color: #64748b; width: 50px;"></th0000000000000000000000000000000000000000000>
                             </tr>
                         </thead>
                         <tbody>
@@ -340,6 +465,16 @@
                                     <div style="font-size: 10px; color: #64748b; font-weight: 600;">{{ f.nome_fantasia or '---' }}</div>
                                 </td>
                                 <td style="padding: 10px; font-family: 'Roboto Mono', monospace; font-size: 11px; color: #475569;">{{ f.cnpj_cpf or '---' }}</td>
+                                <td style="padding: 10px; font-size: 11px; color: #475569;">
+                                    <span style="font-weight: 600;">{{ f.end_cidade or '---' }}</span>
+                                    {% if f.end_uf %}<span style="color: #94a3b8;"> - {{ f.end_uf }}</span>{% endif %}
+                                </td>
+                                <td style="padding: 10px; font-size: 11px; color: #475569;">
+                                    {% if f.whatsapp %}<a href="https://wa.me/{{ f.whatsapp|replace('(', '')|replace(')', '')|replace(' ', '')|replace('-', '') }}" target="_blank" style="color: #25D366; text-decoration: none; font-weight: 600;">{{ f.whatsapp }}</a>{% else %}<span style="color: #cbd5e1;">---</span>{% endif %}
+                                </td>
+                                <td style="padding: 10px; font-size: 11px; color: #475569;">
+                                    {{ f.contato_nome or '---' }}
+                                </td>
                                 <td style="padding: 10px; text-align: center; font-weight: 900; color: #27AE60;">{{ f.avaliacao or '-' }}</td>
                                 <td style="padding: 10px; text-align: center;">
                                     <span style="font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 20px; {{ 'background:#dcfce7; color:#166534;' if f.ativo else 'background:#fee2e2; color:#991b1b;' }}">
@@ -382,11 +517,36 @@
 
 <script>
     function switchOpeTab(btn, tabId) {
-        const container = btn.closest('.fp-tabs-wrap');
-        container.querySelectorAll('.fp-tab').forEach(t => t.classList.remove('active'));
-        container.querySelectorAll('.fp-tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active'); 
-        document.getElementById(tabId).classList.add('active');
+        console.log('🔄 Switching to tab:', tabId);
+        
+        // ✅ Remover 'active' de TODOS os botões
+        document.querySelectorAll('.fp-tab').forEach(t => {
+            t.classList.remove('active');
+            console.log('Removido active de btn:', t.textContent.trim());
+        });
+        
+        // ✅ Remover 'active' de TODOS os painéis
+        document.querySelectorAll('.fp-tab-panel').forEach(p => {
+            p.classList.remove('active');
+            p.style.display = 'none !important';
+            console.log('Removido active de panel:', p.id);
+        });
+        
+        // ✅ Adicionar 'active' ao botão clicado
+        btn.classList.add('active');
+        console.log('Active adicionado ao btn clicado');
+        
+        // ✅ Mostrar o painel correspondente
+        const targetPanel = document.getElementById(tabId);
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            targetPanel.style.display = 'block !important';
+            targetPanel.style.visibility = 'visible';
+            targetPanel.style.opacity = '1';
+            console.log('✅ Painel ativado:', tabId);
+        } else {
+            console.error('❌ Painel não encontrado:', tabId);
+        }
     }
 
     function previewImage(input) {
@@ -420,10 +580,47 @@
     }
 
     function executarFiltroFornecedor() {
-        const query = document.getElementById('input-busca-master').value.toUpperCase();
+        const query = (document.getElementById('input-busca-master').value || '').toUpperCase().trim();
+        const rating = (document.getElementById('f-rating')?.value || '').toUpperCase();
+        const status = (document.getElementById('f-status')?.value || '').toUpperCase();
+        const docFilter = (document.getElementById('f-doc')?.value || '').replace(/\D/g, '');
+        const cidadeFilter = (document.getElementById('f-cidade')?.value || '').toUpperCase().trim();
+
         document.querySelectorAll('#grid-fornecedores tbody tr').forEach(row => {
-            const text = row.innerText.toUpperCase();
-            row.style.display = text.includes(query) ? '' : 'none';
+            let visible = true;
+
+            // Master search (nome, fantasia, documento, cidade, etc.)
+            if (query) {
+                const text = row.innerText.toUpperCase();
+                if (!text.includes(query)) visible = false;
+            }
+
+            // Rating filter (usamos data-rating)
+            if (visible && rating) {
+                const rowRating = (row.getAttribute('data-rating') || '').toUpperCase();
+                if (rowRating !== rating) visible = false;
+            }
+
+            // Status filter (data-status contém 'Ativo'/'Inativo')
+            if (visible && status) {
+                const rowStatus = (row.getAttribute('data-status') || '').toUpperCase();
+                if (rowStatus !== status.toUpperCase()) visible = false;
+            }
+
+            // Documento filter (compara apenas dígitos)
+            if (visible && docFilter) {
+                const rowDoc = (row.getAttribute('data-doc') || '').replace(/\D/g, '');
+                if (!rowDoc.includes(docFilter)) visible = false;
+            }
+
+            // Cidade filter (coluna 5 / index 4)
+            if (visible && cidadeFilter) {
+                const cityCell = row.cells[4];
+                const cityText = cityCell ? cityCell.innerText.toUpperCase() : '';
+                if (!cityText.includes(cidadeFilter)) visible = false;
+            }
+
+            row.style.display = visible ? '' : 'none';
         });
     }
 
@@ -476,6 +673,39 @@
     $(document).ready(function() {
         initMasksFornecedor();
         alternarMaskPix();
+        
+        // ✅ Garantir que as abas estão habilitadas com event listeners
+        document.querySelectorAll('.fp-tab').forEach(btn => {
+            btn.disabled = false;
+            btn.removeAttribute('disabled');
+            btn.style.pointerEvents = 'auto';
+            btn.style.cursor = 'pointer';
+            btn.style.outline = 'none';
+            
+            // Listener adicional
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Tab clicada!');
+            }, false);
+        });
+
+        // ✅ INICIALIZAR ABAS: Remover active de todos exceto o primeiro painel
+        document.querySelectorAll('.fp-tab-panel').forEach((panel, index) => {
+            if (index === 0) {
+                panel.classList.add('active');
+                panel.style.display = 'block';
+                panel.style.visibility = 'visible';
+                panel.style.opacity = '1';
+                console.log('✅ Primeira aba ativada ao carregar:', panel.id);
+            } else {
+                panel.classList.remove('active');
+                panel.style.display = 'none';
+                panel.style.visibility = 'hidden';
+                panel.style.opacity = '0';
+            }
+        });
+        
         if (typeof checkGoldenStandardGlobal === 'function') {
             checkGoldenStandardGlobal('Gestão de Fornecedores', 'CADASTROS — Pessoas', 'Fornecedores');
         }
@@ -491,6 +721,120 @@
         if (tipo === 'CPF') inp.mask('000.000.000-00');
         else if (tipo === 'CNPJ') inp.mask('00.000.000/0000-00');
         else if (tipo === 'Celular') inp.mask('(00) 00000-0000');
+    }
+
+    // ✅ GERENCIAMENTO DE DOCUMENTOS
+    let documentosAdicionados = [];
+
+    function abrirSeletorDocumentos() {
+        document.getElementById('doc-file').click();
+    }
+
+    function adicionarDocumentoTabela() {
+        const fileInput = document.getElementById('doc-file');
+        const tipoSelect = document.getElementById('doc-tipo');
+        const dataInput = document.getElementById('doc-data');
+        
+        if (!fileInput.files.length) return;
+        if (!tipoSelect.value) {
+            mostrarNotificacao('Selecione o tipo de documento', 'warning');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const tipo = tipoSelect.value;
+        const data = dataInput.value || new Date().toISOString().split('T')[0];
+        const tamanho = (file.size / 1024).toFixed(2) + ' KB';
+        const id = Date.now();
+
+        documentosAdicionados.push({ id, tipo, data, arquivo: file.name, tamanho });
+        atualizarListaDocumentos();
+        mostrarNotificacao(`Documento "${file.name}" adicionado!`, 'success');
+        
+        // Limpar inputs
+        fileInput.value = '';
+        tipoSelect.value = '';
+        dataInput.value = '';
+    }
+
+    function atualizarListaDocumentos() {
+        const tbody = document.getElementById('tabela-documentos');
+        
+        if (documentosAdicionados.length === 0) {
+            tbody.innerHTML = '<tr style="text-align: center; color: #cbd5e1; padding: 40px;"><td colspan="5" style="padding: 30px;"><i class="fas fa-inbox"></i> Nenhum documento adicionado</td></tr>';
+            document.getElementById('catalogo-docs').value = '';
+            return;
+        }
+
+        tbody.innerHTML = documentosAdicionados.map(doc => `
+            <tr style="border-bottom: 1px solid #f1f5f9; transition: 0.2s;" onmouseover="this.style.background='#f0fff4'">
+                <td style="padding: 10px;"><strong>${doc.tipo}</strong></td>
+                <td style="padding: 10px;">${doc.data}</td>
+                <td style="padding: 10px;">${doc.arquivo}</td>
+                <td style="padding: 10px; text-align: center; color: #64748b;">${doc.tamanho}</td>
+                <td style="padding: 10px; text-align: center;">
+                    <button type="button" onclick="removerDocumento(${doc.id})" style="background: none; border: none; color: #e53e3e; cursor: pointer; font-size: 14px; transition: 0.2s;" onmouseover="this.style.transform='scale(1.3)'">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Atualizar campo oculto com catalogação
+        const catalogo = documentosAdicionados.map(d => `${d.tipo} | ${d.data} | ${d.arquivo}`).join('\n');
+        document.getElementById('catalogo-docs').value = catalogo;
+    }
+
+    function removerDocumento(id) {
+        documentosAdicionados = documentosAdicionados.filter(d => d.id !== id);
+        atualizarListaDocumentos();
+        mostrarNotificacao('Documento removido!', 'info');
+    }
+
+    function mostrarNotificacao(msg, tipo = 'info') {
+        if (typeof arioneToast === 'function') {
+            arioneToast(msg, tipo);
+        } else {
+            alert(msg);
+        }
+    }
+
+    /**
+     * Alterna a situação do fornecedor (ativo/inativo) via AJAX
+     */
+    async function alternarSituacaoFornecedor(fornecedorId) {
+        if (!fornecedorId || fornecedorId === 'null') {
+            arioneToast('Salve o fornecedor primeiro', 'warning');
+            return;
+        }
+
+        const btn = document.getElementById('btn-situacao');
+        const isAtivo = btn.querySelector('span').textContent.trim() === 'ATIVO';
+        const rota = isAtivo ? '/cadastros/fornecedores/inativar/' : '/cadastros/fornecedores/reativar/';
+
+        try {
+            const response = await fetch(rota + fornecedorId, { method: 'POST' });
+            if (response.ok) {
+                // Alterna visualmente
+                const statusSpan = btn.querySelector('span');
+                if (isAtivo) {
+                    statusSpan.textContent = 'INATIVO';
+                    statusSpan.style.background = '#fee2e2';
+                    statusSpan.style.color = '#991b1b';
+                    arioneToast('Fornecedor inativado!', 'info');
+                } else {
+                    statusSpan.textContent = 'ATIVO';
+                    statusSpan.style.background = '#dcfce7';
+                    statusSpan.style.color = '#166534';
+                    arioneToast('Fornecedor reativado!', 'success');
+                }
+            } else {
+                arioneToast('Erro ao alterar situação', 'danger');
+            }
+        } catch (e) {
+            arioneToast('Erro de conexão', 'danger');
+            console.error(e);
+        }
     }
 </script>
 {% endblock %}

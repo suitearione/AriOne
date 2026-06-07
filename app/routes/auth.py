@@ -1,3 +1,4 @@
+
 # /app/routes/auth.py
 # Modulo de Segurança — autenticação e sessão de usuário
 

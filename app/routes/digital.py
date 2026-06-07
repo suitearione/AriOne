@@ -25,8 +25,9 @@ def parse_currency(value):
 @digital_bp.route("/")
 @login_required
 def abas():
-    from app.models.digital.lead import Lead
+    from app.models.digital.campanha import Campanha
     from app.models.digital.captura import Captura
+    # módulo pipeline não existe; remoção da importação para evitar ModuleNotFoundError
     from app.models.digital.automacao import Automacao
     from app.models.digital.conversao import Conversao
 
@@ -42,29 +43,10 @@ def abas():
     if aba_ativa not in [a["id"] for a in abas]:
         aba_ativa = "linkone"
 
-    # Carregar dados se a aba ativa for LeadOne
-    leads = None
-    capturas = None
-    automacoes = None
-    conversoes = None
-    campanhas = None
-
-    if aba_ativa == "leadone":
-        leads = Lead.query.order_by(Lead.nome.asc()).all()
-        capturas = Captura.query.order_by(Captura.data_cadastro.desc()).all()
-        automacoes = Automacao.query.order_by(Automacao.data_cadastro.desc()).all()
-        conversoes = Conversao.query.order_by(Conversao.data_cadastro.desc()).all()
-        campanhas = Campanha.query.order_by(Campanha.data_cadastro.desc()).all()
-
     return render_template(
         "digital/abas_digital.html",
         abas=abas,
         aba_ativa=aba_ativa,
-        leads=leads,
-        capturas=capturas,
-        automacoes=automacoes,
-        conversoes=conversoes,
-        campanhas=campanhas
     )
 
 @digital_bp.route("/card/gateway/modulos")
@@ -219,7 +201,8 @@ def leads():
         return redirect(url_for('digital.leads'))
 
     leads = Lead.query.order_by(Lead.nome.asc()).all()
-    return render_template('digital/cards/grid_leadone.html', leads=leads)
+    # Renderiza o template do formulário e tabela de leads criado em templates/digital/cards/form_leads.html
+    return render_template('digital/cards/form_leads.html', leads=leads)
 
 @digital_bp.route("/leads/<int:id>/delete", methods=['POST'])
 @login_required
@@ -461,7 +444,7 @@ def capturas():
         return redirect(url_for('digital.capturas'))
 
     capturas = Captura.query.order_by(Captura.data_cadastro.desc()).all()
-    return render_template('digital/cards/grid_leadone.html', capturas=capturas)
+    return render_template('digital/cards/form_captura.html', capturas=capturas)
 
 @digital_bp.route("/capturas/<int:id>/delete", methods=['POST'])
 @login_required
@@ -524,7 +507,7 @@ def automacoes():
         return redirect(url_for('digital.automacoes'))
 
     automacoes = Automacao.query.order_by(Automacao.data_cadastro.desc()).all()
-    return render_template('digital/cards/grid_leadone.html', automacoes=automacoes)
+    return render_template('digital/cards/form_automacao.html', automacoes=automacoes)
 
 @digital_bp.route("/automacoes/<int:id>/delete", methods=['POST'])
 @login_required
@@ -587,7 +570,7 @@ def conversoes():
         return redirect(url_for('digital.conversoes'))
 
     conversoes = Conversao.query.order_by(Conversao.data_cadastro.desc()).all()
-    return render_template('digital/cards/grid_leadone.html', conversoes=conversoes)
+    return render_template('digital/cards/form_conversao.html', conversoes=conversoes)
 
 @digital_bp.route("/conversoes/<int:id>/delete", methods=['POST'])
 @login_required
@@ -623,18 +606,29 @@ def form_publico_captura(slug):
         email = request.form.get('email', '').strip()
 
         if nome and telefone:
-            lead = Lead(
-                nome=nome,
-                telefone=telefone,
-                email=email,
-                etapa='Novo',
-                origem=captura.nome
-            )
-            db.session.add(lead)
-            try:
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
+            # normalizar telefone: manter apenas dígitos e remover '+' inicial
+            tel_limpo = ''.join(c for c in telefone if c.isdigit() or c == '+')
+            if tel_limpo.startswith('+'):
+                tel_limpo = tel_limpo[1:]
+
+            # verifica duplicidade por telefone limpo
+            existente = Lead.query.filter_by(telefone=tel_limpo).first()
+            if not existente:
+                lead = Lead(
+                    nome=nome,
+                    telefone=tel_limpo,
+                    email=email,
+                    etapa='Novo',
+                    origem=captura.nome
+                )
+                db.session.add(lead)
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+            else:
+                # já existe: opcionalmente poderia atualizar origem/etapa; por enquanto apenas evita duplicar
+                pass
 
         return render_template('digital/publico/form_captura.html', captura=captura, sucesso=True)
 

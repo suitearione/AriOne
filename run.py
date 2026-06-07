@@ -8,7 +8,7 @@ import sys
 # Adiciona o diretório raiz ao PATH
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app.app import create_app
+from app import create_app
 
 # Cria a aplicação
 app = create_app()
@@ -18,6 +18,6 @@ if __name__ == '__main__':
     # Use este apenas para desenvolvimento local
     app.run(
         host='0.0.0.0',
-        port=5000,
+        port=8080,
         debug=True
     )

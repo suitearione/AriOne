@@ -1,0 +1,253 @@
+<div class="arione-modern-container" style="padding: 0 24px 24px 24px; animation: feFadeUp 0.4s ease-out;">
+    <style>
+        :root { 
+            --pf-pri: #8B5CF6; 
+            --pf-bg-glass: rgba(255, 255, 255, 0.85);
+        }
+        
+        .pf-card {
+            background: var(--pf-bg-glass);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.02);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .pf-header {
+            padding: 18px 24px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pf-title {
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .pf-body {
+            padding: 24px;
+            background: #ffffff;
+        }
+
+        .pf-group {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .pf-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .pf-group-title {
+            font-weight: 800;
+            font-size: 13px;
+            color: #334155;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pf-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .pf-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .pf-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pf-select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #1e293b;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .pf-select:focus {
+            border-color: var(--pf-pri);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            background: #ffffff;
+        }
+        
+        .btn-salvar-pf {
+            background: linear-gradient(135deg, var(--pf-pri) 0%, #7c3aed 100%);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+            transition: all 0.3s ease;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-salvar-pf:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        }
+    </style>
+
+    <form id="form-parametros-caixa" onsubmit="salvarParametrosCaixa(event)">
+        <div class="pf-card">
+            <div class="pf-header">
+                <i class="fas fa-cash-register" style="color: var(--pf-pri); font-size: 18px;"></i>
+                <div class="pf-title">PARÂMETROS DE CAIXA</div>
+            </div>
+
+            <div class="pf-body">
+                
+                <!-- SUPRIMENTO -->
+                <div class="pf-group">
+                    <div class="pf-group-title"><i class="fas fa-arrow-down" style="color:#10b981;"></i> Suprimento (Entrada/Troco)</div>
+                    <div class="pf-row">
+                        <div class="pf-col">
+                            <label class="pf-label">Conta Contábil (DRE)</label>
+                            <select name="conta_suprimento_id" class="pf-select">
+                                <option value="">-- Selecione a Conta Padrão --</option>
+                                {% for c in contas %}
+                                    <option value="{{ c.id }}" {% if p and p.conta_suprimento_id == c.id %}selected{% endif %}>
+                                        {{ c.codigo }} - {{ c.descricao }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="pf-col">
+                            <label class="pf-label">Centro de Custo</label>
+                            <select name="cc_suprimento_id" class="pf-select">
+                                <option value="">-- Selecione o C.C. Padrão --</option>
+                                {% for cc in centros %}
+                                    <option value="{{ cc.id }}" {% if p and p.cc_suprimento_id == cc.id %}selected{% endif %}>
+                                        {{ cc.codigo }} - {{ cc.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SANGRIA -->
+                <div class="pf-group">
+                    <div class="pf-group-title"><i class="fas fa-arrow-up" style="color:#ef4444;"></i> Sangria (Saída/Retirada)</div>
+                    <div class="pf-row">
+                        <div class="pf-col">
+                            <label class="pf-label">Conta Contábil (DRE)</label>
+                            <select name="conta_sangria_id" class="pf-select">
+                                <option value="">-- Selecione a Conta Padrão --</option>
+                                {% for c in contas %}
+                                    <option value="{{ c.id }}" {% if p and p.conta_sangria_id == c.id %}selected{% endif %}>
+                                        {{ c.codigo }} - {{ c.descricao }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="pf-col">
+                            <label class="pf-label">Centro de Custo</label>
+                            <select name="cc_sangria_id" class="pf-select">
+                                <option value="">-- Selecione o C.C. Padrão --</option>
+                                {% for cc in centros %}
+                                    <option value="{{ cc.id }}" {% if p and p.cc_sangria_id == cc.id %}selected{% endif %}>
+                                        {{ cc.codigo }} - {{ cc.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AVULSO -->
+                <div class="pf-group">
+                    <div class="pf-group-title"><i class="fas fa-random" style="color:#3b82f6;"></i> Lançamentos Avulsos</div>
+                    <div class="pf-row">
+                        <div class="pf-col">
+                            <label class="pf-label">Conta Contábil (DRE)</label>
+                            <select name="conta_avulso_id" class="pf-select">
+                                <option value="">-- Selecione a Conta Padrão --</option>
+                                {% for c in contas %}
+                                    <option value="{{ c.id }}" {% if p and p.conta_avulso_id == c.id %}selected{% endif %}>
+                                        {{ c.codigo }} - {{ c.descricao }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="pf-col">
+                            <label class="pf-label">Centro de Custo</label>
+                            <select name="cc_avulso_id" class="pf-select">
+                                <option value="">-- Selecione o C.C. Padrão --</option>
+                                {% for cc in centros %}
+                                    <option value="{{ cc.id }}" {% if p and p.cc_avulso_id == cc.id %}selected{% endif %}>
+                                        {{ cc.codigo }} - {{ cc.nome }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <button type="submit" class="btn-salvar-pf"><i class="fas fa-save"></i> SALVAR PARÂMETROS</button>
+    </form>
+
+    <script>
+        async function salvarParametrosCaixa(e) {
+            e.preventDefault();
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+            btn.disabled = true;
+
+            const fd = new FormData(form);
+            try {
+                const res = await fetch("{{ url_for('financeiro.salvar_parametros_caixa') }}", {
+                    method: 'POST',
+                    body: fd
+                });
+                const data = await res.json();
+                if(data.success) {
+                    arioneToast("Parâmetros do Caixa salvos com sucesso!", "success");
+                    fecharModalGer(); // Fecha o modal se estiver no grid gerencial
+                } else {
+                    arioneToast("Erro ao salvar: " + (data.error || "Desconhecido"), "error");
+                }
+            } catch(err) {
+                arioneToast("Erro de comunicação com servidor.", "error");
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i> SALVAR PARÂMETROS';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</div>

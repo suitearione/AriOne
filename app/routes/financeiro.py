@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, request, session
+import json
+from flask import Blueprint, render_template, request, session, jsonify
 from flask_login import login_required
 from app.extensions import db
 from app.utils.helpers import parse_money
-from sqlalchemy import case
+from sqlalchemy import case, text
 
 financeiro_bp = Blueprint("financeiro", __name__, url_prefix="/financeiro")
 
@@ -122,11 +123,11 @@ financeiro_bp = Blueprint("financeiro", __name__, url_prefix="/financeiro")
 @financeiro_bp.route("/")
 def abas():
     abas = [
-        {"id": "contas",   "label": "Contas",   "icon": "fas fa-receipt"},
         {"id": "caixas",   "label": "Caixas",   "icon": "fas fa-cash-register"},
-        {"id": "fluxo",    "label": "Fluxo & Projeções", "icon": "fas fa-chart-line"},
         {"id": "bancos",   "label": "Bancos",   "icon": "fas fa-university"},
         {"id": "gerencial","label": "Gerencial", "icon": "fas fa-sitemap"},
+        {"id": "contas",   "label": "Movimentações",   "icon": "fas fa-receipt"},
+        {"id": "fluxo",    "label": "Fluxo & Projeções", "icon": "fas fa-chart-line"},
     ]
     aba_ativa = request.args.get("aba", "contas")
     if aba_ativa not in [a["id"] for a in abas]:
@@ -212,6 +213,168 @@ def excluir_centro_custo(id):
         db.session.rollback()
         return {"success": False, "error": str(e)}, 500
 
+@financeiro_bp.route('/api/agentes')
+@login_required
+def api_agentes():
+    local = (request.args.get('local') or '').upper().strip()
+
+    if local == 'CAIXA':
+        from app.models.gestao.caixa import Caixa
+        caixas = Caixa.query.filter_by(status='ABERTO').all()
+        return jsonify([
+            {
+                'id': c.id,
+                'nome': c.nome,
+                'saldo': float(c.saldo_atual or 0),
+                'formas_pagamento_ids': c.formas_pagamento_aceitas,
+            }
+            for c in caixas
+        ])
+
+    if local == 'OPERADORA':
+        from app.models.comercial.models import OperadoraFinanceira
+        ensure_operadora_formas_column()
+        operadoras = OperadoraFinanceira.query.filter_by(ativa=True).all()
+        return jsonify([
+            {
+                'id': o.id,
+                'nome': o.nome,
+                'nome_fantasia': o.nome_fantasia,
+                'formas_pagamento_ids': o.formas_pagamento_aceitas,
+            }
+            for o in operadoras
+        ])
+
+    return jsonify([])
+
+@financeiro_bp.route('/api/formas-pagamento')
+@login_required
+def api_formas_pagamento_financeiro():
+    from app.models.comercial.models import FormaPagamento
+
+    local = (request.args.get('local') or '').upper().strip()
+
+    def detectar_tipo_e_destinacao(nome_forma):
+        nome_upper = (nome_forma or '').upper()
+        if any(x in nome_upper for x in ['CARTÃO', 'CARTAO', 'CREDIT', 'CRÉDITO', 'DÉBITO', 'DEBITO']):
+            return 'OPERADORA'
+        if any(x in nome_upper for x in ['GATEWAY', 'LINK PAGAMENTO']):
+            return 'OPERADORA'
+        if 'PIX' in nome_upper and ('GATEWAY' in nome_upper or 'OPERADORA' in nome_upper):
+            return 'OPERADORA'
+        if any(x in nome_upper for x in ['TRANSFERÊNCIA', 'TRANSFERENCIA', 'BANCÁRIO', 'BANCARIO']):
+            return 'BANCO'
+        if 'PIX' in nome_upper and 'BANCO' in nome_upper:
+            return 'BANCO'
+        return 'CAIXA'
+
+    agente_id = request.args.get('agente_id')
+    formas = FormaPagamento.query.filter_by(ativa=True).all()
+    if local:
+        formas = [f for f in formas if detectar_tipo_e_destinacao(f.nome) == local]
+
+    if agente_id and local == 'CAIXA':
+        from app.models.gestao.caixa import Caixa
+        caixa = Caixa.query.get(agente_id)
+        if caixa:
+            aceitas = [str(v) for v in caixa.formas_pagamento_aceitas]
+            if aceitas:
+                formas = [f for f in formas if str(f.id) in aceitas]
+
+    selected_operadora = None
+    if agente_id and local == 'OPERADORA':
+        from app.models.comercial.models import OperadoraFinanceira
+        ensure_operadora_formas_column()
+        selected_operadora = OperadoraFinanceira.query.get(agente_id)
+        if selected_operadora:
+            aceitas = [str(v) for v in selected_operadora.formas_pagamento_aceitas]
+            if aceitas:
+                formas = [f for f in formas if str(f.id) in aceitas]
+            else:
+                formas = [f for f in formas if f.operadora_id == selected_operadora.id]
+
+    resultado = []
+
+    for f in formas:
+        operadora_dados = None
+        if f.operadora_id and f.operadora:
+            operadora_dados = {
+                'id': f.operadora.id,
+                'nome': f.operadora.nome,
+                'nome_fantasia': f.operadora.nome_fantasia,
+                'cnpj': f.operadora.cnpj,
+                'taxa_debito': f.operadora.taxa_debito or 0,
+                'taxa_pix': f.operadora.taxa_pix or 0,
+                'taxa_credito_vista': f.operadora.taxa_credito_vista or 0,
+                'taxa_credito_parcelado': f.operadora.taxa_credito_parcelado or 0,
+                'taxa_antecipacao': f.operadora.taxa_antecipacao or 0,
+                'taxas_parcelamento': f.operadora.taxas_parcelamento,
+                'icone': f.operadora.icone,
+                'cor': f.operadora.cor,
+            }
+        elif local == 'OPERADORA' and selected_operadora:
+            operadora_dados = {
+                'id': selected_operadora.id,
+                'nome': selected_operadora.nome,
+                'nome_fantasia': selected_operadora.nome_fantasia,
+                'cnpj': selected_operadora.cnpj,
+                'taxa_debito': selected_operadora.taxa_debito or 0,
+                'taxa_pix': selected_operadora.taxa_pix or 0,
+                'taxa_credito_vista': selected_operadora.taxa_credito_vista or 0,
+                'taxa_credito_parcelado': selected_operadora.taxa_credito_parcelado or 0,
+                'taxa_antecipacao': selected_operadora.taxa_antecipacao or 0,
+                'taxas_parcelamento': selected_operadora.taxas_parcelamento,
+                'icone': selected_operadora.icone,
+                'cor': selected_operadora.cor,
+            }
+
+        parcelas_opcoes = []
+        if operadora_dados and operadora_dados.get('taxas_parcelamento'):
+            try:
+                taxas = json.loads(operadora_dados['taxas_parcelamento'] or '{}')
+                keys = sorted([int(k) for k in taxas.keys() if str(k).strip().isdigit()])
+                for n in keys:
+                    cfg = taxas.get(str(n), {})
+                    parcelas_opcoes.append({
+                        'numero': n,
+                        'nome': cfg.get('nome') or (f'{n}x' if n > 1 else 'À VISTA'),
+                        'taxa': cfg.get('taxa', 0),
+                        'vendedor_paga': bool(cfg.get('vendedor_paga')),
+                        'cliente_paga': bool(cfg.get('cliente_paga')),
+                        'intervalo_dias': cfg.get('intervalo_dias', f.intervalo_dias or 0),
+                    })
+            except Exception:
+                parcelas_opcoes = []
+
+        if not parcelas_opcoes:
+            for i in range(1, (f.max_parcelas or 1) + 1):
+                parcelas_opcoes.append({
+                    'numero': i,
+                    'nome': 'À VISTA' if i == 1 else f'{i}x',
+                    'taxa': 0,
+                    'vendedor_paga': False,
+                    'cliente_paga': False,
+                    'intervalo_dias': (f.intervalo_dias or 0) * (i - 1),
+                })
+
+        resultado.append({
+            'id': f.id,
+            'nome': f.nome,
+            'operadora_id': f.operadora_id,
+            'operadora_nome': f.operadora.nome if f.operadora else None,
+            'operadora': operadora_dados,
+            'max_parcelas': len(parcelas_opcoes) or (f.max_parcelas or 1),
+            'intervalo_dias': f.intervalo_dias or 0,
+            'parcela_minima': f.parcela_minima or 0,
+            'taxa_juros': f.taxa_juros or 0,
+            'percentual_desconto': f.percentual_desconto or 0,
+            'icone': f.icone,
+            'cor': f.cor,
+            'parcelas': parcelas_opcoes,
+        })
+
+    return jsonify(resultado)
+
 @financeiro_bp.route("/cards/centro-custos", methods=['GET', 'POST'])
 @login_required
 def form_centro_custo():
@@ -251,7 +414,7 @@ def form_centro_custo():
     from app.models.gestao.plano_contas import PlanoContas
     
     # 🛡️ Auto-Seed: Garantir dados mínimos para teste se estiver vazio
-    if PlanoContas.query.count() == 0:
+    if PlanoContas.query.filter_by(empresa_id=e_id).count() == 0:
         contas_seed = [
             {'cod': '3.01.001', 'desc': 'COMPRA DE MERCADORIA PARA REVENDA', 'tipo': 'DESPESA'},
             {'cod': '3.01.002', 'desc': 'DESPESAS COM LOGÍSTICA E FRETE', 'tipo': 'DESPESA'},
@@ -269,12 +432,15 @@ def form_centro_custo():
 @financeiro_bp.route('/card/pagamentos')
 def card_formas_pagamento():
     from app.models.comercial.models import FormaPagamento, OperadoraFinanceira
+    is_modal = request.args.get('modal', '0') == '1'
+    ensure_operadora_formas_column()
+    ensure_forma_pagamento_condicao_column()
     pagamentos = FormaPagamento.query.order_by(FormaPagamento.tipo, FormaPagamento.nome).all()
     operadoras = OperadoraFinanceira.query.filter_by(ativa=True).order_by(OperadoraFinanceira.nome).all()
     return render_template('financeiro/cards/form_financeiro_forma_pagamentos.html', 
                            pagamentos=pagamentos, 
                            operadoras=operadoras, 
-                           is_modal=True)
+                           is_modal=is_modal)
 
 @financeiro_bp.route('/card/pagamentos/salvar', methods=['POST'])
 def salvar_forma_pagamento():
@@ -288,6 +454,7 @@ def salvar_forma_pagamento():
         
         pag.nome = request.form.get('nome').upper()
         pag.agrupador_operacional = request.form.get('agrupador_operacional') or 'OUTROS'
+        pag.condicao_pagamento = request.form.get('condicao_pagamento', '').strip() or None
         pag.baixa_automatica = True if request.form.get('baixa_automatica') == 'SIM' else False
         
         # Campos simplificados (Legacy ou Automáticos)
@@ -351,14 +518,40 @@ def seed_formas_pagamento():
 # ── Operadoras Financeiras (Quiet Luxury Standard) ─────────────────────────
 @financeiro_bp.route('/card/operadoras')
 def card_operadoras():
-    from app.models.comercial.models import OperadoraFinanceira
+    is_modal = request.args.get('modal', '0') == '1'
+    ensure_operadora_formas_column()
+    from app.models.comercial.models import FormaPagamento, OperadoraFinanceira
+    from app.models.gestao.plano_contas import PlanoContas
+    empresa_id = session.get('empresa_id')
+    q_pc = PlanoContas.query
+    if empresa_id:
+        q_pc = q_pc.filter_by(empresa_id=empresa_id)
+    plano_contas = q_pc.filter_by(ativo=True, natureza='ANALITICA').order_by(PlanoContas.codigo).all()
+
     operadoras = OperadoraFinanceira.query.order_by(OperadoraFinanceira.nome).all()
-    return render_template('financeiro/cards/form_financeiro_operadora.html', operadoras=operadoras, is_modal=True)
+    formas_pagamento = FormaPagamento.query.filter_by(ativa=True).order_by(FormaPagamento.nome).all()
+    return render_template('financeiro/cards/form_financeiro_operadora.html', operadoras=operadoras, formas_pagamento=formas_pagamento, plano_contas=plano_contas, is_modal=is_modal)
+
+
+def ensure_operadora_formas_column():
+    with db.engine.begin() as conn:
+        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(comercial_operadoras_financeiras)"))]
+        if 'formas_pagamento_ids' not in cols:
+            conn.execute(text('ALTER TABLE comercial_operadoras_financeiras ADD COLUMN formas_pagamento_ids TEXT'))
+        if 'formas_pagamento_detalhes' not in cols:
+            conn.execute(text('ALTER TABLE comercial_operadoras_financeiras ADD COLUMN formas_pagamento_detalhes TEXT'))
+
+def ensure_forma_pagamento_condicao_column():
+    with db.engine.begin() as conn:
+        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(comercial_formas_pagamento)"))]
+        if 'condicao_pagamento' not in cols:
+            conn.execute(text('ALTER TABLE comercial_formas_pagamento ADD COLUMN condicao_pagamento TEXT'))
 
 @financeiro_bp.route('/card/operadoras/salvar', methods=['POST'])
 def salvar_operadora():
     from app.models.comercial.models import OperadoraFinanceira
     try:
+        ensure_operadora_formas_column()
         oid = request.form.get('id')
         if oid:
             op = OperadoraFinanceira.query.get(oid)
@@ -380,6 +573,11 @@ def salvar_operadora():
         
         # Captura as taxas por parcelas (JSON enviado pelo front)
         op.taxas_parcelamento = request.form.get('taxas_parcelamento')
+        
+        formas_pagamento_ids = request.form.getlist('formas_pagamento_ids')
+        op.formas_pagamento_aceitas = formas_pagamento_ids
+        
+        op.formas_pagamento_configuracoes = request.form.get('formas_pagamento_detalhes')
         
         op.icone = request.form.get('icone', 'fas fa-landmark')
         op.cor = request.form.get('cor', '#2980B9')
@@ -493,6 +691,8 @@ def seed_plano_contas():
             {'codigo': '1.1', 'descricao': 'RECEITAS DE VENDAS', 'tipo': 'RECEITA', 'natureza': 'SINTETICA', 'grupo': 'R'},
             {'codigo': '1.1.001', 'descricao': 'VENDA DE PRODUTOS', 'tipo': 'RECEITA', 'natureza': 'ANALITICA', 'grupo': 'R'},
             {'codigo': '1.1.002', 'descricao': 'PRESTAÇÃO DE SERVIÇOS', 'tipo': 'RECEITA', 'natureza': 'ANALITICA', 'grupo': 'R'},
+            {'codigo': '1.1.01.01', 'descricao': 'TRANSFERÊNCIA - REFORÇO DE CAIXA (SUPRIMENTO)', 'tipo': 'RECEITA', 'natureza': 'ANALITICA', 'grupo': 'R'},
+            {'codigo': '1.1.01.02', 'descricao': 'TRANSFERÊNCIA - VALORES A DEPOSITAR (SANGRIA)', 'tipo': 'RECEITA', 'natureza': 'ANALITICA', 'grupo': 'R'},
             {'codigo': '1.2', 'descricao': 'RECEITAS FINANCEIRAS', 'tipo': 'RECEITA', 'natureza': 'ANALITICA', 'grupo': 'R'},
             {'codigo': '1.3', 'descricao': 'OUTRAS RECEITAS OPERACIONAIS', 'tipo': 'RECEITA', 'natureza': 'ANALITICA', 'grupo': 'R'},
 
@@ -504,7 +704,9 @@ def seed_plano_contas():
             # 3. CUSTOS VARIÁVEIS (CPV/CMV)
             {'codigo': '3', 'descricao': 'CUSTOS VARIÁVEIS', 'tipo': 'DESPESA', 'natureza': 'SINTETICA', 'grupo': 'D'},
             {'codigo': '3.1', 'descricao': 'MATÉRIA-PRIMA E INSUMOS', 'tipo': 'DESPESA', 'natureza': 'ANALITICA', 'grupo': 'D'},
+            {'codigo': '3.1.01.01', 'descricao': 'DESPESAS ADMINISTRATIVAS GERAIS', 'tipo': 'DESPESA', 'natureza': 'ANALITICA', 'grupo': 'D'},
             {'codigo': '3.2', 'descricao': 'EMBALAGENS E LOGÍSTICA', 'tipo': 'DESPESA', 'natureza': 'ANALITICA', 'grupo': 'D'},
+            {'codigo': '3.2.01.01', 'descricao': 'RECEITAS EVENTUAIS/AVULSAS', 'tipo': 'RECEITA', 'natureza': 'ANALITICA', 'grupo': 'R'},
             {'codigo': '3.3', 'descricao': 'COMISSÕES DE VENDAS', 'tipo': 'DESPESA', 'natureza': 'ANALITICA', 'grupo': 'D'},
             {'codigo': '3.4', 'descricao': 'TAXAS DE CARTÃO / GATEWAYS', 'tipo': 'DESPESA', 'natureza': 'ANALITICA', 'grupo': 'D'},
 
@@ -923,13 +1125,16 @@ def card_caixas():
     from app.models.gestao.caixa import Caixa, MovimentacaoCaixa
     from app.models.gestao.plano_contas import PlanoContas
     from app.models.gestao.centro_custo import CentroCusto
-    from app.models.comercial.models import FormaPagamento
+    from app.models.comercial.models import FormaPagamento, OperadoraFinanceira
     from app.models.sistema.parametro import ParametroSistema
     import datetime
 
-    # 🛡️ Garantir que as tabelas existem no SQLite automaticamente
+    # 🛡️ Garantir que as tabelas e colunas existem no SQLite automaticamente
     try:
         db.create_all()
+        ensure_caixa_formas_column()
+        ensure_operadora_formas_column()
+        ensure_forma_pagamento_condicao_column()
     except Exception:
         pass
 
@@ -954,18 +1159,42 @@ def card_caixas():
     centros_custo = q_cc.order_by(CentroCusto.codigo).all()
 
     formas_pagamento = FormaPagamento.query.order_by(FormaPagamento.nome).all()
+    operadoras = OperadoraFinanceira.query.filter_by(ativa=True).order_by(OperadoraFinanceira.nome).all()
 
     today = datetime.datetime.now().strftime('%Y-%m-%d')
     is_modal = request.args.get('modal', '0') == '1'
 
+    caixa_selecionada = None
+    caixa_id_param = request.args.get('caixa_id')
+    if caixa_id_param and caixa_id_param.isdigit():
+        caixa_selecionada = next((c for c in caixas if c.id == int(caixa_id_param)), None)
+    if caixa_selecionada is None and caixas:
+        caixa_selecionada = caixas[0]
+
     return render_template('financeiro/cards/form_financeiro_caixas.html',
                            caixas=caixas,
+                           caixa_selecionada=caixa_selecionada,
                            planos_conta=planos_conta,
+                           plano_contas=planos_conta,
                            centros_custo=centros_custo,
                            formas_pagamento=formas_pagamento,
+                           operadoras=operadoras,
                            today=today,
                            parametro_sistema=ParametroSistema,
                            is_modal=is_modal)
+
+
+def ensure_caixa_formas_column():
+    with db.engine.begin() as conn:
+        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(financeiro_caixas)"))]
+        if 'formas_pagamento_ids' not in cols:
+            conn.execute(text('ALTER TABLE financeiro_caixas ADD COLUMN formas_pagamento_ids TEXT'))
+        if 'formas_pagamento_detalhes' not in cols:
+            conn.execute(text('ALTER TABLE financeiro_caixas ADD COLUMN formas_pagamento_detalhes TEXT'))
+        if 'bancos_ids' not in cols:
+            conn.execute(text('ALTER TABLE financeiro_caixas ADD COLUMN bancos_ids TEXT'))
+        if 'operadoras_ids' not in cols:
+            conn.execute(text('ALTER TABLE financeiro_caixas ADD COLUMN operadoras_ids TEXT'))
 
 
 @financeiro_bp.route('/card/caixas/salvar', methods=['POST'])
@@ -976,6 +1205,7 @@ def salvar_caixa():
     import datetime
 
     try:
+        ensure_caixa_formas_column()
         caixa_id = request.form.get('caixa_id')
         nome = request.form.get('nome', '').strip()
         responsavel = request.form.get('responsavel', '').strip()
@@ -986,12 +1216,21 @@ def salvar_caixa():
         if not nome:
             return {"success": False, "error": "O nome do caixa é obrigatório."}, 400
 
+        formas_pagamento_ids = request.form.getlist('formas_pagamento_ids')
+        formas_pagamento_detalhes = request.form.get('formas_pagamento_detalhes', '').strip()
+        bancos_ids = request.form.getlist('bancos_ids')
+        operadoras_ids = request.form.getlist('operadoras_ids')
+
         if caixa_id and caixa_id.isdigit():
             c = Caixa.query.get_or_404(int(caixa_id))
             c.nome = nome
             c.responsavel = responsavel
             c.status = status
             c.observacoes = observacoes
+            c.formas_pagamento_aceitas = formas_pagamento_ids
+            c.formas_pagamento_detalhes = formas_pagamento_detalhes
+            c.bancos_aceitos = bancos_ids
+            c.operadoras_aceitas = operadoras_ids
             if status == 'FECHADO' and not c.data_fechamento:
                 c.data_fechamento = datetime.datetime.utcnow()
             elif status == 'ABERTO':
@@ -1005,7 +1244,11 @@ def salvar_caixa():
                 saldo_inicial=saldo_inicial,
                 saldo_atual=saldo_inicial,
                 status=status,
-                observacoes=observacoes
+                observacoes=observacoes,
+                formas_pagamento_aceitas=formas_pagamento_ids,
+                formas_pagamento_detalhes=formas_pagamento_detalhes,
+                bancos_aceitos=bancos_ids,
+                operadoras_aceitas=operadoras_ids
             )
             db.session.add(c)
             msg = "Caixa aberto com sucesso!"
@@ -1240,6 +1483,7 @@ def card_entradas_saidas():
     from app.models.gestao.plano_contas import PlanoContas
     from app.models.gestao.centro_custo import CentroCusto
     from app.models.comercial.models import FormaPagamento
+    from app.models.gestao.caixa import Caixa
     import datetime
 
     e_id = session.get('empresa_id')
@@ -1248,6 +1492,7 @@ def card_entradas_saidas():
     pai_ids = {cc.pai_id for cc in centros_custo_raw if cc.pai_id is not None}
     centros_custo = [cc for cc in centros_custo_raw if cc.id not in pai_ids]
     formas_pagamento = FormaPagamento.query.filter_by(ativa=True).order_by(FormaPagamento.nome).all()
+    caixas = Caixa.query.filter_by(empresa_id=e_id, status='ABERTO').order_by(Caixa.nome).all()
     today = datetime.datetime.now().strftime('%Y-%m-%d')
     is_modal = request.args.get('modal', '0') == '1'
 
@@ -1255,6 +1500,7 @@ def card_entradas_saidas():
                            plano_contas=plano_contas,
                            centros_custo=centros_custo,
                            formas_pagamento=formas_pagamento,
+                           caixas=caixas,
                            today=today,
                            is_modal=is_modal)
 
@@ -1317,7 +1563,25 @@ def card_bancos():
 @login_required
 def card_contas_bancarias():
     is_modal = request.args.get('modal', '0') == '1'
-    return render_template('financeiro/cards/form_financeiro_contas_bancarias.html', is_modal=is_modal)
+    from app.models.comercial.models import FormaPagamento
+    from app.models.gestao.plano_contas import PlanoContas
+    empresa_id = session.get('empresa_id')
+    q_pc = PlanoContas.query
+    if empresa_id:
+        q_pc = q_pc.filter_by(empresa_id=empresa_id)
+    plano_contas = q_pc.filter_by(ativo=True, natureza='ANALITICA').order_by(PlanoContas.codigo).all()
+
+    formas_pagamento = FormaPagamento.query.filter_by(ativa=True).order_by(FormaPagamento.nome).all()
+    formas_pagamento_serialized = [
+        {'id': fp.id, 'nome': fp.nome}
+        for fp in formas_pagamento
+    ]
+    return render_template(
+        'financeiro/cards/form_financeiro_contas_bancarias.html',
+        is_modal=is_modal,
+        formas_pagamento=formas_pagamento_serialized,
+        plano_contas=plano_contas
+    )
 
 @financeiro_bp.route('/card/extratos')
 @login_required
@@ -1450,3 +1714,50 @@ def card_fluxo_caixa_graficos():
 def card_conciliacao():
     is_modal = request.args.get('modal', '0') == '1'
     return render_template('financeiro/cards/form_financeiro_conciliacao.html', is_modal=is_modal)
+
+# ── Parâmetros de Caixa ───────────────────────────────────────────────────
+@financeiro_bp.route('/card/parametros-caixa', methods=['GET'])
+@login_required
+def card_parametros_caixa():
+    from app.models.gestao.parametros_financeiros import ParametrosFinanceiros
+    from app.models.gestao.plano_contas import PlanoContas
+    from app.models.gestao.centro_custo import CentroCusto
+    e_id = session.get('empresa_id')
+    
+    # Auto-Migração para a nova tabela
+    try:
+        with db.engine.begin() as conn:
+            db.create_all()
+    except Exception:
+        pass
+
+    p = ParametrosFinanceiros.query.filter_by(empresa_id=e_id).first()
+    contas = PlanoContas.query.filter_by(empresa_id=e_id, natureza='ANALITICA').order_by(PlanoContas.codigo).all()
+    centros = CentroCusto.query.filter_by(empresa_id=e_id).order_by(CentroCusto.codigo).all()
+    return render_template('financeiro/cards/form_financeiro_parametros_caixa.html', p=p, contas=contas, centros=centros)
+
+@financeiro_bp.route('/card/parametros-caixa/salvar', methods=['POST'])
+@login_required
+def salvar_parametros_caixa():
+    from app.models.gestao.parametros_financeiros import ParametrosFinanceiros
+    e_id = session.get('empresa_id')
+    p = ParametrosFinanceiros.query.filter_by(empresa_id=e_id).first()
+    if not p:
+        p = ParametrosFinanceiros(empresa_id=e_id)
+        db.session.add(p)
+    
+    def get_int(val): return int(val) if val and str(val).isdigit() else None
+    
+    if 'conta_suprimento_id' in request.form: p.conta_suprimento_id = get_int(request.form.get('conta_suprimento_id'))
+    if 'cc_suprimento_id' in request.form: p.cc_suprimento_id = get_int(request.form.get('cc_suprimento_id'))
+    if 'conta_sangria_id' in request.form: p.conta_sangria_id = get_int(request.form.get('conta_sangria_id'))
+    if 'cc_sangria_id' in request.form: p.cc_sangria_id = get_int(request.form.get('cc_sangria_id'))
+    if 'conta_avulso_id' in request.form: p.conta_avulso_id = get_int(request.form.get('conta_avulso_id'))
+    if 'cc_avulso_id' in request.form: p.cc_avulso_id = get_int(request.form.get('cc_avulso_id'))
+    
+    try:
+        db.session.commit()
+        return {"success": True}
+    except Exception as e:
+        db.session.rollback()
+        return {"success": False, "error": str(e)}

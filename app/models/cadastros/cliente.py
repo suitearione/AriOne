@@ -11,7 +11,8 @@ class Cliente(db.Model):
     __tablename__ = 'clientes'
 
     id = db.Column(db.Integer, primary_key=True)
-    
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=False, index=True)
+
     # ── Identificação ──────────────────────────────────────────────────────
     tipo_pessoa     = db.Column(db.String(2), default='F') # F=Física, J=Jurídica
     nome            = db.Column(db.String(150), nullable=False)

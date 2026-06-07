@@ -10,24 +10,24 @@ Função : Pedido de Vendas (PADRÃO HCM GOLDEN STANDARD - MONOLÍTICO LUXURY)
 {% block content %}
 {% set target = pedido if pedido else (orcamento if orcamento else None) %}
 {% set is_conversao = True if orcamento and not pedido else False %}
-
 {# ── CONTEÚDO FIXO NO TOPO (Cabeçalho Mestre) ── #}
 {{ comp.cabecalho_mestre_arione(
-titulo="Pedido de Venda",
-subtitulo="Operacional > Vendas > Pedidos",
-icone="fa-shopping-cart",
-form_id="form-pedido-venda",
-onclick_save="arioneSalvarDocumento('Pedido de Venda', this, 'form-pedido-venda')",
-onclick_clonar="arioneClonarRegistro('form-pedido-venda')",
-onclick_novo="arioneResetForm('form-pedido-venda')",
-onclick_search="focusSearchMaster()",
-onclick_filter="arioneToast('Filtros Avançados', 'info')",
-cor_tema="#03A9F4",
-func_fechar="fecharModalGlobal()",
-aba_retorno="vendas",
-blueprint_retorno="operacoes",
-status=pedido.status|upper if pedido else "NOVO",
-ajuda="O Pedido de Venda oficializa a negociação e inicia os fluxos de faturamento e produção."
+    titulo="Pedido de Venda",
+    subtitulo="Operacional > Vendas > Pedidos",
+    icone="fa-shopping-cart",
+    form_id="form-pedido-venda",
+    onclick_save="arioneSalvarDocumento('Pedido de Venda', this, 'form-pedido-venda')",
+    onclick_clonar="arioneClonarRegistro('form-pedido-venda')",
+    onclick_novo="arioneResetForm('form-pedido-venda')",
+    onclick_search="focusSearchMaster()",
+    onclick_filter="arioneToast('Filtros Avançados', 'info')",
+    onclick_print="imprimirPedidoStampfe()",
+    cor_tema="#03A9F4",
+    func_fechar="fecharModalGlobal()",
+    aba_retorno="vendas",
+    blueprint_retorno="operacoes",
+    status=pedido.status|upper if pedido else "NOVO",
+    ajuda="O Pedido de Venda oficializa a negociação e inicia os fluxos de faturamento e produção."
 ) }}
 
 <div class="fe-wrap mod-vendas" style="padding: 0 24px 40px 24px;">
@@ -682,60 +682,87 @@ ajuda="O Pedido de Venda oficializa a negociação e inicia os fluxos de faturam
                             </div>
                         </div>
                     </div>
-                    <div id="frete-info-empty" style="text-align:center; padding:25px; background:#f8fafc; border-radius:10px; border:1.5px dashed #e2e8f0;">
-                        <i class="fas fa-truck-fast" style="font-size:28px; color:#cbd5e1; display:block; margin-bottom:8px;"></i>
-                        <div style="font-size:12px; color:#94a3b8; font-weight:600;">Selecione o tipo de frete (CIF ou FOB) para carregar as transportadoras disponíveis automaticamente.</div>
-                    </div>
-                </div>
 
-                {# ABA 2: PAGAMENTO #}
+                {# ABA 2: FORMAS DE PAGAMENTOS #}
                 <div id="tab-pagamento" class="fp-tab-panel">
                     <input type="hidden" name="forma_pagamento_id" id="forma_pagamento_id_hidden">
                     <input type="hidden" name="parcelas_selecionadas" id="parcelas_selecionadas_hidden" value="1">
-                    <div style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Selecione a modalidade de pagamento</div>
-                    <div id="grid-formas-pagamento" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-bottom:16px;">
-                        {% for f in formas_pagamento %}
-                        <div class="pag-card" data-id="{{ f.id }}" data-nome="{{ f.nome }}"
-                            data-parcelas="{{ f.max_parcelas }}" data-intervalo="{{ f.intervalo_dias }}"
-                            data-juros="{{ f.taxa_juros }}" data-desconto="{{ f.percentual_desconto }}"
-                            data-cor="{{ f.cor }}" onclick="selecionarFormaPagamento(this)"
-                            style="border:2px solid #e2e8f0; border-radius:10px; padding:14px; cursor:pointer; transition:all 0.25s; background:#fff; position:relative; overflow:hidden;">
-                            <div style="position:absolute; top:0; left:0; width:100%; height:3px; background:{{ f.cor }};"></div>
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                                <div style="width:32px; height:32px; background:{{ f.cor }}18; color:{{ f.cor }}; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:15px;">
-                                    <i class="{{ f.icone }}"></i>
+                    <input type="hidden" name="operadora_id_hidden" id="operadora_id_hidden">
+
+                {# ══ SEÇÃO 0: FORMA DE RECEBIMENTO/PAGAMENTO (Local → Agente → Forma) ══ #}
+                    <div style="margin-bottom:20px; padding:14px; background:#f0f7ff; border-radius:10px; border:1.5px solid #2980B930;">
+                        <div style="font-size:10px; font-weight:800; color:#2980B9; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                            <i class="fas fa-map-pin"></i> Forma de Recebimento / Pagamento
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; align-items:end;">
+
+                            {# PASSO 1: LOCAL #}
+                            <div>
+                                <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                    <span style="background:#2980B9; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">1</span>
+                                    Local <span style="color:#e74c3c;">*</span>
                                 </div>
-                                <div style="font-weight:800; color:#1e293b; font-size:12px; line-height:1.2;">{{ f.nome }}</div>
+                                <select id="ped_local_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="pedCarregarAgentes(this.value)">
+                                    <option value="">— Selecione o local —</option>
+                                    <option value="CAIXA">🏦 Caixa</option>
+                                    <option value="BANCO">🏛️ Banco</option>
+                                    <option value="OPERADORA">💳 Operadora de Cartão</option>
+                                </select>
+                                <input type="hidden" name="local_recebimento" id="ped_local_receb_hidden">
                             </div>
-                            <div style="font-size:9px; color:#94a3b8; font-weight:700; text-transform:uppercase;">{{ f.tipo }}</div>
-                            <div style="margin-top:6px; display:flex; justify-content:space-between;">
-                                {% if f.max_parcelas > 1 %}<span style="font-size:10px; font-weight:800; color:{{ f.cor }};">até {{ f.max_parcelas }}x</span>
-                                {% else %}<span style="font-size:10px; font-weight:800; color:#27ae60;">À VISTA</span>{% endif %}
-                                {% if f.taxa_juros > 0 %}<span style="font-size:9px; color:#e74c3c; font-weight:700;">+{{ "%.1f"|format(f.taxa_juros) }}%</span>
-                                {% elif f.percentual_desconto > 0 %}<span style="font-size:9px; color:#27ae60; font-weight:700;">-{{ "%.1f"|format(f.percentual_desconto) }}%</span>{% endif %}
+
+                            {# PASSO 2: AGENTE OPERADOR #}
+                            <div>
+                                <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                    <span id="badge-step-agente" style="background:#cbd5e1; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0; transition:background 0.3s;">2</span>
+                                    <span id="label-agente-tipo">Agente Operador</span> <span style="color:#e74c3c;">*</span>
+                                </div>
+                                <div style="position:relative;">
+                                    <select id="ped_agente_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="pedCarregarFormasPagamento(this.value)" disabled>
+                                        <option value="">← Selecione o local primeiro</option>
+                                    </select>
+                                    <span id="spinner-agente" style="display:none; position:absolute; right:32px; top:10px; color:#2980B9;"><i class="fas fa-spinner fa-spin" style="font-size:13px;"></i></span>
+                                </div>
+                                <input type="hidden" name="agente_recebimento_id" id="ped_agente_receb_hidden">
                             </div>
+
+                            {# PASSO 3: FORMA DE PAGAMENTO #}
+                            <div>
+                                <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                    <span id="badge-step-forma" style="background:#cbd5e1; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0; transition:background 0.3s;">3</span>
+                                    Forma de Pagamento <span style="color:#e74c3c;">*</span>
+                                </div>
+                                <div style="position:relative;">
+                                    <select id="ped_forma_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="pedOnFormaSelected(this)" disabled>
+                                        <option value="">← Selecione o agente primeiro</option>
+                                    </select>
+                                    <span id="spinner-forma" style="display:none; position:absolute; right:32px; top:10px; color:#2980B9;"><i class="fas fa-spinner fa-spin" style="font-size:13px;"></i></span>
+                                </div>
+                                <div id="ped-parcelas-panel" style="display:none; margin-top:10px;">
+                                    <label for="ped_parcelas_select" style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px;">Parcelas</label>
+                                    <select id="ped_parcelas_select" class="fp-input" style="height:36px; min-width:140px; width:100%;" onchange="pedOnParcelasSelected(this.value)"></select>
+                                </div>
+                                <input type="hidden" name="forma_recebimento_id" id="ped_forma_receb_hidden">
+                            </div>
+
                         </div>
-                        {% else %}
-                        <div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;">
-                            <i class="fas fa-credit-card" style="font-size:24px; display:block; margin-bottom:8px; opacity:0.3;"></i>
-                            Nenhuma forma configurada. <a href="/financeiro/?aba=gerencial" target="_blank" style="color:#2980B9; font-weight:700;">Configurar</a>
+
+                        {# BADGE DE CONFIRMAÇÃO DA SELEÇÃO #}
+                        <div id="ped-receb-confirmado" style="display:none; margin-top:12px; padding:10px 14px; background:linear-gradient(135deg,#f0fdf4,#fff); border:1.5px solid #22c55e; border-radius:8px; display:flex; align-items:center; gap:10px; animation: feFadeUp 0.3s ease;">
+                            <i class="fas fa-check-circle" style="color:#22c55e; font-size:16px;"></i>
+                            <div style="flex:1;">
+                                <span id="ped-receb-resumo-texto" style="font-size:11px; font-weight:800; color:#15803d;"></span>
+                            </div>
+                            <button type="button" onclick="pedLimparSelecaoRecebimento()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; hover:background:#f1f5f9;">
+                                <i class="fas fa-times"></i> Alterar
+                            </button>
                         </div>
-                        {% endfor %}
                     </div>
-                    <div id="painel-parcelamento" style="display:none; background:#f8fafc; border-radius:10px; padding:16px; border:1px solid #e2e8f0;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                            <div style="font-size:11px; font-weight:800; color:#1e293b; display:flex; align-items:center; gap:8px;">
-                                <i class="fas fa-calculator" style="color:#2980B9;"></i>
-                                <span id="pag-nome-display">—</span>
-                            </div>
-                            <div id="pag-ajuste-badge" style="font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; display:none;"></div>
-                        </div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;" id="grid-parcelas"></div>
-                    </div>
-                    <div id="pag-resumo" style="display:none; margin-top:12px; padding:12px 16px; background:linear-gradient(135deg,rgba(41,128,185,0.05),rgba(39,174,96,0.05)); border-radius:8px; border:1px solid #e2e8f0; justify-content:space-between; align-items:center;">
-                        <div><div style="font-size:9px; color:#64748b; font-weight:800; text-transform:uppercase;">FORMA</div><div id="resumo-forma-nome" style="font-size:13px; font-weight:800; color:#1e293b;">—</div></div>
-                        <div style="text-align:center;"><div style="font-size:9px; color:#64748b; font-weight:800; text-transform:uppercase;">PARCELAS</div><div id="resumo-forma-parcelas" style="font-size:18px; font-weight:900; color:#2980B9;">—</div></div>
-                        <div style="text-align:right;"><div style="font-size:9px; color:#64748b; font-weight:800; text-transform:uppercase;">TOTAL c/ AJUSTE</div><div id="resumo-forma-total" style="font-size:18px; font-weight:900; color:#27ae60;">R$ 0,00</div></div>
+                                      
+                    {# Info quando nenhuma forma é selecionada #}
+                    <div id="pag-vazio" style="text-align:center; padding:40px; color:#94a3b8;">
+                        <i class="fas fa-credit-card" style="font-size:32px; display:block; margin-bottom:12px; opacity:0.3;"></i>
+                        <div style="font-size:12px; font-weight:600;">Selecione uma forma de pagamento acima para visualizar a operadora e opções de parcelamento.</div>
                     </div>
                 </div>
 
@@ -1283,9 +1310,10 @@ ajuda="O Pedido de Venda oficializa a negociação e inicia os fluxos de faturam
         document.getElementById('resumo-forma-parcelas').textContent=parcelas+'x';
         document.getElementById('resumo-forma-total').textContent='R$ '+total.toLocaleString('pt-BR',{minimumFractionDigits:2});
     }
+</script>
 
-    {# 📚 Datalists Originais (Para restaurar a setinha nativa) #}
-    <datalist id="lista_sku_vendas">
+{# 📚 Datalists Originais (Para restaurar a setinha nativa) #}
+<datalist id="lista_sku_vendas">
         {% for v in variacoes %}<option value="{{ (v.sku or v.produto_pai.referencia or v.produto_pai.cod_interno or "")|upper }}">{{ v.produto_pai.descricao|upper }} - {{ v.nome|upper }}</option>{% endfor %}
         {% for p in produtos if p.tipo_estoque != 'grade' %}<option value="{{ (p.referencia or p.cod_interno or "")|upper }}">{{ p.descricao|upper }}</option>{% endfor %}
     </datalist>
@@ -2209,5 +2237,570 @@ ajuda="O Pedido de Venda oficializa a negociação e inicia os fluxos de faturam
             arioneToast('Erro de rede ao sincronizar.', 'danger');
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🛡️ CASCATA DE FORMAS DE PAGAMENTO: Forma → Operadora → Parcelas
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    let formasPagamentoCache = {};
+
+    // Função para carregar as formas de pagamento via API
+    async function carregarFormasPagamento() {
+        try {
+            const response = await fetch('/operacoes/api/formas-pagamento');
+            const data = await response.json();
+            
+            if (!data.ok) {
+                arioneToast('Erro ao carregar formas de pagamento', 'danger');
+                return;
+            }
+
+            // Cacheia as formas para acesso rápido
+            formasPagamentoCache = {};
+            const select = document.getElementById('select-forma-pagamento');
+            
+            data.formas_pagamento.forEach(forma => {
+                formasPagamentoCache[forma.id] = forma;
+                const option = document.createElement('option');
+                option.value = forma.id;
+                
+                // Exibe APENAS o nome cadastrado (sem sufixo)
+                option.textContent = forma.nome;
+                select.appendChild(option);
+            });
+
+            arioneToast('✅ Formas de pagamento carregadas!', 'success');
+        } catch (e) {
+            console.error('[Pagamento API] Erro:', e);
+            arioneToast('❌ Erro ao carregar formas de pagamento', 'danger');
+        }
+    }
+
+    // Função auxiliar para converter tipo para legível
+    function getTipoLegivel(tipo) {
+        const mapa = {
+            'CARTAO': 'Cartão de Crédito',
+            'CARTÃO': 'Cartão de Crédito',
+            'PIX': 'PIX',
+            'BOLETO': 'Boleto',
+            'DINHEIRO': 'Dinheiro',
+            'OUTROS': 'Outros'
+        };
+        return mapa[tipo] || tipo;
+    }
+
+    // Função para carregar a forma de pagamento selecionada e exibir operadora + parcelas
+    async function carregarFormaPagamento(formaId) {
+        if (!formaId) {
+            // Limpar tudo se nenhuma forma for selecionada
+            document.getElementById('painel-destinacao').style.display = 'none';
+            document.getElementById('painel-operadora').style.display = 'none';
+            document.getElementById('painel-parcelamento').style.display = 'none';
+            document.getElementById('pag-resumo').style.display = 'none';
+            document.getElementById('pag-vazio').style.display = 'block';
+            document.getElementById('forma_pagamento_id_hidden').value = '';
+            document.getElementById('operadora_id_hidden').value = '';
+            document.getElementById('destinacao_id_hidden').value = '';
+            return;
+        }
+
+        const forma = formasPagamentoCache[formaId];
+        if (!forma) {
+            arioneToast('⚠️ Forma de pagamento não encontrada', 'warning');
+            return;
+        }
+
+        // Salva o ID da forma
+        document.getElementById('forma_pagamento_id_hidden').value = forma.id;
+
+        // 🔴 EXIBE DESTINAÇÃO (Caixa, Operadora, Banco, etc)
+        exibirDestinacao(forma);
+
+        // 🔵 EXIBE OPERADORA (se houver)
+        if (forma.operadora) {
+            const op = forma.operadora;
+            document.getElementById('operadora-nome').value = op.nome || '—';
+            document.getElementById('operadora-cnpj').value = op.cnpj || '—';
+            document.getElementById('operadora-taxa-debito').value = (op.taxa_debito || 0) + '%';
+            document.getElementById('operadora-taxa-pix').value = (op.taxa_pix || 0) + '%';
+            document.getElementById('operadora-taxa-credito-vista').value = (op.taxa_credito_vista || 0) + '%';
+            document.getElementById('operadora-taxa-credito-parcelado').value = (op.taxa_credito_parcelado || 0) + '%';
+            
+            document.getElementById('operadora_id_hidden').value = op.id;
+            document.getElementById('painel-operadora').style.display = 'block';
+        } else {
+            document.getElementById('painel-operadora').style.display = 'none';
+        }
+
+        // 🟢 CONSTRÓI OPÇÕES DE PARCELAS
+        const gridParcelas = document.getElementById('grid-parcelas');
+        gridParcelas.innerHTML = '';
+
+        const totalAtual = parseTotalAtual();
+        const forma_nome = forma.nome;
+        const juros = forma.taxa_juros || 0;
+        const desconto = forma.percentual_desconto || 0;
+
+        // Calcula se deve somar juros ou subtrair desconto
+        let totalComAjuste = totalAtual;
+        if (juros > 0) {
+            totalComAjuste = totalAtual * (1 + juros / 100);
+        } else if (desconto > 0) {
+            totalComAjuste = totalAtual * (1 - desconto / 100);
+        }
+
+        // Cria botões de parcelamento (1 até max_parcelas)
+        for (let i = 1; i <= (forma.max_parcelas || 1); i++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'parcela-btn' + (i === 1 ? ' selected' : '');
+            
+            const valorParcela = totalComAjuste / i;
+            const descricao = i === 1 
+                ? `À VISTA` 
+                : `${i}x`;
+            
+            const corForma = forma.cor || '#2980B9';
+            btn.style.background = i === 1 ? corForma : '#fff';
+            btn.style.color = i === 1 ? '#fff' : '#475569';
+            btn.style.borderColor = corForma;
+            
+            btn.innerHTML = `
+                <div style="font-size:12px; font-weight:900;">${descricao}</div>
+                <div style="font-size:9px; font-weight:600; opacity:0.9;">R$ ${valorParcela.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
+            `;
+            
+            btn.onclick = () => {
+                // Remove seleção anterior
+                gridParcelas.querySelectorAll('.parcela-btn').forEach(b => {
+                    b.classList.remove('selected');
+                    b.style.background = '#fff';
+                    b.style.color = '#475569';
+                });
+                
+                // Seleciona novo
+                btn.classList.add('selected');
+                btn.style.background = corForma;
+                btn.style.color = '#fff';
+                
+                // Atualiza hidden
+                document.getElementById('parcelas_selecionadas_hidden').value = i;
+                
+                // Atualiza resumo
+                atualizarResumoPagamentoCascata(forma_nome, forma.operadora?.nome || '—', i, totalComAjuste, forma.destinacao.descricao_destino);
+            };
+            
+            gridParcelas.appendChild(btn);
+        }
+
+        // Atualiza badge de ajuste
+        const badge = document.getElementById('pag-ajuste-badge');
+        if (juros > 0) {
+            badge.style.display = 'inline-flex';
+            badge.style.background = '#fee2e2';
+            badge.style.color = '#dc2626';
+            badge.textContent = `+ ${juros}% de juros`;
+        } else if (desconto > 0) {
+            badge.style.display = 'inline-flex';
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#16a34a';
+            badge.textContent = `- ${desconto}% de desconto`;
+        } else {
+            badge.style.display = 'none';
+        }
+
+        // Atualiza nome da forma no painel
+        document.getElementById('pag-nome-display').textContent = forma_nome;
+
+        // Exibe painéis
+        document.getElementById('painel-parcelamento').style.display = 'block';
+        document.getElementById('pag-vazio').style.display = 'none';
+
+        // Atualiza resumo com primeira parcela (à vista)
+        atualizarResumoPagamentoCascata(forma_nome, forma.operadora?.nome || '—', 1, totalComAjuste, forma.destinacao.descricao_destino);
+    }
+
+    // Função para exibir o painel de destinação
+    function exibirDestinacao(forma) {
+        const painelDestinacao = document.getElementById('painel-destinacao');
+        const selectDestinacao = document.getElementById('select-destinacao');
+        
+        const tipoLegivel = getTipoLegivel(forma.tipo);
+        document.getElementById('destinacao-titulo').textContent = `Destino do Pagamento: ${tipoLegivel}`;
+        document.getElementById('destinacao-descricao').textContent = forma.destinacao.descricao_destino;
+
+        // Limpa options
+        selectDestinacao.innerHTML = '';
+
+        if (forma.destinacao.requer_seletor && forma.destinacao.opcoes.length > 0) {
+            // Se Dinheiro, mostrar seletor de Caixa
+            const optionPadrao = document.createElement('option');
+            optionPadrao.value = '';
+            optionPadrao.textContent = '-- SELECIONE CAIXA --';
+            selectDestinacao.appendChild(optionPadrao);
+
+            forma.destinacao.opcoes.forEach(opcao => {
+                const option = document.createElement('option');
+                option.value = opcao.id;
+                option.textContent = `${opcao.nome} (Saldo: R$ ${opcao.saldo.toLocaleString('pt-BR', {minimumFractionDigits:2})})`;
+                selectDestinacao.appendChild(option);
+            });
+
+            selectDestinacao.style.display = 'block';
+            selectDestinacao.onchange = function() {
+                document.getElementById('destinacao_id_hidden').value = this.value;
+            };
+            painelDestinacao.style.display = 'block';
+        } else if (!forma.destinacao.requer_seletor) {
+            // Se Cartão/Operadora, não precisa seletor
+            selectDestinacao.style.display = 'none';
+            painelDestinacao.style.display = 'block';
+        } else {
+            painelDestinacao.style.display = 'none';
+        }
+    }
+
+    // Função para atualizar o resumo final
+    function atualizarResumoPagamentoCascata(formaNome, operadoraNome, numParcelas, total, destinacao) {
+        document.getElementById('resumo-forma-nome').textContent = formaNome;
+        document.getElementById('resumo-operadora-nome').textContent = operadoraNome;
+        document.getElementById('resumo-forma-parcelas').textContent = numParcelas + 'x';
+        document.getElementById('resumo-forma-total').textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2});
+        document.getElementById('resumo-destinacao').textContent = destinacao;
+        
+        document.getElementById('pag-resumo').style.display = 'grid';
+    }
+
+    // Carrega formas de pagamento ao abrir a página
+    document.addEventListener('DOMContentLoaded', () => {
+        carregarFormasPagamento();
+    });
+
+    async function arioneSyncPesos() {
+        if (!confirm('🛡️ AriOne: Deseja forçar a sincronização dos pesos do catálogo com este pedido? (Isso corrigirá itens com peso 0.0)')) return;
+
+        try {
+            const res = await fetch('/operacoes/vendas/fix-weights', { method: 'POST' });
+            const data = await res.json();
+            
+            if (data.success) {
+                arioneToast(data.message, 'success');
+                // 🔄 Re-busca pesos de todos os itens na tela
+                const rows = document.querySelectorAll('#tabela-itens-ped tbody tr.item-row');
+                for (let row of rows) {
+                    const skuInput = row.querySelector('.table-input-sku');
+                    if (skuInput && skuInput.value) {
+                        await fetchItemBySKU(skuInput);
+                    }
+                }
+                arioneToast('Pesos atualizados na interface!', 'info');
+                calcularTotaisPedido();
+            } else {
+                arioneToast('Erro: ' + data.error, 'danger');
+            }
+        } catch (e) {
+            arioneToast('Erro de rede ao sincronizar', 'danger');
+        }
+    }
+
+    // 🌟 ADICIONE APENAS ESTA FUNÇÃO AQUI:
+    function imprimirPedidoStampfe() { 
+        const pedidoId = document.getElementById('id_venda_pedido')?.value || ''; 
+        
+        if (!pedidoId || pedidoId === '') { 
+            arioneToast('Por favor, salve o pedido antes de efetuar a impressão.', 'warning'); 
+            return; 
+        } 
+        
+        const urlImpressao = `/operacoes/vendas/pedido/${pedidoId}/imprimir`; 
+        window.open(urlImpressao, '_blank'); 
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 💳 DESTINAÇÃO DE RECEBIMENTO: Local → Agente Operador → Forma de Pgto
+    // Cascata inteligente: filtra agentes pela tabela correta do BD conforme
+    // o local selecionado (CAIXA → tb_caixas / BANCO → tb_bancos /
+    // OPERADORA → tb_operadoras), em seguida carrega as formas vinculadas.
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Mapa de labels dinâmicos por local selecionado
+    const PED_AGENTE_LABELS = {
+        'CAIXA':     { label: 'Caixa',             placeholder: '← Selecione o caixa' },
+        'BANCO':     { label: 'Banco / Conta',      placeholder: '← Selecione o banco' },
+        'OPERADORA': { label: 'Operadora de Cartão', placeholder: '← Selecione a operadora' },
+    };
+
+    function getContasBancariasLocal() {
+        const defaultContas = [
+            { id: 1, nome: "001 - BANCO DO BRASIL S.A. / 55443-2", banco: "001 - BANCO DO BRASIL S.A.", agencia: "1122-3", conta: "55443-2", chave_pix: "00.000.000/0001-00", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 15420.50, formas_pagamento_ids: [] },
+            { id: 2, nome: "341 - ITAÚ UNIBANCO S.A. / 99887-1", banco: "341 - ITAÚ UNIBANCO S.A.", agencia: "4455", conta: "99887-1", chave_pix: "financeiro@arione.com.br", tipo: "CORRENTE", modalidade_banco: "FISICO", status: "ATIVO", saldo: 8250.00, formas_pagamento_ids: [] },
+            { id: 3, nome: "260 - NU PAGAMENTOS S.A. (NUBANK) / 1234567-8", banco: "260 - NU PAGAMENTOS S.A. (NUBANK)", agencia: "0001", conta: "1234567-8", chave_pix: "11999998888", tipo: "POUPANCA", modalidade_banco: "DIGITAL", status: "ATIVO", saldo: 3400.75, formas_pagamento_ids: [] }
+        ];
+
+        try {
+            const raw = localStorage.getItem('arione_contas_bancarias_cad');
+            if (!raw) {
+                return defaultContas;
+            }
+
+            const contas = JSON.parse(raw);
+            return Array.isArray(contas) ? contas : defaultContas;
+        } catch (e) {
+            console.warn('[PED] Erro ao ler contas bancárias locais:', e);
+            return defaultContas;
+        }
+    }
+
+    async function pedCarregarAgentes(local) {
+        const selectAgente  = document.getElementById('ped_agente_receb');
+        const selectForma   = document.getElementById('ped_forma_receb');
+        const spinnerAgente = document.getElementById('spinner-agente');
+        const badgeAgente   = document.getElementById('badge-step-agente');
+        const labelAgente   = document.getElementById('label-agente-tipo');
+
+        // — Reset cascata
+        selectAgente.innerHTML = '<option value="">Carregando...</option>';
+        selectAgente.disabled  = true;
+        selectForma.innerHTML  = '<option value="">← Selecione o agente primeiro</option>';
+        selectForma.disabled   = true;
+        document.getElementById('ped_agente_receb_hidden').value = '';
+        document.getElementById('ped_forma_receb_hidden').value  = '';
+        document.getElementById('ped_local_receb_hidden').value  = local;
+        document.getElementById('ped-receb-confirmado').style.display = 'none';
+
+        if (!local) {
+            selectAgente.innerHTML = '<option value="">← Selecione o local primeiro</option>';
+            badgeAgente.style.background = '#cbd5e1';
+            return;
+        }
+
+        // — Atualiza label do passo 2 conforme tipo
+        const cfg = PED_AGENTE_LABELS[local] || { label: 'Agente Operador', placeholder: '← Selecione o agente' };
+        labelAgente.textContent = cfg.label;
+        badgeAgente.style.background = '#2980B9';
+
+        // — BANCO usa dados locais de contas bancárias (cliente/browser)
+        if (local === 'BANCO') {
+            const contas = getContasBancariasLocal().filter(c => String(c.status || 'ATIVO').toUpperCase() === 'ATIVO');
+            if (contas.length === 0) {
+                selectAgente.innerHTML = `<option value="">Nenhuma ${cfg.label.toLowerCase()} cadastrada</option>`;
+                arioneToast(`Nenhuma ${cfg.label.toLowerCase()} encontrada para este local.`, 'warning');
+                spinnerAgente.style.display = 'none';
+                return;
+            }
+
+            selectAgente.innerHTML = `<option value="">${cfg.placeholder}</option>`;
+            contas.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value       = item.id;
+                opt.textContent = item.banco ? `${item.banco} (Ag: ${item.agencia} / Cc: ${item.conta})` : `Conta ${item.id}`;
+                opt.dataset.tipo = local;
+                opt.dataset.saldo = Number(item.saldo || 0);
+                selectAgente.appendChild(opt);
+            });
+            selectAgente.disabled = false;
+            spinnerAgente.style.display = 'none';
+            return;
+        }
+
+        // — Spinner ligado
+        spinnerAgente.style.display = 'inline';
+        selectAgente.innerHTML = `<option value="">Buscando ${cfg.label.toLowerCase()}es...</option>`;
+
+        try {
+            // Endpoint com parâmetro 'local' → backend filtra a tabela correta
+            // CAIXA → tb_caixas | BANCO → tb_bancos | OPERADORA → tb_operadoras
+            const res  = await fetch(`/financeiro/api/agentes?local=${encodeURIComponent(local)}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+
+            if (!Array.isArray(data) || data.length === 0) {
+                selectAgente.innerHTML = `<option value="">Nenhum ${cfg.label.toLowerCase()} cadastrado</option>`;
+                arioneToast(`Nenhum ${cfg.label.toLowerCase()} encontrado para este local.`, 'warning');
+                return;
+            }
+
+            selectAgente.innerHTML = `<option value="">${cfg.placeholder}</option>`;
+            data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value       = item.id;
+                opt.textContent = item.nome || item.descricao || `ID ${item.id}`;
+                // Guarda tipo para uso posterior no resumo
+                opt.dataset.tipo = local;
+                selectAgente.appendChild(opt);
+            });
+            selectAgente.disabled = false;
+
+        } catch (e) {
+            console.error('[PED] Erro ao carregar agentes:', e);
+            selectAgente.innerHTML = '<option value="">Erro ao carregar — tente novamente</option>';
+            arioneToast('Erro ao buscar agentes operadores. Verifique a conexão.', 'danger');
+        } finally {
+            spinnerAgente.style.display = 'none';
+        }
+    }
+
+    async function pedCarregarFormasPagamento(agenteId) {
+        const selectForma   = document.getElementById('ped_forma_receb');
+        const spinnerForma  = document.getElementById('spinner-forma');
+        const badgeForma    = document.getElementById('badge-step-forma');
+        const parcelasPanel = document.getElementById('ped-parcelas-panel');
+
+        // — Reset passo 3
+        if (parcelasPanel) parcelasPanel.style.display = 'none';
+        selectForma.innerHTML  = '<option value="">Carregando...</option>';
+        selectForma.disabled   = true;
+        document.getElementById('ped_forma_receb_hidden').value  = '';
+        document.getElementById('ped_agente_receb_hidden').value = agenteId;
+        document.getElementById('ped-receb-confirmado').style.display = 'none';
+
+        if (!agenteId) {
+            selectForma.innerHTML = '<option value="">← Selecione o agente primeiro</option>';
+            badgeForma.style.background = '#cbd5e1';
+            return;
+        }
+
+        badgeForma.style.background = '#2980B9';
+        spinnerForma.style.display  = 'inline';
+        selectForma.innerHTML = '<option value="">Buscando formas de pagamento...</option>';
+
+        try {
+            const local = document.getElementById('ped_local_receb').value || '';
+            const res  = await fetch(`/financeiro/api/formas-pagamento?agente_id=${encodeURIComponent(agenteId)}&local=${encodeURIComponent(local)}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            let data = await res.json();
+
+            if (local === 'BANCO') {
+                const conta = getContasBancariasLocal().find(item => String(item.id) === String(agenteId));
+                const acceptedIds = (conta && Array.isArray(conta.formas_pagamento_ids)) ? conta.formas_pagamento_ids.map(String) : [];
+                if (acceptedIds.length > 0) {
+                    data = data.filter(item => acceptedIds.includes(String(item.id)));
+                }
+            }
+
+            if (!Array.isArray(data) || data.length === 0) {
+                selectForma.innerHTML = '<option value="">Nenhuma Forma de Pagamento Aceita, favor inserir Forma de Pagamentos</option>';
+                arioneToast('Nenhuma Forma de Pagamento Aceita, favor inserir Forma de Pagamentos.', 'warning');
+                return;
+            }
+
+            selectForma.innerHTML = '<option value="">← Selecione a forma de pagamento</option>';
+            data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value       = item.id;
+                const parcelasList = Array.isArray(item.parcelas) ? item.parcelas : [];
+                const parcelas  = parcelasList.length > 0 ? parcelasList.length : (item.max_parcelas || 1);
+                const sufixo    = parcelas > 1 ? `${parcelas}x` : 'À VISTA';
+                opt.textContent = `${item.nome || item.descricao || `ID ${item.id}`} (${sufixo})`;
+                opt.dataset.parcelas = parcelas;
+                opt.dataset.parcelasJson = JSON.stringify(parcelasList);
+                opt.dataset.nome = item.nome || item.descricao || `ID ${item.id}`;
+                selectForma.appendChild(opt);
+            });
+            selectForma.disabled = false;
+
+        } catch (e) {
+            console.error('[PED] Erro ao carregar formas de pagamento:', e);
+            selectForma.innerHTML = '<option value="">Erro ao carregar — tente novamente</option>';
+            arioneToast('Erro ao buscar formas de pagamento. Verifique a conexão.', 'danger');
+        } finally {
+            spinnerForma.style.display = 'none';
+        }
+    }
+
+    function pedOnFormaSelected(selectEl) {
+        const formaId   = selectEl.value;
+        const selectedOption = selectEl.options[selectEl.selectedIndex];
+        const formaNome = selectedOption?.dataset?.nome || selectedOption?.text || '';
+        const parcelas  = selectedOption?.dataset?.parcelas || '1';
+        const parcelasJson = selectedOption?.dataset?.parcelasJson ? JSON.parse(selectedOption.dataset.parcelasJson) : null;
+        document.getElementById('ped_forma_receb_hidden').value = formaId;
+        document.getElementById('parcelas_selecionadas_hidden').value = parcelas;
+
+        const parcelasPanel = document.getElementById('ped-parcelas-panel');
+        if (!formaId) {
+            if (parcelasPanel) parcelasPanel.style.display = 'none';
+            document.getElementById('ped-receb-confirmado').style.display = 'none';
+            return;
+        }
+
+        if (parcelasPanel) parcelasPanel.style.display = 'block';
+        atualizarParcelasPedido(parcelasJson || parseInt(parcelas, 10) || 1);
+
+        // — Monta texto do resumo e exibe badge de confirmação
+        const local      = document.getElementById('ped_local_receb').value;
+        const agenteNome = document.getElementById('ped_agente_receb').options[
+            document.getElementById('ped_agente_receb').selectedIndex
+        ]?.text || '—';
+        const localLabel = PED_AGENTE_LABELS[local]?.label || local;
+
+        const textoResumo = `✔ ${localLabel}: ${agenteNome}  →  ${formaNome}`;
+        document.getElementById('ped-receb-resumo-texto').textContent = textoResumo;
+        document.getElementById('ped-receb-confirmado').style.display = 'flex';
+
+        // — Sincroniza campo de operadora (compatibilidade com resumo antigo)
+        document.getElementById('operadora_id_hidden').value = formaId;
+        document.getElementById('resumo-operadora-nome').textContent = agenteNome;
+        document.getElementById('resumo-forma-nome').textContent     = formaNome;
+        const parcelaLabel = document.getElementById('resumo-forma-parcelas');
+        if (parcelaLabel) parcelaLabel.textContent = parcelas + 'x';
+        document.getElementById('resumo-destinacao').textContent     = `${localLabel}: ${agenteNome}`;
+        document.getElementById('pag-resumo').style.display          = 'grid';
+        document.getElementById('pag-vazio').style.display           = 'none';
+    }
+
+    function atualizarParcelasPedido(parcelas) {
+        const select = document.getElementById('ped_parcelas_select');
+        if (!select) return;
+        select.innerHTML = '';
+
+        if (Array.isArray(parcelas) && parcelas.length > 0) {
+            parcelas.forEach(op => {
+                const option = document.createElement('option');
+                option.value = op.numero;
+                option.textContent = op.nome || (op.numero === 1 ? 'À VISTA' : `${op.numero}x`);
+                select.appendChild(option);
+            });
+        } else {
+            const max = parseInt(parcelas, 10) || 1;
+            for (let i = 1; i <= max; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i === 1 ? 'À VISTA' : `${i}x`;
+                select.appendChild(option);
+            }
+        }
+
+        select.value = select.options[0]?.value || '1';
+    }
+
+    function pedOnParcelasSelected(value) {
+        const parcelas = value || '1';
+        document.getElementById('parcelas_selecionadas_hidden').value = parcelas;
+        const parcelaLabel = document.getElementById('resumo-forma-parcelas');
+        if (parcelaLabel) parcelaLabel.textContent = parcelas + 'x';
+    }
+
+    function pedLimparSelecaoRecebimento() {
+        document.getElementById('ped_local_receb').value = '';
+        pedCarregarAgentes('');
+        document.getElementById('ped-receb-confirmado').style.display = 'none';
+        document.getElementById('pag-resumo').style.display  = 'none';
+        document.getElementById('pag-vazio').style.display   = 'block';
+        const parcelasPanel = document.getElementById('ped-parcelas-panel');
+        if (parcelasPanel) parcelasPanel.style.display = 'none';
+    }
+
+    function pedValidarDestinoRecebimento() {
+        const local  = document.getElementById('ped_local_receb').value;
+        const agente = document.getElementById('ped_agente_receb').value;
+        const forma  = document.getElementById('ped_forma_receb').value;
+        if (!local || !agente || !forma) {
+            arioneToast('Preencha Local, Agente Operador e Forma de Pagamento.', 'warning');
+            return false;
+        }
+        return true;
+    }
+
 </script>
 {% endblock %}

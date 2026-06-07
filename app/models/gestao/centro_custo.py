@@ -14,7 +14,11 @@ class CentroCusto(db.Model):
     empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), index=True)
     pai_id = db.Column(db.Integer, db.ForeignKey('centros_custo.id'), nullable=True) # Hierarquia
     
-    codigo = db.Column(db.String(20), unique=True, nullable=False) # Ex: 01.001
+    __table_args__ = (
+        db.UniqueConstraint('empresa_id', 'codigo', name='uix_empresa_codigo_cc'),
+    )
+    
+    codigo = db.Column(db.String(20), nullable=False) # Ex: 01.001
     nome = db.Column(db.String(100), nullable=False)
     tipo = db.Column(db.String(20), default='Operacional') # Operacional, Administrativo, Comercial
     

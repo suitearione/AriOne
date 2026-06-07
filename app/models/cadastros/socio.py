@@ -142,8 +142,7 @@ class SocioEmpresa(db.Model):
     poder_cheques       = db.Column(db.Boolean, default=False)  # Assinar Cheques
     poder_contratos     = db.Column(db.Boolean, default=False)  # Assinar Contratos
     poder_representacao = db.Column(db.Boolean, default=False)  # Representar Legalmente
-    poder_bancario      = db.Column(db.Boolean, default=False)  # Movimentar Contas
-
+    poder_bancario      = db.Column(db.Boolean, default=False)  # Movimentarmovimentcao
     # ═══════════════════════════════════════════════════════════════════════
     # RELACIONAMENTOS
     # ═══════════════════════════════════════════════════════════════════════

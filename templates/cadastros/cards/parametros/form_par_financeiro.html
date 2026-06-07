@@ -76,15 +76,15 @@
                 <div class="fp-row">
                     <div class="fp-group fp-flex-1">
                         <label class="fp-label">Juros de Mora Diário (%)</label>
-                        <input class="fp-input" type="number" step="0.01" value="0.03">
+                        <input class="fp-input" type="number" name="juros_mora_diario" step="0.01" value="0.03">
                     </div>
                     <div class="fp-group fp-flex-1">
                         <label class="fp-label">Multa por Atraso (%)</label>
-                        <input class="fp-input" type="number" step="0.01" value="2.00">
+                        <input class="fp-input" type="number" name="multa_por_atraso" step="0.01" value="2.00">
                     </div>
                     <div class="fp-group fp-flex-1">
                         <label class="fp-label">Dias para Protesto Automático</label>
-                        <input class="fp-input" type="number" value="10">
+                        <input class="fp-input" type="number" name="dias_protesto_automatico" value="10">
                     </div>
                 </div>
             </div>
@@ -110,19 +110,19 @@
                     <div class="fp-row">
                         <div class="fp-group fp-flex-1">
                             <label class="fp-label">Plano de Contas Padrão</label>
-                            <select class="fp-input" name="financeiro_caixa_suprimento_plano_contas_id">
+                            <select class="fp-input" name="conta_suprimento_id">
                                 <option value="">Selecione...</option>
                                 {% for pc in planos_conta %}
-                                <option value="{{ pc.id }}">{{ pc.codigo }} - {{ pc.descricao }}</option>
+                                <option value="{{ pc.id }}" {% if p and p.conta_suprimento_id == pc.id %}selected{% endif %}>{{ pc.codigo }} - {{ pc.descricao }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="fp-group fp-flex-1">
                             <label class="fp-label">Centro de Custo Padrão</label>
-                            <select class="fp-input" name="financeiro_caixa_suprimento_centro_custo_id">
+                            <select class="fp-input" name="cc_suprimento_id">
                                 <option value="">Selecione...</option>
                                 {% for cc in centros_custo %}
-                                <option value="{{ cc.id }}">{{ cc.codigo }} - {{ cc.nome }}</option>
+                                <option value="{{ cc.id }}" {% if p and p.cc_suprimento_id == cc.id %}selected{% endif %}>{{ cc.codigo }} - {{ cc.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -139,19 +139,19 @@
                     <div class="fp-row">
                         <div class="fp-group fp-flex-1">
                             <label class="fp-label">Plano de Contas Padrão</label>
-                            <select class="fp-input" name="financeiro_caixa_sangria_plano_contas_id">
+                            <select class="fp-input" name="conta_sangria_id">
                                 <option value="">Selecione...</option>
                                 {% for pc in planos_conta %}
-                                <option value="{{ pc.id }}">{{ pc.codigo }} - {{ pc.descricao }}</option>
+                                <option value="{{ pc.id }}" {% if p and p.conta_sangria_id == pc.id %}selected{% endif %}>{{ pc.codigo }} - {{ pc.descricao }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="fp-group fp-flex-1">
                             <label class="fp-label">Centro de Custo Padrão</label>
-                            <select class="fp-input" name="financeiro_caixa_sangria_centro_custo_id">
+                            <select class="fp-input" name="cc_sangria_id">
                                 <option value="">Selecione...</option>
                                 {% for cc in centros_custo %}
-                                <option value="{{ cc.id }}">{{ cc.codigo }} - {{ cc.nome }}</option>
+                                <option value="{{ cc.id }}" {% if p and p.cc_sangria_id == cc.id %}selected{% endif %}>{{ cc.codigo }} - {{ cc.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -168,19 +168,19 @@
                     <div class="fp-row">
                         <div class="fp-group fp-flex-1">
                             <label class="fp-label">Plano de Contas Padrão</label>
-                            <select class="fp-input" name="financeiro_caixa_avulso_plano_contas_id">
+                            <select class="fp-input" name="conta_avulso_id">
                                 <option value="">Selecione...</option>
                                 {% for pc in planos_conta %}
-                                <option value="{{ pc.id }}">{{ pc.codigo }} - {{ pc.descricao }}</option>
+                                <option value="{{ pc.id }}" {% if p and p.conta_avulso_id == pc.id %}selected{% endif %}>{{ pc.codigo }} - {{ pc.descricao }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="fp-group fp-flex-1">
                             <label class="fp-label">Centro de Custo Padrão</label>
-                            <select class="fp-input" name="financeiro_caixa_avulso_centro_custo_id">
+                            <select class="fp-input" name="cc_avulso_id">
                                 <option value="">Selecione...</option>
                                 {% for cc in centros_custo %}
-                                <option value="{{ cc.id }}">{{ cc.codigo }} - {{ cc.nome }}</option>
+                                <option value="{{ cc.id }}" {% if p and p.cc_avulso_id == cc.id %}selected{% endif %}>{{ cc.codigo }} - {{ cc.nome }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -232,9 +232,9 @@
     }
 
     function salvarSecaoRegras() {
-        const jurosMora = document.querySelector('input[type="number"][step="0.01"]').value;
-        const multaAtraso = document.querySelectorAll('input[type="number"][step="0.01"]')[1].value;
-        const diasProtesto = document.querySelector('input[type="number"]:not([step="0.01"])').value;
+        const jurosMora = document.querySelector('[name="juros_mora_diario"]').value;
+        const multaAtraso = document.querySelector('[name="multa_por_atraso"]').value;
+        const diasProtesto = document.querySelector('[name="dias_protesto_automatico"]').value;
         
         const dados = {
             juros_mora_diario: jurosMora,
@@ -246,43 +246,74 @@
     }
 
     function salvarSecaoSuprimento() {
-        const planoContas = document.querySelector('[name="financeiro_caixa_suprimento_plano_contas_id"]').value;
-        const centroCusto = document.querySelector('[name="financeiro_caixa_suprimento_centro_custo_id"]').value;
+        const planoContas = document.querySelector('[name="conta_suprimento_id"]').value;
+        const centroCusto = document.querySelector('[name="cc_suprimento_id"]').value;
         
         const dados = {
-            financeiro_caixa_suprimento_plano_contas_id: planoContas,
-            financeiro_caixa_suprimento_centro_custo_id: centroCusto
+            conta_suprimento_id: planoContas,
+            cc_suprimento_id: centroCusto
         };
         
-        salvarParametrosFinanceiros(dados, 'SUPRIMENTO (Entrada)');
+        salvarCaixaApi(dados, 'SUPRIMENTO (Entrada)');
     }
 
     function salvarSecaoSangria() {
-        const planoContas = document.querySelector('[name="financeiro_caixa_sangria_plano_contas_id"]').value;
-        const centroCusto = document.querySelector('[name="financeiro_caixa_sangria_centro_custo_id"]').value;
+        const planoContas = document.querySelector('[name="conta_sangria_id"]').value;
+        const centroCusto = document.querySelector('[name="cc_sangria_id"]').value;
         
         const dados = {
-            financeiro_caixa_sangria_plano_contas_id: planoContas,
-            financeiro_caixa_sangria_centro_custo_id: centroCusto
+            conta_sangria_id: planoContas,
+            cc_sangria_id: centroCusto
         };
         
-        salvarParametrosFinanceiros(dados, 'SANGRIA (Saída)');
+        salvarCaixaApi(dados, 'SANGRIA (Saída)');
     }
 
     function salvarSecaoAvulso() {
-        const planoContas = document.querySelector('[name="financeiro_caixa_avulso_plano_contas_id"]').value;
-        const centroCusto = document.querySelector('[name="financeiro_caixa_avulso_centro_custo_id"]').value;
+        const planoContas = document.querySelector('[name="conta_avulso_id"]').value;
+        const centroCusto = document.querySelector('[name="cc_avulso_id"]').value;
         
         const dados = {
-            financeiro_caixa_avulso_plano_contas_id: planoContas,
-            financeiro_caixa_avulso_centro_custo_id: centroCusto
+            conta_avulso_id: planoContas,
+            cc_avulso_id: centroCusto
         };
         
-        salvarParametrosFinanceiros(dados, 'AVULSO (Lançamento)');
+        salvarCaixaApi(dados, 'AVULSO (Lançamento)');
+    }
+
+    function salvarCaixaApi(dados, nomeSecao) {
+        function mostrarNotificacao(mensagem, tipo) {
+            if (typeof window.arioneToast === 'function') {
+                window.arioneToast(mensagem, tipo);
+            } else if (typeof arioneToast === 'function') {
+                arioneToast(mensagem, tipo);
+            } else {
+                alert(mensagem);
+            }
+        }
+
+        fetch("{{ url_for('financeiro.salvar_parametros_caixa') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams(dados)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                mostrarNotificacao(`${nomeSecao} salvo com sucesso!`, 'success');
+            } else {
+                mostrarNotificacao(`Erro ao salvar ${nomeSecao}: ${data.error || 'Erro desconhecido'}`, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro de comunicação com o servidor: ' + error.message, 'danger');
+        });
     }
 
     function salvarParametrosFinanceiros(dados, nomeSecao) {
-        // Função auxiliar para mostrar notificação
         function mostrarNotificacao(mensagem, tipo) {
             if (typeof window.arioneToast === 'function') {
                 window.arioneToast(mensagem, tipo);

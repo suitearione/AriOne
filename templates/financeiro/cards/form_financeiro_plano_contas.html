@@ -22,40 +22,137 @@
         /* 🛡️ BLINDAGEM PAA §12-E: O cabeçalho deve 'beijar' o topo */
         .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
         
-        :root { --pc-pri: #00E676; --pc-acc: #00E676; }
-        .pc-item { display: flex; align-items: center; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; transition: 0.2s; }
-        .pc-item:hover { background: #f8fafc; }
-        .pc-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-        .badge-sintetica { background: #e0e7ff; color: #4338ca; }
-        .badge-analitica { background: #ecfdf5; color: #065f46; }
+        :root { 
+            --pc-pri: #00E676; 
+            --pc-pri-hover: #00c853;
+            --pc-acc: #1e293b;
+            --bg-glass: rgba(255, 255, 255, 0.7);
+        }
         
-        .codigo-col { width: 120px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #64748b; font-size: 13px; }
+        /* Container principal com borda sutil e sombra premium */
+        .fp-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.02);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* 💎 Header do Card */
+        .fp-card-header {
+            padding: 18px 24px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fp-card-title {
+            font-weight: 800;
+            color: #0f172a;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Botão Premium */
+        .btn-premium {
+            background: linear-gradient(135deg, var(--pc-pri) 0%, #00c853 100%);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 230, 118, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 230, 118, 0.4);
+        }
+
+        /* Itens da Lista */
+        .pc-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 8px 16px; 
+            border-bottom: 1px solid #f1f5f9; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+        }
+        .pc-item:hover { 
+            background: #f8fafc;
+            transform: translateX(4px);
+            box-shadow: -4px 0 0 var(--pc-pri);
+        }
+        
+        .pc-badge { 
+            font-size: 10px; 
+            font-weight: 800; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        .badge-sintetica { background: rgba(67, 56, 202, 0.1); color: #4338ca; border: 1px solid rgba(67, 56, 202, 0.2); }
+        .badge-analitica { background: rgba(0, 230, 118, 0.1); color: #059669; border: 1px solid rgba(0, 230, 118, 0.2); }
+        
+        .codigo-col { width: 140px; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #64748b; font-size: 13px; }
         .desc-col { flex: 1; transition: 0.2s; }
         
         /* 💎 Estilos de Natureza (Quiet Luxury) */
-        .pc-sintetica .desc-col { font-weight: 700; color: #1e293b; font-size: 11px; letter-spacing: 0.2px; text-transform: uppercase; }
-        .pc-analitica .desc-col { font-weight: 400; color: #475569; font-size: 11px; }
+        .pc-sintetica .desc-col { font-weight: 800; color: #0f172a; font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase; }
+        .pc-analitica .desc-col { font-weight: 500; color: #475569; font-size: 12px; }
         
-        /* Níveis de Indentação */
-        .nivel-1 { background: rgba(0, 230, 118, 0.03); border-left: 4px solid var(--pc-pri); }
-        .nivel-2 { padding-left: 40px; border-left: 1px solid #e2e8f0; }
-        .nivel-3 { padding-left: 80px; border-left: 1px solid #e2e8f0; }
-        .nivel-4 { padding-left: 110px; border-left: 1px solid #e2e8f0; }
+        /* Níveis de Indentação com Linhas Modernas */
+        .nivel-1 { background: rgba(248, 250, 252, 0.5); }
+        .nivel-2 { padding-left: 48px; position: relative; }
+        .nivel-2::before { content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+        .nivel-3 { padding-left: 72px; position: relative; }
+        .nivel-3::before { content: ''; position: absolute; left: 48px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+        .nivel-4 { padding-left: 96px; position: relative; }
+        .nivel-4::before { content: ''; position: absolute; left: 72px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+
+        /* Ações */
+        .btn-acao {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-acao.edit { color: #6366f1; }
+        .btn-acao.edit:hover { background: rgba(99, 102, 241, 0.1); transform: scale(1.05); }
+        .btn-acao.trash { color: #f43f5e; }
+        .btn-acao.trash:hover { background: rgba(244, 63, 94, 0.1); transform: scale(1.05); }
+
     </style>
     
 
-    <div class="fp-card" style="background:#fff; border-radius:12px; border:1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden;">
+    <div class="fp-card">
         
-        <div style="padding: 15px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-weight: 800; color: #1e293b;"><i class="fas fa-sitemap" style="color: var(--pc-pri); margin-right: 8px;"></i> ESTRUTURA HIERÁRQUICA</div>
+        <div class="fp-card-header">
+            <div class="fp-card-title"><i class="fas fa-sitemap" style="color: var(--pc-pri); margin-right: 10px; font-size: 16px;"></i> ESTRUTURA HIERÁRQUICA</div>
             <div style="display: flex; gap: 10px;">
-                <button type="button" onclick="seedPlanoContas()" class="btn-crud" style="background: var(--pc-pri); color: #fff; border: none; padding: 6px 15px; border-radius: 6px; font-weight: 700; font-size: 11px;"><i class="fas fa-magic"></i> GERAR ESTRUTURA PADRÃO</button>
+                <button type="button" onclick="seedPlanoContas()" class="btn-premium"><i class="fas fa-magic"></i> GERAR ESTRUTURA PADRÃO</button>
             </div>
         </div>
 
         <div id="pc-tree-container">
             {# Cabeçalho da Listagem #}
-            <div class="pc-item" style="background: #f1f5f9; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid #e2e8f0;">
+            <div style="display: flex; padding: 8px 16px; background: #f8fafc; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0;">
                 <div class="codigo-col">CÓDIGO</div>
                 <div class="desc-col">DESCRIÇÃO DA CONTA</div>
                 <div style="width: 100px; text-align: center;">TIPO</div>
@@ -79,8 +176,8 @@
                     </span>
                 </div>
                 <div style="width: 80px; text-align: center; display: flex; gap: 8px; justify-content: center;">
-                    <button onclick="editarConta('{{ c.id }}')" style="background: none; border: none; color: #6366f1; cursor: pointer;"><i class="fas fa-edit"></i></button>
-                    <button onclick="excluirConta('{{ c.id }}')" style="background: none; border: none; color: #f43f5e; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                    <button onclick="editarConta('{{ c.id }}')" class="btn-acao edit" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button onclick="excluirConta('{{ c.id }}')" class="btn-acao trash" title="Excluir"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
             {% else %}

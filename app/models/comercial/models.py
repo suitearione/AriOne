@@ -1,3 +1,5 @@
+import json
+
 from app.extensions import db
 from datetime import datetime
 
@@ -226,6 +228,60 @@ class OperadoraFinanceira(db.Model):
     taxa_credito_parcelado = db.Column(db.Float, default=0.0)
     taxa_antecipacao = db.Column(db.Float, default=0.0)
     taxas_parcelamento = db.Column(db.Text) # JSON string
+    formas_pagamento_ids = db.Column(db.Text, nullable=True)
+    formas_pagamento_detalhes = db.Column(db.Text, nullable=True)  # JSON string
+
+    @property
+    def formas_pagamento_aceitas(self):
+        if self.formas_pagamento_ids:
+            try:
+                return json.loads(self.formas_pagamento_ids)
+            except Exception:
+                return []
+        return []
+
+    @formas_pagamento_aceitas.setter
+    def formas_pagamento_aceitas(self, value):
+        if not value:
+            self.formas_pagamento_ids = None
+            return
+        if isinstance(value, str):
+            try:
+                self.formas_pagamento_ids = json.dumps(json.loads(value))
+                return
+            except Exception:
+                self.formas_pagamento_ids = json.dumps([value])
+                return
+        if isinstance(value, list):
+            self.formas_pagamento_ids = json.dumps([int(v) for v in value if v is not None])
+            return
+        self.formas_pagamento_ids = json.dumps([value])
+
+    @property
+    def formas_pagamento_configuracoes(self):
+        if self.formas_pagamento_detalhes:
+            try:
+                return json.loads(self.formas_pagamento_detalhes)
+            except Exception:
+                return {}
+        return {}
+
+    @formas_pagamento_configuracoes.setter
+    def formas_pagamento_configuracoes(self, value):
+        if not value:
+            self.formas_pagamento_detalhes = None
+            return
+        if isinstance(value, str):
+            try:
+                self.formas_pagamento_detalhes = json.dumps(json.loads(value))
+                return
+            except Exception:
+                self.formas_pagamento_detalhes = value
+                return
+        if isinstance(value, dict):
+            self.formas_pagamento_detalhes = json.dumps(value)
+            return
+        self.formas_pagamento_detalhes = json.dumps(value)
     
     # Visual e Status
     icone = db.Column(db.String(50), default='fas fa-landmark')
@@ -248,6 +304,8 @@ class OperadoraFinanceira(db.Model):
             'taxa_credito_parcelado': self.taxa_credito_parcelado,
             'taxa_antecipacao': self.taxa_antecipacao,
             'taxas_parcelamento': self.taxas_parcelamento,
+            'formas_pagamento_ids': self.formas_pagamento_aceitas,
+            'formas_pagamento_detalhes': self.formas_pagamento_configuracoes,
             'icone': self.icone,
             'cor': self.cor,
             'ativa': self.ativa
@@ -261,7 +319,8 @@ class FormaPagamento(db.Model):
     agrupador_operacional = db.Column(db.String(50), default='OUTROS') # CARTÃO, BOLETO, PIX, DINHEIRO, OUTROS
     baixa_automatica = db.Column(db.Boolean, default=False)
     tipo = db.Column(db.String(50), default='DINHEIRO') # CARTÃO, BOLETO, PIX, DINHEIRO, OUTROS
-    
+    condicao_pagamento = db.Column(db.String(100), nullable=True)
+
     # Vinculação com Operadora
     operadora_id = db.Column(db.Integer, db.ForeignKey('comercial_operadoras_financeiras.id'))
     operadora = db.relationship('OperadoraFinanceira', backref='formas_pagamento', lazy=True)
@@ -289,6 +348,7 @@ class FormaPagamento(db.Model):
             'agrupador_operacional': self.agrupador_operacional,
             'baixa_automatica': self.baixa_automatica,
             'tipo': self.tipo,
+            'condicao_pagamento': self.condicao_pagamento,
             'operadora_id': self.operadora_id,
             'operadora_nome': self.operadora.nome if self.operadora else None,
             'max_parcelas': self.max_parcelas,

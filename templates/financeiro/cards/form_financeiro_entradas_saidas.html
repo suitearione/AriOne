@@ -1,213 +1,290 @@
-<!-- templates/financeiro/cards/form_financeiro_entradas_saidas.html -->
 {% extends "base_modal.html" if is_modal else "base.html" %}
 {% import "macros/componentes.html" as comp %}
 
 {% block content %}
+<div class="ctx-fin-wrap">
 
-{{ comp.cabecalho_mestre_arione(
-    titulo="Entradas & Saídas",
-    subtitulo="Financeiro > Lançamento Rápido Direto",
-    icone="fa-bolt",
-    cor_tema="#E67E22",
-    func_fechar="fecharEsteModal()",
-    form_id="formLancamentoDireto",
-    onclick_novo="document.getElementById('formLancamentoDireto').reset()",
-    onclick_save="document.getElementById('formLancamentoDireto').dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))",
-    onclick_search="if(typeof arioneToast === 'function') arioneToast('Pesquisa ativa', 'info')",
-    onclick_filter="if(typeof arioneToast === 'function') arioneToast('Filtros avançados em desenvolvimento', 'info')",
-    onclick_list="if(typeof arioneToast === 'function') arioneToast('Listagem em desenvolvimento', 'info')",
-    onclick_clonar="if(typeof arioneToast === 'function') arioneToast('Clonando registro...', 'info')",
-    onclick_export="if(typeof arioneToast === 'function') arioneToast('Exportando dados para CSV/Excel...', 'info')",
-    onclick_import="if(typeof arioneToast === 'function') arioneToast('Importação de XML/OFX em desenvolvimento...', 'info')",
-    onclick_print="window.print()",
-    onclick_email="if(typeof arioneToast === 'function') arioneToast('Enviando movimentação por E-mail...', 'info')",
-    onclick_whatsapp="if(typeof arioneToast === 'function') arioneToast('Compartilhando movimentação via WhatsApp...', 'info')",
-    status="Ativo",
-    ajuda="Formulário para lançamento rápido direto de entradas e saídas no fluxo de caixa.",
-    tamanho="medio"
-) }}
+    <style>
+        :root { --fin-pri: #E67E22; --fin-acc: #D35400; }
+        .ctx-fin-wrap { max-width: 1000px; margin: 0 auto; }
+        .ctx-fin-header { background: linear-gradient(135deg, var(--fin-pri), #CA6F1E); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .ctx-fin-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
 
-<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; width: 100%;">
-    <div class="op-container-fluid" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease;">
-        <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
-            <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
-                <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <i class="fas fa-bolt" style="color: #E67E22; margin-right: 10px;"></i>
-                        <span>Lançamento Rápido Direto</span>
+        .fin-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; }
+        .fin-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .fin-group { display: flex; flex-direction: column; gap: 5px; }
+        .fin-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .fin-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600; outline: none; }
+        .fin-input:focus { border-color: var(--fin-pri); }
+    </style>
+
+    {# 🏛️ TOPO: CABEÇALHO MESTRE ARI-ONE #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Entradas & Saídas",
+        subtitulo="Financeiro > Lançamento Rápido",
+        icone="fa-bolt",
+        cor_tema="#E67E22",
+        func_fechar="window.history.back()",
+        form_id="formLancamentoDireto",
+        onclick_novo="if(typeof arioneResetForm === 'function') arioneResetForm('formLancamentoDireto')",
+        onclick_save="document.getElementById('formLancamentoDireto').dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}))",
+        status="Ativo",
+        ajuda="Formulário para lançamento rápido de entradas e saídas.",
+        tamanho="medio"
+    ) }}
+
+    <div class="ctx-fin-body">
+        <form id="formLancamentoDireto" onsubmit="salvarLancamentoDireto(event)">
+            
+            <div class="fin-section">
+                <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">TIPO DE MOVIMENTAÇÃO <span style="color:#e74c3c;">*</span></label>
+                        <select name="tipo" id="tipo_movimentacao" class="fin-input" onchange="alternarDestino(this.value)" required>
+                            <option value="RECEITA">RECEITA</option>
+                            <option value="DESPESA">DESPESA</option>
+                            <option value="TRANSFERÊNCIA">TRANSFERÊNCIA</option>
+                        </select>
                     </div>
-                    <span style="background: #e2e8f0; color: #64748b; font-size: 10px; padding: 4px 12px; border-radius: 12px; font-weight: 600;">ATIVO</span>
+                    <div class="fin-group">
+                        <label class="fin-label">DATA <span style="color:#e74c3c;">*</span></label>
+                        <input class="fin-input" type="date" name="data_pagamento" value="{{ today }}" required>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">VALOR (R$) <span style="color:#e74c3c;">*</span></label>
+                        <input class="fin-input" type="text" name="valor" oninput="if(typeof arioneMaskMoney === 'function') this.value = arioneMaskMoney(this.value);" style="color:var(--fin-pri); font-weight:900; font-size:15px;" placeholder="0,00" required>
+                    </div>
                 </div>
-                <div class="op-card-body" style="padding: 25px;">
-                    <form id="formLancamentoDireto" onsubmit="salvarLancamentoDireto(event)">
-                        <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
-                            <div class="op-group" style="flex: 1; min-width: 150px;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">TIPO DE MOVIMENTAÇÃO *</label>
-                                <select name="tipo" class="op-input" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #334155; background: #fff; transition: 0.2s;">
-                                    <option value="RECEITA">RECEITA (Entrada)</option>
-                                    <option value="DESPESA">DESPESA (Saída)</option>
-                                </select>
-                            </div>
-                            <div class="op-group" style="flex: 1; min-width: 150px;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DATA DO PAGAMENTO *</label>
-                                <input class="op-input" type="date" name="data_pagamento" value="{{ today }}" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
-                            </div>
-                        </div>
-
-                        <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
-                            <div class="op-group" style="flex: 1;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">DESCRIÇÃO DA MOVIMENTAÇÃO *</label>
-                                <input class="op-input" type="text" name="descricao" placeholder="EX: MATERIAL DE ESCRITÓRIO, MANUTENÇÃO..." required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #f8fafc; transition: 0.2s;">
-                            </div>
-                        </div>
-
-                        <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
-                            <div class="op-group" style="flex: 1;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">PLANO DE CONTAS (DRE - CONTAS ANALÍTICAS) *</label>
-                                <input class="op-input" type="text" id="es_plano_contas_busca" placeholder="BUSCAR POR CÓDIGO OU NOME..." list="es-lista-plano-contas" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="selecionarEsPlanoContas(this.value)">
-                                <input type="hidden" name="plano_contas_id" id="es_plano_contas_id">
-                                <datalist id="es-lista-plano-contas">
-                                    {% for pc in plano_contas %}
-                                    <option value="{{ pc.codigo }} - {{ pc.descricao }}" data-id="{{ pc.id }}"></option>
-                                    {% endfor %}
-                                </datalist>
-                            </div>
-                        </div>
-
-                        <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
-                            <div class="op-group" style="flex: 1;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CENTRO DE CUSTO (RATEIO) *</label>
-                                <input class="op-input" type="text" id="es_centro_custo_busca" placeholder="BUSCAR POR CÓDIGO OU NOME..." list="es-lista-centro-custo" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; text-transform: uppercase; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;" onchange="selecionarEsCentroCusto(this.value)">
-                                <input type="hidden" name="centro_custo_id" id="es_centro_custo_id">
-                                <datalist id="es-lista-centro-custo">
-                                    {% for cc in centros_custo %}
-                                    <option value="{{ cc.codigo }} - {{ cc.nome }}" data-id="{{ cc.id }}"></option>
-                                    {% endfor %}
-                                </datalist>
-                            </div>
-                        </div>
-
-                        <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
-                            <div class="op-group" style="flex: 1; min-width: 150px;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">FORMA DE PAGAMENTO *</label>
-                                <select name="forma_pagamento_id" class="op-input" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
-                                    <option value="">-- SELECIONE A FORMA --</option>
-                                    {% for fp in formas_pagamento %}
-                                    <option value="{{ fp.id }}">{{ fp.nome }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="op-group" style="flex: 1; min-width: 150px;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">VALOR (R$) *</label>
-                                <input class="op-input arione-money" type="text" name="valor" placeholder="0,00" oninput="this.value = arioneMaskMoney(this.value)" required style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 14px; text-align: center; font-weight: 600; color: #E67E22; background: #fff; transition: 0.2s;">
-                            </div>
-                        </div>
-
-                        <div class="op-row" style="gap: 15px; margin-bottom: 25px; display: flex;">
-                            <div class="op-group" style="flex: 1;">
-                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">OBSERVAÇÕES ADICIONAIS</label>
-                                <textarea class="op-input" name="observacoes" rows="2" placeholder="Notas adicionais..." style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; outline: none; background: #fff; transition: 0.2s;"></textarea>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid #f1f5f9; padding-top: 20px;">
-                            <button type="button" class="ge-btn-cancelar" onclick="fecharEsteModal()" style="padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 12px; background: #edf2f7; color: #4a5568; border: none; cursor: pointer;">Cancelar</button>
-                            <button type="submit" style="background: #E67E22; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
-                                <i class="fas fa-check" style="margin-right: 4px;"></i> Registrar Movimentação
-                            </button>
-                        </div>
-                    </form>
+                <div class="fin-row">
+                    <div class="fin-group" style="flex: 2;">
+                        <label class="fin-label">DESCRIÇÃO DA MOVIMENTAÇÃO <span style="color:#e74c3c;">*</span></label>
+                        <input type="text" name="descricao" class="fin-input" placeholder="Ex: Pagamento de Fornecedor X" required>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- ORIGEM (OU PADRÃO) -->
+            <div class="fin-section" id="bloco_origem">
+                <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">PLANO DE CONTAS <span style="color:#e74c3c;">*</span></label>
+                        <input class="fin-input" type="text" list="lista-plano-contas" oninput="selecionarId(this, 'plano_contas_id')" onchange="selecionarId(this, 'plano_contas_id')" placeholder="Busque ou selecione..." required>
+                        <input type="hidden" name="plano_contas_id" id="plano_contas_id">
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">CENTRO DE CUSTO <span style="color:#e74c3c;">*</span></label>
+                        <input class="fin-input" type="text" list="lista-cc" oninput="selecionarId(this, 'cc_id')" onchange="selecionarId(this, 'cc_id')" placeholder="Busque ou selecione..." required>
+                        <input type="hidden" name="centro_custo_id" id="cc_id">
+                    </div>
+                </div>
+                <div class="fin-label" style="margin-bottom: 10px; color: var(--fin-pri);">FORMA DE RECEBIMENTO/PAGAMENTO</div>
+                <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">Local <span style="color:#e74c3c;">*</span></label>
+                        <select id="local_origem" class="fin-input" onchange="carregarAgentes(this.value, 'agente_origem')">
+                            <option value="">Selecione...</option>
+                            <option value="CAIXA">Caixas</option>
+                            <option value="BANCO">Bancos</option>
+                            <option value="OPERADORA">Operadoras</option>
+                        </select>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Agente Operador <span style="color:#e74c3c;">*</span></label>
+                        <select id="agente_origem" class="fin-input" onchange="carregarFormasPagamento(this.value, 'forma_pagamento_origem')">
+                            <option value="">Busque ou selecione...</option>
+                        </select>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Forma de Pagamento <span style="color:#e74c3c;">*</span></label>
+                        <select id="forma_pagamento_origem" class="fin-input">
+                            <option value="">Busque ou selecione...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DESTINO (APENAS TRANSFERÊNCIA) -->
+            <div class="fin-section" id="bloco_destino" style="display: none; border-color: #3498db; background-color: #f7fbfe;">
+                <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">PLANO DE CONTAS (DESTINO) <span style="color:#e74c3c;">*</span></label>
+                        <input class="fin-input" type="text" list="lista-plano-contas" id="input_pc_destino" oninput="selecionarId(this, 'plano_contas_destino_id')" onchange="selecionarId(this, 'plano_contas_destino_id')" placeholder="Busque ou selecione...">
+                        <input type="hidden" name="plano_contas_destino_id" id="plano_contas_destino_id">
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">CENTRO DE CUSTO (DESTINO) <span style="color:#e74c3c;">*</span></label>
+                        <input class="fin-input" type="text" list="lista-cc" id="input_cc_destino" oninput="selecionarId(this, 'cc_destino_id')" onchange="selecionarId(this, 'cc_destino_id')" placeholder="Busque ou selecione...">
+                        <input type="hidden" name="centro_custo_destino_id" id="cc_destino_id">
+                    </div>
+                </div>
+                <div class="fin-label" style="margin-bottom: 10px; color: #3498db;">FORMA DE RECEBIMENTO/PAGAMENTO (DESTINO)</div>
+                <div class="fin-row">
+                    <div class="fin-group">
+                        <label class="fin-label">Local <span style="color:#e74c3c;">*</span></label>
+                        <select id="local_destino" class="fin-input" onchange="carregarAgentes(this.value, 'agente_destino')">
+                            <option value="">Selecione...</option>
+                            <option value="CAIXA">Caixas</option>
+                            <option value="BANCO">Bancos</option>
+                            <option value="OPERADORA">Operadoras</option>
+                        </select>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Agente Operador <span style="color:#e74c3c;">*</span></label>
+                        <select id="agente_destino" class="fin-input" onchange="carregarFormasPagamento(this.value, 'forma_pagamento_destino')">
+                            <option value="">Busque ou selecione...</option>
+                        </select>
+                    </div>
+                    <div class="fin-group">
+                        <label class="fin-label">Forma de Pagamento <span style="color:#e74c3c;">*</span></label>
+                        <select id="forma_pagamento_destino" class="fin-input">
+                            <option value="">Busque ou selecione...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+        </form>
     </div>
 </div>
 
+<datalist id="lista-plano-contas">
+    {% for item in plano_contas %}
+    <option value="{{ item.codigo }} - {{ item.descricao }}" data-id="{{ item.id }}"></option>
+    {% endfor %}
+</datalist>
+
+<datalist id="lista-cc">
+    {% for item in centros_custo %}
+    <option value="{{ item.codigo }} - {{ item.nome }}" data-id="{{ item.id }}"></option>
+    {% endfor %}
+</datalist>
+
 <script>
-function selecionarEsPlanoContas(val) {
-    const list = document.getElementById('es-lista-plano-contas');
-    const options = list.getElementsByTagName('option');
-    let found = false;
-    for (let i = 0; i < options.length; i++) {
-        if (options[i].value === val) {
-            document.getElementById('es_plano_contas_id').value = options[i].getAttribute('data-id');
-            found = true; break;
-        }
-    }
-    if (!found && val) {
-        if (typeof arioneToast === 'function') arioneToast('Selecione uma conta válida da lista', 'warning');
-        document.getElementById('es_plano_contas_id').value = '';
-    }
-}
+    function alternarDestino(tipo) {
+        const blocoDestino = document.getElementById('bloco_destino');
+        const inputsDestino = blocoDestino.querySelectorAll('input, select');
 
-function selecionarEsCentroCusto(val) {
-    const list = document.getElementById('es-lista-centro-custo');
-    const options = list.getElementsByTagName('option');
-    let found = false;
-    for (let i = 0; i < options.length; i++) {
-        if (options[i].value === val) {
-            document.getElementById('es_centro_custo_id').value = options[i].getAttribute('data-id');
-            found = true; break;
-        }
-    }
-    if (!found && val) {
-        if (typeof arioneToast === 'function') arioneToast('Selecione um centro de custo válido da lista', 'warning');
-        document.getElementById('es_centro_custo_id').value = '';
-    }
-}
-
-function arioneMaskMoney(val) {
-    if (!val) return '0,00';
-    let v = val.toString().replace(/\D/g, ''); v = (v / 100).toFixed(2) + ''; v = v.replace(".", ","); v = v.replace(/\B(?=(\d{3})+(?!\d))/g, "."); return v;
-}
-
-function fecharEsteModal() {
-    if (typeof fecharModalFlx === 'function' && document.getElementById('modal-overlay-flx')?.classList.contains('ativo')) {
-        fecharModalFlx();
-    }
-    if (typeof fecharModalCnt === 'function' && document.getElementById('modal-overlay-cnt')?.classList.contains('ativo')) {
-        fecharModalCnt();
-    }
-}
-
-async function salvarLancamentoDireto(e) {
-    e.preventDefault();
-    const form = e.target;
-    
-    const pc_id = document.getElementById('es_plano_contas_id').value;
-    const cc_id = document.getElementById('es_centro_custo_id').value;
-    if (!pc_id || !cc_id) {
-        if (typeof arioneToast === 'function') arioneToast('Selecione Plano de Contas e Centro de Custo válidos da lista.', 'warning');
-        return;
-    }
-
-    const formData = new FormData(form);
-
-    try {
-        const response = await fetch('/financeiro/card/entradas-saidas/salvar', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-
-        if (result.success) {
-            if (typeof arioneToast === 'function') arioneToast(result.message, "success");
-            fecharEsteModal();
-            if (typeof carregarLancamentos === 'function') carregarLancamentos();
+        if (tipo === 'TRANSFERÊNCIA') {
+            blocoDestino.style.display = 'block';
+            document.getElementById('input_pc_destino').required = true;
+            document.getElementById('input_cc_destino').required = true;
+            document.getElementById('local_destino').required = true;
+            document.getElementById('agente_destino').required = true;
+            document.getElementById('forma_pagamento_destino').required = true;
         } else {
-            if (typeof arioneToast === 'function') arioneToast(result.error || "Erro ao salvar lançamento", "danger");
-            alert("Erro: " + (result.error || "Falha ao registrar movimentação."));
+            blocoDestino.style.display = 'none';
+            inputsDestino.forEach(el => el.required = false);
         }
-    } catch (err) {
-        console.error("Erro na requisição AJAX:", err);
-        if (typeof arioneToast === 'function') arioneToast("Erro de comunicação com o servidor", "danger");
     }
-}
-</script>
 
-<style>
-    .arione-canvas-luxury { animation: fadeIn 0.5s ease-out; font-family: 'Inter', sans-serif; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .op-input:focus { border-color: #E67E22 !important; box-shadow: 0 0 0 4px rgba(230,126,34,0.15); background: #fff !important; }
-</style>
+    function selecionarId(input, hiddenId) {
+        const list = document.getElementById(input.getAttribute('list'));
+        if(!list) return;
+        const options = list.options;
+        for (let opt of options) {
+            if (opt.value === input.value) {
+                document.getElementById(hiddenId).value = opt.getAttribute('data-id');
+                return;
+            }
+        }
+        document.getElementById(hiddenId).value = '';
+    }
+
+    async function carregarAgentes(local, selectId) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Busque ou selecione...</option>';
+
+        if (!local) return;
+
+        const response = await fetch(`/financeiro/api/agentes?local=${local}`);
+        const data = await response.json();
+
+        data.forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.nome}</option>`;
+        });
+    }
+
+    async function carregarFormasPagamento(agenteId, selectId) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '<option value="">Busque ou selecione...</option>';
+
+        if (!agenteId) return;
+
+        const response = await fetch(`/financeiro/api/formas-pagamento?agente_id=${agenteId}`);
+        const data = await response.json();
+
+        data.forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.nome}</option>`;
+        });
+    }
+
+    async function salvarLancamentoDireto(e) {
+        e.preventDefault();
+
+        const pc_id = document.getElementById('plano_contas_id').value;
+        const cc_id = document.getElementById('cc_id').value;
+
+        if (!pc_id) {
+            if(typeof arioneToast === 'function') arioneToast('Selecione um Plano de Contas válido.', 'warning');
+            return;
+        }
+        if (!cc_id) {
+            if(typeof arioneToast === 'function') arioneToast('Selecione um Centro de Custo válido.', 'warning');
+            return;
+        }
+
+        const local_origem = document.getElementById('local_origem').value;
+        const agente_origem = document.getElementById('agente_origem').value;
+        const forma_pagamento_origem = document.getElementById('forma_pagamento_origem').value;
+
+        if (!local_origem || !agente_origem || !forma_pagamento_origem) {
+            if(typeof arioneToast === 'function') arioneToast('Selecione Local, Agente Operador e Forma de Pagamento.', 'warning');
+            return;
+        }
+
+        const isTransferencia = document.getElementById('tipo_movimentacao').value === 'TRANSFERÊNCIA';
+        if (isTransferencia) {
+            const pcd_id = document.getElementById('plano_contas_destino_id').value;
+            const ccd_id = document.getElementById('cc_destino_id').value;
+            if (!pcd_id) {
+                if(typeof arioneToast === 'function') arioneToast('Selecione um Plano de Contas válido (Destino).', 'warning');
+                return;
+            }
+            if (!ccd_id) {
+                if(typeof arioneToast === 'function') arioneToast('Selecione um Centro de Custo válido (Destino).', 'warning');
+                return;
+            }
+            const local_destino = document.getElementById('local_destino').value;
+            const agente_destino = document.getElementById('agente_destino').value;
+            const forma_pagamento_destino = document.getElementById('forma_pagamento_destino').value;
+            if (!local_destino || !agente_destino || !forma_pagamento_destino) {
+                if(typeof arioneToast === 'function') arioneToast('Selecione Local, Agente Operador e Forma de Pagamento (Destino).', 'warning');
+                return;
+            }
+        }
+
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/financeiro/card/entradas-saidas/salvar', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                if(typeof arioneToast === 'function') arioneToast(data.message, 'success');
+                if(typeof window.history.back === 'function') window.history.back();
+            } else {
+                if(typeof arioneToast === 'function') arioneToast('Erro: ' + data.error, 'error');
+                else alert('Erro: ' + data.error);
+            }
+        } catch (err) {
+            console.error(err);
+            if(typeof arioneToast === 'function') arioneToast('Erro de conexão ao salvar!', 'error');
+            else alert('Erro de conexão ao salvar!');
+        }
+    }
+</script>
 {% endblock %}

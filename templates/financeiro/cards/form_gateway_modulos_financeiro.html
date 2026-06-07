@@ -130,14 +130,14 @@
             
             <div class="gateway-grid-mestre">
                 <!-- Operadoras Financeiras -->
-                <div class="gateway-item-mestre" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.06); padding: 20px 15px;" onclick="abrirCardFinanceiro('{{ url_for('financeiro.card_operadoras') }}', 'Operadoras Financeiras')">
+                <div class="gateway-item-mestre" style="--c:#2980B9; --c-bg:rgba(41,128,185,0.06); padding: 20px 15px; cursor: pointer;" onclick="window.location.href='{{ url_for('financeiro.card_operadoras') }}'">
                     <div class="gateway-icon-mestre" style="width: 45px; height: 45px; font-size: 18px;"><i class="fas fa-landmark"></i></div>
                     <span class="gateway-label-mestre" style="font-size: 14px;">Operadoras</span>
                     <span class="gateway-desc-mestre" style="font-size: 9px;">Gateways & Adquirentes</span>
                 </div>
 
                 <!-- Formas de Pagamento -->
-                <div class="gateway-item-mestre" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.06); padding: 20px 15px;" onclick="abrirCardFinanceiro('{{ url_for('financeiro.card_formas_pagamento') }}', 'Formas de Pagamento')">
+                <div class="gateway-item-mestre" style="--c:#27AE60; --c-bg:rgba(39,174,96,0.06); padding: 20px 15px; cursor: pointer;" onclick="window.location.href='{{ url_for('financeiro.card_formas_pagamento') }}'">
                     <div class="gateway-icon-mestre" style="width: 45px; height: 45px; font-size: 18px;"><i class="fas fa-credit-card"></i></div>
                     <span class="gateway-label-mestre" style="font-size: 14px;">Pagamentos</span>
                     <span class="gateway-desc-mestre" style="font-size: 9px;">Regras & Parcelamento</span>

@@ -1273,6 +1273,8 @@ def trocar_empresa(id):
     if empresa:
         session['empresa_id'] = empresa.id
         session['nome_empresa'] = empresa.razao_social
+        session['nome_fantasia'] = empresa.nome_fantasia
+        session['logo_empresa'] = empresa.logo if empresa.logo else None
 
         if request.method == 'POST':
             return jsonify({'success': True, 'message': f'Empresa alterada para {empresa.razao_social}'})

@@ -657,6 +657,16 @@ tamanho='grande') %}
             // Foca na busca se existir
             const searchInput = document.getElementById('cc-search-input') || document.querySelector('.fe-search-master');
             if (searchInput) setTimeout(() => searchInput.focus(), 50);
+            // Garante que a lista esteja visível e em foco
+            try {
+                if (list) {
+                    list.style.display = 'block';
+                    const masterSearch = list.querySelector('#input-busca-master') || list.querySelector('input[type="search"]');
+                    if (masterSearch) { setTimeout(() => masterSearch.focus(), 120); }
+                    // Rola até a lista para dispositivos móveis
+                    setTimeout(() => { try { list.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(e){} }, 150);
+                }
+            } catch(e) { console.warn('Erro ao garantir visibilidade da lista', e); }
         } else {
             // Mudar para FORMULÁRIO
             list.style.display = 'none';

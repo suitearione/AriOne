@@ -1,0 +1,369 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fp-wrap mod-leads" id="ctx-leads">
+    <style>
+        .arione-page { padding: 0 !important; }
+        .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
+    </style>
+
+    <div style="position: sticky; top: 0; z-index: 2000; background: #f4f6f9; padding: 0 24px; margin: 0; border-bottom: 2px solid #e2e8f0;">
+        {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+        {{ cabecalho_mestre_arione(
+            titulo='LeadOne: Gestão de Leads',
+            subtitulo='Marketing > Leads',
+            icone='fas fa-filter',
+            cor_tema='#1A237E',
+            func_fechar="window.location.href='" ~ url_for('digital.abas', aba='leadone') ~ "'",
+            form_id='lead-form-area',
+            onclick_novo='resetFormLead()',
+            onclick_save='salvarLead()',
+            onclick_list='alternarVisaoFormLista()'
+        ) }}
+    </div>
+
+    <div id="lead-form-area" class="fe-form-stage-medio" style="max-width: 1000px; margin: 0 auto; padding: 12px 24px; background: #f4f6f9;">
+        <div class="fp-card" style="border-left: 4px solid #1A237E;">
+            <div class="fp-card-title" style="background: rgba(26, 35, 126, 0.03); color: #1A237E;"><i class="fas fa-filter"></i> Detalhes do Lead</div>
+            <div class="fp-card-body">
+                <form id="lead-form" method="POST" action="{{ url_for('digital.leads') }}">
+                    <input type="hidden" name="id" id="lead-id-input">
+                    <div class="fp-row">
+                        <div class="fp-group fp-flex-2">
+                            <label class="fp-label">Nome <span class="fp-req">*</span></label>
+                            <input type="text" class="fp-input fp-track" name="nome" id="lead-nome" required placeholder="Nome do cliente">
+                        </div>
+                        <div class="fp-group">
+                            <label class="fp-label">Email</label>
+                            <input type="email" class="fp-input fp-track" name="email" id="lead-email" placeholder="contato@exemplo.com" id="lead-email" autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="fp-row" style="margin-top:12px;">
+                        <div class="fp-group">
+                            <label class="fp-label">Telefone</label>
+                            <input type="tel" class="fp-input fp-track" name="telefone" id="lead-telefone" placeholder="+55 (99) 99999-9999" maxlength="20">
+                        </div>
+                        <div class="fp-group">
+                            <label class="fp-label">Etapa</label>
+                            <select class="fp-input fp-track" name="etapa" id="lead-etapa">
+                                <option>Novo</option>
+                                <option>Marcado</option>
+                                <option>Contato Feito</option>
+                                <option>Em Negociação</option>
+                                <option>Orçamento Enviado</option>
+                                <option>Venda Efetuada</option>
+                                <option>Perdido</option>
+                            </select>
+                        </div>
+                        <div class="fp-group">
+                            <label class="fp-label">Origem</label>
+                            <input type="text" class="fp-input fp-track" name="origem" id="lead-origem" placeholder="ex: CSV Google, Instagram, Site">
+                        </div>
+                    </div>
+
+                    <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; padding-top:12px;">
+                        <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="resetFormLead()">Cancelar</button>
+                        <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-lead" onclick="salvarLead()"><i class="fas fa-save"></i> Salvar Lead</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="fp-card" style="margin-top:15px; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;">
+
+            <!-- Cabeçalho com contador + botões -->
+            <div style="display:flex !important; justify-content:space-between !important; align-items:center !important; background:#f8fafc; padding:10px 16px; border-bottom:1px solid #e2e8f0; flex-wrap:wrap; gap:8px;">
+                <span style="font-weight:600; color:#1A237E; font-size:14px;">
+                    <i class="fas fa-table"></i> Leads Cadastrados
+                    <span id="leads-counter" style="display:inline-block; background:#1A237E; color:#fff; font-size:11px; font-weight:700; padding:1px 9px; border-radius:12px; margin-left:6px; vertical-align:middle;">0</span>
+                </span>
+                <div style="display:flex !important; gap:6px; align-items:center; flex-wrap:wrap;">
+                    <button id="btn-marcar-disparo" type="button"
+                        onclick="marcarParaDisparo()"
+                        style="display:inline-flex !important; align-items:center; gap:5px; padding:5px 12px; font-size:12px; font-weight:600; border:1px solid #1A237E; color:#1A237E; background:#fff; border-radius:6px; cursor:pointer; white-space:nowrap;">
+                        <i class="fas fa-bolt"></i> Marcado para Disparo
+                    </button>
+                    <label for="csv-import-input"
+                        style="display:inline-flex !important; align-items:center; gap:5px; padding:5px 12px; font-size:12px; font-weight:600; border:1px solid #1A237E; color:#1A237E; background:#fff; border-radius:6px; cursor:pointer; white-space:nowrap; margin:0;">
+                        <i class="fas fa-file-csv"></i> Importar CSV
+                    </label>
+                    <input type="file" id="csv-import-input" accept=".csv" style="display:none !important;">
+                    <button id="btn-import-clientes" type="button"
+                        onclick="openImportClientesModal()"
+                        style="display:inline-flex !important; align-items:center; gap:5px; padding:5px 12px; font-size:12px; font-weight:600; border:1px solid #1A237E; color:#1A237E; background:#fff; border-radius:6px; cursor:pointer; white-space:nowrap;">
+                        <i class="fas fa-users"></i> Importar do Cadastro
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela -->
+            <div style="padding:0; overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#eef1f8; border-bottom:2px solid #d0d7e8;">
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; white-space:nowrap; width:36px;"><input type="checkbox" id="select-all-leads"></th>
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; white-space:nowrap;">Nome</th>
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; white-space:nowrap;">Email</th>
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; white-space:nowrap;">Telefone</th>
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; white-space:nowrap;">Etapa</th>
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; min-width:140px; white-space:nowrap;">Origem</th>
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; white-space:nowrap;">Data</th>
+                            <th style="padding:7px 10px; text-align:left; font-weight:700; color:#1A237E; white-space:nowrap;">Observações</th>
+                            <th style="padding:7px 10px; text-align:center; font-weight:700; color:#1A237E; width:90px; white-space:nowrap;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-leads">
+                        {% if leads and leads|length > 0 %}
+                            {% for l in leads %}
+                            <tr class="lead-row"
+                                data-id="{{ l.id }}"
+                                data-nome="{{ l.nome|e }}"
+                                data-email="{{ l.email|e }}"
+                                data-telefone="{{ l.telefone|e }}"
+                                data-etapa="{{ l.etapa|e }}"
+                                data-origem="{{ l.origem|e }}"
+                                data-observacoes="{{ l.observacoes|e }}"
+                                data-data="{{ l.data_cadastro.isoformat() if l.data_cadastro else '' }}"
+                                style="border-bottom:1px solid #e8ecf4;">
+                                <td style="padding:5px 10px; white-space:nowrap;"><input type="checkbox" class="lead-select" value="{{ l.id }}"></td>
+                                <td style="padding:5px 10px; white-space:nowrap;">{{ l.nome }}</td>
+                                <td style="padding:5px 10px; white-space:nowrap;">{{ l.email or '-' }}</td>
+                                <td style="padding:5px 10px; white-space:nowrap;">{{ l.telefone or '-' }}</td>
+                                <td style="padding:5px 10px; white-space:nowrap;">{{ l.etapa or 'Novo' }}</td>
+                                <td style="padding:5px 10px; white-space:nowrap; min-width:180px;">{{ l.origem or '-' }}</td>
+                                <td style="padding:5px 10px; white-space:nowrap;">{{ l.data_cadastro.strftime('%Y-%m-%d') if l.data_cadastro else '-' }}</td>
+                                <td style="padding:5px 10px; white-space:nowrap; max-width:220px; overflow:hidden; text-overflow:ellipsis;">{{ l.observacoes or '-' }}</td>
+                                <td style="padding:5px 10px; text-align:center; white-space:nowrap;">
+                                    <button type="button"
+                                        onclick="editarLead({{ l.id }})"
+                                        title="Editar"
+                                        style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:1px solid #1A237E; color:#1A237E; background:#fff; border-radius:5px; cursor:pointer; margin-right:4px;">
+                                        <i class="fas fa-edit" style="font-size:12px;"></i>
+                                    </button>
+                                    <button type="button"
+                                        onclick="excluirLead({{ l.id }}, '{{ l.nome|e }}')"
+                                        title="Excluir"
+                                        style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border:1px solid #c0392b; color:#c0392b; background:#fff; border-radius:5px; cursor:pointer;">
+                                        <i class="fas fa-trash" style="font-size:12px;"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" style="text-align:center; padding:20px; color:#888;">Nenhum lead cadastrado. Use o botão "+" no cabeçalho para adicionar.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal simples para importar clientes do cadastro -->
+    <div id="modal-clientes" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; z-index:3000;">
+        <div style="background:#fff; width:720px; max-width:95%; border-radius:10px; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <strong>Importar Clientes do Cadastro</strong>
+                <button onclick="closeImportClientesModal()" style="border:none; background:transparent; font-size:18px; cursor:pointer;">✕</button>
+            </div>
+            <div id="clientes-list" style="max-height:380px; overflow:auto; border:1px solid #eee; padding:8px; border-radius:6px;">Carregando...</div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
+                <button onclick="closeImportClientesModal()" class="fp-btn fp-btn-ghost-dark">Fechar</button>
+                <button onclick="importarClientesSelecionados()" class="fp-btn fp-btn-salvar-footer">Importar Selecionados</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ─── Máscaras internacionais ───────────────────────────────────────────────
+    (function() {
+        // Máscara de telefone: +DD (DDD) NNNNN-NNNN  (aceita de 7 a 15 dígitos)
+        function mascaraTelefone(input) {
+            input.addEventListener('input', function(e) {
+                let v = this.value.replace(/\D/g, '');
+                if (v.length === 0) { this.value = ''; return; }
+                // Monta progressivamente
+                let out = '+';
+                if (v.length <= 2) {
+                    out += v;
+                } else if (v.length <= 4) {
+                    out += v.substring(0,2) + ' (' + v.substring(2);
+                } else if (v.length <= 9) {
+                    out += v.substring(0,2) + ' (' + v.substring(2,4) + ') ' + v.substring(4);
+                } else if (v.length <= 13) {
+                    out += v.substring(0,2) + ' (' + v.substring(2,4) + ') ' + v.substring(4,9) + '-' + v.substring(9);
+                } else {
+                    // Trunca em 15 dígitos (máx E.164)
+                    v = v.substring(0,15);
+                    out += v.substring(0,2) + ' (' + v.substring(2,4) + ') ' + v.substring(4,9) + '-' + v.substring(9,15);
+                }
+                this.value = out;
+            });
+            // Ao focar, se vazio, pré-preenche com +55
+            input.addEventListener('focus', function() {
+                if (!this.value) this.value = '+55 ';
+            });
+            input.addEventListener('blur', function() {
+                if (this.value === '+55 ') this.value = '';
+            });
+        }
+
+        // Máscara de email: normaliza para lowercase ao sair do campo
+        function mascaraEmail(input) {
+            input.addEventListener('blur', function() {
+                this.value = this.value.trim().toLowerCase();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const telInput = document.getElementById('lead-telefone');
+            const emailInput = document.getElementById('lead-email');
+            if (telInput) mascaraTelefone(telInput);
+            if (emailInput) mascaraEmail(emailInput);
+
+            // Contador de leads
+            atualizarContador();
+        });
+    })();
+
+    // ─── Contador de registros ─────────────────────────────────────────────────
+    function atualizarContador() {
+        const rows = document.querySelectorAll('#tbody-leads .lead-row');
+        const contador = document.getElementById('leads-counter');
+        if (contador) contador.textContent = rows.length;
+    }
+
+    // ─── Reset do formulário ───────────────────────────────────────────────────
+    function resetFormLead() {
+        document.getElementById('lead-id-input').value = '';
+        document.getElementById('lead-nome').value = '';
+        document.getElementById('lead-email').value = '';
+        document.getElementById('lead-telefone').value = '';
+        document.getElementById('lead-etapa').value = 'Novo';
+        document.getElementById('lead-origem').value = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ─── Salvar lead ───────────────────────────────────────────────────────────
+    async function salvarLead() {
+        const form = document.getElementById('lead-form');
+        const btn = document.getElementById('btn-salvar-lead');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+        const formData = new FormData(form);
+        try {
+            const res = await fetch(form.action, { method: 'POST', body: formData, headers: {'X-Requested-With':'XMLHttpRequest'} });
+            if (res.ok) {
+                arioneToast('Lead salvo com sucesso!', 'success');
+                setTimeout(()=> location.reload(), 800);
+            } else {
+                const json = await res.json().catch(()=>null);
+                arioneToast(json && json.message ? json.message : 'Erro ao salvar lead.', 'danger');
+            }
+        } catch (e) { arioneToast('Erro de conexão ao salvar lead.', 'danger'); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Salvar Lead'; }
+    }
+
+    // ─── Editar lead ───────────────────────────────────────────────────────────
+    function editarLead(id) {
+        const row = document.querySelector(`.lead-row[data-id="${id}"]`);
+        if (!row) return;
+        document.getElementById('lead-id-input').value = id;
+        document.getElementById('lead-nome').value = row.dataset.nome || '';
+        document.getElementById('lead-email').value = row.dataset.email || '';
+        document.getElementById('lead-telefone').value = row.dataset.telefone || '';
+        document.getElementById('lead-etapa').value = row.dataset.etapa || 'Novo';
+        document.getElementById('lead-origem').value = row.dataset.origem || '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ─── Excluir lead ──────────────────────────────────────────────────────────
+    async function excluirLead(id, nome) {
+        if (!confirm(`Confirma exclusão do lead: ${nome}?`)) return;
+        try {
+            const res = await fetch(`{{ url_for('digital.delete_lead', id=0) }}`.replace('/0/', `/${id}/`), { method: 'POST' });
+            if (res.ok) { arioneToast('Lead removido.', 'success'); setTimeout(()=> location.reload(), 600); }
+            else { arioneToast('Erro ao remover lead.', 'danger'); }
+        } catch (e) { arioneToast('Erro de conexão ao remover lead.', 'danger'); }
+    }
+
+    // ─── Import CSV ────────────────────────────────────────────────────────────
+    document.getElementById('csv-import-input')?.addEventListener('change', async function(e){
+        const f = this.files[0];
+        if (!f) return;
+        const fd = new FormData(); fd.append('csv_file', f);
+        try {
+            const res = await fetch('{{ url_for('digital.importar_csv_leads') }}', { method: 'POST', body: fd });
+            if (res.redirected) window.location.href = res.url; else location.reload();
+        } catch (e) { arioneToast('Erro ao enviar CSV.', 'danger'); }
+    });
+
+    // ─── Marcar para disparo e importação de clientes ───────────────────────────
+    document.addEventListener('DOMContentLoaded', function(){
+        // select-all binding
+        const selectAll = document.getElementById('select-all-leads');
+        if (selectAll){
+            selectAll.addEventListener('change', function(){
+                const checked = this.checked;
+                document.querySelectorAll('.lead-select').forEach(ch => ch.checked = checked);
+            });
+        }
+    });
+
+    function getSelectedLeadIds(){
+        return Array.from(document.querySelectorAll('.lead-select:checked')).map(i => parseInt(i.value));
+    }
+
+    async function marcarParaDisparo(){
+        const ids = getSelectedLeadIds();
+        if (!ids.length){ arioneToast('Selecione ao menos um lead para marcar.', 'warning'); return; }
+        try{
+            const res = await fetch('{{ url_for('digital.enviar_automacao_leads') }}', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({lead_ids: ids}) });
+            const json = await res.json().catch(()=>null);
+            if (res.ok){ arioneToast(json && json.message ? json.message : 'Automação criada com sucesso!', 'success'); setTimeout(()=>location.reload(),700); }
+            else { arioneToast(json && json.message ? json.message : 'Erro ao criar automação.', 'danger'); }
+        } catch(e){ arioneToast('Erro de conexão ao criar automação.', 'danger'); }
+    }
+
+    // Modal: importar clientes do cadastro
+    function openImportClientesModal(){
+        const modal = document.getElementById('modal-clientes');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        loadClientesDisponiveis();
+    }
+    function closeImportClientesModal(){
+        const modal = document.getElementById('modal-clientes'); if (!modal) return; modal.style.display = 'none';
+    }
+
+    async function loadClientesDisponiveis(){
+        const list = document.getElementById('clientes-list'); if (!list) return; list.innerHTML = '<div style="padding:12px">Carregando...</div>';
+        try{
+            const res = await fetch('{{ url_for('digital.clientes_disponiveis') }}');
+            const json = await res.json();
+            list.innerHTML = '';
+            if (json.clientes && json.clientes.length){
+                json.clientes.forEach(c => {
+                    const row = document.createElement('div');
+                    row.style.padding = '8px 6px';
+                    row.innerHTML = `<label style="display:flex; gap:8px; align-items:center;"><input type=checkbox class="cliente-select" value="${c.id}"> <strong style="width:260px; display:inline-block; overflow:hidden; text-overflow:ellipsis">${c.nome}</strong> <span style="color:#666; font-size:12px">${c.telefone} ${c.email?('- '+c.email):''}</span></label>`;
+                    list.appendChild(row);
+                });
+            } else { list.innerHTML = '<div style="padding:12px">Nenhum cliente disponível.</div>'; }
+        } catch(e){ list.innerHTML = '<div style="padding:12px">Erro ao carregar clientes.</div>'; }
+    }
+
+    async function importarClientesSelecionados(){
+        const ids = Array.from(document.querySelectorAll('.cliente-select:checked')).map(i => parseInt(i.value));
+        if (!ids.length){ arioneToast('Selecione ao menos um cliente.', 'warning'); return; }
+        try{
+            const res = await fetch('{{ url_for('digital.importar_clientes') }}', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({cliente_ids: ids}) });
+            const json = await res.json().catch(()=>null);
+            if (res.ok){ arioneToast(json && json.message ? json.message : `${ids.length} clientes importados.`, 'success'); closeImportClientesModal(); setTimeout(()=>location.reload(),700); }
+            else { arioneToast(json && json.message ? json.message : 'Erro ao importar clientes.', 'danger'); }
+        } catch(e){ arioneToast('Erro de conexão ao importar clientes.', 'danger'); }
+    }
+</script>
+{% endblock %}

@@ -11,7 +11,8 @@ class Fornecedor(db.Model):
     __tablename__ = 'fornecedores'
 
     id = db.Column(db.Integer, primary_key=True)
-    
+    empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), nullable=False, index=True)
+
     # ── Identificação ──────────────────────────────────────────────────────
     tipo_pessoa     = db.Column(db.String(2), default='J') # F=Física, J=Jurídica
     razao_social    = db.Column(db.String(150), nullable=False)

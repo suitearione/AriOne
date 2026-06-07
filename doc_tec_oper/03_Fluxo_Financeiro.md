@@ -73,12 +73,10 @@ Este documento descreve o fluxo financeiro do sistema AriOne ERP, desde o orçam
 
 ### Entradas
 - Vendas à vista
-- Recebimentos de contas
-- Outras receitas
+- Recebimentos demovimentcao- Outras receitas
 
 ### Saídas
-- Pagamentos de contas
-- Compras à vista
+- Pagamentos demovimentcao- Compras à vista
 - Outras despesas
 
 ### Saldo
@@ -180,8 +178,7 @@ Este documento descreve o fluxo financeiro do sistema AriOne ERP, desde o orçam
 - Lucro/Prejuízo
 
 ### Balancete
-- Saldos de contas
-- Movimentações
+- Saldos demovimentcao- Movimentações
 - Comparativo
 
 ### Inadimplência

@@ -28,6 +28,7 @@ from app.models.comercial.models import Revendedor, Influenciador, Estilista, Mi
 from app.models.sistema.parametro import ParametroSistema
 from app.models.cadastros.transportadora import Transportadora
 from app.models.catalogos import Marca, Categoria, Subcategoria, UnidadeMedida, Etiqueta, Insumo, Acessorio, Embalagem, MateriaPrima, Produto, Servico, Deposito, DepositoPrateleira, CorCatalogo, TamanhoCatalogo, GradeModelo, AtributoCatalogo, TipoMateriaPrima
+from app.models import PlanoContas, CentroCusto
 import json, csv, io
 from app import db
 from app.utils.progress import is_ari_dev, get_matrix_progress
@@ -509,11 +510,11 @@ def abas():
     pass
 
     abas_disponiveis = [
-        {'id': 'empresa',    'label': 'Empresa',     'icon': 'business'},
-        {'id': 'catalogos',  'label': 'Catálogos',   'icon': 'menu_book'},
-        {'id': 'comercial',  'label': 'Comercial',   'icon': 'storefront'},
-        {'id': 'pessoas',    'label': 'Pessoas',     'icon': 'group'},
-        {'id': 'parametros', 'label': 'Parâmetros',  'icon': 'tune'},
+        {'id': 'empresa',            'label': 'Empresa',              'icon': 'business'},
+        {'id': 'catalogos',          'label': 'Catálogos',            'icon': 'menu_book'},
+        {'id': 'comercial',          'label': 'Comercial',            'icon': 'storefront'},
+        {'id': 'pessoas',            'label': 'Pessoas',              'icon': 'group'},
+        {'id': 'parametros',         'label': 'Parâmetros',           'icon': 'tune'},
     ]
     ids_validos = [a['id'] for a in abas_disponiveis]
     aba_ativa = request.args.get('aba', 'empresa')
@@ -919,28 +920,36 @@ def card_parametros_venda():
 def card_parametros_compra():
     return render_template('cadastros/cards/parametros/form_par_compras.html')
 
-
-@cadastros_bp.route('/card/parametros/financeiro')
+@cadastros_bp.route('/parametro-financeiro')
 @login_required
 def card_parametros_financeiro():
-    from app.models.gestao.plano_contas import PlanoContas
-    from app.models.gestao.centro_custo import CentroCusto
-
-    empresa_id = session.get('empresa_id')
+    from app.models.gestao.parametros_financeiros import ParametrosFinanceiros
+    empresa_id = getattr(current_user, 'empresa_id', None)
     
-    # Buscar planos de contas
-    q_pc = PlanoContas.query
-    if empresa_id: q_pc = q_pc.filter_by(empresa_id=empresa_id)
-    planos_conta = q_pc.order_by(PlanoContas.codigo).all()
+    # Auto-Migração para a nova tabela
+    try:
+        with db.engine.begin() as conn:
+            db.create_all()
+    except Exception:
+        pass
+        
+    q_pc = PlanoContas.query  
+    q_cc = CentroCusto.query  
     
-    # Buscar centros de custo
-    q_cc = CentroCusto.query
-    if empresa_id: q_cc = q_cc.filter_by(empresa_id=empresa_id)
-    centros_custo = q_cc.order_by(CentroCusto.codigo).all()
-
-    return render_template('cadastros/cards/parametros/form_par_financeiro.html',
-                           planos_conta=planos_conta,
-                           centros_custo=centros_custo)
+    if empresa_id:
+        q_pc = q_pc.filter_by(empresa_id=empresa_id)
+        q_cc = q_cc.filter_by(empresa_id=empresa_id)
+        
+    lista_planos = q_pc.order_by(PlanoContas.codigo).all()
+    lista_centros = q_cc.order_by(CentroCusto.codigo).all()
+    p = ParametrosFinanceiros.query.filter_by(empresa_id=empresa_id).first() if empresa_id else None
+    
+    return render_template(
+        'cadastros/cards/parametros/form_par_financeiro.html',
+        planos_conta=lista_planos,
+        centros_custo=lista_centros,
+        p=p
+    )
 
 
 @cadastros_bp.route('/card/parametros/producao')

@@ -1,0 +1,123 @@
+{% extends "base.html" if not request.args.get('modal') else "base_modal.html" %}
+{% block content %}
+<div class="fp-wrap mod-conversoes">
+    {% from "macros/componentes.html" import cabecalho_mestre_arione %}
+    <div style="position: sticky; top:0; z-index:2000; background:#f4f6f9; padding:0 24px; border-bottom:2px solid #e2e8f0;">
+        {{ cabecalho_mestre_arione(
+            titulo='LeadOne: Conversões',
+            subtitulo='Registro de vendas / conversões',
+            icone='fa-bullhorn',
+            cor_tema='#1A237E',
+            func_fechar="window.location.href='" ~ url_for('digital.abas', aba='leadone') ~ "'",
+            form_id='conversao-form-area',
+            onclick_novo='resetFormConversao()',
+            onclick_save='salvarConversao()',
+            onclick_list='alternarVisaoFormLista()'
+        ) }}
+    </div>
+
+    <div id="area-formulario-conversoes" class="fe-form-stage-medio" style="max-width:1000px; margin:12px auto; padding:12px 24px; background:#f4f6f9;">
+        <div id="conversao-form-area" style="animation:feFadeUp 0.6s ease-out;">
+            <form id="conversao-form" method="POST" action="{{ url_for('digital.conversoes') }}">
+                <input type="hidden" name="id" id="conv-id-input">
+                <div class="fp-card" style="border-left:4px solid #1A237E;">
+                    <div class="fp-card-title" style="background: rgba(26,35,126,0.03); color:#1A237E;"><i class="fas fa-bullhorn"></i> Detalhes da Conversão</div>
+                    <div class="fp-card-body">
+                        <div class="fp-row">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Lead <span class="fp-req">*</span></label>
+                                <input type="text" class="fp-input fp-track" name="lead" id="conv-lead-input" required placeholder="Nome do lead">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Data</label>
+                                <input type="date" class="fp-input fp-track" name="data" id="conv-data-input">
+                            </div>
+                        </div>
+                        <div class="fp-row" style="margin-top:12px;">
+                            <div class="fp-group fp-flex-2">
+                                <label class="fp-label">Valor (R$)</label>
+                                <input type="text" class="fp-input fp-track mask-moeda" name="valor" id="conv-valor-input" placeholder="R$ 0,00">
+                            </div>
+                            <div class="fp-group">
+                                <label class="fp-label">Responsável</label>
+                                <input type="text" class="fp-input fp-track" name="resp" id="conv-resp-input" placeholder="Nome do vendedor">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; padding:10px 0 20px;">
+                    <button type="button" class="fp-btn fp-btn-ghost-dark" onclick="window.location.reload()">Cancelar</button>
+                    <button type="button" class="fp-btn fp-btn-salvar-footer" id="btn-salvar-conv" onclick="forceSubmitConversao()"><i class="fas fa-save"></i> Confirmar e Salvar</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="conv-list-area" class="fp-card" style="margin-top:15px; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0;">
+            <div class="fp-card-title" style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:15px 20px;">
+                <span><i class="fas fa-table"></i> Conversões Registradas</span>
+                <input type="text" id="conv-search-input" oninput="executarFiltroConversoes()" placeholder="Pesquisa rápida..." style="padding:6px 10px; border:1.5px solid #ddd; border-radius:20px; font-size:12px; width:220px;">
+            </div>
+            <table class="fp-table">
+                <thead>
+                    <tr>
+                        <th>Lead</th>
+                        <th>Data</th>
+                        <th>Valor</th>
+                        <th>Responsável</th>
+                        <th style="text-align:center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-conversoes">
+                    {% for c in conversoes %}
+                    <tr class="conv-row" data-id="{{ c.id }}" data-lead="{{ c.lead|e }}" data-data="{{ c.data_conversao.strftime('%Y-%m-%d') if c.data_conversao else '' }}" data-valor="{{ '%.2f'|format(c.valor or 0) }}" data-resp="{{ c.responsavel|e }}">
+                        <td><strong>{{ c.lead }}</strong></td>
+                        <td>{{ c.data_conversao.strftime('%d/%m/%Y') if c.data_conversao else '-' }}</td>
+                        <td>{{ 'R$ %.2f'|format(c.valor or 0) }}</td>
+                        <td>{{ c.responsavel or '-' }}</td>
+                        <td class="fp-actions" style="text-align:center;">
+                            <button type="button" class="fp-btn-icon" onclick='editarConversao({{ c.id }})'><i class="fas fa-edit"></i></button>
+                            <form method="POST" action="{{ url_for('digital.delete_conversao', id=c.id) }}" style="display:inline;" onsubmit="return confirm('Remover conversão?');">
+                                <button type="submit" class="fp-btn-icon"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function forceSubmitConversao() {
+        const form = document.getElementById('conversao-form'); if (!form.checkValidity()) { form.reportValidity(); return; }
+        const btn = document.getElementById('btn-salvar-conv'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(form.action, { method: 'POST', body: formData });
+            if (response.ok) { arioneToast('Conversão salva com sucesso!', 'success'); setTimeout(()=>window.location.reload(),800); }
+            else { arioneToast('Erro ao salvar conversão.', 'danger'); }
+        } catch(e) { arioneToast('Erro crítico.', 'danger'); }
+        finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Confirmar e Salvar'; }
+    }
+
+    function executarFiltroConversoes() {
+        const q = document.getElementById('conv-search-input').value.toLowerCase();
+        document.querySelectorAll('.conv-row').forEach(row => { row.style.display = row.getAttribute('data-lead').toLowerCase().includes(q) ? '' : 'none'; });
+    }
+
+    function editarConversao(id) {
+        const row = document.querySelector(`.conv-row[data-id="${id}"]`); if (!row) return;
+        document.getElementById('conv-id-input').value = id;
+        document.getElementById('conv-lead-input').value = row.dataset.lead || '';
+        document.getElementById('conv-data-input').value = row.dataset.data || '';
+        document.getElementById('conv-valor-input').value = row.dataset.valor ? ('R$ ' + row.dataset.valor.replace('.',',')) : '';
+        document.getElementById('conv-resp-input').value = row.dataset.resp || '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetFormConversao() { window.location.href = "{{ url_for('digital.conversoes') }}"; }
+    window.salvarConversao = forceSubmitConversao;
+</script>
+{% endblock %}

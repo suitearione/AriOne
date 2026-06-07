@@ -520,13 +520,11 @@ function carregarContasDashboard() {
         const nomeBancoCurto = c.banco ? c.banco.split('-').pop().trim() : 'CONTA';
 
         card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <div style="font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1.2;">${nomeBancoCurto}</div>
-                <div>${iconeModalidade}</div>
-            </div>
-            <div>
-                <div style="font-size: 10px; color: #64748b; margin-bottom: 4px; font-weight: 600;">Ag: ${c.agencia || '--'} | Cc: ${c.conta || '--'}</div>
-                <div style="font-size: 18px; font-weight: 800; color: #0f766e;">R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; flex-shrink: 0; min-width: 180px;">${nomeBancoCurto}</div>
+                <div style="font-size: 10px; color: #64748b; font-weight: 600; white-space: nowrap; flex: 1;">Ag: ${c.agencia || '--'} | Cc: ${c.conta || '--'}</div>
+                <div style="font-size: 16px; font-weight: 800; color: #0f766e; white-space: nowrap; flex-shrink: 0; min-width: 120px; text-align: right;">R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <div style="flex-shrink: 0; margin-left: 4px;">${iconeModalidade}</div>
             </div>
             <div style="position: absolute; right: -15px; bottom: -15px; font-size: 70px; color: #0f766e; opacity: 0.04; pointer-events: none;">
                 <i class="fas fa-wallet"></i>

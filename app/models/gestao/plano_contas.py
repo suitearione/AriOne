@@ -13,7 +13,11 @@ class PlanoContas(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     empresa_id = db.Column(db.Integer, db.ForeignKey('empresas.id'), index=True)
     
-    codigo = db.Column(db.String(30), unique=True, nullable=False) # Ex: 1.01.001
+    __table_args__ = (
+        db.UniqueConstraint('empresa_id', 'codigo', name='uix_empresa_codigo_pc'),
+    )
+    
+    codigo = db.Column(db.String(30), nullable=False) # Ex: 1.01.001
     descricao = db.Column(db.String(150), nullable=False)
     
     # Tipo: RECEITA, DESPESA, ATIVO, PASSIVO

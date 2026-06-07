@@ -1420,6 +1420,172 @@ def get_produto_by_sku():
 
 
 # ── API: TRANSPORTADORAS POR CLIENTE ──────────────────────────────────────────
+# ── API: FORMAS DE PAGAMENTO COM OPERADORA ────────────────────────────────────
+@operacoes_bp.route('/api/formas-pagamento')
+@login_required
+def api_formas_pagamento():
+    """
+    Retorna todas as formas de pagamento com dados da operadora associada.
+    NOVO: Detecta automaticamente tipo e destinação baseado no NOME da forma
+    
+    Regras de destinação:
+    - OPERADORA: Cartão Crédito, Cartão Débito, Link de pagamentos, PIX Gateway, Gateways
+    - BANCO: Transferências, PIX Bancário, Outras formas bancárias
+    - CAIXA: Dinheiro, Crédito Especial, Vale, Permuta, Carnê, Receber, Outros
+    """
+    from app.models.comercial.models import FormaPagamento, OperadoraFinanceira
+    from app.models.gestao.caixa import Caixa
+    
+    formas = FormaPagamento.query.filter_by(ativa=True).all()
+    
+    # Carrega caixas disponíveis
+    caixas = Caixa.query.filter_by(status='ABERTO').all()
+    caixas_dados = [{'id': c.id, 'nome': c.nome, 'saldo': float(c.saldo_atual or 0)} for c in caixas]
+    
+    def detectar_tipo_e_destinacao(nome_forma, operadora_id, operadora_obj):
+        """
+        Detecta tipo e destinação baseado no nome da forma
+        """
+        nome_upper = (nome_forma or '').upper()
+        
+        # ═══ REGRA 1: OPERADORA (Cartão, Gateway, Link, PIX Gateway) ═══
+        if any(x in nome_upper for x in ['CARTÃO', 'CARTAO', 'CREDIT', 'CRÉDITO', 'DÉBITO', 'DEBITO']):
+            tipo = 'CARTAO'
+            op_nome = operadora_obj.nome if operadora_obj else 'Operadora'
+            return {
+                'tipo_forma': tipo,
+                'tipo_destino': 'OPERADORA',
+                'descricao_destino': f'Operadora: {op_nome}',
+                'requer_seletor': False,
+                'opcoes': []
+            }
+        
+        if any(x in nome_upper for x in ['GATEWAY', 'LINK PAGAMENTO']):
+            tipo = 'GATEWAY'
+            op_nome = operadora_obj.nome if operadora_obj else 'Gateway'
+            return {
+                'tipo_forma': tipo,
+                'tipo_destino': 'OPERADORA',
+                'descricao_destino': f'Gateway: {op_nome}',
+                'requer_seletor': False,
+                'opcoes': []
+            }
+        
+        if 'PIX' in nome_upper and ('GATEWAY' in nome_upper or 'OPERADORA' in nome_upper):
+            tipo = 'PIX'
+            op_nome = operadora_obj.nome if operadora_obj else 'Gateway PIX'
+            return {
+                'tipo_forma': tipo,
+                'tipo_destino': 'OPERADORA',
+                'descricao_destino': f'Gateway PIX: {op_nome}',
+                'requer_seletor': False,
+                'opcoes': []
+            }
+        
+        # ═══ REGRA 2: BANCO (Transferência, PIX Bancário, etc) ═══
+        if any(x in nome_upper for x in ['TRANSFERÊNCIA', 'TRANSFERENCIA', 'BANCÁRIO', 'BANCARIO']):
+            tipo = 'BANCO'
+            return {
+                'tipo_forma': tipo,
+                'tipo_destino': 'BANCO',
+                'descricao_destino': 'Banco/Conta Bancária',
+                'requer_seletor': False,
+                'opcoes': []
+            }
+        
+        if 'PIX' in nome_upper and 'BANCO' in nome_upper:
+            tipo = 'PIX_BANCO'
+            return {
+                'tipo_forma': tipo,
+                'tipo_destino': 'BANCO',
+                'descricao_destino': 'Banco/Conta via PIX',
+                'requer_seletor': False,
+                'opcoes': []
+            }
+        
+        # ═══ REGRA 3: CAIXA (Dinheiro, Vale, Carnê, Receber, Crédito Especial, etc) ═══
+        # Por padrão, tudo que não é Operadora ou Banco vai para Caixa
+        if 'DINHEIRO' in nome_upper or 'ESPÉCIE' in nome_upper:
+            tipo = 'DINHEIRO'
+        elif any(x in nome_upper for x in ['VALE', 'ADIANTAMENTO']):
+            tipo = 'VALE'
+        elif any(x in nome_upper for x in ['CARNÊ', 'CARNE']):
+            tipo = 'CARNE'
+        elif any(x in nome_upper for x in ['RECEBER', 'PRAZO']):
+            tipo = 'RECEBER'
+        elif 'CRÉDITO' in nome_upper or 'CREDITO' in nome_upper:
+            tipo = 'CREDITO_ESPECIAL'
+        elif 'PERMUTA' in nome_upper:
+            tipo = 'PERMUTA'
+        else:
+            tipo = 'OUTROS'
+        
+        return {
+            'tipo_forma': tipo,
+            'tipo_destino': 'CAIXA',
+            'descricao_destino': 'Caixa da Empresa',
+            'requer_seletor': True,
+            'opcoes': caixas_dados
+        }
+    
+    resultado = []
+    for f in formas:
+        operadora_dados = None
+        if f.operadora_id and f.operadora:
+            operadora_dados = {
+                'id': f.operadora.id,
+                'nome': f.operadora.nome,
+                'nome_fantasia': f.operadora.nome_fantasia,
+                'cnpj': f.operadora.cnpj,
+                'taxa_debito': f.operadora.taxa_debito or 0,
+                'taxa_pix': f.operadora.taxa_pix or 0,
+                'taxa_credito_vista': f.operadora.taxa_credito_vista or 0,
+                'taxa_credito_parcelado': f.operadora.taxa_credito_parcelado or 0,
+                'icone': f.operadora.icone,
+                'cor': f.operadora.cor
+            }
+        
+        # ⭐ DETECTA TIPO E DESTINAÇÃO baseado no NOME
+        info_dest = detectar_tipo_e_destinacao(f.nome, f.operadora_id, f.operadora)
+        
+        # Gera opções de parcelamento (1 até max_parcelas)
+        parcelas_opcoes = []
+        for i in range(1, (f.max_parcelas or 1) + 1):
+            parcelas_opcoes.append({
+                'numero': i,
+                'intervalo_dias': (f.intervalo_dias or 0) * (i - 1) if f.intervalo_dias else 0,
+                'descricao': f"{i}x" if i == 1 else f"{i}x de {f.intervalo_dias or 30} em {f.intervalo_dias or 30} dias"
+            })
+        
+        resultado.append({
+            'id': f.id,
+            'nome': f.nome,
+            'tipo': info_dest['tipo_forma'],
+            'agrupador_operacional': f.agrupador_operacional,
+            'operadora_id': f.operadora_id,
+            'operadora': operadora_dados,
+            'max_parcelas': f.max_parcelas or 1,
+            'intervalo_dias': f.intervalo_dias or 0,
+            'parcela_minima': f.parcela_minima or 0,
+            'taxa_juros': f.taxa_juros or 0,
+            'percentual_desconto': f.percentual_desconto or 0,
+            'icone': f.icone,
+            'cor': f.cor,
+            'parcelas': parcelas_opcoes,
+            'destinacao': {
+                'tipo_destino': info_dest['tipo_destino'],
+                'descricao_destino': info_dest['descricao_destino'],
+                'requer_seletor': info_dest['requer_seletor'],
+                'opcoes': info_dest['opcoes']
+            }
+        })
+    
+    return jsonify({
+        'ok': True,
+        'formas_pagamento': resultado
+    })
+
+# ── API: TRANSPORTADORAS POR CLIENTE ────────────────────────────────────────────
 @operacoes_bp.route('/api/transportadoras/por-cliente')
 @login_required
 def api_transportadoras_por_cliente():

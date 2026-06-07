@@ -3,7 +3,7 @@
    Função   : Gestão de Formas de Pagamento (Gold Standard Luxury)
    ============================================================================= #}
 
-{% extends "base.html" %}
+{% extends "base_modal.html" if is_modal else "base.html" %}
 {% import "macros/componentes.html" as comp %}
 
 {% block content %}
@@ -31,18 +31,9 @@
         tamanho="medio"
     ) }}
 
-<style>
-    .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
-</style>
-
-<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; min-height: 100vh; width: 100%;">
-
-    <div class="op-container-fluid" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease;">
-        
-        <div class="op-row" style="gap: 25px; align-items: flex-start; display: flex; flex-wrap: wrap;">
-            
-            {# COLUNA 1: FORMULÁRIO DE CADASTRO #}
-            <div class="op-card" style="flex: 1; min-width: 500px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
+<div class="arione-canvas-luxury" style="padding: 0; background: #f8fafc; width: 100%;">
+    <div class="bnk-container" style="max-width: 1000px; margin: 0 auto; padding: 25px; transition: all 0.3s ease; animation: fadeIn 0.5s ease-out;">
+        <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(226, 232, 240, 0.8); background: #fff; overflow: hidden;">
                 <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155; font-size: 13px; background: #fcfdfe; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <i class="fas fa-plus-circle" style="color: #27ae60; margin-right: 10px;"></i> Detalhes da Forma
@@ -70,6 +61,10 @@
                                     <option value="DIGITAL">DIGITAL</option>
                                     <option value="OUTROS">OUTROS</option>
                                 </select>
+                            </div>
+                            <div class="op-group" style="flex: 1;">
+                                <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">CONDIÇÃO DE PAGAMENTO</label>
+                                <input class="op-input" type="text" name="condicao_pagamento" id="fp_condicao" placeholder="Ex: 30/60 dias ou 3x sem juros" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
                             </div>
                             <div class="op-group" style="flex: 1;">
                                 <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">BAIXA AUTOMÁTICA?</label>
@@ -114,8 +109,8 @@
                 </div>
             </div>
 
-            {# COLUNA 2: LISTAGEM #}
-            <div class="op-card" style="flex: 1.5; min-width: 600px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #cbd5e1; background: #fff; overflow: hidden;">
+            {# LISTAGEM DE FORMAS #}
+            <div class="op-card" style="border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #cbd5e1; background: #fff; overflow: hidden; margin-top: 25px; width: 100%;">
                 <div class="op-card-title" style="padding: 16px 25px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
                     <span style="font-weight: 600; color: #334155; font-size: 13px;">
                         <i class="fas fa-list-ul" style="color: #27ae60; margin-right: 8px;"></i>
@@ -153,7 +148,12 @@
                                     </div>
                                 </td>
                                 <td style="text-align: center;">
-                                    <span style="font-size: 10px; font-weight: 900; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 12px; letter-spacing: 0.5px;">{{ fp.agrupador_operacional }}</span>
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                                        <span style="font-size: 10px; font-weight: 900; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 12px; letter-spacing: 0.5px;">{{ fp.agrupador_operacional }}</span>
+                                        {% if fp.condicao_pagamento %}
+                                        <span style="font-size: 10px; font-weight: 700; color: #334155; background: #e2e8f0; padding: 4px 10px; border-radius: 10px;">{{ fp.condicao_pagamento }}</span>
+                                        {% endif %}
+                                    </div>
                                 </td>
                                 <td style="text-align: center;">
                                     {% if fp.baixa_automatica %}
@@ -201,6 +201,7 @@
             document.getElementById('fp_id').value = data.id;
             document.getElementById('fp_nome').value = data.nome;
             document.getElementById('fp_agrupador').value = data.agrupador_operacional;
+            document.getElementById('fp_condicao').value = data.condicao_pagamento || '';
             document.getElementById('fp_baixa').value = data.baixa_automatica.toString();
             document.getElementById('fp_operadora').value = data.operadora_id || '';
             document.getElementById('fp_max_parcelas').value = data.max_parcelas;
