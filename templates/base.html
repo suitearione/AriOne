@@ -456,6 +456,21 @@
         resetMobileSidebar();
     </script>
 
+    <style>
+        @media (max-width: 1200px) {
+            .ge-cards-container {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(120px, 1fr)) !important;
+                gap: 16px !important;
+                align-items: stretch !important;
+            }
+            .ge-cards-container .ge-card {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+        }
+    </style>
+
 </body>
 
 </html>

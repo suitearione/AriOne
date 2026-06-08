@@ -73,6 +73,7 @@ body {
     position: fixed;
     top: 12px;
     left: 12px;
+    right: auto;
     width: 46px;
     height: 46px;
     border-radius: 14px;
@@ -118,6 +119,18 @@ body {
 
     #mobile-menu-toggle-fixed i {
         font-size: 18px !important;
+    }
+
+    .ge-cards-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(120px, 1fr)) !important;
+        gap: 16px !important;
+        align-items: stretch !important;
+    }
+
+    .ge-cards-container .ge-card {
+        width: 100% !important;
+        min-width: 0 !important;
     }
 }
 

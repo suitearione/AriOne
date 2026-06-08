@@ -21,9 +21,9 @@
 }
 
 .ge-cards-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
 }
 
 /* ===== CARD ===== */
@@ -34,7 +34,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 140px;
+    width: 100%;
+    min-width: 0;
     padding: 24px 15px 18px;
     background: #ffffff;
     border-radius: 16px;
