@@ -95,6 +95,11 @@
     <style>
         /* ⚡ Responsividade global para mobile/tablet */
         @media (max-width: 1200px) {
+            html, body {
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+                min-height: 100% !important;
+            }
             .arione-sidebar {
                 display: block !important;
                 position: relative !important;
@@ -107,6 +112,7 @@
                 border-bottom: 1px solid rgba(0,0,0,0.08) !important;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
                 background: #7A255F !important;
+                max-height: none !important;
             }
             .arione-sidebar .menu-scroll-container {
                 max-height: none !important;
@@ -126,7 +132,35 @@
                 border-left: none !important;
                 border-radius: 12px !important;
             }
-            .arione-main-wrapper { margin-left: 0 !important; z-index: 1 !important; }
+            html, body {
+                height: auto !important;
+                min-height: 100% !important;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
+            body.arione-body {
+                display: block !important;
+            }
+            .arione-sidebar {
+                position: static !important;
+                width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .arione-main-wrapper {
+                margin-left: 0 !important;
+                z-index: 1 !important;
+                height: auto !important;
+                min-height: auto !important;
+                width: 100% !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .arione-new-header-container {
+                height: auto !important;
+                overflow: visible !important;
+            }
             .arione-new-header-container main.arione-page { padding: 14px 12px !important; }
             .arione-new-header-container header { padding: 10px 12px !important; }
             .fe-header-wrapper-grande,
@@ -143,8 +177,13 @@
         }
 
         @media (max-width: 1024px) {
+            html, body {
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
             .arione-bar-blue-new { width: 100% !important; left: 0 !important; }
-            .arione-main-wrapper { margin-left: 0 !important; }
+            .arione-main-wrapper { margin-left: 0 !important; height: auto !important; }
+            .arione-new-header-container { height: auto !important; }
             .arione-new-header-container main.arione-page { padding: 12px !important; }
             .fe-header-mestre-container { padding-top: 8px !important; }
             .fe-header-wrapper-grande { padding: 0 12px !important; }

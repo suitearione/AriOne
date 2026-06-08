@@ -759,56 +759,11 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                     <input type="hidden" name="condicao_pagamento" id="condicao_pagamento_hidden">
                     <input type="hidden" name="parcelas_selecionadas" id="parcelas_selecionadas_hidden" value="1">
 
-                    {# Seletor de Método (Cards visuais) #}
-                    <div style="margin-bottom:16px;">
-                        <div style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">
-                            Selecione a modalidade de pagamento
-                        </div>
-                        <div id="grid-formas-pagamento" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap:10px;">
-                            {% for f in formas_pagamento %}
-                            <div class="pag-card" data-id="{{ f.id }}" data-nome="{{ f.nome }}"
-                                data-parcelas="{{ f.max_parcelas }}" data-intervalo="{{ f.intervalo_dias }}"
-                                data-juros="{{ f.taxa_juros }}" data-desconto="{{ f.percentual_desconto }}"
-                                data-cor="{{ f.cor }}"
-                                onclick="selecionarFormaPagamento(this)"
-                                style="border:2px solid #e2e8f0; border-radius:10px; padding:14px; cursor:pointer; transition:all 0.25s; background:#fff; position:relative; overflow:hidden;">
-                                <div style="position:absolute; top:0; left:0; width:100%; height:3px; background:{{ f.cor }};"></div>
-                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                                    <div style="width:32px; height:32px; background:{{ f.cor }}18; color:{{ f.cor }}; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:15px; border:1px solid {{ f.cor }}30;">
-                                        <i class="{{ f.icone }}"></i>
-                                    </div>
-                                    <div style="font-weight:800; color:#1e293b; font-size:12px; line-height:1.2;">{{ f.nome }}</div>
-                                </div>
-                                <div style="font-size:9px; color:#94a3b8; font-weight:700; text-transform:uppercase;">{{ f.tipo }}</div>
-                                <div style="margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
-                                    {% if f.max_parcelas > 1 %}
-                                    <span style="font-size:10px; font-weight:800; color:{{ f.cor }};">até {{ f.max_parcelas }}x</span>
-                                    {% else %}
-                                    <span style="font-size:10px; font-weight:800; color:#27ae60;">À VISTA</span>
-                                    {% endif %}
-                                    {% if f.taxa_juros > 0 %}
-                                    <span style="font-size:9px; color:#e74c3c; font-weight:700;">+{{ "%.1f"|format(f.taxa_juros) }}%</span>
-                                    {% elif f.percentual_desconto > 0 %}
-                                    <span style="font-size:9px; color:#27ae60; font-weight:700;">-{{ "%.1f"|format(f.percentual_desconto) }}%</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% else %}
-                            <div style="grid-column:1/-1; text-align:center; padding:30px; color:#94a3b8;">
-                                <i class="fas fa-credit-card" style="font-size:24px; display:block; margin-bottom:8px; opacity:0.3;"></i>
-                                Nenhuma forma de pagamento configurada.<br>
-                                <a href="/financeiro/?aba=gerencial" target="_blank" style="color:#0072CE; font-weight:700; font-size:12px;">Configurar em Financeiro</a>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    {# ══ DESTINAÇÃO DO RECEBIMENTO: Local → Agente → Forma ══ #}
-                    <div id="painel-destinacao-venda" style="margin-bottom:16px; padding:14px; background:#f0f7ff; border-radius:10px; border:1.5px solid #0072CE30; display:none;">
+                    <div style="margin-bottom:20px; padding:14px; background:#f0f7ff; border-radius:10px; border:1.5px solid #0072CE30;">
                         <div style="font-size:10px; font-weight:800; color:#0072CE; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
                             <i class="fas fa-map-pin"></i> Forma de Recebimento / Pagamento
                         </div>
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:12px;">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:12px; align-items:end;">
                             <div>
                                 <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
                                     <span style="background:#0072CE; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">1</span>
@@ -826,7 +781,7 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                                     <span style="background:#94a3b8; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">2</span>
                                     Agente Operador <span style="color:#e74c3c;">*</span>
                                 </div>
-                                <select id="orc_agente_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="orcCarregarFormasPagamento(this.value)">
+                                <select id="orc_agente_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="orcCarregarFormasPagamento(this.value)" disabled>
                                     <option value="">Busque ou selecione...</option>
                                 </select>
                                 <input type="hidden" name="local_recebimento" id="orc_local_receb_hidden">
@@ -837,7 +792,7 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                                     <span style="background:#94a3b8; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">3</span>
                                     Forma de Pagamento <span style="color:#e74c3c;">*</span>
                                 </div>
-                                <select id="orc_forma_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="orcAtualizarResumoDest()">
+                                <select id="orc_forma_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="orcAtualizarResumoDest()" disabled>
                                     <option value="">Busque ou selecione...</option>
                                 </select>
                                 <input type="hidden" name="forma_recebimento_id" id="orc_forma_receb_hidden">
@@ -2112,6 +2067,12 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
             } else {
                 const res  = await fetch(`/financeiro/api/agentes?local=${local}`);
                 data = await res.json();
+            }
+
+            if (data && !Array.isArray(data) && data.message) {
+                selectAgente.innerHTML = `<option value="">${data.message}</option>`;
+                if (typeof arioneToast === 'function') arioneToast(data.message, 'warning');
+                return;
             }
 
             if (!Array.isArray(data) || data.length === 0) {

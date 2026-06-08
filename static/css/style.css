@@ -38,6 +38,11 @@ body {
     z-index: 2000; /* Deve ser maior que o z-index da sidebar (1000) para cobri-la com modais internos */
 }
 
+.arione-main-wrapper, .arione-page, .arione-new-header-container {
+    position: relative;
+    z-index: 1;
+}
+
 .arione-new-header-container {
     display: flex;
     flex-direction: column;
@@ -125,30 +130,55 @@ body {
     @media (max-width: 1200px) {
         html, body {
             overflow-x: hidden !important;
+            overflow-y: auto !important;
             min-height: 100% !important;
         }
 
+        #mobile-menu-toggle {
+            display: flex !important;
+        }
+
         .arione-sidebar {
-            position: relative !important;
-            width: 100% !important;
-            height: auto !important;
-            left: 0 !important;
+            position: fixed !important;
+            width: 280px !important;
+            height: 100vh !important;
+            left: -280px !important;
             top: 0 !important;
-            z-index: 2001 !important;
-            overflow: visible !important;
+            z-index: 9998 !important;
+            overflow-y: auto !important;
             background-color: #7A255F !important;
-            border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+            border-right: 1px solid rgba(255,255,255,0.08) !important;
             box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+            transition: left 0.3s ease !important;
+        }
+
+        .arione-sidebar.mobile-open {
+            left: 0 !important;
+        }
+
+        .arione-sidebar.mobile-open::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: -1;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
         }
 
         .arione-main-wrapper {
             margin-left: 0 !important;
             z-index: 1 !important;
+            width: 100% !important;
+            position: relative;
         }
 
         .arione-new-header-container,
         .arione-page {
             min-height: auto !important;
+            width: 100% !important;
         }
 
         .menu-logo-container {
@@ -163,20 +193,22 @@ body {
 
         .menu-lista {
             display: flex !important;
-            flex-wrap: wrap !important;
-            justify-content: center !important;
-            gap: 8px !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            gap: 4px !important;
         }
 
         .menu-item {
             width: 100% !important;
-            margin: 4px 0 !important;
+            margin: 0 !important;
         }
 
         .menu-item .menu-link {
             width: 100% !important;
+            text-align: left;
         }
     }
+
 
     @media (max-width: 900px) {
         .menu-lista {

@@ -136,6 +136,30 @@
                     case 'F7': e.preventDefault(); window.location.href = "{{ url_for('financeiro.card_despesas') }}"; break;
                 }
             });
+
+            // Fechar sidebar ao clicar em um link no mobile
+            document.addEventListener('DOMContentLoaded', function() {
+                const sidebarLinks = document.querySelectorAll('.arione-sidebar .menu-link');
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        const sidebar = document.querySelector('.arione-sidebar');
+                        if (sidebar && window.innerWidth <= 1200) {
+                            sidebar.classList.remove('mobile-open');
+                        }
+                    });
+                });
+
+                // Fechar sidebar ao clicar fora dela no mobile
+                document.addEventListener('click', function(e) {
+                    const sidebar = document.querySelector('.arione-sidebar');
+                    const toggle = document.querySelector('#mobile-menu-toggle');
+                    if (sidebar && toggle && window.innerWidth <= 1200) {
+                        if (!sidebar.contains(e.target) && !toggle.contains(e.target) && sidebar.classList.contains('mobile-open')) {
+                            sidebar.classList.remove('mobile-open');
+                        }
+                    }
+                });
+            });
             </script>
         </ul>
     </div>

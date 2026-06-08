@@ -1,6 +1,14 @@
 <div class="arione-bar-white-new"
      style="display:flex; align-items:center; justify-content:flex-start; padding:0 24px; height:60px; gap: 20px; border-radius: 12px 12px 0 0; background: #fff;">
 
+    <!-- BOTÃO MENU MOBILE (HAMBURGER) -->
+    <button id="mobile-menu-toggle" 
+            onclick="document.querySelector('.arione-sidebar').classList.toggle('mobile-open')"
+            style="display: none; background: none; border: none; font-size: 24px; color: #7A255F; cursor: pointer; padding: 6px; margin-right: 10px;"
+            title="Abrir/Fechar Menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <!-- EMPRESA ATIVA -->
     <div class="arione-left-info-group"
          style="flex:1; display:flex; align-items:center; position:relative; z-index:1900; gap:20px;">

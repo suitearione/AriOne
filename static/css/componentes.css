@@ -189,9 +189,8 @@ header {
 
 .arione-modal-backdrop {
     position: fixed;
-    top: 0;
-    left: var(--sidebar-width, 230px);
-    width: calc(100vw - var(--sidebar-width, 230px));
+    inset: 0;
+    width: 100vw;
     height: 100vh;
     background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(6px);
@@ -199,11 +198,14 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 999999 !important;
     transition: all 0.3s ease;
+    pointer-events: all;
 }
 
 .arione-modal-window {
+    position: relative;
+    z-index: 1000000 !important;
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 25px 60px rgba(0,0,0,0.35);
@@ -222,6 +224,34 @@ header {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+@media (max-width: 1200px) {
+    .arione-modal-window {
+        width: calc(100% - 24px) !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: calc(100vh - 20px) !important;
+        margin: 10px !important;
+        border-radius: 14px !important;
+    }
+    .arione-modal-window iframe {
+        height: calc(100vh - 120px) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .arione-modal-window {
+        width: calc(100% - 12px) !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: calc(100vh - 16px) !important;
+        margin: 8px !important;
+        border-radius: 12px !important;
+    }
+    .arione-modal-window iframe {
+        height: calc(100vh - 100px) !important;
+    }
 }
 
 #arione-modal-content iframe {

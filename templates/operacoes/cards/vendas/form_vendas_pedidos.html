@@ -2614,6 +2614,12 @@ Função : Pedido de Vendas (PADRÃO HCM GOLDEN STANDARD - MONOLÍTICO LUXURY)
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
 
+            if (data && !Array.isArray(data) && data.message) {
+                selectAgente.innerHTML = `<option value="">${data.message}</option>`;
+                arioneToast(data.message, 'warning');
+                return;
+            }
+
             if (!Array.isArray(data) || data.length === 0) {
                 selectAgente.innerHTML = `<option value="">Nenhum ${cfg.label.toLowerCase()} cadastrado</option>`;
                 arioneToast(`Nenhum ${cfg.label.toLowerCase()} encontrado para este local.`, 'warning');

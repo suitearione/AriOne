@@ -138,6 +138,12 @@
         
         const response = await fetch(`/financeiro/api/agentes?local=${local}`);
         const data = await response.json();
+
+        if (data && !Array.isArray(data) && data.message) {
+            select.innerHTML = `<option value="">${data.message}</option>`;
+            if (typeof arioneToast === 'function') arioneToast(data.message, 'warning');
+            return;
+        }
         
         data.forEach(item => {
             select.innerHTML += `<option value="${item.id}">${item.nome}</option>`;

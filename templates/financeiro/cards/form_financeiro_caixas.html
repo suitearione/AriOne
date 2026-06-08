@@ -240,14 +240,22 @@
 
                             <div class="op-form-group" style="margin-bottom: 15px;">
                                     <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Formas de Pagamento Aceitas</label>
-                                    <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: stretch;">
-                                        <select id="caixa_formas_pagamento_selector" class="op-input-luxury" style="flex: 1; width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: #fff;">
+                                    <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items: stretch; flex-wrap: wrap;">
+                                        <select id="caixa_formas_pagamento_selector" class="op-input-luxury" style="flex: 1; min-width: 240px; width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: #fff;">
                                             <option value="">Selecione uma forma de pagamento</option>
                                             {% for fp in formas_pagamento %}
                                             <option value="{{ fp.id }}" data-agrupador="{{ fp.agrupador_operacional }}" data-condicao="{{ fp.condicao_pagamento or '' }}">{{ fp.nome }}</option>
                                             {% endfor %}
                                         </select>
                                         <button type="button" onclick="adicionarFormaPagamentoCaixa()" class="op-btn-luxury" style="background: #7A255F; color: #fff; border: none; padding: 10px 14px; border-radius: 6px; font-weight: 600; cursor: pointer;">Adicionar</button>
+                                    </div>
+                                    <input type="hidden" name="aplicar_todos_caixas" value="0">
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #475569; margin-bottom: 10px;">
+                                        <input type="checkbox" id="caixa_aplicar_formas_todos" name="aplicar_todos_caixas" value="1" style="width: 16px; height: 16px; accent-color: #7A255F;">
+                                        Aplicar estas formas de pagamento a todos os caixas da empresa
+                                    </label>
+                                    <div id="caixa_aplicar_formas_todos_alert" style="display:none; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #f6e05e; color: #92400e; font-size: 12px; line-height: 1.4;">
+                                        <strong>Atenção:</strong> com esta opção ativa, as formas de pagamento serão replicadas para todos os caixas da empresa ao salvar.
                                     </div>
                                     <datalist id="lista-plano-contas">
                                         {% for pc in planos_conta %}
@@ -932,6 +940,14 @@ function resetFormCaixa() {
     document.getElementById('painel-caixa-saldo').textContent = 'R$ 0,00';
     document.getElementById('mov_caixa_id').value = '';
     document.getElementById('tabela-movimentacoes-body').innerHTML = '<tr id="linha-sem-movimentacao"><td colspan="5" style="text-align: center; padding: 30px; color: #94a3b8; font-size: 14px;">Salve o caixa para registrar movimentações.</td></tr>';
+    atualizarAlertaAplicarFormasTodosCaixas();
+}
+
+function atualizarAlertaAplicarFormasTodosCaixas() {
+    const checkbox = document.getElementById('caixa_aplicar_formas_todos');
+    const alerta = document.getElementById('caixa_aplicar_formas_todos_alert');
+    if (!checkbox || !alerta) return;
+    alerta.style.display = checkbox.checked ? 'block' : 'none';
 }
 
 function salvarCaixa() {
@@ -1134,6 +1150,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderCaixaFormasPagamentosFromIds(activeIds, activeDetails);
             }
         }
+    }
+
+    const checkboxAplicarTodos = document.getElementById('caixa_aplicar_formas_todos');
+    if (checkboxAplicarTodos) {
+        checkboxAplicarTodos.addEventListener('change', atualizarAlertaAplicarFormasTodosCaixas);
+        atualizarAlertaAplicarFormasTodosCaixas();
     }
 
     const params = new URLSearchParams(window.location.search);

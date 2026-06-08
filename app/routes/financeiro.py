@@ -220,7 +220,13 @@ def api_agentes():
 
     if local == 'CAIXA':
         from app.models.gestao.caixa import Caixa
-        caixas = Caixa.query.filter_by(status='ABERTO').all()
+        empresa_id = session.get('empresa_id')
+        caixas = Caixa.query.filter_by(status='ABERTO', empresa_id=empresa_id).all() if empresa_id else []
+        if not caixas:
+            return jsonify({
+                'message': 'não existe nenhum Caixa aberto no momento, favor providenciar a abertura do caixa para o lançamento.'
+            })
+
         return jsonify([
             {
                 'id': c.id,
@@ -269,13 +275,20 @@ def api_formas_pagamento_financeiro():
         return 'CAIXA'
 
     agente_id = request.args.get('agente_id')
+    if not local and agente_id:
+        from app.models.gestao.caixa import Caixa
+        caixa = Caixa.query.get(agente_id)
+        if caixa:
+            local = 'CAIXA'
+
     formas = FormaPagamento.query.filter_by(ativa=True).all()
     if local:
         formas = [f for f in formas if detectar_tipo_e_destinacao(f.nome) == local]
 
     if agente_id and local == 'CAIXA':
         from app.models.gestao.caixa import Caixa
-        caixa = Caixa.query.get(agente_id)
+        empresa_id = session.get('empresa_id')
+        caixa = Caixa.query.filter_by(id=agente_id, empresa_id=empresa_id).first() if empresa_id else None
         if caixa:
             aceitas = [str(v) for v in caixa.formas_pagamento_aceitas]
             if aceitas:
@@ -1221,6 +1234,9 @@ def salvar_caixa():
         bancos_ids = request.form.getlist('bancos_ids')
         operadoras_ids = request.form.getlist('operadoras_ids')
 
+        aplicar_todos_caixas_values = request.form.getlist('aplicar_todos_caixas')
+        aplicar_todos_caixas = any(str(val).lower() in ('1', 'on', 'true', 'yes') for val in aplicar_todos_caixas_values)
+
         if caixa_id and caixa_id.isdigit():
             c = Caixa.query.get_or_404(int(caixa_id))
             c.nome = nome
@@ -1252,6 +1268,17 @@ def salvar_caixa():
             )
             db.session.add(c)
             msg = "Caixa aberto com sucesso!"
+
+        if aplicar_todos_caixas:
+            empresa_id = session.get('empresa_id')
+            if empresa_id:
+                outros_caixas = Caixa.query.filter(Caixa.empresa_id == empresa_id)
+                if caixa_id and caixa_id.isdigit():
+                    outros_caixas = outros_caixas.filter(Caixa.id != int(caixa_id))
+                for other in outros_caixas:
+                    other.formas_pagamento_aceitas = formas_pagamento_ids
+                    other.formas_pagamento_detalhes = formas_pagamento_detalhes
+            msg += " Formas de pagamento aplicadas a todos os caixas." 
 
         db.session.commit()
         return {"success": True, "message": msg, "id": c.id}
