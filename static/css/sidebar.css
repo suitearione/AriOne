@@ -328,3 +328,32 @@
     opacity: 1 !important;
     text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
 }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* MOBILE RESPONSIVO - Drawer Sidebar Pattern                */
+/* ═══════════════════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+    .arione-sidebar {
+        width: 280px !important;
+        position: fixed !important;
+        height: 100vh !important;
+        left: -280px !important;
+        top: 0 !important;
+        z-index: 9998 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background-color: #7A255F !important;
+        transition: left 0.3s ease !important;
+        box-shadow: none !important;
+    }
+
+    .arione-sidebar.mobile-open {
+        left: 0 !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+    }
+
+    .menu-scroll-container {
+        overflow-y: auto !important;
+        max-height: calc(100vh - 200px) !important;
+    }
+}

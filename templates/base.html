@@ -99,54 +99,50 @@
                 overflow-x: hidden !important;
                 overflow-y: auto !important;
                 min-height: 100% !important;
+                height: auto !important;
+            }
+            body.arione-body {
+                display: block !important;
             }
             .arione-sidebar {
-                display: block !important;
-                position: relative !important;
-                width: 100% !important;
-                height: auto !important;
-                left: 0 !important;
+                position: fixed !important;
+                width: 280px !important;
+                height: 100vh !important;
+                left: -280px !important;
                 top: 0 !important;
-                overflow: visible !important;
-                z-index: 2001 !important;
-                border-bottom: 1px solid rgba(0,0,0,0.08) !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-                background: #7A255F !important;
-                max-height: none !important;
+                z-index: 9998 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                background-color: #7A255F !important;
+                transition: left 0.3s ease !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            .arione-sidebar.mobile-open {
+                left: 0 !important;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
             }
             .arione-sidebar .menu-scroll-container {
                 max-height: none !important;
             }
             .arione-sidebar .menu-lista {
                 display: flex !important;
-                flex-wrap: wrap !important;
-                justify-content: center !important;
-                gap: 8px !important;
+                flex-direction: column !important;
+                flex-wrap: nowrap !important;
+                justify-content: flex-start !important;
+                gap: 6px !important;
             }
             .arione-sidebar .menu-item {
-                margin: 4px !important;
-                flex: 0 1 auto !important;
+                margin: 0 !important;
+                flex: 0 0 auto !important;
+                width: 100% !important;
             }
             .arione-sidebar .menu-link {
                 padding: 10px 14px !important;
                 border-left: none !important;
                 border-radius: 12px !important;
-            }
-            html, body {
-                height: auto !important;
-                min-height: 100% !important;
-                overflow-x: hidden !important;
-                overflow-y: auto !important;
-            }
-            body.arione-body {
-                display: block !important;
-            }
-            .arione-sidebar {
-                position: static !important;
                 width: 100% !important;
-                height: auto !important;
-                max-height: none !important;
-                overflow: visible !important;
+                text-align: left !important;
             }
             .arione-main-wrapper {
                 margin-left: 0 !important;
@@ -257,35 +253,46 @@
             .ge-modal { width: calc(100% - 24px) !important; max-width: calc(100% - 24px) !important; }
         }
 
-        /* Ensure tables and grids scroll horizontally on small screens */
+        /* ✅ MOBILE DRAWER SIDEBAR - Responsive Design */
         @media (max-width: 480px) {
             .arione-page, .arione-page-wrapper { padding-left: 8px !important; padding-right: 8px !important; }
             .arione-sidebar {
-                display: block !important;
-                position: relative !important;
-                width: 100% !important;
-                height: auto !important;
-                left: 0 !important;
+                position: fixed !important;
+                width: 280px !important;
+                height: 100vh !important;
+                left: -280px !important;
                 top: 0 !important;
-                overflow: visible !important;
-                border-bottom: 1px solid rgba(0,0,0,0.08) !important;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+                z-index: 9998 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                max-height: 100vh !important;
                 background: #7A255F !important;
+                transition: left 0.3s ease !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .arione-sidebar.mobile-open {
+                left: 0 !important;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
             }
             .arione-sidebar .menu-lista {
                 display: flex !important;
-                flex-wrap: wrap !important;
-                justify-content: space-between !important;
+                flex-direction: column !important;
+                flex-wrap: nowrap !important;
+                justify-content: flex-start !important;
                 gap: 6px !important;
             }
             .arione-sidebar .menu-item {
-                flex: 1 1 48% !important;
-                min-width: 48% !important;
+                flex: 0 0 auto !important;
+                width: 100% !important;
+                min-width: 100% !important;
             }
             .arione-sidebar .menu-link {
                 padding: 10px 12px !important;
                 border-left: none !important;
                 border-radius: 10px !important;
+                width: 100% !important;
+                text-align: left !important;
             }
             .arione-bar-blue-new { width: 100% !important; left: 0 !important; }
             .fp-card-body,
@@ -399,6 +406,38 @@
             <div id="arione-modal-content"></div>
         </div>
     </div>
+
+    <script>
+    /* Force mobile sidebar CSS to apply correctly */
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.querySelector('.arione-sidebar');
+        if (!sidebar) return;
+
+        function applyMobileStyles() {
+            const isMobile = window.innerWidth <= 1200;
+            if (isMobile) {
+                const computedLeft = window.getComputedStyle(sidebar).left;
+                // Force CSS to apply if it's not working
+                if (computedLeft === '0px' && !sidebar.classList.contains('mobile-open')) {
+                    // Apply inline styles as fallback
+                    sidebar.style.left = '-280px';
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.width = '280px';
+                    sidebar.style.height = '100vh';
+                    sidebar.style.zIndex = '9998';
+                    sidebar.style.transition = 'left 0.3s ease';
+                    sidebar.style.overflow = 'auto';
+                }
+            }
+        }
+
+        // Apply on load
+        applyMobileStyles();
+
+        // Apply on resize
+        window.addEventListener('resize', applyMobileStyles);
+    });
+    </script>
 
 </body>
 

@@ -142,6 +142,9 @@
                 const sidebarLinks = document.querySelectorAll('.arione-sidebar .menu-link');
                 sidebarLinks.forEach(link => {
                     link.addEventListener('click', function() {
+                        // Scroll para o topo
+                        window.scrollTo(0, 0);
+                        
                         const sidebar = document.querySelector('.arione-sidebar');
                         if (sidebar && window.innerWidth <= 1200) {
                             sidebar.classList.remove('mobile-open');
