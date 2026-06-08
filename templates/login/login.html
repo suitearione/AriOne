@@ -39,14 +39,15 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html {
-            width: 100vw; height: 100vh;
+            width: 100%; min-height: 100vh;
             display: flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, #e0e6ed 0%, #f4f6f9 100%);
-            font-family: 'Inter', 'Segoe UI', sans-serif; overflow: hidden;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            overflow-x: hidden; overflow-y: auto;
         }
         .login-container {
             width: min(900px, 100%); max-width: 900px;
-            min-height: 460px; max-height: calc(100vh - 20px);
+            min-height: 420px; max-height: calc(100vh - 20px);
             margin: 0 auto;
             background: #fff; border-radius: 12px;
             display: flex; flex-direction: column; overflow: hidden;
@@ -107,7 +108,25 @@
                 display: none;
             }
             .painel {
+                position: relative;
+                width: 100%;
                 max-width: 100%;
+                display: none;
+                opacity: 1;
+                transform: none;
+                pointer-events: none;
+                transition: none;
+            }
+            .painel.ativo {
+                display: block;
+                pointer-events: auto;
+            }
+            .painel.inativo,
+            .painel.direita {
+                display: none;
+                opacity: 0;
+                transform: none;
+                pointer-events: none;
             }
             .arone-title {
                 font-size: 1.35rem;
