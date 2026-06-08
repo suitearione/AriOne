@@ -66,6 +66,61 @@ body {
     height: 20px;
 }
 
+#mobile-menu-toggle-fixed {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 14px 32px rgba(0,0,0,0.14);
+    color: #7A255F;
+    z-index: 10002;
+    border: none;
+    cursor: pointer;
+}
+
+#mobile-menu-toggle-fixed i {
+    font-size: 18px;
+}
+
+@media (max-width: 1200px) {
+    .arione-main-wrapper {
+        margin-left: 0 !important;
+    }
+
+    .arione-page {
+        padding: 0 14px 18px 14px;
+    }
+
+    #mobile-menu-toggle,
+    #mobile-menu-toggle-fixed {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #mobile-menu-toggle-fixed {
+        width: 46px !important;
+        height: 46px !important;
+        border-radius: 14px !important;
+        background: rgba(255,255,255,0.95) !important;
+        box-shadow: 0 14px 32px rgba(0,0,0,0.14) !important;
+        color: #7A255F !important;
+        z-index: 10002 !important;
+        border: none !important;
+        cursor: pointer !important;
+    }
+
+    #mobile-menu-toggle-fixed i {
+        font-size: 18px !important;
+    }
+}
+
 /* TOPBAR */
 .arione-topbar {
     flex-shrink: 0;

@@ -108,19 +108,25 @@
                 position: fixed !important;
                 width: 280px !important;
                 height: 100vh !important;
-                left: -280px !important;
+                left: 0 !important;
                 top: 0 !important;
                 z-index: 9998 !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
                 background-color: #7A255F !important;
-                transition: left 0.3s ease !important;
+                transition: transform 0.3s ease, left 0.3s ease !important;
+                transform: translateX(-280px) !important;
                 display: flex !important;
                 flex-direction: column !important;
             }
             .arione-sidebar.mobile-open {
                 left: 0 !important;
+                transform: translateX(0) !important;
                 box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+            }
+            body.arione-body .arione-sidebar.mobile-open {
+                left: 0 !important;
+                transform: translateX(0) !important;
             }
             .arione-sidebar .menu-scroll-container {
                 max-height: none !important;
@@ -260,19 +266,21 @@
                 position: fixed !important;
                 width: 280px !important;
                 height: 100vh !important;
-                left: -280px !important;
+                left: 0 !important;
                 top: 0 !important;
                 z-index: 9998 !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
                 max-height: 100vh !important;
                 background: #7A255F !important;
-                transition: left 0.3s ease !important;
+                transition: transform 0.3s ease, left 0.3s ease !important;
+                transform: translateX(-280px) !important;
                 border: none !important;
                 box-shadow: none !important;
             }
             .arione-sidebar.mobile-open {
                 left: 0 !important;
+                transform: translateX(0) !important;
                 box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
             }
             .arione-sidebar .menu-lista {
@@ -310,6 +318,10 @@
 </head>
 
 <body class="arione-body">
+
+    <button id="mobile-menu-toggle-fixed" type="button" onclick="toggleSidebarMenu()" title="Abrir/Fechar Menu" aria-label="Abrir/Fechar Menu" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+    </button>
 
     {% include 'partials/_navbar.html' ignore missing %}
 
@@ -408,35 +420,40 @@
     </div>
 
     <script>
-    /* Force mobile sidebar CSS to apply correctly */
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebar = document.querySelector('.arione-sidebar');
-        if (!sidebar) return;
+        function toggleSidebarMenu() {
+            const sidebar = document.querySelector('.arione-sidebar');
+            const button = document.getElementById('mobile-menu-toggle-fixed');
+            if (!sidebar) return;
 
-        function applyMobileStyles() {
-            const isMobile = window.innerWidth <= 1200;
-            if (isMobile) {
-                const computedLeft = window.getComputedStyle(sidebar).left;
-                // Force CSS to apply if it's not working
-                if (computedLeft === '0px' && !sidebar.classList.contains('mobile-open')) {
-                    // Apply inline styles as fallback
-                    sidebar.style.left = '-280px';
-                    sidebar.style.position = 'fixed';
-                    sidebar.style.width = '280px';
-                    sidebar.style.height = '100vh';
-                    sidebar.style.zIndex = '9998';
-                    sidebar.style.transition = 'left 0.3s ease';
-                    sidebar.style.overflow = 'auto';
+            const isOpen = sidebar.classList.toggle('mobile-open');
+            sidebar.style.setProperty('left', '0px', 'important');
+            sidebar.style.setProperty('transform', isOpen ? 'translateX(0)' : 'translateX(-280px)', 'important');
+            sidebar.style.setProperty('transition', 'transform 0.3s ease, left 0.3s ease', 'important');
+            sidebar.style.setProperty('right', 'auto', 'important');
+
+            if (button) {
+                button.setAttribute('aria-expanded', String(isOpen));
+            }
+        }
+
+        function resetMobileSidebar() {
+            const sidebar = document.querySelector('.arione-sidebar');
+            const button = document.getElementById('mobile-menu-toggle-fixed');
+            if (!sidebar) return;
+            if (window.innerWidth > 1200) {
+                sidebar.classList.remove('mobile-open');
+                sidebar.style.removeProperty('transform');
+                sidebar.style.removeProperty('right');
+                sidebar.style.removeProperty('left');
+                sidebar.style.removeProperty('transition');
+                if (button) {
+                    button.setAttribute('aria-expanded', 'false');
                 }
             }
         }
 
-        // Apply on load
-        applyMobileStyles();
-
-        // Apply on resize
-        window.addEventListener('resize', applyMobileStyles);
-    });
+        window.addEventListener('resize', resetMobileSidebar);
+        resetMobileSidebar();
     </script>
 
 </body>
