@@ -64,9 +64,15 @@
                 </div>
                 <div class="goal-track">
                     <div class="goal-bar"><div class="goal-fill" style="width: {{ [kpi.perc_meta or 0, 100]|min }}%;"></div></div>
-                    <div class="goal-values">
-                        <div class="goal-v-item"><span>Atingido (Realizado)</span><strong>R$ {{ "{:,.2f}".format(kpi.vendas_mes or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong></div>
-                        <div class="goal-v-item" style="text-align: right;"><span>Falta Atingir</span><strong style="color: #E74C3C;">R$ {{ "{:,.2f}".format(kpi.falta_atingir or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong></div>
+                    <div class="goal-values" style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
+                        <div class="goal-v-item" style="text-align: left; font-size: 13px;">
+                            <span style="color: #64748b;">Atingido (Realizado):</span> 
+                            <strong style="color: #1e293b;">R$ {{ "{:,.2f}".format(kpi.vendas_mes or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong>
+                        </div>
+                        <div class="goal-v-item" style="text-align: left; font-size: 13px;">
+                            <span style="color: #64748b;">Falta Atingir:</span> 
+                            <strong style="color: #E74C3C;">R$ {{ "{:,.2f}".format(kpi.falta_atingir or 0).replace(',','v').replace('.',',').replace('v','.') }}</strong>
+                        </div>
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #e2e8f0; font-size: 10px; color: #94a3b8;">
                         <span>Meta Mensal: <strong style="color: #1e293b;">R$ {{ "{:,.2f}".format(kpi.meta_mes or 1200000).replace(',','v').replace('.',',').replace('v','.') }}</strong></span>
@@ -153,10 +159,14 @@
                             <tr class="cv-row" onclick="window.location.href='/operacoes/vendas/orcamento/edit/{{ orc.id }}'">
                                  <td class="cv-id">{{ (orc.numero or orc.id)|string }}</td>
                                  <td>
-                                     <div class="cv-main-text">{{ orc.cliente.nome|upper }}</div>
-                                     <div class="cv-sub-text">{{ (orc.vendedor.nome_exibivel or orc.vendedor.nome)|upper if orc.vendedor else '--' }}</div>
+                                     <div class="cv-main-text" style="display: flex; align-items: center; gap: 8px;">
+                                         {{ orc.cliente.nome|title }}
+                                         <span style="font-size: 10px; background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 6px; font-weight: 600; white-space: nowrap;">
+                                             <i class="fas fa-headset"></i> {{ (orc.vendedor.nome_exibivel or orc.vendedor.nome)|title if orc.vendedor else '--' }}
+                                         </span>
+                                     </div>
                                  </td>
-                                 <td style="text-align: right; font-weight: 800; color: #1e293b;">
+                                 <td class="cv-val">
                                      R$ {{ "{:,.2f}".format(orc.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}
                                  </td>
                                 <td style="text-align: center;">
@@ -197,12 +207,14 @@
                             <tr class="cv-row" onclick="window.location.href='/operacoes/vendas/pedido/edit/{{ ped.id }}'">
                                  <td class="cv-id" style="color: #1e293b;">{{ (ped.numero or ped.id)|string }}</td>
                                  <td>
-                                     <div class="cv-main-text">{{ ped.cliente.nome|upper }}</div>
-                                     <div class="cv-sub-text">
-                                         <i class="fas fa-calendar-day"></i> {{ ped.data_pedido.strftime('%d/%m/%Y') }}
+                                     <div class="cv-main-text" style="display: flex; align-items: center; gap: 8px;">
+                                         {{ ped.cliente.nome|title }}
+                                         <span style="font-size: 10px; background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 6px; font-weight: 600; white-space: nowrap;">
+                                             <i class="fas fa-calendar-day"></i> {{ ped.data_pedido.strftime('%d/%m/%Y') }}
+                                         </span>
                                      </div>
                                  </td>
-                                 <td style="text-align: right; font-weight: 800; color: #1e293b;">
+                                 <td class="cv-val">
                                      R$ {{ "{:,.2f}".format(ped.total_liquido or 0).replace(',','v').replace('.',',').replace('v','.') }}
                                  </td>
                                 <td style="text-align: center;">
@@ -293,11 +305,17 @@
         .cv-main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; }
         .cv-panel { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .cv-panel-header { padding: 18px 22px; border-bottom: 1px solid #f1f5f9; background: #fdfdfd; }
-        .cv-panel-title { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 800; color: #1e293b; text-transform: uppercase; }
+        .cv-panel-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; color: #334155; }
         
         .cv-list-wrap { max-height: 550px; overflow-y: auto; }
         .cv-table { width: 100%; border-collapse: collapse; }
-        .cv-table th { position: sticky; top: 0; background: #fff; padding: 12px 22px; text-align: left; font-size: 10px; color: #94a3b8; font-weight: 800; border-bottom: 1px solid #f1f5f9; z-index: 5; }
+        .cv-table th { position: sticky; top: 0; background: #fff; padding: 12px 22px; text-align: left; font-size: 11px; color: #64748b; font-weight: 600; border-bottom: 1px solid #f1f5f9; z-index: 5; }
+        .cv-table td { padding: 12px 22px; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+        .cv-row:hover { background: #fdfdfd; cursor: pointer; }
+        .cv-id { font-size: 13px; font-weight: 600; color: #475569; }
+        .cv-main-text { font-size: 13px; font-weight: 600; color: #334155; }
+        .cv-sub-text { font-size: 11px; font-weight: 500; color: #94a3b8; margin-top: 4px; }
+        .cv-val { text-align: right; font-weight: 600; color: #1e293b; font-size: 13px; }
         
         /* Aging & Status Tags */
         .aging-tag { padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 800; }

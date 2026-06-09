@@ -37,6 +37,14 @@
             <span class="ge-card-desc">Compromissos Firmados</span>
         </div>
 
+        <!-- Ordem de Compras -->
+        <div class="ge-card" onclick="abrirModalOpe('ordem_compra')" style="--card-cor:#17A2B8;--card-cor-bg:rgba(23,162,184,0.10);">
+            <i class="fas fa-shopping-basket ge-card-bg-icon"></i>
+            <div class="ge-card-icon-wrap"><i class="fas fa-shopping-basket ge-card-icon"></i></div>
+            <span class="ge-card-label">Ordens de Compras</span>
+            <span class="ge-card-desc">Gerenciamento de Ordens</span>
+        </div>
+
         <!-- Consignadas -->
         <div class="ge-card" onclick="abrirModalOpe('consignatas')" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,0.10);">
             <i class="fas fa-box-open ge-card-bg-icon"></i>
@@ -104,6 +112,7 @@ const endpointsOpe = {
     consignatas: '{{ url_for("operacoes.card_compras_consignados", modal=1) }}',
     devolucoes:  '{{ url_for("operacoes.card_compras_devolucoes", modal=1) }}',
     servicos:    '{{ url_for("operacoes.card_compras_servicos", modal=1) }}',
+    ordem_compra: '{{ url_for("operacoes.card_compras_pedido", modal=1) }}',
     precos:      '{{ url_for("operacoes.card_compras_precos", modal=1) }}',
     em_aberto:   '{{ url_for("operacoes.card_compras_emaberto", modal=1) }}'
 };

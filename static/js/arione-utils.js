@@ -7,6 +7,35 @@
 console.log('✅ AriOne Utils carregado');
 
 // =============================================================================
+// 🛡️ Force same-origin X-Requested-With header on fetch
+// =============================================================================
+(function() {
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = function(input, init = {}) {
+        try {
+            let url = typeof input === 'string' ? input : input.url;
+            const requestUrl = new URL(url, window.location.origin);
+            if (requestUrl.origin === window.location.origin) {
+                init = init || {};
+                init.headers = init.headers || {};
+                if (init.headers instanceof Headers) {
+                    if (!init.headers.has('X-Requested-With')) {
+                        init.headers.set('X-Requested-With', 'XMLHttpRequest');
+                    }
+                } else {
+                    if (!Object.keys(init.headers).some(key => key.toLowerCase() === 'x-requested-with')) {
+                        init.headers = { ...init.headers, 'X-Requested-With': 'XMLHttpRequest' };
+                    }
+                }
+            }
+        } catch (e) {
+            // ignore invalid URLs or cross-origin requests
+        }
+        return nativeFetch(input, init);
+    };
+})();
+
+// =============================================================================
 // 🛡️ AriOne TOAST — Notificação não-intrusiva (Quiet Luxury)
 // =============================================================================
 

@@ -8,6 +8,7 @@
 {% import "macros/componentes.html" as comp %}
 
 {% block content %}
+{% set target = pedido if pedido else None %}
 <div class="fe-wrap fp-wrap mod-compras split-layout-active" style="background: #f8fafc; min-height: 100vh;">
 
     {# CABEÇALHO MESTRE (PADRÃO OURO) #}
@@ -29,7 +30,7 @@
         ajuda="O formulário de Pedidos de Compra gerencia a reposição de estoque e contratação de serviços."
     ) }}
 
-    <form id="form-pedido-compra" method="POST" novalidate style="padding: 20px; max-width: 1600px; margin: 0 auto;">
+    <form id="form-pedido-compra" action="{{ url_for('operacoes.salvar_pedido_compra') }}" method="POST" novalidate style="padding: 20px; max-width: 1600px; margin: 0 auto;">
         
         <div class="split-container" style="display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start;">
             
@@ -88,12 +89,12 @@
                 </div>
 
                 {# CARD 2: ITENS DO PEDIDO #}
-                <div class="fp-card" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff;">
+                <div class="fp-card" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; background: #fff; overflow: hidden;">
                     <div class="fp-card-title" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 10px; font-weight: 800; color: #1e293b;">
                             <i class="fas fa-truck-loading" style="color: #27AE60;"></i> ITENS E MERCADORIAS
                         </div>
-                        <button type="button" onclick="arioneAdicionarLinhaGrid('#tabela-itens-compra', '#27AE60', 'calcularTotaisPedidoCompra')" class="fp-btn" style="background: #27AE60; color: #fff; font-size: 11px; padding: 6px 15px; border-radius: 8px;">
+                        <button type="button" onclick="arioneAdicionarLinhaGrid('#tabela-itens-compra', '#27AE60', 'calcularTotaisPedidoCompra')" class="fp-btn" style="background: #27AE60; color: #fff; font-size: 11px; padding: 6px 15px; border-radius: 8px; font-weight: 700;">
                             <i class="fas fa-plus"></i> ADICIONAR ITEM
                         </button>
                     </div>
@@ -101,30 +102,205 @@
                         <table class="arione-table-hcm" id="tabela-itens-compra">
                             <thead>
                                 <tr>
-                                    <th style="width: 180px;">CÓDIGO / SKU</th>
-                                    <th>DESCRIÇÃO DO ITEM</th>
+                                    <th style="width: 250px;">SKU / CÓDIGO</th>
+                                    <th>DESCRIÇÃO DO PRODUTO</th>
+                                    <th style="width: 85px; text-align: center;">UN</th>
                                     <th style="width: 100px; text-align: center;">QTD</th>
-                                    <th style="width: 140px; text-align: right;">UNITÁRIO</th>
-                                    <th style="width: 140px; text-align: right;">TOTAL</th>
-                                    <th style="width: 60px;"></th>
+                                    <th style="width: 120px; text-align: right;">VALOR UNIT.</th>
+                                    <th style="width: 75px; text-align: center;">DESC.</th>
+                                    <th style="width: 130px; text-align: right;">SUBTOTAL</th>
+                                    <th style="width: 80px;"></th>
                                 </tr>
                             </thead>
                             <tbody>
+                                {% if target and target.itens %}
+                                    {% for item in target.itens %}
+                                    <tr class="item-row" data-peso="{{ item.insumo.peso|float if item.insumo and item.insumo.peso else 0.0 }}">
+                                        <td>
+                                            <div class="arione-arrow-wrapper">
+                                                <input type="text" class="fp-input table-input-sku arione-input-with-arrow" name="item_sku[]" 
+                                                    value="{{ item.insumo.sku or item.insumo.id if item.insumo else '' }}"
+                                                    oninput="this.value = this.value.toUpperCase(); syncSKU(this)"
+                                                    onclick="syncSKU(this)"
+                                                    autocomplete="off"
+                                                    style="width: 100% !important; height: 34px !important; font-family: monospace;">
+                                                <i class="fas fa-caret-down arione-physical-arrow" onclick="syncSKU(this.previousElementSibling)"></i>
+                                            </div>
+                                            <div style="font-size: 8px; color: #94a3b8; font-weight: 700; margin-top: 2px;">
+                                                PESO: <span class="row-peso-debug">{{ item.insumo.peso|float if item.insumo and item.insumo.peso else 0.0 }}</span> KG | ID: {{ item.insumo.id if item.insumo else '' }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="arione-arrow-wrapper">
+                                                <input type="text" class="fp-input table-input-desc arione-input-with-arrow" name="item_nome[]" 
+                                                    value="{{ item.insumo.descricao if item.insumo else '' }}"
+                                                    autocomplete="off" style="width: 100% !important; height: 34px !important;"
+                                                    oninput="syncProduto(this)"
+                                                    onclick="syncProduto(this)">
+                                                <i class="fas fa-caret-down arione-physical-arrow" onclick="syncProduto(this.previousElementSibling)"></i>
+                                                <button type="button" onclick="toggleItemObs(this)" title="Observação do Item"
+                                                    style="color: {{ '#27AE60' if item.observacoes else '#94a3b8' }}; background: none; border: none; cursor: pointer; padding: 0 5px; z-index: 10; margin-left: 5px;"><i
+                                                        class="fas fa-comment-dots"></i></button>
+                                                <input type="hidden" class="table-input-obs" name="item_obs[]" value="{{ item.observacoes or '' }}">
+                                                <input type="hidden" class="table-input-id" name="item_insumo_id[]" value="{{ item.insumo_id }}">
+                                            </div>
+                                        </td>
+                                        <td><input type="text" class="fp-input table-input-un" name="item_un[]" value="{{ item.insumo.unidade_medida or 'UN' if item.insumo else 'UN' }}"
+                                                style="text-align: center; height: 34px !important; background: #f8fafc;" readonly>
+                                        </td>
+                                        <td><input type="number" class="fp-input table-input-qtd" name="item_qtd[]" value="{{ item.quantidade|int if item.quantidade == item.quantidade|int else item.quantidade }}"
+                                                style="text-align: center; height: 34px !important;"
+                                                oninput="calcularTotaisPedidoCompra()"></td>
+                                        <td><input type="text" class="fp-input table-input-vlr" name="item_preco[]" 
+                                                value="{{ '{:,.2f}'.format(item.valor_unitario).replace(',','v').replace('.',',').replace('v','.') }}"
+                                                style="text-align: right; height: 34px !important;"
+                                                oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedidoCompra()"></td>
+                                        <td>
+                                            <div style="display: flex; gap: 0; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                                                <input type="text" class="table-input-desc-val" name="item_desc_val[]" value="0,00"
+                                                    style="flex: 1; border: none; text-align: right; padding: 6px 1px; font-size: 11px; font-weight: 600;"
+                                                    oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedidoCompra()">
+                                                <select class="table-input-desc-tipo" name="item_desc_tipo[]"
+                                                    style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; font-weight: 800; color: #64748b; padding: 6px 0px;"
+                                                    onchange="calcularTotaisPedidoCompra()">
+                                                    <option value="VALOR">R$</option>
+                                                    <option value="PERCENT">%</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                        <td style="text-align: right; font-weight: 800; color: #27AE60;" class="col-total-linha">
+                                            R$ {{ '{:,.2f}'.format(item.total_item).replace(',','v').replace('.',',').replace('v','.') }}
+                                        </td>
+                                        <td style="text-align: center;"><button type="button"
+                                                onclick="this.closest('tr').remove(); calcularTotaisPedidoCompra();"
+                                                style="color: #ef4444; background: none; border: none; cursor: pointer;"><i
+                                                    class="fas fa-trash-alt"></i></button></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr class="item-row" data-peso="0">
+                                        <td><input type="text" class="fp-input table-input-sku" name="item_sku[]" placeholder="SKU..."
+                                                list="lista-skus" oninput="this.value = this.value.toUpperCase(); fetchItemBySKU(this)"
+                                                style="height: 34px !important; font-family: monospace;"></td>
+                                        <td>
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <input type="text" class="fp-input table-input-desc" name="item_nome[]" placeholder="Buscar produto..."
+                                                    list="lista-produtos" style="flex: 1; height: 34px !important;"
+                                                    oninput="syncProduto(this)">
+                                                <button type="button" onclick="toggleItemObs(this)" title="Observação do Item"
+                                                    style="color: #94a3b8; background: none; border: none; cursor: pointer;"><i
+                                                        class="fas fa-comment-dots"></i></button>
+                                                <input type="hidden" class="table-input-obs" name="item_obs[]">
+                                                <input type="hidden" class="table-input-id" name="item_insumo_id[]">
+                                            </div>
+                                        </td>
+                                        <td><input type="text" class="fp-input table-input-un" name="item_un[]" value="UN"
+                                                style="text-align: center; height: 34px !important; background: #f8fafc;" readonly>
+                                        </td>
+                                        <td><input type="number" class="fp-input table-input-qtd" name="item_qtd[]" value="1"
+                                                style="text-align: center; height: 34px !important;"
+                                                oninput="calcularTotaisPedidoCompra()"></td>
+                                        <td><input type="text" class="fp-input table-input-vlr" name="item_preco[]" value="0,00"
+                                                style="text-align: right; height: 34px !important;"
+                                                oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedidoCompra()"></td>
+                                        <td>
+                                            <div style="display: flex; gap: 0; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                                                <input type="text" class="table-input-desc-val" name="item_desc_val[]" value="0,00"
+                                                    style="flex: 1; border: none; text-align: right; padding: 6px 1px; font-size: 11px; font-weight: 600;"
+                                                    oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedidoCompra()">
+                                                <select class="table-input-desc-tipo" name="item_desc_tipo[]"
+                                                    style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; font-weight: 800; color: #64748b; padding: 6px 0px;"
+                                                    onchange="calcularTotaisPedidoCompra()">
+                                                    <option value="VALOR">R$</option>
+                                                    <option value="PERCENT">%</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                        <td style="text-align: right; font-weight: 800; color: #27AE60;" class="col-total-linha">R$ 0,00</td>
+                                        <td style="text-align: center;"><button type="button"
+                                                onclick="this.closest('tr').remove(); calcularTotaisPedidoCompra();"
+                                                style="color: #ef4444; background: none; border: none; cursor: pointer;"><i
+                                                    class="fas fa-trash-alt"></i></button></td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                            <tfoot style="background: #fff; border-top: 2px solid #f1f5f9;">
                                 <tr>
-                                    <td>
-                                        <input type="text" class="fp-input table-input-sku" placeholder="Cód..." oninput="fetchItemBySKU(this)">
+                                    <td colspan="3"></td>
+                                    <td style="text-align: center; padding: 12px 0;">
+                                        <div style="font-size: 9px; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Qtd. Itens</div>
+                                        <div id="resumo-qtd-itens" style="font-size: 15px; font-weight: 700; color: #1e293b;">0</div>
                                     </td>
-                                    <td>
-                                        <input type="text" class="fp-input table-input-desc" placeholder="Buscar item..." list="lista-produtos">
+                                    <td></td>
+                                    <td style="text-align: center; padding: 12px 0;">
+                                        <div style="font-size: 9px; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Total Desc.</div>
+                                        <div id="resumo-total-desconto-itens" style="font-size: 15px; font-weight: 700; color: #ef4444;">R$ 0,00</div>
                                     </td>
-                                    <td><input type="number" class="fp-input table-input-qtd" value="1" style="text-align: center;" oninput="calcularTotaisPedidoCompra()"></td>
-                                    <td><input type="text" class="fp-input table-input-vlr" value="0,00" style="text-align: right;" oninput="this.value = arioneMaskMoney(this.value); calcularTotaisPedidoCompra()"></td>
-                                    <td style="text-align: right; font-weight: 800; color: #27AE60;" class="col-total-linha">R$ 0,00</td>
-                                    <td style="text-align: center;">
-                                        <button type="button" onclick="this.closest('tr').remove(); calcularTotaisPedidoCompra();" style="color: #ef4444; background: none; border: none; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+                                    <td style="text-align: right; padding: 12px 10px;">
+                                        <div style="font-size: 9px; color: #64748b; font-weight: 800; text-transform: uppercase;">Total Itens</div>
+                                        <div id="resumo-total-itens" style="font-size: 13px; font-weight: 800; color: #1e293b;">R$ 0,00</div>
+                                        <div style="font-size: 8px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 4px;">Valor c/ Descontos</div>
+                                        <div id="resumo-valor-com-descontos" style="font-size: 11px; font-weight: 800; color: #1e293b;">R$ 0,00</div>
+                                        <div style="height: 1px; background: #e2e8f0; margin-top: 6px;"></div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="8" style="padding: 15px 24px; border-top: 1px dashed #f1f5f9; background: #f8fafc;">
+                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 30px; flex-wrap: wrap;">
+                                            <div style="display: flex; align-items: flex-end; gap: 10px;">
+                                                <div style="font-size: 10px; font-weight: 800; color: #27AE60; text-transform: uppercase; margin-right: 5px; padding-bottom: 8px; letter-spacing: 0.5px;">Ajustes Gerais:</div>
+                                                <div class="fp-group" style="margin:0;">
+                                                    <label class="fp-label" style="font-size: 8px;">OPERAÇÃO</label>
+                                                    <div style="display:flex; border:1.5px solid #cbd5e1; border-radius:6px; overflow:hidden;">
+                                                        <button type="button" id="btn-op-desconto" onclick="setOperacaoGlobal('desconto')"
+                                                            style="padding:6px 12px; border:none; background:#ef4444; color:#fff; font-weight:800; font-size:10px; cursor:pointer;">DESC.</button>
+                                                        <button type="button" id="btn-op-acrescimo" onclick="setOperacaoGlobal('acrescimo')"
+                                                            style="padding:6px 12px; border:none; background:#f8fafc; color:#94a3b8; font-weight:800; font-size:10px; cursor:pointer;">ACRÉS.</button>
+                                                    </div>
+                                                    <input type="hidden" name="ajuste_global_tipo" id="ajuste_global_tipo" value="desconto">
+                                                </div>
+
+                                                <div class="fp-group" style="margin:0;">
+                                                    <label class="fp-label" style="font-size: 8px;">MODO</label>
+                                                    <div style="display:flex; border:1.5px solid #cbd5e1; border-radius:6px; overflow:hidden;">
+                                                        <button type="button" id="btn-mod-pct" onclick="setModalidadeGlobal('PERCENT')"
+                                                            style="padding:6px 10px; border:none; background:#27AE60; color:#fff; font-weight:800; font-size:10px; cursor:pointer;">%</button>
+                                                        <button type="button" id="btn-mod-val" onclick="setModalidadeGlobal('VALOR')"
+                                                            style="padding:6px 10px; border:none; background:#f8fafc; color:#94a3b8; font-weight:800; font-size:10px; cursor:pointer;">R$</button>
+                                                    </div>
+                                                    <input type="hidden" name="ajuste_global_modalidade" id="ajuste_global_modalidade" value="PERCENT">
+                                                </div>
+
+                                                <div class="fp-group" style="margin:0; width: 80px;">
+                                                    <label class="fp-label" style="font-size: 8px;">VALOR (%)</label>
+                                                    <input type="text" class="fp-input" id="ajuste_global_pct" value="0,00"
+                                                        style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #ef4444;"
+                                                        oninput="this.value=arioneMaskMoney(this.value); syncAjusteGlobal('PERCENT')">
+                                                </div>
+
+                                                <div class="fp-group" style="margin:0; width: 100px;">
+                                                    <label id="label-ajuste-final" class="fp-label" style="font-size: 8px;">VALOR DESC/ACRESC.</label>
+                                                    <input type="text" class="fp-input" name="ajuste_global_valor" id="ajuste_global_valor" value="0,00"
+                                                        style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #ef4444;"
+                                                        oninput="this.value=arioneMaskMoney(this.value); syncAjusteGlobal('VALOR')">
+                                                </div>
+
+                                                <div class="fp-group" style="margin:0; width: 110px;">
+                                                    <label class="fp-label" style="font-size: 8px;">VALOR DO DESCONTO GLOBAL</label>
+                                                    <input type="text" class="fp-input" id="resumo-ajuste-global" value="0,00"
+                                                        style="height: 28px; font-size: 13px; font-weight: 800; text-align: center; color: #ef4444; background: #fff1f2; border-color: #fecaca;"
+                                                        readonly tabindex="-1">
+                                                </div>
+                                            </div>
+                                            <div style="text-align: right; padding-left: 20px; border-left: 1px solid #e2e8f0;">
+                                                <div style="font-size: 10px; color: #27AE60; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">VALOR TOTAL DO PEDIDO</div>
+                                                <div id="resumo-total-geral-table" style="font-size: 24px; font-weight: 900; color: #27AE60; letter-spacing: -1px; line-height: 1;">R$ 0,00</div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
-                            </tbody>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -134,19 +310,82 @@
                     <div class="fp-tabs-nav" style="padding: 10px 20px; border-bottom: 1px solid #f1f5f9; gap: 30px;">
                         <button type="button" class="fp-tab active" onclick="switchOpeTab(this, 'tab-pagto')"><i class="fas fa-credit-card"></i> Pagamento</button>
                         <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-transp')"><i class="fas fa-truck"></i> Transporte</button>
-                        <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-financeiro')"><i class="fas fa-university"></i> Financeiro</button>
+                        <button type="button" class="fp-tab" onclick="switchOpeTab(this, 'tab-historico')"><i class="fas fa-history"></i> Histórico</button>
                     </div>
                     <div class="fp-tab-content" style="padding: 20px;">
                         <div id="tab-pagto" class="fp-tab-panel active">
-                            <div class="fp-row">
-                                <div class="fp-group fp-flex-1">
-                                    <label class="fp-label">CONDIÇÃO DE PAGAMENTO</label>
-                                    <select class="fp-input"><option>FATURADO 30 DIAS</option><option>À VISTA</option><option>30/60/90 DIAS</option></select>
+                            <input type="hidden" name="forma_pagamento_id" id="forma_pagamento_id_hidden">
+                            <input type="hidden" name="parcelas_selecionadas" id="parcelas_selecionadas_hidden" value="1">
+                            <input type="hidden" name="operadora_id_hidden" id="operadora_id_hidden">
+
+                            <div style="margin-bottom:20px; padding:14px; background:#f0fdf4; border-radius:10px; border:1.5px solid #22c55e30;">
+                                <div style="font-size:10px; font-weight:800; color:#27AE60; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                                    <i class="fas fa-map-pin"></i> Forma de Pagamento / Contas a Pagar
                                 </div>
-                                <div class="fp-group fp-flex-1">
-                                    <label class="fp-label">TABELA FORNECEDOR</label>
-                                    <input type="text" class="fp-input" placeholder="Ref. tabela do fornecedor...">
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; align-items:end;">
+
+                                    <div>
+                                        <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                            <span style="background:#27AE60; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0;">1</span>
+                                            Local <span style="color:#e74c3c;">*</span>
+                                        </div>
+                                        <select id="ped_local_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="pedCarregarAgentes(this.value)">
+                                            <option value="">— Selecione o local —</option>
+                                            <option value="CAIXA">🏦 Caixa</option>
+                                            <option value="BANCO">🏛️ Banco</option>
+                                            <option value="OPERADORA">💳 Operadora de Cartão</option>
+                                        </select>
+                                        <input type="hidden" name="local_recebimento" id="ped_local_receb_hidden">
+                                    </div>
+
+                                    <div>
+                                        <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                            <span id="badge-step-agente" style="background:#cbd5e1; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0; transition:background 0.3s;">2</span>
+                                            <span id="label-agente-tipo">Agente Operador</span> <span style="color:#e74c3c;">*</span>
+                                        </div>
+                                        <div style="position:relative;">
+                                            <select id="ped_agente_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="pedCarregarFormasPagamento(this.value)" disabled>
+                                                <option value="">← Selecione o local primeiro</option>
+                                            </select>
+                                            <span id="spinner-agente" style="display:none; position:absolute; right:32px; top:10px; color:#27AE60;"><i class="fas fa-spinner fa-spin" style="font-size:13px;"></i></span>
+                                        </div>
+                                        <input type="hidden" name="agente_recebimento_id" id="ped_agente_receb_hidden">
+                                    </div>
+
+                                    <div>
+                                        <div style="font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:5px; display:flex; align-items:center; gap:5px;">
+                                            <span id="badge-step-forma" style="background:#cbd5e1; color:#fff; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; flex-shrink:0; transition:background 0.3s;">3</span>
+                                            Forma de Pagamento <span style="color:#e74c3c;">*</span>
+                                        </div>
+                                        <div style="position:relative;">
+                                            <select id="ped_forma_receb" class="fp-input" style="height:36px; font-weight:700; font-size:12px;" onchange="pedOnFormaSelected(this)" disabled>
+                                                <option value="">← Selecione o agente primeiro</option>
+                                            </select>
+                                            <span id="spinner-forma" style="display:none; position:absolute; right:32px; top:10px; color:#27AE60;"><i class="fas fa-spinner fa-spin" style="font-size:13px;"></i></span>
+                                        </div>
+                                        <div id="ped-parcelas-panel" style="display:none; margin-top:10px;">
+                                            <label for="ped_parcelas_select" style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px;">Parcelas</label>
+                                            <select id="ped_parcelas_select" class="fp-input" style="height:36px; min-width:140px; width:100%;" onchange="pedOnParcelasSelected(this.value)"></select>
+                                        </div>
+                                        <input type="hidden" name="forma_recebimento_id" id="ped_forma_receb_hidden">
+                                    </div>
+
                                 </div>
+
+                                <div id="ped-receb-confirmado" style="display:none; margin-top:12px; padding:10px 14px; background:linear-gradient(135deg,#f0fdf4,#fff); border:1.5px solid #22c55e; border-radius:8px; display:flex; align-items:center; gap:10px; animation: feFadeUp 0.3s ease;">
+                                    <i class="fas fa-check-circle" style="color:#22c55e; font-size:16px;"></i>
+                                    <div style="flex:1;">
+                                        <span id="ped-receb-resumo-texto" style="font-size:11px; font-weight:800; color:#15803d;"></span>
+                                    </div>
+                                    <button type="button" onclick="pedLimparSelecaoRecebimento()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; hover:background:#f1f5f9;">
+                                        <i class="fas fa-times"></i> Alterar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="pag-vazio" style="text-align:center; padding:40px; color:#94a3b8;">
+                                <i class="fas fa-credit-card" style="font-size:32px; display:block; margin-bottom:12px; opacity:0.3;"></i>
+                                <div style="font-size:12px; font-weight:600;">Selecione uma forma de pagamento acima para visualizar a operadora e opções de parcelamento.</div>
                             </div>
                         </div>
                         <div id="tab-transp" class="fp-tab-panel">
@@ -155,7 +394,7 @@
                                 <div class="fp-group fp-flex-1"><label class="fp-label">FRETE</label><select class="fp-input"><option>FOB (POR CONTA DO FORNECEDOR)</option><option>CIF (POR CONTA DA EMPRESA)</option></select></div>
                             </div>
                         </div>
-                        <div id="tab-financeiro" class="fp-tab-panel">
+                        <div id="tab-historico" class="fp-tab-panel">
                             <div class="fp-row">
                                 <div class="fp-group fp-flex-1"><label class="fp-label">CENTRO DE CUSTO</label><select class="fp-input"><option>ADMINISTRATIVO</option><option>PRODUÇÃO</option><option>VENDAS</option></select></div>
                                 <div class="fp-group fp-flex-1"><label class="fp-label">PLANO DE CONTAS</label><select class="fp-input"><option>COMPRA DE MERCADORIA PARA REVENDA</option></select></div>
@@ -171,16 +410,21 @@
                 {# CARD STATUS #}
                 <div class="fp-card" style="padding: 20px; border-radius: 16px; background: #fff; border: 1px solid #e2e8f0; text-align: center;">
                     <div style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Status da Compra</div>
-                    <select class="fp-input" name="status" id="status_pedido" style="font-size: 12px; font-weight: 700; text-transform: uppercase; background: #f8fafc; border-color: #cbd5e1; text-align: center;" onchange="atualizarStatusBadge()">
-                        <option value="RASCUNHO">RASCUNHO</option>
-                        <option value="CONFIRMADO">CONFIRMADO (SALDO PREVISTO)</option>
-                        <option value="EM_TRANSITO">EM TRÂNSITO</option>
-                        <option value="RECEBIDO">RECEBIDO (ENTRADA NF)</option>
-                        <option value="CANCELADO">CANCELADO</option>
+                    <select class="fp-input" name="status" id="status_pedido" 
+                        style="height: 40px; font-size: 13px; font-weight: 800; color: #fff; background: {{ status_lista[0].cor if status_lista else '#27AE60' }}; border-radius: 10px; text-align: center; text-transform: uppercase; border: none; cursor: pointer;"
+                        onchange="const opt = this.options[this.selectedIndex]; if(opt.dataset.cor) this.style.background = opt.dataset.cor;">
+                        {% for s in status_lista %}
+                        <option value="{{ s.nome }}" data-cor="{{ s.cor }}"
+                            {% if (pedido and pedido.status == s.nome) or (not pedido and loop.first) %}selected{% endif %}
+                            style="background: #fff; color: #333; font-weight: 700;">{{ s.nome|upper }}</option>
+                        {% else %}
+                        <option value="RASCUNHO" data-cor="#94a3b8">RASCUNHO</option>
+                        <option value="CONFIRMADO" data-cor="#27AE60">CONFIRMADO (SALDO PREVISTO)</option>
+                        <option value="EM_TRANSITO" data-cor="#3498DB">EM TRÂNSITO</option>
+                        <option value="RECEBIDO" data-cor="#16A085">RECEBIDO (ENTRADA NF)</option>
+                        <option value="CANCELADO" data-cor="#E74C3C">CANCELADO</option>
+                        {% endfor %}
                     </select>
-                    <div id="status-badge-display" style="margin-top: 10px; padding: 8px 15px; border-radius: 10px; background: #94a3b8; color: #fff; font-weight: 800; font-size: 13px; text-transform: uppercase;">
-                        RASCUNHO
-                    </div>
                 </div>
 
                 {# CARD RESUMO FINANCEIRO #}
@@ -246,6 +490,76 @@
     .fp-tab-panel.active { display: block; }
     
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    /* 🔍 AriOne Custom Search Panel */
+    .arione-search-panel {
+        position: absolute;
+        z-index: 9999;
+        background: #fff;
+        border: 1.5px solid #2980B9;
+        border-radius: 10px;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        max-height: 300px;
+        overflow-y: auto;
+        width: 550px;
+        display: none;
+        animation: feFadeUp 0.2s ease;
+    }
+    .arione-search-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.2s;
+    }
+    .arione-search-item:hover, .arione-search-item.active {
+        background: #ebf5fb;
+    }
+    .arione-search-sku {
+        font-family: 'Roboto Mono', monospace;
+        font-weight: 800;
+        color: #2980B9;
+        font-size: 11px;
+        background: #eef2ff;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+    .arione-search-desc {
+        font-size: 12px;
+        font-weight: 700;
+        color: #1e293b;
+        flex: 1;
+        margin-left: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 🏹 AriOne Super Arrow (Physical Icon) */
+    .arione-arrow-wrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .arione-input-with-arrow {
+        padding-right: 32px !important;
+    }
+    .arione-physical-arrow {
+        position: absolute;
+        right: 10px;
+        color: #2980B9;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 100;
+        transition: all 0.2s ease;
+        padding: 5px;
+    }
+    .arione-physical-arrow:hover {
+        transform: scale(1.3);
+        color: #1e6091;
+    }
 </style>
 
 <script>
@@ -278,19 +592,202 @@
         }
     }
 
-    function calcularTotaisPedidoCompra() {
-        let total = 0;
-        const rows = document.querySelectorAll('#tabela-itens-compra tbody tr');
-        rows.forEach(row => {
-            const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
-            const vlr = parseFloat(row.querySelector('.table-input-vlr').value.replace(/\./g, '').replace(',', '.')) || 0;
-            const subtotal = qtd * vlr;
-            total += subtotal;
-            const colTotal = row.querySelector('.col-total-linha');
-            if (colTotal) colTotal.innerText = 'R$ ' + subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    // 🗃️ Base de dados para o Busca Rápida AriOne
+    const arioneDatabase = [
+        {% for v in variacoes %}
+        { sku: '{{ (v.sku or v.produto_pai.referencia or v.produto_pai.cod_interno or "")|upper }}', desc: '{{ v.produto_pai.descricao|upper }} - {{ v.nome|upper }}', id: '{{ v.id }}' },
+        {% endfor %}
+        {% for p in produtos if p.tipo_estoque != 'grade' %}
+        { sku: '{{ (p.referencia or p.cod_interno or "")|upper }}', desc: '{{ p.descricao|upper }}', id: '{{ p.id }}' },
+        {% endfor %}
+    ];
+
+    let currentSearchPanel = null;
+
+    function syncSKU(input) {
+        const val = input.value.toUpperCase();
+        
+        const results = val.length === 0 
+            ? arioneDatabase.slice(0, 20)
+            : arioneDatabase.filter(item => item.sku.includes(val) || item.desc.includes(val)).slice(0, 15);
+
+        showSearchPanel(input, results, (item) => {
+            input.value = item.sku;
+            fetchItemBySKU(input);
         });
-        document.getElementById('resumo-subtotal').innerText = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-        document.getElementById('resumo-total-geral').innerText = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+
+    function syncProduto(input) {
+        const val = input.value.toUpperCase();
+        
+        const results = val.length < 1 
+            ? arioneDatabase.slice(0, 20)
+            : arioneDatabase.filter(item => item.desc.includes(val) || item.sku.includes(val)).slice(0, 15);
+
+        showSearchPanel(input, results, (item) => {
+            const row = input.closest('tr');
+            const skuInput = row.querySelector('.table-input-sku');
+            if (skuInput) {
+                skuInput.value = item.sku;
+                fetchItemBySKU(skuInput);
+            }
+        });
+    }
+
+    function showSearchPanel(input, results, onSelect) {
+        closeSearchPanel();
+        if (results.length === 0) return;
+
+        const panel = document.createElement('div');
+        panel.className = 'arione-search-panel';
+        panel.style.display = 'block';
+        
+        const rect = input.getBoundingClientRect();
+        panel.style.top = (window.scrollY + rect.bottom + 5) + 'px';
+        panel.style.left = (window.scrollX + rect.left) + 'px';
+
+        results.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'arione-search-item';
+            div.innerHTML = `
+                <span class="arione-search-sku">${item.sku}</span>
+                <span class="arione-search-desc">${item.desc}</span>
+            `;
+            div.onclick = () => {
+                onSelect(item);
+                closeSearchPanel();
+            };
+            panel.appendChild(div);
+        });
+
+        document.body.appendChild(panel);
+        currentSearchPanel = panel;
+
+        const clickHandler = (e) => {
+            if (!panel.contains(e.target) && e.target !== input) {
+                closeSearchPanel();
+                document.removeEventListener('click', clickHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', clickHandler), 10);
+    }
+
+    function closeSearchPanel() {
+        if (currentSearchPanel) {
+            currentSearchPanel.remove();
+            currentSearchPanel = null;
+        }
+    }
+
+    let _ajusteOp = 'desconto';
+    let _ajusteMod = 'PERCENT';
+
+    function setOperacaoGlobal(op) {
+        _ajusteOp = op;
+        document.getElementById('ajuste_global_tipo').value = op;
+        const btnDesc = document.getElementById('btn-op-desconto');
+        const btnAcre = document.getElementById('btn-op-acrescimo');
+        if (op === 'desconto') {
+            btnDesc.style.background = '#ef4444'; btnDesc.style.color = '#fff';
+            btnAcre.style.background = '#f8fafc'; btnAcre.style.color = '#94a3b8';
+        } else {
+            btnAcre.style.background = '#3b82f6'; btnAcre.style.color = '#fff';
+            btnDesc.style.background = '#f8fafc'; btnDesc.style.color = '#94a3b8';
+        }
+        calcularTotaisPedidoCompra();
+    }
+
+    function setModalidadeGlobal(mod) {
+        _ajusteMod = mod;
+        document.getElementById('ajuste_global_modalidade').value = mod;
+        const btnPct = document.getElementById('btn-mod-pct');
+        const btnVal = document.getElementById('btn-mod-val');
+        const inpPct = document.getElementById('ajuste_global_pct');
+        if (mod === 'PERCENT') {
+            btnPct.style.background = '#27AE60'; btnPct.style.color = '#fff';
+            btnVal.style.background = '#f8fafc'; btnVal.style.color = '#94a3b8';
+            inpPct.readOnly = false;
+            inpPct.style.opacity = '1';
+        } else {
+            btnVal.style.background = '#27AE60'; btnVal.style.color = '#fff';
+            btnPct.style.background = '#f8fafc'; btnPct.style.color = '#94a3b8';
+            inpPct.value = '0,00';
+            inpPct.readOnly = true;
+            inpPct.style.opacity = '0.5';
+        }
+        calcularTotaisPedidoCompra();
+    }
+
+    function syncAjusteGlobal(modOrigem) {
+        if (_ajusteMod !== modOrigem) return;
+        calcularTotaisPedidoCompra();
+    }
+
+    function calcularTotaisPedidoCompra() {
+        let subtotal = 0; let descontoTotal = 0; let qtdTotal = 0;
+        
+        document.querySelectorAll('#tabela-itens-compra tbody tr').forEach(row => {
+            const q = parseFloat(row.querySelector('.table-input-qtd')?.value) || 0;
+            const v = parseFloat(row.querySelector('.table-input-vlr')?.value.replace(/\./g, '').replace(',', '.')) || 0;
+            const dVal = parseFloat(row.querySelector('.table-input-desc-val')?.value.replace(/\./g, '').replace(',', '.')) || 0;
+            const dTipo = row.querySelector('.table-input-desc-tipo')?.value || 'VALOR';
+            
+            let itemSubtotal = q * v;
+            let itemDesconto = (dTipo === 'PERCENT') ? (itemSubtotal * dVal / 100) : dVal;
+            const tL = itemSubtotal - itemDesconto;
+            
+            subtotal += itemSubtotal;
+            descontoTotal += itemDesconto;
+            qtdTotal += q;
+            
+            const elTotalLinha = row.querySelector('.col-total-linha');
+            if (elTotalLinha) {
+                elTotalLinha.innerText = 'R$ ' + tL.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        });
+
+        const fmt = (val) => 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const parse = (id) => parseFloat(document.getElementById(id)?.value.replace(/\./g, '').replace(',', '.')) || 0;
+        
+        const valorComDescontos = subtotal - descontoTotal;
+
+        const ajMod = document.getElementById('ajuste_global_modalidade')?.value || 'PERCENT';
+        const ajTipo = document.getElementById('ajuste_global_tipo')?.value || 'desconto';
+        let ajVal = parse('ajuste_global_valor');
+
+        if (ajMod === 'PERCENT') {
+            const pct = parse('ajuste_global_pct');
+            ajVal = (valorComDescontos * pct) / 100;
+            const elVal = document.getElementById('ajuste_global_valor');
+            if (elVal) elVal.value = ajVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        const ajusteFinal = (ajTipo === 'desconto') ? ajVal : -ajVal;
+        const totalFinalReal = (valorComDescontos - ajusteFinal);
+
+        const elResumoAjuste = document.getElementById('resumo-ajuste-global');
+        if (elResumoAjuste) {
+            elResumoAjuste.value = ajVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            elResumoAjuste.style.color = (ajTipo === 'desconto') ? '#ef4444' : '#27AE60';
+            elResumoAjuste.style.borderColor = (ajTipo === 'desconto') ? '#fecaca' : '#bbf7d0';
+            elResumoAjuste.style.background = (ajTipo === 'desconto') ? '#fff1f2' : '#f0fdf4';
+        }
+
+        const safeSet = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (el.tagName === 'INPUT') el.value = val;
+                else el.innerText = val;
+            }
+        };
+
+        safeSet('resumo-qtd-itens', qtdTotal);
+        safeSet('resumo-total-desconto-itens', fmt(descontoTotal));
+        safeSet('resumo-total-itens', fmt(subtotal));
+        safeSet('resumo-valor-com-descontos', fmt(valorComDescontos));
+        safeSet('resumo-total-geral', fmt(totalFinalReal));
+        safeSet('resumo-subtotal', fmt(subtotal));
+        safeSet('resumo-total-geral-table', fmt(totalFinalReal));
     }
 
     function switchOpeTab(btn, tabId) {
@@ -313,21 +810,17 @@
         const status = document.getElementById('status_pedido').value;
         
         if (confirm('Deseja FINALIZAR este pedido de compra e atualizar o estoque?')) {
-            // Se status for CONFIRMADO, atualiza saldo_previsto dos produtos
             if (status === 'CONFIRMADO') {
                 const rows = document.querySelectorAll('#tabela-itens-compra tbody tr');
                 rows.forEach(row => {
                     const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
-                    // Aqui seria chamada AJAX para atualizar saldo_previsto no backend
                     console.log(`Atualizando saldo_previsto: +${qtd} para o produto`);
                 });
                 arioneToast('✅ Pedido Confirmado - Saldo Previsto Atualizado!', 'success');
             } else if (status === 'RECEBIDO') {
-                // Se status for RECEBIDO, atualiza saldo_fisico e custo_medio
                 const rows = document.querySelectorAll('#tabela-itens-compra tbody tr');
                 rows.forEach(row => {
                     const qtd = parseFloat(row.querySelector('.table-input-qtd').value) || 0;
-                    // Aqui seria chamada AJAX para atualizar saldo_fisico e custo_medio no backend
                     console.log(`Atualizando saldo_fisico: +${qtd} e custo_medio para o produto`);
                 });
                 arioneToast('✅ Entrada NF Processada - Saldo Físico Atualizado!', 'success');
@@ -347,17 +840,293 @@
         if (!table) return;
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><input type="text" class="fp-input table-input-sku" placeholder="Cód..." oninput="fetchItemBySKU(this)"></td>
-            <td><input type="text" class="fp-input table-input-desc" placeholder="Buscar item..." list="lista-produtos"></td>
-            <td><input type="number" class="fp-input table-input-qtd" value="1" style="text-align: center;" oninput="${funcCalculo}()"></td>
-            <td><input type="text" class="fp-input table-input-vlr" value="0,00" style="text-align: right;" oninput="this.value = arioneMaskMoney(this.value); ${funcCalculo}()"></td>
-            <td style="text-align: right; font-weight: 800; color: ${corTema};" class="col-total-linha">R$ 0,00</td>
-            <td style="text-align: center;">
-                <button type="button" onclick="this.closest('tr').remove(); ${funcCalculo}();" style="color: #ef4444; background: none; border: none; cursor: pointer;"><i class="fas fa-trash-alt"></i></button>
+            <td>
+                <div class="arione-arrow-wrapper">
+                    <input type="text" class="fp-input table-input-sku arione-input-with-arrow" name="item_sku[]" 
+                        oninput="this.value = this.value.toUpperCase(); syncSKU(this)"
+                        onclick="syncSKU(this)"
+                        autocomplete="off"
+                        style="width: 100% !important; height: 34px !important; font-family: monospace;">
+                    <i class="fas fa-caret-down arione-physical-arrow" onclick="syncSKU(this.previousElementSibling)"></i>
+                </div>
             </td>
+            <td>
+                <div class="arione-arrow-wrapper">
+                    <input type="text" class="fp-input table-input-desc arione-input-with-arrow" name="item_nome[]" 
+                        autocomplete="off" style="width: 100% !important; height: 34px !important;"
+                        oninput="syncProduto(this)"
+                        onclick="syncProduto(this)">
+                    <i class="fas fa-caret-down arione-physical-arrow" onclick="syncProduto(this.previousElementSibling)"></i>
+                    <button type="button" onclick="toggleItemObs(this)" title="Observação do Item"
+                        style="color: #94a3b8; background: none; border: none; cursor: pointer; padding: 0 5px; z-index: 10; margin-left: 5px;"><i
+                            class="fas fa-comment-dots"></i></button>
+                    <input type="hidden" class="table-input-obs" name="item_obs[]" value="">
+                    <input type="hidden" class="table-input-id" name="item_insumo_id[]" value="">
+                </div>
+            </td>
+            <td><input type="text" class="fp-input table-input-un" name="item_un[]" value="UN" style="text-align: center; height: 34px !important; background: #f8fafc;" readonly></td>
+            <td><input type="number" class="fp-input table-input-qtd" name="item_qtd[]" value="1" style="text-align: center; height: 34px !important;" oninput="${funcCalculo}()"></td>
+            <td><input type="text" class="fp-input table-input-vlr" name="item_preco[]" value="0,00" style="text-align: right; height: 34px !important;" oninput="this.value = arioneMaskMoney(this.value); ${funcCalculo}()"></td>
+            <td>
+                <div style="display: flex; gap: 0; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #fff;">
+                    <input type="text" class="table-input-desc-val" name="item_desc_val[]" value="0,00" style="flex: 1; border: none; text-align: right; padding: 6px 1px; font-size: 11px; font-weight: 600;" oninput="this.value = arioneMaskMoney(this.value); ${funcCalculo}()">
+                    <select class="table-input-desc-tipo" name="item_desc_tipo[]" style="border: none; border-left: 1px solid #e2e8f0; background: #f8fafc; font-size: 10px; font-weight: 800; color: #64748b; padding: 6px 0px;" onchange="${funcCalculo}()">
+                        <option value="VALOR">R$</option>
+                        <option value="PERCENT">%</option>
+                    </select>
+                </div>
+            </td>
+            <td style="text-align: right; font-weight: 800; color: ${corTema};" class="col-total-linha">R$ 0,00</td>
+            <td style="text-align: center;"><button type="button" onclick="this.closest('tr').remove(); ${funcCalculo}();" style="color: #ef4444; background: none; border: none; cursor: pointer;"><i class="fas fa-trash-alt"></i></button></td>
         `;
         table.appendChild(row);
         row.querySelector('input').focus();
+    }
+
+    function toggleItemObs(btn) {
+        const tr = btn.closest('tr');
+        const inp = tr.querySelector('.table-input-obs');
+        let obs = prompt('Observação do Item:', inp.value);
+        if (obs !== null) {
+            inp.value = obs;
+            btn.style.color = obs.trim() ? '#27AE60' : '#94a3b8';
+        }
+    }
+
+    async function fetchItemBySKU(input) {
+        const sku = input.value.trim();
+        if (!sku) return;
+        try {
+            const response = await fetch(`/operacoes/api/produtos/get-by-sku?sku=${encodeURIComponent(sku)}`);
+            const data = await response.json();
+            if (data.ok) {
+                const row = input.closest('tr');
+                row.querySelector('.table-input-desc').value = data.descricao;
+                row.querySelector('.table-input-vlr').value = data.valor_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                row.querySelector('.table-input-id').value = data.id;
+                arioneToast('✨ Item identificado!', 'success');
+                calcularTotaisPedidoCompra();
+            }
+        } catch (err) {
+            console.error('❌ Erro SKU:', err);
+        }
+    }
+
+    const PED_AGENTE_LABELS = {
+        'CAIXA': { label: 'Caixa Operador', placeholder: 'Selecione o caixa' },
+        'BANCO': { label: 'Conta Bancária', placeholder: 'Selecione a conta' },
+        'OPERADORA': { label: 'Maquininha/Operadora', placeholder: 'Selecione a operadora' }
+    };
+
+    function getContasBancariasLocal() {
+        try {
+            const raw = localStorage.getItem('arione_contas_bancarias');
+            if (!raw) return [];
+            const contas = JSON.parse(raw);
+            return Array.isArray(contas) ? contas : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async function pedCarregarAgentes(local) {
+        const selectAgente  = document.getElementById('ped_agente_receb');
+        const selectForma   = document.getElementById('ped_forma_receb');
+        const spinnerAgente = document.getElementById('spinner-agente');
+        const badgeAgente   = document.getElementById('badge-step-agente');
+        const labelAgente   = document.getElementById('label-agente-tipo');
+
+        selectAgente.innerHTML = '<option value="">Carregando...</option>';
+        selectAgente.disabled  = true;
+        selectForma.innerHTML  = '<option value="">← Selecione o agente primeiro</option>';
+        selectForma.disabled   = true;
+        document.getElementById('ped_agente_receb_hidden').value = '';
+        document.getElementById('ped_forma_receb_hidden').value  = '';
+        document.getElementById('ped_local_receb_hidden').value  = local;
+        document.getElementById('ped-receb-confirmado').style.display = 'none';
+
+        if (!local) {
+            selectAgente.innerHTML = '<option value="">← Selecione o local primeiro</option>';
+            badgeAgente.style.background = '#cbd5e1';
+            return;
+        }
+
+        const cfg = PED_AGENTE_LABELS[local] || { label: 'Agente Operador', placeholder: '← Selecione o agente' };
+        labelAgente.textContent = cfg.label;
+        badgeAgente.style.background = '#27AE60';
+
+        if (local === 'BANCO') {
+            const contas = getContasBancariasLocal().filter(c => String(c.status || 'ATIVO').toUpperCase() === 'ATIVO');
+            if (contas.length === 0) {
+                selectAgente.innerHTML = `<option value="">Nenhuma ${cfg.label.toLowerCase()} cadastrada</option>`;
+                arioneToast(`Nenhuma ${cfg.label.toLowerCase()} encontrada.`, 'warning');
+                return;
+            }
+            selectAgente.innerHTML = `<option value="">${cfg.placeholder}</option>`;
+            contas.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value       = item.id;
+                opt.textContent = item.banco ? `${item.banco} (Ag: ${item.agencia} / Cc: ${item.conta})` : `Conta ${item.id}`;
+                selectAgente.appendChild(opt);
+            });
+            selectAgente.disabled = false;
+            return;
+        }
+
+        spinnerAgente.style.display = 'inline';
+        selectAgente.innerHTML = `<option value="">Buscando...</option>`;
+
+        try {
+            const res  = await fetch(`/financeiro/api/agentes?local=${encodeURIComponent(local)}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+
+            if (!Array.isArray(data) || data.length === 0) {
+                selectAgente.innerHTML = `<option value="">Nenhum ${cfg.label.toLowerCase()} cadastrado</option>`;
+                return;
+            }
+
+            selectAgente.innerHTML = `<option value="">${cfg.placeholder}</option>`;
+            data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value       = item.id;
+                opt.textContent = item.nome || item.descricao || `ID ${item.id}`;
+                selectAgente.appendChild(opt);
+            });
+            selectAgente.disabled = false;
+        } catch (e) {
+            selectAgente.innerHTML = '<option value="">Erro ao carregar</option>';
+        } finally {
+            spinnerAgente.style.display = 'none';
+        }
+    }
+
+    async function pedCarregarFormasPagamento(agenteId) {
+        const selectForma   = document.getElementById('ped_forma_receb');
+        const spinnerForma  = document.getElementById('spinner-forma');
+        const badgeForma    = document.getElementById('badge-step-forma');
+        const parcelasPanel = document.getElementById('ped-parcelas-panel');
+
+        if (parcelasPanel) parcelasPanel.style.display = 'none';
+        selectForma.innerHTML  = '<option value="">Carregando...</option>';
+        selectForma.disabled   = true;
+        document.getElementById('ped_forma_receb_hidden').value  = '';
+        document.getElementById('ped_agente_receb_hidden').value = agenteId;
+        document.getElementById('ped-receb-confirmado').style.display = 'none';
+
+        if (!agenteId) {
+            selectForma.innerHTML = '<option value="">← Selecione o agente primeiro</option>';
+            badgeForma.style.background = '#cbd5e1';
+            return;
+        }
+
+        badgeForma.style.background = '#27AE60';
+        spinnerForma.style.display  = 'inline';
+        selectForma.innerHTML = '<option value="">Buscando formas de pagamento...</option>';
+
+        try {
+            const local = document.getElementById('ped_local_receb').value || '';
+            const res  = await fetch(`/financeiro/api/formas-pagamento?agente_id=${encodeURIComponent(agenteId)}&local=${encodeURIComponent(local)}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            let data = await res.json();
+
+            if (!Array.isArray(data) || data.length === 0) {
+                selectForma.innerHTML = '<option value="">Nenhuma Forma Encontrada</option>';
+                return;
+            }
+
+            selectForma.innerHTML = '<option value="">← Selecione a forma de pagamento</option>';
+            data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value       = item.id;
+                const parcelasList = Array.isArray(item.parcelas) ? item.parcelas : [];
+                const parcelas  = parcelasList.length > 0 ? parcelasList.length : (item.max_parcelas || 1);
+                const sufixo    = parcelas > 1 ? `${parcelas}x` : 'À VISTA';
+                opt.textContent = `${item.nome || item.descricao || `ID ${item.id}`} (${sufixo})`;
+                opt.dataset.parcelas = parcelas;
+                opt.dataset.parcelasJson = JSON.stringify(parcelasList);
+                opt.dataset.nome = item.nome || item.descricao || `ID ${item.id}`;
+                selectForma.appendChild(opt);
+            });
+            selectForma.disabled = false;
+        } catch (e) {
+            selectForma.innerHTML = '<option value="">Erro ao carregar</option>';
+        } finally {
+            spinnerForma.style.display = 'none';
+        }
+    }
+
+    function pedOnFormaSelected(selectEl) {
+        const formaId   = selectEl.value;
+        const selectedOption = selectEl.options[selectEl.selectedIndex];
+        const formaNome = selectedOption?.dataset?.nome || selectedOption?.text || '';
+        const parcelas  = selectedOption?.dataset?.parcelas || '1';
+        const parcelasJson = selectedOption?.dataset?.parcelasJson ? JSON.parse(selectedOption.dataset.parcelasJson) : null;
+        document.getElementById('ped_forma_receb_hidden').value = formaId;
+        document.getElementById('parcelas_selecionadas_hidden').value = parcelas;
+
+        const parcelasPanel = document.getElementById('ped-parcelas-panel');
+        if (!formaId) {
+            if (parcelasPanel) parcelasPanel.style.display = 'none';
+            document.getElementById('ped-receb-confirmado').style.display = 'none';
+            return;
+        }
+
+        if (parcelasPanel) parcelasPanel.style.display = 'block';
+        atualizarParcelasPedido(parcelasJson || parseInt(parcelas, 10) || 1);
+
+        const local      = document.getElementById('ped_local_receb').value;
+        const agenteNome = document.getElementById('ped_agente_receb').options[
+            document.getElementById('ped_agente_receb').selectedIndex
+        ]?.text || '—';
+        const localLabel = PED_AGENTE_LABELS[local]?.label || local;
+
+        const textoResumo = `✔ ${localLabel}: ${agenteNome}  →  ${formaNome}`;
+        document.getElementById('ped-receb-resumo-texto').textContent = textoResumo;
+        document.getElementById('ped-receb-confirmado').style.display = 'flex';
+        
+        document.getElementById('operadora_id_hidden').value = formaId;
+        const emptyState = document.getElementById('pag-vazio');
+        if(emptyState) emptyState.style.display = 'none';
+    }
+
+    function atualizarParcelasPedido(parcelas) {
+        const select = document.getElementById('ped_parcelas_select');
+        if (!select) return;
+        select.innerHTML = '';
+
+        if (Array.isArray(parcelas) && parcelas.length > 0) {
+            parcelas.forEach(op => {
+                const option = document.createElement('option');
+                option.value = op.numero;
+                option.textContent = op.nome || (op.numero === 1 ? 'À VISTA' : `${op.numero}x`);
+                select.appendChild(option);
+            });
+        } else {
+            const max = parseInt(parcelas, 10) || 1;
+            for (let i = 1; i <= max; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i === 1 ? 'À VISTA' : `${i}x`;
+                select.appendChild(option);
+            }
+        }
+        select.value = select.options[0]?.value || '1';
+    }
+
+    function pedOnParcelasSelected(value) {
+        const parcelas = value || '1';
+        document.getElementById('parcelas_selecionadas_hidden').value = parcelas;
+    }
+
+    function pedLimparSelecaoRecebimento() {
+        document.getElementById('ped_local_receb').value = '';
+        pedCarregarAgentes('');
+        document.getElementById('ped-receb-confirmado').style.display = 'none';
+        const emptyState = document.getElementById('pag-vazio');
+        if(emptyState) emptyState.style.display = 'block';
+        const parcelasPanel = document.getElementById('ped-parcelas-panel');
+        if (parcelasPanel) parcelasPanel.style.display = 'none';
     }
 
     function arioneInitForm() {
@@ -389,7 +1158,6 @@
                     }
                 }
 
-                // Prazo de Entrega Automático
                 const hoje = new Date();
                 const formataData = (d) => d.toISOString().split('T')[0];
 
@@ -401,24 +1169,8 @@
                 }
             })
             .catch(err => console.error("❌ Erro ao carregar parâmetros:", err));
-    }
-
-    async function fetchItemBySKU(input) {
-        const sku = input.value.trim();
-        if (!sku) return;
-        try {
-            const response = await fetch(`/operacoes/api/produtos/get-by-sku?sku=${encodeURIComponent(sku)}`);
-            const data = await response.json();
-            if (data.ok) {
-                const row = input.closest('tr');
-                row.querySelector('.table-input-desc').value = data.descricao;
-                row.querySelector('.table-input-vlr').value = data.valor_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-                arioneToast('✨ Item identificado!', 'success');
-                calcularTotaisPedidoCompra();
-            }
-        } catch (err) {
-            console.error('❌ Erro SKU:', err);
-        }
+        
+        calcularTotaisPedidoCompra();
     }
 
     document.addEventListener('DOMContentLoaded', arioneInitForm);

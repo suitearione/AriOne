@@ -81,7 +81,7 @@
                 <div class="fin-row">
                     <div class="fin-group">
                         <label class="fin-label">Local <span style="color:#e74c3c;">*</span></label>
-                        <select id="local_origem" class="fin-input" onchange="carregarAgentes(this.value, 'agente_origem')">
+                        <select id="local_origem" name="local_origem" class="fin-input" onchange="carregarAgentes(this.value, 'agente_origem')">
                             <option value="">Selecione...</option>
                             <option value="CAIXA">Caixas</option>
                             <option value="BANCO">Bancos</option>
@@ -90,14 +90,14 @@
                     </div>
                     <div class="fin-group">
                         <label class="fin-label">Agente Operador <span style="color:#e74c3c;">*</span></label>
-                        <select id="agente_origem" class="fin-input" onchange="carregarFormasPagamento(this.value, 'forma_pagamento_origem')">
-                            <option value="">Busque ou selecione...</option>
+                        <select id="agente_origem" name="agente_origem" class="fin-input" onchange="carregarFormasPagamento(this.value, 'forma_pagamento_origem')" disabled>
+                            <option value="">Selecione o local primeiro</option>
                         </select>
                     </div>
                     <div class="fin-group">
                         <label class="fin-label">Forma de Pagamento <span style="color:#e74c3c;">*</span></label>
-                        <select id="forma_pagamento_origem" class="fin-input">
-                            <option value="">Busque ou selecione...</option>
+                        <select id="forma_pagamento_origem" name="forma_pagamento_origem" class="fin-input" disabled>
+                            <option value="">Selecione o agente primeiro</option>
                         </select>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
                 <div class="fin-row">
                     <div class="fin-group">
                         <label class="fin-label">Local <span style="color:#e74c3c;">*</span></label>
-                        <select id="local_destino" class="fin-input" onchange="carregarAgentes(this.value, 'agente_destino')">
+                        <select id="local_destino" name="local_destino" class="fin-input" onchange="carregarAgentes(this.value, 'agente_destino')">
                             <option value="">Selecione...</option>
                             <option value="CAIXA">Caixas</option>
                             <option value="BANCO">Bancos</option>
@@ -130,14 +130,14 @@
                     </div>
                     <div class="fin-group">
                         <label class="fin-label">Agente Operador <span style="color:#e74c3c;">*</span></label>
-                        <select id="agente_destino" class="fin-input" onchange="carregarFormasPagamento(this.value, 'forma_pagamento_destino')">
-                            <option value="">Busque ou selecione...</option>
+                        <select id="agente_destino" name="agente_destino" class="fin-input" onchange="carregarFormasPagamento(this.value, 'forma_pagamento_destino')" disabled>
+                            <option value="">Selecione o local primeiro</option>
                         </select>
                     </div>
                     <div class="fin-group">
                         <label class="fin-label">Forma de Pagamento <span style="color:#e74c3c;">*</span></label>
-                        <select id="forma_pagamento_destino" class="fin-input">
-                            <option value="">Busque ou selecione...</option>
+                        <select id="forma_pagamento_destino" name="forma_pagamento_destino" class="fin-input" disabled>
+                            <option value="">Selecione o agente primeiro</option>
                         </select>
                     </div>
                 </div>
@@ -192,36 +192,92 @@
 
     async function carregarAgentes(local, selectId) {
         const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="">Busque ou selecione...</option>';
+        if (!select) return;
 
-        if (!local) return;
+        const formaId = selectId === 'agente_origem' ? 'forma_pagamento_origem' : 'forma_pagamento_destino';
+        const formaSelect = document.getElementById(formaId);
 
-        const response = await fetch(`/financeiro/api/agentes?local=${local}`);
-        const data = await response.json();
+        select.innerHTML = '<option value="">Buscando agentes...</option>';
+        select.disabled = true;
 
-        if (data && !Array.isArray(data) && data.message) {
-            select.innerHTML = `<option value="">${data.message}</option>`;
-            if (typeof arioneToast === 'function') arioneToast(data.message, 'warning');
+        if (formaSelect) {
+            formaSelect.innerHTML = '<option value="">Selecione o agente primeiro</option>';
+            formaSelect.disabled = true;
+        }
+
+        if (!local) {
+            select.innerHTML = '<option value="">Selecione o local primeiro</option>';
+            select.disabled = false;
             return;
         }
 
-        data.forEach(item => {
-            select.innerHTML += `<option value="${item.id}">${item.nome}</option>`;
-        });
+        try {
+            const response = await fetch(`/financeiro/api/agentes?local=${encodeURIComponent(local)}`);
+            const data = await response.json();
+
+            if (!response.ok || (data && !Array.isArray(data) && data.message)) {
+                const message = data && data.message ? data.message : 'Erro ao carregar agentes';
+                select.innerHTML = `<option value="">${message}</option>`;
+                if (typeof arioneToast === 'function') arioneToast(message, 'warning');
+                return;
+            }
+
+            if (!Array.isArray(data) || data.length === 0) {
+                select.innerHTML = '<option value="">Nenhum agente encontrado</option>';
+                return;
+            }
+
+            select.innerHTML = '<option value="">Selecione o agente</option>';
+            data.forEach(item => {
+                select.innerHTML += `<option value="${item.id}">${item.nome || item.descricao || `ID ${item.id}`}</option>`;
+            });
+            select.disabled = false;
+        } catch (err) {
+            console.error('Erro carregarAgentes:', err);
+            select.innerHTML = '<option value="">Erro ao carregar agentes</option>';
+            if (typeof arioneToast === 'function') arioneToast('Erro ao carregar agentes. Verifique a conexão.', 'danger');
+        }
     }
 
     async function carregarFormasPagamento(agenteId, selectId) {
         const select = document.getElementById(selectId);
-        select.innerHTML = '<option value="">Busque ou selecione...</option>';
+        if (!select) return;
 
-        if (!agenteId) return;
+        select.innerHTML = '<option value="">Buscando formas...</option>';
+        select.disabled = true;
 
-        const response = await fetch(`/financeiro/api/formas-pagamento?agente_id=${agenteId}`);
-        const data = await response.json();
+        if (!agenteId) {
+            select.innerHTML = '<option value="">Selecione o agente primeiro</option>';
+            select.disabled = false;
+            return;
+        }
 
-        data.forEach(item => {
-            select.innerHTML += `<option value="${item.id}">${item.nome}</option>`;
-        });
+        try {
+            const response = await fetch(`/financeiro/api/formas-pagamento?agente_id=${encodeURIComponent(agenteId)}`);
+            const data = await response.json();
+
+            if (!response.ok || (data && !Array.isArray(data) && data.message)) {
+                const message = data && data.message ? data.message : 'Erro ao carregar formas de pagamento';
+                select.innerHTML = `<option value="">${message}</option>`;
+                if (typeof arioneToast === 'function') arioneToast(message, 'warning');
+                return;
+            }
+
+            if (!Array.isArray(data) || data.length === 0) {
+                select.innerHTML = '<option value="">Nenhuma forma de pagamento encontrada</option>';
+                return;
+            }
+
+            select.innerHTML = '<option value="">Selecione a forma de pagamento</option>';
+            data.forEach(item => {
+                select.innerHTML += `<option value="${item.id}">${item.nome || item.descricao || `ID ${item.id}`}</option>`;
+            });
+            select.disabled = false;
+        } catch (err) {
+            console.error('Erro carregarFormasPagamento:', err);
+            select.innerHTML = '<option value="">Erro ao carregar formas</option>';
+            if (typeof arioneToast === 'function') arioneToast('Erro ao carregar formas de pagamento. Verifique a conexão.', 'danger');
+        }
     }
 
     async function salvarLancamentoDireto(e) {

@@ -22,7 +22,7 @@
 
 from pathlib import Path
 
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, jsonify, request
 
 from flask_login import current_user
 
@@ -945,6 +945,11 @@ def create_app():
         tb = traceback.format_exc()
 
         print(f"\n{'='*50}\n500 ERROR TRACEBACK:\n{tb}\n{'='*50}\n")
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+           request.headers.get('Accept', '').find('application/json') != -1 or \
+           request.is_json:
+            return jsonify(success=False, error="Erro do Servidor Interno - verifique /health para diagnóstico"), 500
 
         return f"Internal Server Error - verifique /health para diagnóstico", 500
 

@@ -109,7 +109,7 @@ class PedidoVenda(db.Model):
     total_liquido = db.Column(db.Numeric(12, 2), default=0.00)
     
     # 🛡️ Status de Fluxo (Seção 3)
-    status = db.Column(db.String(20), default='Aberto') # Aberto, Producao, Faturado, Entregue, Cancelado
+    status = db.Column(db.String(20), default='Em EDIÇÃO') # Aberto, Em EDIÇÃO, Producao, Faturado, Entregue, Cancelado
     
     # Relacionamentos para Backward Scheduling
     ordens_producao = db.relationship('OrdemProducao', backref='pedido_venda', lazy=True)

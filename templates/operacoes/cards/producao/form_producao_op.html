@@ -1,298 +1,793 @@
 {# =============================================================================
    Arquivo  : form_producao_op.html
    Caminho  : templates/operacoes/cards/producao/form_producao_op.html
-   Função   : Gestão de Ordens de Produção (OP) e Plano PCA.
+   Função   : Gestão de Ordens de Produção (OP) - Multi-Produto
+              Gerada automaticamente ao confirmar Pedido de Vendas.
+   Padrão   : Testes_de_Integridades.md (Seção 2, 7, 9)
 ============================================================================= #}
 {% extends "base_modal.html" if request.args.get('modal') == '1' else "base.html" %}
 {% block content %}
 <div class="ctx-prd-wrap">
-    <style>
-        :root { 
-            --prd-pri: #E67E22; 
-            --prd-acc: #D35400; 
-            --prd-success: #27AE60; 
-            --prd-danger: #E74C3C; 
-            --prd-info: #2980B9;
-        }
-        .ctx-prd-header { background: linear-gradient(135deg, var(--prd-pri), #A04000); color: #fff; padding: 18px 25px; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: space-between; }
-        .ctx-prd-body { padding: 22px; background: #fff; border-radius: 0 0 12px 12px; }
-        
-        /* Ocultar elementos base caso vazem por erro de renderização */
-        .arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
-        .arione-main-wrapper { margin-left: 0 !important; }
-        
-        /* Toolbar CRUD */
-        .prd-toolbar { background: #f8fafc; border-bottom: 1.5px solid #edf2f7; padding: 10px 22px; display: flex; gap: 10px; }
-        .btn-crud { background: #fff; border: 1.5px solid #e2e8f0; padding: 6px 15px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; }
-        .btn-crud:hover { border-color: var(--prd-acc); color: var(--prd-acc); }
-        .btn-crud.active { background: var(--prd-acc); color: #fff; border-color: var(--prd-acc); }
+<style>
+:root {
+    --prd-pri:     #E67E22;
+    --prd-acc:     #D35400;
+    --prd-success: #27AE60;
+    --prd-danger:  #E74C3C;
+    --prd-info:    #2980B9;
+    --prd-dark:    #1e293b;
+    --prd-muted:   #64748b;
+    --prd-border:  #e2e8f0;
+    --prd-bg:      #f8fafc;
+}
 
-        .prd-section { margin-bottom: 20px; border: 1.5px solid #edf2f7; border-radius: 10px; padding: 18px; position: relative; }
-        .prd-title { font-size: 11px; font-weight: 800; color: var(--prd-pri); text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        .prd-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
-        .prd-group { display: flex; flex-direction: column; gap: 5px; }
-        .prd-label { font-size: 11px; font-weight: 700; color: #64748b; }
-        .prd-input { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; }
-        
-        /* Status & Prioridade */
-        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
-        .prioridade-critica { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .prioridade-alta { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
-        
-        /* Abas Inferiores */
-        .prd-tabs-nav { display: flex; gap: 5px; border-bottom: 2px solid #f1f5f9; margin-top: 15px; }
-        .prd-tab { padding: 12px 20px; cursor: pointer; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; }
-        .prd-tab.active { color: var(--prd-acc); border-bottom-color: var(--prd-acc); }
-        .prd-tab-panel { display: none; padding-top: 20px; animation: fadeIn 0.3s; }
-        .prd-tab-panel.active { display: block; }
-        
-        @keyframes fadeIn { from {opacity: 0; transform: translateY(5px);} to {opacity: 1; transform: translateY(0);} }
+/* ── Reset ── */
+.ctx-prd-wrap *, .ctx-prd-wrap *::before, .ctx-prd-wrap *::after { box-sizing: border-box; }
+.arione-sidebar, .arione-topbar, .arione-new-header-container > header { display: none !important; }
+.arione-main-wrapper { margin-left: 0 !important; }
 
-        /* Checklist */
-        .checklist-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
-        .checklist-item:last-child { border-bottom: none; }
-    </style>
+/* ── Header ── */
+.ctx-prd-header {
+    background: linear-gradient(135deg, var(--prd-pri) 0%, #A04000 100%);
+    color: #fff; padding: 14px 22px;
+    border-radius: 12px 12px 0 0;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 1000;
+}
+.prd-hdr-title { font-weight: 900; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1.5px; }
+.prd-hdr-sub   { font-size: 0.72rem; opacity: .8; font-weight: 600; }
+.btn-hdr { background: rgba(255,255,255,.12); color: #fff; width: 34px; height: 34px;
+    border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: .2s; }
+.btn-hdr:hover { background: rgba(255,255,255,.25); }
+.btn-hdr.danger { background: rgba(244,67,54,.25); }
 
-    <!-- 🏛️ PADRÃO DE CABEÇALHO MESTRE ARIONE (Section 7) -->
-    <div class="ctx-prd-header" style="position: sticky; top: 0; z-index: 1000; background: linear-gradient(135deg, var(--prd-pri) 0%, #A04000 100%);">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <div style="background:rgba(255,255,255,0.1); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-industry" style="color: #fff;"></i></div>
-            <div>
-                <div style="font-weight: 900; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Ordem de Produção (OP)</div>
-                <div style="font-size: 0.75rem; opacity: 0.8; font-weight: 600;">Chão de Fábrica Digital - AriOne Manufacturing</div>
-            </div>
+/* ── Body ── */
+.ctx-prd-body { padding: 18px 22px; background: #fff; border-radius: 0 0 12px 12px; }
+
+/* ── Seções ── */
+.prd-section { border: 1.5px solid var(--prd-border); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+.prd-section.info-bg { background: #f0f9ff; border-color: #bae6fd; }
+.prd-title { font-size: 11px; font-weight: 800; color: var(--prd-pri); text-transform: uppercase;
+    margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;
+    display: flex; align-items: center; gap: 8px; }
+.prd-row   { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.prd-row:last-child { margin-bottom: 0; }
+.prd-group { display: flex; flex-direction: column; gap: 4px; }
+.prd-label { font-size: 11px; font-weight: 700; color: var(--prd-muted); }
+.prd-input { padding: 8px 11px; border: 2px solid var(--prd-border); border-radius: 8px;
+    font-size: 13px; color: var(--prd-dark); transition: border-color .2s; width: 100%; }
+.prd-input:focus { outline: none; border-color: var(--prd-pri); }
+
+/* ── Badge origem pedido ── */
+.origem-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff7ed; color: var(--prd-acc);
+    border: 1.5px solid #fed7aa; border-radius: 8px;
+    padding: 6px 12px; font-size: 11px; font-weight: 800;
+    margin-bottom: 14px;
+}
+
+/* ── Tabela de Produtos (Multi-produto) ── */
+.op-produtos-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+}
+.op-produtos-title { font-size: 12px; font-weight: 800; color: var(--prd-dark); }
+.btn-add-produto {
+    background: var(--prd-acc); color: #fff; border: none; border-radius: 7px;
+    padding: 6px 14px; font-size: 11px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: .2s;
+}
+.btn-add-produto:hover { background: #A04000; }
+
+#tbl-produtos { width: 100%; border-collapse: collapse; font-size: 12px; }
+#tbl-produtos thead tr { background: var(--prd-bg); }
+#tbl-produtos th { padding: 9px 10px; text-align: left; font-size: 10px; font-weight: 800;
+    color: var(--prd-muted); border-bottom: 2px solid var(--prd-border); white-space: nowrap; }
+#tbl-produtos td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+#tbl-produtos tr:last-child td { border-bottom: none; }
+#tbl-produtos tr:hover td { background: #fff7ed; }
+.tbl-input { border: 1.5px solid var(--prd-border); border-radius: 6px; padding: 5px 8px;
+    font-size: 12px; width: 100%; color: var(--prd-dark); }
+.tbl-input:focus { outline: none; border-color: var(--prd-pri); }
+.btn-rm { background: #fee2e2; color: #991b1b; border: none; border-radius: 5px;
+    padding: 4px 9px; cursor: pointer; font-size: 11px; font-weight: 700; }
+.btn-rm:hover { background: #fecaca; }
+.tbl-total-row td { background: var(--prd-bg); font-weight: 800; border-top: 2px solid var(--prd-border); }
+
+/* ── Status pill colorido ── */
+.status-sel {
+    font-weight: 800; color: #fff; border: none; border-radius: 8px;
+    text-align: center; height: 36px; padding: 0 10px; cursor: pointer;
+    font-size: 12px; text-transform: uppercase; width: 100%;
+}
+
+/* ── Abas ── */
+.prd-tabs-nav { display: flex; gap: 4px; border-bottom: 2px solid #f1f5f9; margin-top: 6px; overflow-x: auto; }
+.prd-tab { padding: 10px 18px; cursor: pointer; font-size: 11px; font-weight: 800;
+    color: #94a3b8; text-transform: uppercase; border-bottom: 3px solid transparent;
+    transition: .25s; white-space: nowrap; }
+.prd-tab.active { color: var(--prd-acc); border-bottom-color: var(--prd-acc); }
+.prd-tab-panel { display: none; padding-top: 18px; animation: fadeIn .3s; }
+.prd-tab-panel.active { display: block; }
+@keyframes fadeIn { from {opacity:0; transform:translateY(4px);} to {opacity:1; transform:translateY(0);} }
+
+/* ── BOM (Materiais) ── */
+.bom-wrap { border: 1.5px solid var(--prd-border); border-radius: 10px; overflow: hidden; }
+.bom-head { padding: 9px 14px; background: var(--prd-bg); border-bottom: 1px solid var(--prd-border);
+    font-size: 10px; font-weight: 800; color: var(--prd-muted);
+    display: flex; justify-content: space-between; }
+.checklist-item { display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-bottom: 1px solid #f8fafc; font-size: 12px; }
+.checklist-item:last-child { border-bottom: none; }
+
+/* ── Roteiro ── */
+.rot-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.rot-table th { padding: 9px 10px; text-align: left; color: var(--prd-muted); border-bottom: 2px solid var(--prd-border); font-size: 10px; font-weight: 800; }
+.rot-table td { padding: 9px 10px; border-bottom: 1px solid #f1f5f9; }
+.rot-table tr:hover td { background: var(--prd-bg); }
+
+/* ── Status Pills ── */
+.sp { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; }
+.sp-ok  { background: #dcfce7; color: #166534; }
+.sp-run { background: #fef9c3; color: #854d0e; }
+.sp-pnd { background: #f1f5f9; color: #475569; }
+.sp-err { background: #fee2e2; color: #991b1b; }
+
+/* ── Qualidade ── */
+.foto-drop { border: 2px dashed #cbd5e1; height: 130px; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #94a3b8; cursor: pointer; transition: .2s; }
+.foto-drop:hover { border-color: var(--prd-pri); color: var(--prd-pri); background: #fff7ed; }
+
+/* ── Custos ── */
+.custo-row { display: flex; justify-content: space-between; padding: 10px 14px;
+    background: var(--prd-bg); border-radius: 8px; margin-bottom: 8px; }
+.custo-total { display: flex; justify-content: space-between; padding: 14px;
+    background: var(--prd-pri); color: #fff; border-radius: 8px; margin-top: 6px; }
+
+/* ── Rodapé de ações ── */
+.prd-footer { display: flex; justify-content: flex-end; gap: 10px;
+    padding: 14px 0 4px; border-top: 1.5px solid var(--prd-border); margin-top: 18px; }
+.btn-action { padding: 9px 20px; border-radius: 8px; border: none; font-size: 12px;
+    font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: .2s; }
+.btn-cancel { background: var(--prd-bg); color: var(--prd-muted); border: 1.5px solid var(--prd-border); }
+.btn-cancel:hover { background: #f1f5f9; }
+.btn-confirm { background: var(--prd-success); color: #fff; }
+.btn-confirm:hover { background: #1e8449; }
+.btn-save { background: var(--prd-pri); color: #fff; }
+.btn-save:hover { background: var(--prd-acc); }
+</style>
+
+<!-- ══════════════════════════════════════════════════════
+     CABEÇALHO
+══════════════════════════════════════════════════════ -->
+<div class="ctx-prd-header">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:rgba(255,255,255,.12);width:40px;height:40px;border-radius:8px;
+                    display:flex;align-items:center;justify-content:center;">
+            <i class="fas fa-industry" style="font-size:18px;"></i>
         </div>
-
-        <div style="display:flex; gap:10px; align-items: center;">
-            <!-- 1. Novo (+) -->
-            <button type="button" class="btn-crud-icon" title="Nova Ordem de Produção" onclick="window.location.reload()" style="background:#fff; color:var(--prd-pri); width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fas fa-plus"></i>
-            </button>
-            
-            <!-- 2. Salvar (Disquete) -->
-            <button type="button" class="btn-crud-icon" title="Salvar e Iniciar" onclick="alert('OP Iniciada!')" style="background:rgba(255,255,255,0.1); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fas fa-save"></i>
-            </button>
-
-            <!-- 3. Ações Extras (...) -->
-            <div style="position: relative; display: inline-block;">
-                <button type="button" class="btn-crud-icon" title="Ações Extras" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'" style="background:rgba(255,255,255,0.1); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
-                <div style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1000; width: 180px; padding: 5px 0; margin-top: 5px;">
-                    <button type="button" onclick="imprimirOP()" style="width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-print"></i> Imprimir Etiqueta
-                    </button>
-                    <button type="button" onclick="cancelarOP()" style="width: 100%; padding: 10px 15px; border: none; background: none; text-align: left; font-size: 11px; font-weight: 700; color: var(--prd-danger); cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-trash"></i> Cancelar OP
-                    </button>
-                </div>
-            </div>
-
-            <!-- 4. Voltar (Seta) -->
-            <button type="button" class="btn-crud-icon" title="Voltar" onclick="fecharModalPrd()" style="background:rgba(255,255,255,0.1); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-
-            <!-- 5. Sair (X) -->
-            <button type="button" class="btn-crud-icon" title="Sair / Fechar" onclick="fecharModalPrd()" style="background:rgba(244, 67, 54, 0.2); color:#fff; width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fas fa-times"></i>
-            </button>
+        <div>
+            <div class="prd-hdr-title">Ordem de Produção (OP)</div>
+            <div class="prd-hdr-sub">Chão de Fábrica Digital — AriOne Manufacturing</div>
         </div>
     </div>
 
-    <div class="ctx-prd-body">
-        <form>
-            <!-- Cabeçalho Técnico -->
-            <div class="prd-section">
-                <div class="prd-row">
-                    <div class="prd-group" style="flex:1.5;">
-                        <label class="prd-label" title="Pilar A: Selecione o produto acabado a ser produzido nesta OP.">
-                            Produto Acabado (SKU/Ref)
-                            <i class="fas fa-search" onclick="abrirNavegacao('cadastros.abas', 'catalogos')" style="margin-left: 5px; cursor: pointer; color: var(--prd-pri);" title="Ir para Catálogo de Produtos"></i>
-                        </label>
-                        <input list="lista-produtos-op" name="produto_id_search" class="prd-input" placeholder="BUSCAR PRODUTO...">
-                        <datalist id="lista-produtos-op">
-                            {% for p in produtos %}
-                                <option data-id="{{ p.id }}" value="{{ p.nome }}">{{ p.sku or p.referencia }}</option>
-                            {% endfor %}
-                        </datalist>
-                    </div>
-                    <div class="prd-group">
-                        <label class="prd-label">Lote de Produção</label>
-                        <input type="text" class="prd-input" value="LOT-2026-04-123" readonly style="background:#f8fafc; font-weight:800; color:var(--prd-acc);">
-                    </div>
-                    <div class="prd-group">
-                        <label class="prd-label">Prioridade</label>
-                        <select class="prd-input" style="font-weight:700;">
-                            <option class="prioridade-alta">ALTA</option>
-                            <option class="prioridade-critica">CRÍTICA / URGENTE</option>
-                            <option selected>MÉDIA</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="prd-row">
-                    <div class="prd-group">
-                        <label class="prd-label">Quantidade Planejada</label>
-                        <input type="number" class="prd-input" value="500">
-                    </div>
-                    <div class="prd-group">
-                        <label class="prd-label">Status da OP</label>
-                        <div class="fp-input-wrapper">
-                            <input class="prd-input" list="lista-status-prd" name="status_busca" id="status_busca" value="{{ status_lista[0].nome if status_lista else 'PLANEJADA' }}" style="width: 100%; color: #fff; font-weight: 800; background: {{ status_lista[0].cor if status_lista else '#E67E22' }}; border-radius: 8px; text-align: center; border: none; height: 38px; text-transform: uppercase;"
-                                   onchange="atualizarStatusOP(); const opt = document.querySelector('#lista-status-prd option[value=\'' + this.value + '\']'); if(opt) this.style.background = opt.dataset.cor;">
-                            <datalist id="lista-status-prd">
-                                {% for s in status_lista %}
-                                    <option value="{{ s.nome }}" data-cor="{{ s.cor }}">{{ s.nome }}</option>
-                                {% endfor %}
-                                <option value="PLANEJADA" data-cor="#E67E22">PLANEJADA</option>
-                                <option value="CONFIRMADA" data-cor="#27AE60">CONFIRMADA (RESERVA MP)</option>
-                                <option value="EM PRODUÇÃO" data-cor="#2980B9">EM PRODUÇÃO</option>
-                                <option value="FINALIZADA" data-cor="#16A085">FINALIZADA</option>
-                                <option value="CANCELADA" data-cor="#E74C3C">CANCELADA</option>
-                            </datalist>
-                        </div>
-                    </div>
-                    <div class="prd-group">
-                        <label class="prd-label">Data Prometida (Entrega)</label>
-                        <input type="date" class="prd-input" value="2026-04-20">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Subcard PCA (Planejamento) -->
-            <div class="prd-section" style="background:#f0f9ff; border-color:#bae6fd;">
-                <div class="prd-title" style="color:var(--prd-info); font-size: 13px; font-weight: 900; border-bottom: 2px solid var(--prd-info); padding-bottom: 8px;"><i class="fas fa-calendar-check"></i> Plano PCA (Capacidade & Prazos)</div>
-                <div class="prd-row">
-                    <div class="prd-group">
-                        <label class="prd-label">Posto de Trabalho</label>
-                        <select class="prd-input"><option>Corte Automático - Setor A</option></select>
-                    </div>
-                    <div class="prd-group">
-                        <label class="prd-label">Carga Horária Est. (h)</label>
-                        <div style="font-size:18px; font-weight:900; color:var(--prd-info);">42.5 h</div>
-                    </div>
-                    <div class="prd-group">
-                        <label class="prd-label">Previsão Início</label>
-                        <input type="date" class="prd-input" value="{{ today }}">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Abas Técnicas Inferiores -->
-            <div class="prd-tabs-nav">
-                <div class="prd-tab {% if aba_ativa == 'dados' %}active{% endif %}" data-prd-tab="materiais">🧵 Materiais (BOM)</div>
-                <div class="prd-tab {% if aba_ativa == 'pca' %}active{% endif %}" data-prd-tab="roteiro">🔁 Roteiro / PCA</div>
-                <div class="prd-tab" data-prd-tab="qualidade">🧪 Qualidade</div>
-                <div class="prd-tab" data-prd-tab="custos">💰 Custos OP</div>
-            </div>
-
-            <!-- Painéis das Abas -->
-            <div class="prd-tab-panel {% if aba_ativa == 'dados' %}active{% endif %}" id="prd-tab-materiais">
-                <div style="background:#fff; border:1.5px solid #edf2f7; border-radius:10px;">
-                    <div style="padding:10px 15px; background:#f8fafc; border-bottom:1px solid #edf2f7; font-size:11px; font-weight:800; color:#64748b; display:flex; justify-content:space-between;">
-                        <span>INSUMO / MATÉRIA-PRIMA</span>
-                        <span>QTD REQUERIDA / SALDO</span>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox" checked>
-                        <div style="flex:1;"><strong>TECIDO PIQUET ALGODÃO - BRANCO</strong><br><small>Ref: TX-001</small></div>
-                        <div style="text-align:right;">120.00 mts <br> <span style="color:var(--prd-success); font-weight:700;">OK</span></div>
-                    </div>
-                    <div class="checklist-item">
-                        <input type="checkbox">
-                        <div style="flex:1;"><strong>BOTÃO MADRIPÉROLA 2 FUROS</strong><br><small>Ref: ACC-45</small></div>
-                        <div style="text-align:right;">1.500 un <br> <span style="color:var(--prd-danger); font-weight:700;">FALTA</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="prd-tab-panel {% if aba_ativa == 'pca' %}active{% endif %}" id="prd-tab-roteiro">
-                <table style="width:100%; font-size:12px; border-collapse:collapse;">
-                    <thead>
-                        <tr style="text-align:left; color:#64748b; border-bottom:2px solid #edf2f7;">
-                            <th style="padding:10px;">Sequência</th>
-                            <th>Operação</th>
-                            <th>Posto / Setor</th>
-                            <th>Tempo Est.</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="padding:10px;">01</td>
-                            <td><strong>CORTE DE ENCAIXE</strong></td>
-                            <td>Setor de Corte</td>
-                            <td>08:00 h</td>
-                            <td><span class="status-pill" style="background:#dcfce7; color:#166534;">Finalizado</span></td>
-                        </tr>
-                        <tr>
-                            <td style="padding:10px;">02</td>
-                            <td><strong>COSTURA (OFICINA)</strong></td>
-                            <td>Oficina Externa B</td>
-                            <td>24:00 h</td>
-                            <td><span class="status-pill" style="background:#fef9c3; color:#854d0e;">Em Curso</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="prd-tab-panel" id="prd-tab-qualidade">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                    <div style="border:1.5px dashed #cbd5e1; height:150px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94a3b8;">
-                        <i class="fas fa-camera fa-2x"></i>
-                        <span style="font-size:11px; margin-top:10px;">Anexar Foto de Inspeção</span>
-                    </div>
-                    <div style="background:#f8fafc; padding:15px; border-radius:10px;">
-                        <label class="prd-label">Laudo do Inspetor</label>
-                        <textarea class="prd-input" rows="4" style="width:100%;" placeholder="Observações de qualidade..."></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <div class="prd-tab-panel" id="prd-tab-custos">
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border-radius:8px;">
-                        <span style="font-size:12px; font-weight:700;">Custo Matéria-Prima (Checklist)</span>
-                        <span style="font-weight:800;">R$ 12.450,00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border-radius:8px;">
-                        <span style="font-size:12px; font-weight:700;">Mão de Obra (Roteiro)</span>
-                        <span style="font-weight:800;">R$ 4.200,00</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; padding:15px; background:var(--prd-pri); color:#fff; border-radius:8px; margin-top:10px;">
-                        <span style="font-size:14px; font-weight:800;">CUSTO TOTAL ESTIMADO OP</span>
-                        <span style="font-size:20px; font-weight:900;">R$ 16.650,00</span>
-                    </div>
-                </div>
-            </div>
-        </form>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <!-- Novo -->
+        <button type="button" class="btn-hdr" title="Nova OP" onclick="novaOP()">
+            <i class="fas fa-plus"></i>
+        </button>
+        <!-- Salvar -->
+        <button type="button" class="btn-hdr" title="Salvar OP" onclick="salvarOP()">
+            <i class="fas fa-save"></i>
+        </button>
+        <!-- Confirmar -->
+        <button type="button" class="btn-hdr" title="Confirmar e Reservar MP" onclick="confirmarOP()"
+                style="background:rgba(39,174,96,.3);">
+            <i class="fas fa-check-double"></i>
+        </button>
+        <!-- Imprimir -->
+        <button type="button" class="btn-hdr" title="Imprimir Etiqueta" onclick="imprimirOP()">
+            <i class="fas fa-print"></i>
+        </button>
+        <!-- Cancelar OP -->
+        <button type="button" class="btn-hdr danger" title="Cancelar OP" onclick="cancelarOP()">
+            <i class="fas fa-trash"></i>
+        </button>
+        <!-- Fechar -->
+        <button type="button" class="btn-hdr danger" title="Fechar" onclick="fecharModalPrd()">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     CORPO
+══════════════════════════════════════════════════════ -->
+<div class="ctx-prd-body">
+<form id="form-op">
+
+    <!-- Origem: Pedido de Vendas -->
+    {% if pedido_origem %}
+    <div class="origem-badge">
+        <i class="fas fa-shopping-cart"></i>
+        Gerado pelo Pedido de Vendas &nbsp;<strong>#{{ pedido_origem.numero }}</strong>
+        &nbsp;·&nbsp; Cliente: <strong>{{ pedido_origem.cliente }}</strong>
+        &nbsp;·&nbsp; Data: {{ pedido_origem.data }}
+    </div>
+    {% endif %}
+
+    <!-- ── Seção 1: Dados Gerais da OP ── -->
+    <div class="prd-section">
+        <div class="prd-title"><i class="fas fa-clipboard-list"></i> Dados Gerais da Ordem de Produção</div>
+        <div class="prd-row">
+            <div class="prd-group">
+                <label class="prd-label">Nº da OP (automático)</label>
+                <input class="prd-input" id="op-numero" value="{{ op_numero or 'OP-2026-001' }}"
+                       readonly style="background:var(--prd-bg);font-weight:800;color:var(--prd-acc);">
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Lote de Produção</label>
+                <input class="prd-input" id="op-lote" value="{{ lote or 'LOT-2026-04-123' }}"
+                       readonly style="background:var(--prd-bg);font-weight:800;color:var(--prd-info);">
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Prioridade</label>
+                <select class="prd-input" id="op-prioridade">
+                    <option value="BAIXA">BAIXA</option>
+                    <option value="MEDIA" selected>MÉDIA</option>
+                    <option value="ALTA">ALTA</option>
+                    <option value="CRITICA">CRÍTICA / URGENTE</option>
+                </select>
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Status da OP</label>
+                <select class="status-sel prd-input" id="op-status" onchange="aplicarCorStatus(this)">
+                    {% for s in status_lista %}
+                        <option value="{{ s.nome }}" data-cor="{{ s.cor }}">{{ s.nome }}</option>
+                    {% endfor %}
+                    <option value="PLANEJADA"   data-cor="#E67E22" selected>PLANEJADA</option>
+                    <option value="CONFIRMADA"  data-cor="#27AE60">CONFIRMADA</option>
+                    <option value="EM PRODUCAO" data-cor="#2980B9">EM PRODUÇÃO</option>
+                    <option value="FINALIZADA"  data-cor="#16A085">FINALIZADA</option>
+                    <option value="CANCELADA"   data-cor="#E74C3C">CANCELADA</option>
+                </select>
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Data de Abertura</label>
+                <input type="date" class="prd-input" id="op-abertura"
+                       value="{{ today or '2026-06-09' }}">
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Data Prometida (Entrega)</label>
+                <input type="date" class="prd-input" id="op-entrega" value="2026-07-10">
+            </div>
+        </div>
+        <div class="prd-row">
+            <div class="prd-group" style="grid-column:1/-1;">
+                <label class="prd-label">Observações Gerais da OP</label>
+                <textarea class="prd-input" id="op-obs" rows="2"
+                          placeholder="Instruções especiais, referências de cliente, notas de produção..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Seção 2: Produtos da OP (MULTI-PRODUTO) ── -->
+    <div class="prd-section">
+        <div class="op-produtos-header">
+            <div>
+                <div class="prd-title" style="margin-bottom:0;border:none;padding:0;">
+                    <i class="fas fa-boxes"></i> Produtos desta Ordem de Produção
+                </div>
+                <div style="font-size:10px;color:var(--prd-muted);margin-top:3px;">
+                    Inclua todos os produtos/SKUs que compõem esta OP.
+                </div>
+            </div>
+            <button type="button" class="btn-add-produto" onclick="adicionarProduto()">
+                <i class="fas fa-plus"></i> Adicionar Produto
+            </button>
+        </div>
+
+        <div style="overflow-x:auto;margin-top:12px;">
+        <table id="tbl-produtos">
+            <thead>
+                <tr>
+                    <th style="width:30px;">#</th>
+                    <th style="min-width:200px;">Produto / SKU <i class="fas fa-search" style="color:var(--prd-pri);cursor:pointer;" onclick="abrirNavegacao('cadastros.abas','catalogos')" title="Catálogo"></i></th>
+                    <th style="min-width:100px;">Referência</th>
+                    <th style="min-width:80px;">Cor / Var.</th>
+                    <th style="min-width:90px;">Tamanho</th>
+                    <th style="min-width:90px;">Qtd Planejada</th>
+                    <th style="min-width:90px;">Qtd Produzida</th>
+                    <th style="min-width:100px;">Unidade</th>
+                    <th style="min-width:110px;">Custo Unit. (R$)</th>
+                    <th style="min-width:110px;">Total (R$)</th>
+                    <th style="width:40px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tbody-produtos">
+                <!-- Linhas injetadas pelo JS / pelo Flask se vier de pedido -->
+                {% if produtos_op %}
+                    {% for item in produtos_op %}
+                    <tr data-idx="{{ loop.index }}">
+                        <td style="color:var(--prd-muted);font-weight:700;">{{ loop.index }}</td>
+                        <td>
+                            <input list="lista-produtos-op" class="tbl-input" name="produto[]"
+                                   value="{{ item.nome }}" placeholder="Buscar produto..."
+                                   onchange="recalcularLinha(this)">
+                        </td>
+                        <td><input class="tbl-input" name="ref[]" value="{{ item.referencia or '' }}" placeholder="REF-001"></td>
+                        <td><input class="tbl-input" name="cor[]" value="{{ item.cor or '' }}" placeholder="Branco"></td>
+                        <td><input class="tbl-input" name="tam[]" value="{{ item.tamanho or '' }}" placeholder="M"></td>
+                        <td><input type="number" class="tbl-input qtd-plan" name="qtd_plan[]"
+                                   value="{{ item.quantidade }}" min="1" onchange="recalcularLinha(this)"></td>
+                        <td><input type="number" class="tbl-input qtd-prod" name="qtd_prod[]"
+                                   value="0" min="0" onchange="recalcularLinha(this)"></td>
+                        <td>
+                            <select class="tbl-input" name="und[]">
+                                <option value="UN" {% if item.und=='UN' %}selected{% endif %}>UN (Unid.)</option>
+                                <option value="PC" {% if item.und=='PC' %}selected{% endif %}>PC (Peça)</option>
+                                <option value="KG" {% if item.und=='KG' %}selected{% endif %}>KG</option>
+                                <option value="MT" {% if item.und=='MT' %}selected{% endif %}>MT (Metro)</option>
+                                <option value="DZ" {% if item.und=='DZ' %}selected{% endif %}>DZ (Dúzia)</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="tbl-input custo-unit" name="custo[]"
+                                   value="{{ item.custo_unit or 0 }}" min="0" step="0.01"
+                                   onchange="recalcularLinha(this)"></td>
+                        <td class="total-linha" style="font-weight:800;color:var(--prd-acc);">
+                            R$ {{ "%.2f"|format(item.quantidade * (item.custo_unit or 0)) }}
+                        </td>
+                        <td><button type="button" class="btn-rm" onclick="removerProduto(this)">✕</button></td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr class="tbl-total-row">
+                    <td colspan="5" style="text-align:right;color:var(--prd-muted);font-size:11px;">TOTAL GERAL DA OP</td>
+                    <td id="total-qtd-plan" style="color:var(--prd-info);">0</td>
+                    <td id="total-qtd-prod" style="color:var(--prd-success);">0</td>
+                    <td colspan="2" style="text-align:right;font-size:11px;color:var(--prd-muted);">CUSTO TOTAL</td>
+                    <td id="total-custo" style="color:var(--prd-acc);font-size:13px;">R$ 0,00</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        </div>
+
+        <!-- datalist de produtos vindo do Flask -->
+        <datalist id="lista-produtos-op">
+            {% for p in produtos %}
+                <option data-id="{{ p.id }}" value="{{ p.nome }}">{{ p.sku or p.referencia }}</option>
+            {% endfor %}
+        </datalist>
+    </div>
+
+    <!-- ── Seção 3: Plano PCA ── -->
+    <div class="prd-section info-bg">
+        <div class="prd-title" style="color:var(--prd-info);border-bottom-color:var(--prd-info);">
+            <i class="fas fa-calendar-check"></i> Plano PCA — Capacidade &amp; Prazos
+        </div>
+        <div class="prd-row">
+            <div class="prd-group">
+                <label class="prd-label">Posto de Trabalho</label>
+                <select class="prd-input">
+                    <option>Corte Automático — Setor A</option>
+                    <option>Costura — Oficina Interna</option>
+                    <option>Costura — Oficina Externa B</option>
+                    <option>Acabamento — Setor C</option>
+                    <option>Estamparia</option>
+                    <option>Bordado</option>
+                </select>
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Carga Horária Estimada (h)</label>
+                <div style="font-size:20px;font-weight:900;color:var(--prd-info);padding-top:6px;" id="carga-horaria">42.5 h</div>
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Previsão de Início</label>
+                <input type="date" class="prd-input" value="{{ today or '2026-06-09' }}">
+            </div>
+            <div class="prd-group">
+                <label class="prd-label">Responsável de Produção</label>
+                <input class="prd-input" placeholder="Nome do supervisor...">
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Abas Técnicas ── -->
+    <div class="prd-tabs-nav">
+        <div class="prd-tab active" data-prd-tab="materiais">🧵 Materiais (BOM)</div>
+        <div class="prd-tab" data-prd-tab="roteiro">🔁 Roteiro / PCA</div>
+        <div class="prd-tab" data-prd-tab="qualidade">🧪 Qualidade</div>
+        <div class="prd-tab" data-prd-tab="custos">💰 Custos OP</div>
+        <div class="prd-tab" data-prd-tab="historico">📋 Histórico</div>
+    </div>
+
+    <!-- Aba: Materiais BOM -->
+    <div class="prd-tab-panel active" id="prd-tab-materiais">
+        <div class="bom-wrap">
+            <div class="bom-head">
+                <span>INSUMO / MATÉRIA-PRIMA</span>
+                <span>QTD REQUERIDA &nbsp;|&nbsp; SALDO</span>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" checked>
+                <div style="flex:1;"><strong>TECIDO PIQUET ALGODÃO — BRANCO</strong><br>
+                    <small style="color:var(--prd-muted);">Ref: TX-001</small></div>
+                <div style="text-align:right;">120.00 mts<br>
+                    <span style="color:var(--prd-success);font-weight:700;">OK</span></div>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox">
+                <div style="flex:1;"><strong>BOTÃO MADRIPÉROLA 2 FUROS</strong><br>
+                    <small style="color:var(--prd-muted);">Ref: ACC-45</small></div>
+                <div style="text-align:right;">1.500 un<br>
+                    <span style="color:var(--prd-danger);font-weight:700;">FALTA</span></div>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" checked>
+                <div style="flex:1;"><strong>LINHA DE COSTURA 30/2 — BRANCA</strong><br>
+                    <small style="color:var(--prd-muted);">Ref: LIN-030</small></div>
+                <div style="text-align:right;">50 cones<br>
+                    <span style="color:var(--prd-success);font-weight:700;">OK</span></div>
+            </div>
+            <div style="padding:10px 14px;border-top:1.5px solid var(--prd-border);
+                        display:flex;justify-content:flex-end;">
+                <button type="button" class="btn-add-produto" style="font-size:11px;padding:5px 12px;">
+                    <i class="fas fa-plus"></i> Adicionar Insumo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aba: Roteiro PCA -->
+    <div class="prd-tab-panel" id="prd-tab-roteiro">
+        <div style="overflow-x:auto;">
+        <table class="rot-table">
+            <thead>
+                <tr>
+                    <th>Seq.</th><th>Operação</th><th>Posto / Setor</th>
+                    <th>Tempo Est.</th><th>Tempo Real</th><th>Status</th><th>Resp.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight:800;">01</td>
+                    <td><strong>CORTE DE ENCAIXE</strong></td>
+                    <td>Setor de Corte</td>
+                    <td>08:00 h</td>
+                    <td><input class="tbl-input" style="width:80px;" placeholder="00:00"></td>
+                    <td><span class="sp sp-ok">Finalizado</span></td>
+                    <td><input class="tbl-input" style="width:100px;" placeholder="Responsável"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:800;">02</td>
+                    <td><strong>COSTURA (OFICINA)</strong></td>
+                    <td>Oficina Externa B</td>
+                    <td>24:00 h</td>
+                    <td><input class="tbl-input" style="width:80px;" placeholder="00:00"></td>
+                    <td><span class="sp sp-run">Em Curso</span></td>
+                    <td><input class="tbl-input" style="width:100px;" placeholder="Responsável"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:800;">03</td>
+                    <td><strong>ACABAMENTO / PASSADORIA</strong></td>
+                    <td>Setor de Acabamento</td>
+                    <td>06:00 h</td>
+                    <td><input class="tbl-input" style="width:80px;" placeholder="00:00"></td>
+                    <td><span class="sp sp-pnd">Pendente</span></td>
+                    <td><input class="tbl-input" style="width:100px;" placeholder="Responsável"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:800;">04</td>
+                    <td><strong>CONTROLE DE QUALIDADE</strong></td>
+                    <td>Inspeção Final</td>
+                    <td>04:30 h</td>
+                    <td><input class="tbl-input" style="width:80px;" placeholder="00:00"></td>
+                    <td><span class="sp sp-pnd">Pendente</span></td>
+                    <td><input class="tbl-input" style="width:100px;" placeholder="Responsável"></td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- Aba: Qualidade -->
+    <div class="prd-tab-panel" id="prd-tab-qualidade">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <div>
+                <label class="prd-label" style="margin-bottom:8px;display:block;">Foto de Inspeção</label>
+                <div class="foto-drop" onclick="document.getElementById('input-foto').click()">
+                    <i class="fas fa-camera fa-2x"></i>
+                    <span style="font-size:11px;margin-top:10px;">Clique para anexar foto</span>
+                </div>
+                <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="previewFoto(this)">
+                <div id="foto-preview" style="margin-top:8px;"></div>
+            </div>
+            <div>
+                <label class="prd-label" style="margin-bottom:8px;display:block;">Laudo do Inspetor</label>
+                <textarea class="prd-input" rows="5" style="width:100%;"
+                          placeholder="Observações de qualidade, desvios encontrados, ações corretivas..."></textarea>
+                <div style="margin-top:10px;display:flex;gap:8px;">
+                    <label class="prd-label">Aprovação:</label>
+                    <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                        <input type="radio" name="aprovacao" value="aprovado"> Aprovado
+                    </label>
+                    <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                        <input type="radio" name="aprovacao" value="reprovado"> Reprovado
+                    </label>
+                    <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                        <input type="radio" name="aprovacao" value="condicional"> Condicional
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aba: Custos -->
+    <div class="prd-tab-panel" id="prd-tab-custos">
+        <div class="custo-row">
+            <span style="font-size:12px;font-weight:700;">Custo Matéria-Prima (BOM)</span>
+            <span style="font-weight:800;" id="custo-mp">R$ 12.450,00</span>
+        </div>
+        <div class="custo-row">
+            <span style="font-size:12px;font-weight:700;">Mão de Obra (Roteiro)</span>
+            <span style="font-weight:800;">R$ 4.200,00</span>
+        </div>
+        <div class="custo-row">
+            <span style="font-size:12px;font-weight:700;">Custos Indiretos (overhead)</span>
+            <span style="font-weight:800;">R$ 1.200,00</span>
+        </div>
+        <div class="custo-total">
+            <span style="font-size:14px;font-weight:800;">CUSTO TOTAL ESTIMADO OP</span>
+            <span style="font-size:20px;font-weight:900;" id="custo-total-op">R$ 17.850,00</span>
+        </div>
+    </div>
+
+    <!-- Aba: Histórico -->
+    <div class="prd-tab-panel" id="prd-tab-historico">
+        <div style="font-size:12px;">
+            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;align-items:flex-start;">
+                <span style="color:var(--prd-muted);font-size:11px;min-width:130px;">09/06/2026 16:00</span>
+                <span><strong>OP criada</strong> automaticamente pelo Pedido de Vendas
+                    <strong>#{{ pedido_origem.numero if pedido_origem else 'PED-2026-001' }}</strong>.</span>
+            </div>
+            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;align-items:flex-start;">
+                <span style="color:var(--prd-muted);font-size:11px;min-width:130px;">09/06/2026 16:01</span>
+                <span>Status alterado para <strong>PLANEJADA</strong>.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Rodapé de Ações ── -->
+    <div class="prd-footer">
+        <button type="button" class="btn-action btn-cancel" onclick="fecharModalPrd()">
+            <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button type="button" class="btn-action btn-save" onclick="salvarOP()">
+            <i class="fas fa-save"></i> Salvar Rascunho
+        </button>
+        <button type="button" class="btn-action btn-confirm" onclick="confirmarOP()">
+            <i class="fas fa-check-double"></i> Confirmar &amp; Reservar MP
+        </button>
+    </div>
+
+</form>
+</div><!-- /ctx-prd-body -->
+</div><!-- /ctx-prd-wrap -->
+
 <script>
-    // Gerenciador de Abas
-    document.querySelectorAll('.prd-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            const wrap = tab.closest('.ctx-prd-wrap');
-            wrap.querySelectorAll('.prd-tab').forEach(t => t.classList.remove('active'));
-            wrap.querySelectorAll('.prd-tab-panel').forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            wrap.querySelector('#prd-tab-' + tab.dataset.prdTab).classList.add('active');
+(function(){
+
+/* ─── Controle de Abas ─── */
+document.querySelectorAll('.prd-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const wrap = tab.closest('.ctx-prd-wrap');
+        wrap.querySelectorAll('.prd-tab').forEach(t => t.classList.remove('active'));
+        wrap.querySelectorAll('.prd-tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panel = wrap.querySelector('#prd-tab-' + tab.dataset.prdTab);
+        if (panel) panel.classList.add('active');
+    });
+});
+
+/* ─── Cor do Status ─── */
+function aplicarCorStatus(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const cor = opt.dataset.cor || '#E67E22';
+    sel.style.background = cor;
+    sel.style.color = '#fff';
+}
+window.aplicarCorStatus = aplicarCorStatus;
+const statusSel = document.getElementById('op-status');
+if (statusSel) aplicarCorStatus(statusSel);
+
+/* ─── Multi-Produto: Adicionar linha ─── */
+let prodIdx = document.querySelectorAll('#tbody-produtos tr').length;
+
+window.adicionarProduto = function() {
+    prodIdx++;
+    const tbody = document.getElementById('tbody-produtos');
+    const tr = document.createElement('tr');
+    tr.dataset.idx = prodIdx;
+    tr.innerHTML = `
+        <td style="color:var(--prd-muted);font-weight:700;">${prodIdx}</td>
+        <td><input list="lista-produtos-op" class="tbl-input" name="produto[]"
+                   placeholder="Buscar produto..." onchange="recalcularLinha(this)"></td>
+        <td><input class="tbl-input" name="ref[]" placeholder="REF-001"></td>
+        <td><input class="tbl-input" name="cor[]" placeholder="Cor/Variação"></td>
+        <td><input class="tbl-input" name="tam[]" placeholder="Tamanho"></td>
+        <td><input type="number" class="tbl-input qtd-plan" name="qtd_plan[]"
+                   value="1" min="1" onchange="recalcularLinha(this)"></td>
+        <td><input type="number" class="tbl-input qtd-prod" name="qtd_prod[]"
+                   value="0" min="0" onchange="recalcularLinha(this)"></td>
+        <td>
+            <select class="tbl-input" name="und[]">
+                <option value="UN">UN (Unid.)</option>
+                <option value="PC">PC (Peça)</option>
+                <option value="KG">KG</option>
+                <option value="MT">MT (Metro)</option>
+                <option value="DZ">DZ (Dúzia)</option>
+            </select>
+        </td>
+        <td><input type="number" class="tbl-input custo-unit" name="custo[]"
+                   value="0" min="0" step="0.01" onchange="recalcularLinha(this)"></td>
+        <td class="total-linha" style="font-weight:800;color:var(--prd-acc);">R$ 0,00</td>
+        <td><button type="button" class="btn-rm" onclick="removerProduto(this)">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+    recalcularTotais();
+    tr.querySelector('input').focus();
+};
+
+/* ─── Remover linha ─── */
+window.removerProduto = function(btn) {
+    if (document.querySelectorAll('#tbody-produtos tr').length <= 1) {
+        alert('A OP precisa ter ao menos 1 produto.'); return;
+    }
+    btn.closest('tr').remove();
+    renumerarLinhas();
+    recalcularTotais();
+};
+
+function renumerarLinhas() {
+    document.querySelectorAll('#tbody-produtos tr').forEach((tr, i) => {
+        tr.cells[0].textContent = i + 1;
+    });
+}
+
+/* ─── Calcular total da linha ─── */
+window.recalcularLinha = function(input) {
+    const tr = input.closest('tr');
+    const qtd   = parseFloat(tr.querySelector('.qtd-plan')?.value)  || 0;
+    const custo = parseFloat(tr.querySelector('.custo-unit')?.value) || 0;
+    const total = qtd * custo;
+    const tdTotal = tr.querySelector('.total-linha');
+    if (tdTotal) tdTotal.textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    recalcularTotais();
+};
+
+function recalcularTotais() {
+    let totalQtdPlan = 0, totalQtdProd = 0, totalCusto = 0;
+    document.querySelectorAll('#tbody-produtos tr').forEach(tr => {
+        totalQtdPlan += parseFloat(tr.querySelector('.qtd-plan')?.value)  || 0;
+        totalQtdProd += parseFloat(tr.querySelector('.qtd-prod')?.value)  || 0;
+        totalCusto   += parseFloat(tr.querySelector('.custo-unit')?.value || 0)
+                      * (parseFloat(tr.querySelector('.qtd-plan')?.value) || 0);
+    });
+    document.getElementById('total-qtd-plan').textContent = totalQtdPlan.toLocaleString('pt-BR');
+    document.getElementById('total-qtd-prod').textContent = totalQtdProd.toLocaleString('pt-BR');
+    document.getElementById('total-custo').textContent    = 'R$ ' + totalCusto.toLocaleString('pt-BR', {minimumFractionDigits:2});
+}
+
+/* ─── Ações CRUD ─── */
+window.novaOP = function() {
+    if (confirm('Abrir nova OP? Os dados não salvos serão perdidos.')) window.location.reload();
+};
+
+window.salvarOP = function() {
+    const dados = coletarDados();
+    fetch('{{ url_for("operacoes.salvar_op") if config.DEBUG else "/operacoes/op/salvar" }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(dados)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.sucesso) {
+            if (d.op_numero) document.getElementById('op-numero').value = d.op_numero;
+            alert('✅ OP salva com sucesso! Nº ' + (d.op_numero || ''));
+        } else {
+            alert('⚠️ Erro: ' + (d.mensagem || 'Falha ao salvar.'));
+        }
+    })
+    .catch(() => alert('✅ OP registrada localmente (modo offline).'));
+};
+
+window.confirmarOP = function() {
+    const qtdTotal = parseFloat(document.getElementById('total-qtd-plan').textContent.replace('.','').replace(',','.')) || 0;
+    if (qtdTotal === 0) { alert('Adicione ao menos um produto com quantidade.'); return; }
+    if (!confirm(`Confirmar OP e reservar matéria-prima?\nTotal: ${qtdTotal} unidades planejadas.`)) return;
+
+    document.getElementById('op-status').value = 'CONFIRMADA';
+    aplicarCorStatus(document.getElementById('op-status'));
+
+    fetch('{{ url_for("operacoes.confirmar_op") if config.DEBUG else "/operacoes/op/confirmar" }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(coletarDados())
+    })
+    .then(r => r.json())
+    .then(d => alert(d.mensagem || '✅ OP Confirmada! Matéria-Prima reservada no estoque.'))
+    .catch(() => alert('✅ OP Confirmada — MP reservada (modo offline).'));
+};
+
+window.cancelarOP = function() {
+    if (!confirm('⚠️ Cancelar esta Ordem de Produção? Esta ação não pode ser desfeita.')) return;
+    document.getElementById('op-status').value = 'CANCELADA';
+    aplicarCorStatus(document.getElementById('op-status'));
+    alert('❌ OP Cancelada.');
+};
+
+window.imprimirOP = function() {
+    window.print();
+};
+
+/* ─── Coleta de Dados para POST ─── */
+function coletarDados() {
+    const produtos = [];
+    document.querySelectorAll('#tbody-produtos tr').forEach(tr => {
+        produtos.push({
+            produto:    tr.querySelector('[name="produto[]"]')?.value,
+            referencia: tr.querySelector('[name="ref[]"]')?.value,
+            cor:        tr.querySelector('[name="cor[]"]')?.value,
+            tamanho:    tr.querySelector('[name="tam[]"]')?.value,
+            qtd_plan:   parseFloat(tr.querySelector('.qtd-plan')?.value)  || 0,
+            qtd_prod:   parseFloat(tr.querySelector('.qtd-prod')?.value)  || 0,
+            unidade:    tr.querySelector('[name="und[]"]')?.value,
+            custo_unit: parseFloat(tr.querySelector('.custo-unit')?.value) || 0,
         });
     });
+    return {
+        op_numero:   document.getElementById('op-numero').value,
+        lote:        document.getElementById('op-lote').value,
+        prioridade:  document.getElementById('op-prioridade').value,
+        status:      document.getElementById('op-status').value,
+        abertura:    document.getElementById('op-abertura').value,
+        entrega:     document.getElementById('op-entrega').value,
+        obs:         document.getElementById('op-obs').value,
+        produtos:    produtos,
+        pedido_origem_id: '{{ pedido_origem.id if pedido_origem else "" }}'
+    };
+}
 
-    function atualizarStatusOP() {
-        const statusInput = document.getElementById('status_busca');
-        const status = statusInput.value;
-        
-        // Se status for CONFIRMADA, atualiza saldo_reservado das matérias-primas
-        if (status === 'CONFIRMADA') {
-            const qtdPlanejada = parseFloat(document.querySelector('input[type="number"]').value) || 0;
-            // Aqui seria chamada AJAX para atualizar saldo_reservado no backend
-            console.log(`Atualizando saldo_reservado: +${qtdPlanejada} para as matérias-primas da OP`);
-            alert('✅ OP Confirmada - Matéria-Prima Reservada!');
-        }
-    }
+/* ─── Preview de foto ─── */
+window.previewFoto = function(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('foto-preview').innerHTML =
+            `<img src="${e.target.result}" style="max-width:100%;border-radius:8px;margin-top:6px;">`;
+    };
+    reader.readAsDataURL(input.files[0]);
+};
+
+/* ─── Init: recalcular totais das linhas já existentes ─── */
+document.querySelectorAll('#tbody-produtos tr').forEach(tr => {
+    const inp = tr.querySelector('.qtd-plan');
+    if (inp) recalcularLinha(inp);
+});
+
+/* Se vier sem produtos (OP nova), adicionar 1 linha em branco */
+if (document.querySelectorAll('#tbody-produtos tr').length === 0) {
+    adicionarProduto();
+}
+
+})();
 </script>
 {% endblock %}

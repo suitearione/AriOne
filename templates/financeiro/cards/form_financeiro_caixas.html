@@ -204,6 +204,7 @@
                         {# FORMULÁRIO COMPACTO DE EDIÇÃO #}
                         <form id="form-gestao-caixas" onsubmit="event.preventDefault(); salvarCaixa();" style="margin-top: 20px;">
                             <input type="hidden" id="caixa_id" name="caixa_id" value="{{ caixa.id if caixa else '' }}">
+                            <input type="hidden" id="id_caixa" name="id_caixa" value="{{ caixa.id if caixa else '' }}">
                             <input type="hidden" id="caixa_formas_pagamento_detalhes" name="formas_pagamento_detalhes" value='{{ caixa.formas_pagamento_detalhes | tojson if caixa and caixa.formas_pagamento_detalhes else "{}" }}'>
                             
                             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
@@ -249,9 +250,9 @@
                                         </select>
                                         <button type="button" onclick="adicionarFormaPagamentoCaixa()" class="op-btn-luxury" style="background: #7A255F; color: #fff; border: none; padding: 10px 14px; border-radius: 6px; font-weight: 600; cursor: pointer;">Adicionar</button>
                                     </div>
-                                    <input type="hidden" name="aplicar_todos_caixas" value="0">
                                     <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #475569; margin-bottom: 10px;">
-                                        <input type="checkbox" id="caixa_aplicar_formas_todos" name="aplicar_todos_caixas" value="1" style="width: 16px; height: 16px; accent-color: #7A255F;">
+                                        <input type="checkbox" id="caixa_aplicar_formas_todos" name="aplicar_todos_caixas" value="1" onchange="atualizarAlertaAplicarFormasTodosCaixas()" style="width: 16px; height: 16px; accent-color: #7A255F;">
+                                        <input type="hidden" name="aplicar_todos_caixas" value="0">
                                         Aplicar estas formas de pagamento a todos os caixas da empresa
                                     </label>
                                     <div id="caixa_aplicar_formas_todos_alert" style="display:none; margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; background: #fffbeb; border: 1px solid #f6e05e; color: #92400e; font-size: 12px; line-height: 1.4;">
@@ -706,6 +707,7 @@ function selecionarCaixa(id, elemento) {
     const formasDetalhes = caixaState.formasDetalhes || datasetFormasDetalhes;
 
     document.getElementById('caixa_id').value = id;
+    document.getElementById('id_caixa').value = id;
     document.getElementById('caixa_nome').value = nome;
     document.getElementById('caixa_responsavel').value = responsavel !== 'None' ? responsavel : '';
     document.getElementById('caixa_saldo_inicial').value = saldo_inicial ? parseFloat(saldo_inicial).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '0,00';
@@ -720,6 +722,12 @@ function selecionarCaixa(id, elemento) {
     document.getElementById('painel-caixa-nome').textContent = nome;
     document.getElementById('painel-caixa-saldo').textContent = 'R$ ' + parseFloat(saldo_atual || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mov_caixa_id').value = id;
+
+    const aplicarTodosCheckbox = document.getElementById('caixa_aplicar_formas_todos');
+    if (aplicarTodosCheckbox) {
+        aplicarTodosCheckbox.checked = false;
+    }
+    atualizarAlertaAplicarFormasTodosCaixas();
 
     renderCaixaFormasPagamentosFromIds((formasAceitas || []).map(String), detalhesLimpos);
     const url = new URL(window.location);
@@ -917,6 +925,7 @@ function renderCaixaFormasPagamentosFromIds(ids, details) {
 function resetFormCaixa() {
     document.querySelectorAll('.caixa-item').forEach(el => el.classList.remove('ativo'));
     document.getElementById('caixa_id').value = '';
+    document.getElementById('id_caixa').value = '';
     document.getElementById('caixa_nome').value = '';
     document.getElementById('caixa_responsavel').value = '';
     document.getElementById('caixa_saldo_inicial').value = '0,00';
@@ -932,6 +941,12 @@ function resetFormCaixa() {
     if (detalhesField) detalhesField.value = '{}';
     if (selector) selector.value = '';
     renderCaixaFormasPagamentosFromIds([], {});
+
+    const aplicarTodosCheckbox = document.getElementById('caixa_aplicar_formas_todos');
+    if (aplicarTodosCheckbox) {
+        aplicarTodosCheckbox.checked = false;
+    }
+    atualizarAlertaAplicarFormasTodosCaixas();
 
     document.getElementById('form-caixa-titulo').innerHTML = '<i class="fas fa-plus" style="color: #7A255F;"></i> Novo Caixa';
     document.getElementById('btn-excluir-caixa').style.display = 'none';
@@ -1154,6 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkboxAplicarTodos = document.getElementById('caixa_aplicar_formas_todos');
     if (checkboxAplicarTodos) {
+        checkboxAplicarTodos.checked = false;
         checkboxAplicarTodos.addEventListener('change', atualizarAlertaAplicarFormasTodosCaixas);
         atualizarAlertaAplicarFormasTodosCaixas();
     }

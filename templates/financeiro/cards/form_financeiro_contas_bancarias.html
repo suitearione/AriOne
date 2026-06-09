@@ -60,13 +60,13 @@
                         <div class="op-group" style="flex: 1; min-width: 280px;">
                             <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">FORMAS DE PAGAMENTO ACEITAS</label>
                             <div style="display: flex; gap: 10px; align-items: center;">
-                                <select id="conta_formas_pagamento_selector" class="op-input" style="flex: 1; width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 12px;">
+                                <select id="conta_formas_pagamento_selector" class="op-input" disabled style="flex: 1; width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 12px;">
                                     <option value="">Selecione uma forma</option>
                                     {% for fp in formas_pagamento %}
                                     <option value="{{ fp.id }}">{{ fp.nome }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="button" onclick="adicionarFormaConta()" style="height: 40px; padding: 0 15px; border-radius: 8px; border: none; background: #7A255F; color: #fff; cursor: pointer; font-weight: 700; font-size: 12px;">Adicionar</button>
+                                <button type="button" id="conta_formas_pagamento_add_btn" onclick="adicionarFormaConta()" disabled style="height: 40px; padding: 0 15px; border-radius: 8px; border: none; background: #7A255F; color: #fff; cursor: pointer; font-weight: 700; font-size: 12px;">Adicionar</button>
                             </div>
                             <datalist id="lista-plano-contas">
                                 {% for pc in plano_contas %}
@@ -205,6 +205,15 @@ function carregarDatalistBancosEmpresa() {
 }
 
 window.conta_formas_pagamento_disponiveis = {{ formas_pagamento|tojson | safe }};
+window.contaBancariaAtiva = false;
+
+function setContaBancariaFormActive(active) {
+    window.contaBancariaAtiva = !!active;
+    const select = document.getElementById('conta_formas_pagamento_selector');
+    const button = document.getElementById('conta_formas_pagamento_add_btn');
+    if (select) select.disabled = !active;
+    if (button) button.disabled = !active;
+}
 
 function getFormasPagamentoDisponiveis() {
     return window.conta_formas_pagamento_disponiveis || [];
@@ -288,6 +297,16 @@ function renderContaFormasFromIds(ids) {
 }
 
 function adicionarFormaConta() {
+    const form = document.getElementById('formContasBancarias');
+    const bancoVal = form.querySelector('[name="banco"]').value.trim();
+    const agenciaVal = form.querySelector('[name="agencia"]').value.trim();
+    const contaVal = form.querySelector('[name="conta"]').value.trim();
+
+    if (!bancoVal || !agenciaVal || !contaVal) {
+        if (typeof arioneToast === 'function') arioneToast('Selecione ou preencha os dados da conta bancária antes de adicionar formas de pagamento.', 'warning');
+        return;
+    }
+
     const select = document.getElementById('conta_formas_pagamento_selector');
     if (!select) return;
     const id = select.value;
@@ -326,6 +345,7 @@ function selecionarBancoMestre(val) {
         // Busca modalidade no cadastro de bancos da empresa
         const b = getBancosCadastradosEmpresa().find(item => item.cod === cod);
         if (b && inpMod) inpMod.value = b.modalidade_banco || 'FISICO';
+        setContaBancariaFormActive(true);
 
         if (typeof arioneToast === 'function') arioneToast(`Banco selecionado: ${nome} (${cod})`, 'success');
     } else if (val.trim().length === 3 && !isNaN(val.trim())) {
@@ -348,6 +368,7 @@ function buscarBancoFebrabanContas(cod) {
         inpNome.value = `${b.cod} - ${b.banco}`;
         if (inpCod) inpCod.value = b.cod;
         if (inpMod) inpMod.value = b.modalidade_banco || 'FISICO';
+        setContaBancariaFormActive(true);
         if (typeof arioneToast === 'function') arioneToast(`Banco localizado no cadastro da empresa: ${b.banco}`, 'success');
     } else {
         if (typeof arioneToast === 'function') arioneToast(`Banco código ${codClean} não encontrado no Cadastro de Bancos da Empresa.`, 'warning');
@@ -471,6 +492,7 @@ function editarContaMaster(id) {
     form.querySelector('[name="status"]').value = c.status || 'ATIVO';
     form.querySelector('[name="saldo"]').value = c.saldo || 0;
     renderContaFormasFromIds(c.formas_pagamento_ids || []);
+    setContaBancariaFormActive(true);
     form.scrollIntoView({ behavior: 'smooth' });
     if (typeof arioneToast === 'function') arioneToast(`Editando conta: ${c.banco}`, "info");
 }
@@ -490,6 +512,7 @@ function novaContaBancariaMaster() {
     form.reset();
     form.querySelector('[name="id"]').value = 'new';
     renderContaFormasFromIds([]);
+    setContaBancariaFormActive(true);
     form.scrollIntoView({ behavior: 'smooth' });
     if (typeof arioneToast === 'function') arioneToast("Formulário limpo para nova conta bancária", "info");
 }

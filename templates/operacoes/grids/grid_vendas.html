@@ -114,7 +114,7 @@ const endpointsVnd = {
     precos:        '{{ url_for("operacoes.card_tabelas_precos", modal=1) }}',
     metas:         '{{ url_for("operacoes.metas_vendas") }}',
     perfis_venda:  '{{ url_for("cadastros.form_perfil_venda", modal=1) }}',
-    em_aberto:     '{{ url_for("operacoes.card_vendas_pedido", modal=1) }}'
+    em_aberto:     '{{ url_for("operacoes.card_vendas_aberto", modal=1) }}'
 };
 
 async function abrirModalVnd(tipo) {

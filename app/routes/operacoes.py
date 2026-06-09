@@ -9,13 +9,13 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.operacoes.vendas import OrcamentoVenda, PedidoVenda, OrcamentoVendaItem, PedidoVendaItem, MetaVenda
-from app.models.operacoes.compras import OrcamentoCompra, PedidoCompra
+from app.models.operacoes.compras import OrcamentoCompra, PedidoCompra, OrcamentoCompraItem, PedidoCompraItem
 from app.models.operacoes.producao import OrdemProducao
 from app.models.cadastros.cliente import Cliente
 from app.models.cadastros.funcionario import Funcionario
 from app.models.cadastros.fornecedor import Fornecedor
 from app.models.comercial.models import TabelaPreco, TabelaPrecoItem, PerfilVenda, Revendedor, FormaPagamento
-from app.models.catalogos import Produto, Insumo, MateriaPrima, ProdutoVariacao
+from app.models.catalogos import Produto, Insumo, MateriaPrima, ProdutoVariacao, ProdutoComposicao
 from app.models.sistema.status import StatusWorkflow
 from app.models.sistema.parametro import ParametroSistema
 from app.utils.helpers import calcular_cronograma, parse_date, parse_money
@@ -173,7 +173,7 @@ def central_vendas():
 @operacoes_bp.route('/')
 @login_required
 def index():
-    return redirect(url_for('operacoes.abas'))
+    return redirect(url_for('operacoes.abas', **request.args))
 
 @operacoes_bp.route('/abas')
 @login_required
@@ -278,6 +278,43 @@ def card_vendas_pedido(id=None):
                            formas_pagamento=formas_pagamento, today=datetime.now().strftime('%Y-%m-%d'),
                            pedidos_recentes=pedidos_recentes, pedido=pedido, canais_digitais=canais_digitais)
 
+@operacoes_bp.route('/cards/vendas/em_aberto')
+@operacoes_bp.route('/vendas/em_aberto')
+@login_required
+def card_vendas_aberto():
+    empresa_id = session.get('empresa_id') or (current_user.empresa_id if current_user.is_authenticated else None)
+    query = PedidoVenda.query
+    if empresa_id:
+        query = query.filter_by(empresa_id=empresa_id)
+
+    # Considera vendas abertas como pedidos não entregues e não cancelados
+    vendas = query.filter(PedidoVenda.status.notin_(['Entregue', 'Cancelado'])) \
+        .order_by(PedidoVenda.data_entrega_prometida.asc()).all()
+
+    today = datetime.now().date()
+    vendas_data = []
+    for v in vendas:
+        venc = v.data_entrega_prometida
+        dias = None
+        if venc:
+            diff = (today - venc).days
+            if diff > 0:
+                dias = diff
+        vendas_data.append({
+            'pedido_id': v.id,
+            'pedido_numero': v.numero or f'PED-{v.id:05d}',
+            'cliente': v.cliente.nome if getattr(v, 'cliente', None) else 'Cliente não informado',
+            'venc': venc.strftime('%d/%m/%Y') if venc else 'Sem data',
+            'valor': float(v.total_liquido or 0.0),
+            'dias': dias,
+            'status': 'Vencido' if dias and dias > 0 else 'A vencer',
+            'whatsapp': v.cliente.whatsapp if getattr(v, 'cliente', None) and v.cliente.whatsapp else ''
+        })
+
+    is_modal = request.args.get('modal') == '1'
+    return render_template('operacoes/cards/vendas/form_vendas_em_aberto.html', 
+                           vendas=vendas_data, is_modal=is_modal, now=datetime.now(), periodo='01/05/2026 – 30/06/2026')
+
 @operacoes_bp.route('/vendas/pedido/novo/de_orcamento/<int:orc_id>')
 @login_required
 def pedido_de_orcamento(orc_id):
@@ -321,11 +358,12 @@ def card_compras_orcamento():
     compradores = Funcionario.query.filter_by(ativo=True).all()
     produtos = Produto.query.filter_by(ativo=True).all()
     status_lista = StatusWorkflow.query.filter_by(tipo='ORÇAMENTO DE COMPRA', ativa=True).order_by(StatusWorkflow.ordem).all()
+    formas_pagamento = FormaPagamento.query.filter_by(ativa=True).order_by(FormaPagamento.nome).all()
     today = datetime.now().strftime('%Y-%m-%d')
     is_modal = request.args.get('modal') == '1'
     return render_template('operacoes/cards/compras/form_compras_orcamentos.html', 
                            fornecedores=fornecedores, compradores=compradores, produtos=produtos, 
-                           tipo='orcamento', titulo='Orçamento de Compra', today=today, is_modal=is_modal, status_lista=status_lista)
+                           tipo='orcamento', titulo='Orçamento de Compra', today=today, is_modal=is_modal, status_lista=status_lista, formas_pagamento=formas_pagamento)
 
 @operacoes_bp.route('/cards/compras/pedido')
 @login_required
@@ -334,12 +372,15 @@ def card_compras_pedido():
     fornecedores = Fornecedor.query.filter_by(ativo=True).all()
     compradores = Funcionario.query.filter_by(ativo=True).all()
     produtos = Produto.query.filter_by(ativo=True).all()
+    from app.models.catalogos import ProdutoVariacao
+    variacoes = ProdutoVariacao.query.join(Produto).filter(Produto.ativo == True).all()
     status_lista = StatusWorkflow.query.filter_by(tipo='PEDIDO DE COMPRA', ativa=True).order_by(StatusWorkflow.ordem).all()
+    formas_pagamento = FormaPagamento.query.filter_by(ativa=True).order_by(FormaPagamento.nome).all()
     today = datetime.now().strftime('%Y-%m-%d')
     is_modal = request.args.get('modal') == '1'
     return render_template('operacoes/cards/compras/form_compras_pedidos.html', 
-                           fornecedores=fornecedores, compradores=compradores, produtos=produtos, 
-                           tipo='pedido', titulo='Pedido de Compra', today=today, is_modal=is_modal, status_lista=status_lista)
+                           fornecedores=fornecedores, compradores=compradores, produtos=produtos, variacoes=variacoes,
+                           tipo='pedido', titulo='Pedido de Compra', today=today, is_modal=is_modal, status_lista=status_lista, formas_pagamento=formas_pagamento)
 
 @operacoes_bp.route('/cards/compras/consignados')
 @login_required
@@ -884,6 +925,210 @@ def gerar_proximo_numero(tipo='pedido', emp_id=1):
     ParametroSistema.set_valor(f'ult_{sufixo_param}', str(proximo_num - incremento), grupo='vendas')
     return doc_num_str
 
+
+def montar_insumos_producao(produto, quantidade):
+    """Gera o material necessário para a produção baseado na composição do produto."""
+    if not produto or quantidade <= 0:
+        return []
+
+    insumos = []
+    compositions = ProdutoComposicao.query.filter_by(produto_id=produto.id, variacao_id=None).all()
+    for comp in compositions:
+        try:
+            base_qtd = float(comp.quantidade or 0)
+            if base_qtd <= 0:
+                continue
+            qtd = base_qtd * quantidade
+            custo_unitario = float(comp.custo_unitario or 0)
+            insumos.append({
+                'tipo_componente': comp.tipo_componente,
+                'item_id': comp.item_id,
+                'nome': comp.nome,
+                'unidade': comp.unidade,
+                'custo_unitario': custo_unitario,
+                'quantidade': qtd,
+                'total_custo': custo_unitario * qtd
+            })
+        except Exception:
+            continue
+
+    return insumos
+
+@operacoes_bp.route('/compras/orcamento/salvar', methods=['POST'])
+@login_required
+def salvar_orcamento_compra():
+    verificar_schema_operacoes()
+    data = request.form
+    try:
+        emp_id = session.get('empresa_id') or (current_user.empresa_id if current_user.is_authenticated else 1)
+        orc_id = data.get('id') or data.get('orcamento_id')
+        if orc_id:
+            orc = OrcamentoCompra.query.get(orc_id)
+            if not orc:
+                return jsonify(success=False, error="Orçamento não encontrado"), 404
+            OrcamentoCompraItem.query.filter_by(orcamento_id=orc.id).delete()
+        else:
+            orc = OrcamentoCompra(empresa_id=emp_id)
+
+        orc.fornecedor_id = data.get('fornecedor_id')
+        comprador_val = data.get('comprador_id')
+        orc.comprador_id = int(comprador_val) if comprador_val and str(comprador_val).lower() != 'none' else None
+        orc.perfil_compra = data.get('perfil_compra') or 'padrao'
+        orc.condicao_pagamento = data.get('condicao_pagamento')
+        orc.data_emissao = parse_date(data.get('data_emissao')) if data.get('data_emissao') else datetime.now()
+        orc.data_limite_compra = parse_date(data.get('data_limite')) if data.get('data_limite') else None
+        
+        num_doc = data.get('numero')
+        if not num_doc and not orc_id:
+            num_doc = gerar_proximo_numero('orcamento_compra', emp_id)
+            
+        if num_doc:
+            orc.numero = num_doc
+        
+        orc.valor_desconto = parse_money(data.get('valor_desconto'))
+        orc.outros_custos = parse_money(data.get('outros_custos'))
+        orc.total_frete = parse_money(data.get('total_frete'))
+        
+        orc.forma_envio = data.get('frete_tipo')
+        orc.ent_cep = data.get('ent_cep')
+        orc.ent_logradouro = data.get('ent_logradouro')
+        orc.ent_numero = data.get('ent_numero')
+        orc.ent_bairro = data.get('ent_bairro')
+        orc.ent_cidade = data.get('ent_cidade')
+        orc.ent_uf = data.get('ent_uf')
+        orc.ent_complemento = data.get('ent_complemento')
+        
+        orc.observacoes = data.get('observacoes')
+        orc.status = data.get('status_documento') or data.get('status') or 'Cotacao'
+        
+        db.session.add(orc)
+        db.session.flush()
+        
+        itens_ids = request.form.getlist('item_produto_id[]') or request.form.getlist('item_insumo_id[]')
+        itens_qtds = request.form.getlist('item_qtd[]')
+        itens_precos = request.form.getlist('item_preco[]')
+        
+        total_bruto = 0
+        for i in range(len(itens_ids)):
+            if not itens_ids[i]: continue
+            
+            qtd = float(itens_qtds[i] or 1)
+            preco = parse_money(itens_precos[i] or '0')
+            total_item = qtd * preco
+            total_bruto += total_item
+            
+            item = OrcamentoCompraItem(
+                orcamento_id=orc.id,
+                insumo_id=itens_ids[i],
+                quantidade=qtd,
+                valor_cotado=preco,
+                total_item=total_item
+            )
+            db.session.add(item)
+            
+        orc.total_bruto = total_bruto
+        orc.total_liquido = total_bruto - float(orc.valor_desconto or 0) + float(orc.outros_custos or 0) + float(orc.total_frete or 0)
+        orc.total_orcamento = orc.total_liquido
+        
+        db.session.commit()
+        return jsonify(success=True, message=f"Orçamento #{orc.id} salvo com sucesso!", id=orc.id)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, error=str(e)), 500
+
+@operacoes_bp.route('/compras/pedido/salvar', methods=['POST'])
+@login_required
+def salvar_pedido_compra():
+    verificar_schema_operacoes()
+    data = request.form
+    try:
+        emp_id = session.get('empresa_id') or (current_user.empresa_id if current_user.is_authenticated else 1)
+        ped_id = data.get('id') or data.get('pedido_id')
+        if ped_id:
+            ped = PedidoCompra.query.get(ped_id)
+            if not ped:
+                return jsonify(success=False, error="Pedido não encontrado"), 404
+        else:
+            ped = PedidoCompra(empresa_id=emp_id, status='Em EDIÇÃO', data_pedido=datetime.now())
+
+        ped.fornecedor_id = data.get('fornecedor_id')
+        comprador_val = data.get('comprador_id')
+        ped.comprador_id = int(comprador_val) if comprador_val and str(comprador_val).lower() != 'none' else None
+        ped.perfil_compra = data.get('perfil_compra') or 'padrao'
+        
+        num_doc = data.get('numero')
+        if not num_doc and not ped_id:
+            num_doc = gerar_proximo_numero('pedido_compra', emp_id)
+            
+        if num_doc:
+            ped.numero = num_doc
+        
+        if data.get('data_promessa'):
+            ped.data_entrega = datetime.strptime(data.get('data_promessa'), '%Y-%m-%d').date()
+        elif data.get('data_entrega'):
+            ped.data_entrega = datetime.strptime(data.get('data_entrega'), '%Y-%m-%d').date()
+        else:
+            ped.data_entrega = datetime.now().date()
+        
+        ped.total_bruto = parse_money(data.get('total_bruto') or data.get('ajuste_global_valor'))
+        ped.valor_desconto = parse_money(data.get('valor_desconto'))
+        ped.total_liquido = parse_money(data.get('total_liquido'))
+        ped.total_frete = parse_money(data.get('total_frete'))
+        ped.outros_custos = parse_money(data.get('outros_custos'))
+        ped.condicao_pagamento = data.get('condicao_pagamento')
+        forma_pg_id = data.get('forma_pagamento_id') or data.get('forma_recebimento_id')
+        if forma_pg_id:
+            ped.forma_pagamento_id = forma_pg_id
+        
+        ped.forma_envio = data.get('frete_tipo')
+        ped.ent_cep = data.get('ent_cep')
+        ped.ent_logradouro = data.get('ent_logradouro')
+        ped.ent_numero = data.get('ent_numero')
+        ped.ent_bairro = data.get('ent_bairro')
+        ped.ent_cidade = data.get('ent_cidade')
+        ped.ent_uf = data.get('ent_uf')
+        ped.ent_complemento = data.get('ent_complemento')
+        
+        ped.status = (data.get('status_documento') or data.get('status') or 'Aberto').strip().upper()
+        
+        db.session.add(ped)
+        db.session.flush()
+        
+        if ped_id:
+            PedidoCompraItem.query.filter_by(pedido_id=ped.id).delete()
+
+        itens_ids = request.form.getlist('item_produto_id[]') or request.form.getlist('item_insumo_id[]')
+        itens_qtds = request.form.getlist('item_qtd[]')
+        itens_precos = request.form.getlist('item_preco[]')
+        
+        total_bruto = 0
+        for i in range(len(itens_ids)):
+            if not itens_ids[i]: continue
+            
+            qtd = float(itens_qtds[i] or 1)
+            preco = parse_money(itens_precos[i] or '0')
+            total_item = qtd * preco
+            total_bruto += total_item
+            
+            item = PedidoCompraItem(
+                pedido_id=ped.id,
+                insumo_id=itens_ids[i],
+                quantidade=qtd,
+                valor_unitario=preco,
+                total_item=total_item
+            )
+            db.session.add(item)
+            
+        if not ped.total_bruto or ped.total_bruto == 0:
+             ped.total_bruto = total_bruto
+             ped.total_liquido = total_bruto - float(ped.valor_desconto or 0) + float(ped.outros_custos or 0) + float(ped.total_frete or 0)
+
+        db.session.commit()
+        return jsonify(success=True, message=f"Pedido #{ped.id} salvo com sucesso!", id=ped.id)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, error=str(e)), 500
+
 @operacoes_bp.route('/vendas/orcamento/salvar', methods=['POST'])
 @login_required
 def salvar_orcamento_venda():
@@ -1021,14 +1266,16 @@ def salvar_pedido_venda():
         else:
             ped = PedidoVenda(
                 empresa_id=emp_id,
-                status='Aberto',
+                status='Em EDIÇÃO',
                 data_pedido=datetime.now()
             )
 
         ped.cliente_id = data.get('cliente_id')
-        ped.vendedor_id = data.get('vendedor_id') if data.get('vendedor_id') else None
+        vendedor_val = data.get('vendedor_id')
+        ped.vendedor_id = int(vendedor_val) if vendedor_val and str(vendedor_val).lower() != 'none' else None
         ped.tipo_venda = data.get('tipo_venda') or 'Produtos'
-        ped.orcamento_id = data.get('orcamento_id') if data.get('orcamento_id') else None
+        orc_val = data.get('orcamento_id')
+        ped.orcamento_id = int(orc_val) if orc_val and str(orc_val).lower() != 'none' else None
         ped.canal_venda = data.get('canal_venda')
         
         # 🛡️ Validação de Unicidade de Número (AriOne Integrity)
@@ -1069,7 +1316,9 @@ def salvar_pedido_venda():
         ped.ent_uf = data.get('ent_uf')
         ped.ent_complemento = data.get('ent_complemento')
         
-        ped.status = data.get('status_documento') or 'Aberto'
+        old_status = ped.status if ped_id else None
+        ped.status = (data.get('status_documento') or 'Aberto').strip().upper()
+        status_confirmado = ped.status == 'CONFIRMADO'
         
         db.session.add(ped)
         db.session.flush()
@@ -1087,6 +1336,7 @@ def salvar_pedido_venda():
         itens_ids = request.form.getlist('item_produto_id[]')
         itens_qtds = request.form.getlist('item_qtd[]')
         itens_precos = request.form.getlist('item_preco[]')
+        itens_skus = request.form.getlist('item_sku[]')
         
         total_bruto = 0
         for i in range(len(itens_ids)):
@@ -1105,9 +1355,110 @@ def salvar_pedido_venda():
                 total_item=total_item
             )
             db.session.add(item)
-            
+
         ped.frete = parse_money(data.get('total_frete'))
-        
+
+        # Cria ordens de produção e compras automaticamente apenas para pedidos CONFIRMADOS
+        if status_confirmado:
+            if not OrdemProducao.query.filter_by(pedido_venda_id=ped.id).first():
+                for index, sku in enumerate(itens_skus):
+                    if not sku:
+                        continue
+                    sku_clean = sku.strip().upper()
+                    if sku_clean.startswith('FP'):
+                        try:
+                            qtd = float(itens_qtds[index] or 0)
+                        except ValueError:
+                            qtd = 0
+                        if qtd <= 0:
+                            continue
+
+                        produto_fp = Produto.query.get(int(itens_ids[index]))
+                        op = OrdemProducao(
+                            empresa_id=emp_id,
+                            pedido_venda_id=ped.id,
+                            numero=f"OP-{ped.id}-{index + 1}",
+                            produto_final_id=int(itens_ids[index]),
+                            variacao_id=None,
+                            quantidade_planejada=qtd,
+                            insumos_necessarios_json=montar_insumos_producao(produto_fp, qtd),
+                            status='Planejada'
+                        )
+                        db.session.add(op)
+
+            af_items = []
+            if not PedidoCompra.query.join(OrcamentoCompra, PedidoCompra.orcamento_compra_id == OrcamentoCompra.id).filter(OrcamentoCompra.pedido_venda_id == ped.id).first():
+                for index, sku in enumerate(itens_skus):
+                    if not sku:
+                        continue
+                    sku_clean = sku.strip().upper()
+                    if sku_clean.startswith('AF'):
+                        insumo = Insumo.query.filter(
+                            (Insumo.sku == sku) |
+                            (db.func.replace(db.func.replace(db.func.replace(Insumo.sku, '.', ''), '-', ''), ' ', '') == sku_clean) |
+                            (db.cast(Insumo.id, db.String) == sku)
+                        ).first()
+                        if not insumo:
+                            continue
+
+                        try:
+                            qtd = float(itens_qtds[index] or 0)
+                        except ValueError:
+                            qtd = 0
+                        if qtd <= 0:
+                            continue
+
+                        af_items.append((insumo, qtd))
+
+            if af_items:
+                fornecedor_id = None
+                for insumo, _ in af_items:
+                    if insumo.fornecedor_id:
+                        fornecedor_id = insumo.fornecedor_id
+                        break
+                if not fornecedor_id:
+                    fornecedor = Fornecedor.query.filter_by(ativo=True).first()
+                    fornecedor_id = fornecedor.id if fornecedor else None
+
+                if fornecedor_id:
+                    orc_compra = OrcamentoCompra(
+                        empresa_id=emp_id,
+                        pedido_venda_id=ped.id,
+                        fornecedor_id=fornecedor_id,
+                        data_limite_compra=ped.data_entrega_prometida or datetime.now().date(),
+                        status='Aprovado'
+                    )
+                    db.session.add(orc_compra)
+                    db.session.flush()
+
+                    pedido_compra = PedidoCompra(
+                        empresa_id=emp_id,
+                        orcamento_compra_id=orc_compra.id,
+                        data_entrega=ped.data_entrega_prometida or datetime.now().date(),
+                        status='CONFIRMADO'
+                    )
+                    db.session.add(pedido_compra)
+                    db.session.flush()
+
+                    for insumo, qtd in af_items:
+                        orc_item = OrcamentoCompraItem(
+                            orcamento_id=orc_compra.id,
+                            insumo_id=insumo.id,
+                            quantidade=qtd,
+                            valor_cotado=float(insumo.preco_custo or 0),
+                            total_item=qtd * float(insumo.preco_custo or 0)
+                        )
+                        db.session.add(orc_item)
+
+                        pc_item = PedidoCompraItem(
+                            pedido_id=pedido_compra.id,
+                            insumo_id=insumo.id,
+                            quantidade=qtd,
+                            valor_unitario=float(insumo.preco_custo or 0),
+                            total_item=qtd * float(insumo.preco_custo or 0)
+                        )
+                        db.session.add(pc_item)
+
         db.session.commit()
 
         # 📊 Sincroniza Parâmetro de Numeração (Apenas se for novo)
@@ -1895,3 +2246,28 @@ def debug_product(sku):
         } for item in v]
     }
     return jsonify(res)
+
+@operacoes_bp.route('/vendas/orcamento/imprimir/<int:id>', methods=['GET'])
+@login_required
+def imprimir_orcamento(id):
+    """🖨️ Imprimir Orçamento (A4 Print Layout)"""
+    verificar_schema_operacoes()
+    orcamento = OrcamentoVenda.query.get_or_404(id)
+    empresa_id = session.get('empresa_id') or (current_user.empresa_id if current_user.is_authenticated else 1)
+    from app.models.cadastros.empresa import Empresa
+    empresa = Empresa.query.get(empresa_id)
+    
+    return render_template('operacoes/imprimir/orcamento.html', orcamento=orcamento, empresa=empresa)
+
+@operacoes_bp.route('/vendas/pedido/imprimir/<int:id>', methods=['GET'])
+@login_required
+def imprimir_pedido(id):
+    """🖨️ Imprimir Pedido (A4 Print Layout)"""
+    verificar_schema_operacoes()
+    pedido = PedidoVenda.query.get_or_404(id)
+    empresa_id = session.get('empresa_id') or (current_user.empresa_id if current_user.is_authenticated else 1)
+    from app.models.cadastros.empresa import Empresa
+    empresa = Empresa.query.get(empresa_id)
+    
+    return render_template('operacoes/imprimir/pedido.html', pedido=pedido, empresa=empresa)
+

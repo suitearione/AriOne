@@ -214,16 +214,32 @@
                                 </div>
                             </div>
 
-                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex;">
-                                <div class="op-group" style="flex: 1;">
-                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">FORMA DE PAGAMENTO PREVISTA</label>
-                                    <select class="op-input" name="forma_pagamento_id" id="cnt_forma_pagamento" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; text-transform: uppercase; transition: 0.2s;">
-                                        <option value="">-- FORMA DE PAGAMENTO --</option>
-                                        {% for fp in formas_pagamento %}
-                                        <option value="{{ fp.id }}" {{ 'selected' if lancamento and lancamento.forma_pagamento_id == fp.id else '' }}>
-                                            {{ fp.nome }}
-                                        </option>
-                                        {% endfor %}
+                            <div style="margin-bottom: 14px;">
+                                <label class="op-label" style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 8px; display: block;">FORMA DE PAGAMENTO PREVISTA</label>
+                            </div>
+                            <div class="op-row" style="gap: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap;">
+                                <div class="op-group" style="flex: 1; min-width: 200px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">{{ 'Local de Recebimento *' if tipo == 'RECEITA' else 'Local de Pagamento *' }}</label>
+                                    <select class="op-input" name="local_pagamento" id="cnt_local_pagamento" onchange="carregarAgentes(this.value, 'cnt_agente_pagamento')" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;">
+                                        <option value="">-- SELECIONE --</option>
+                                        <option value="CAIXA">Caixa</option>
+                                        <option value="BANCO">Banco</option>
+                                        <option value="OPERADORA">Operadora</option>
+                                    </select>
+                                </div>
+                                <div class="op-group" style="flex: 1; min-width: 200px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Agente Operador *</label>
+                                    <select class="op-input" name="agente_pagamento_id" id="cnt_agente_pagamento" onchange="carregarFormasPagamento(this.value, 'cnt_forma_pagamento')" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;" disabled>
+                                        <option value="">-- Selecione o local primeiro --</option>
+                                    </select>
+                                </div>
+                                <div class="op-group" style="flex: 1; min-width: 200px;">
+                                    <label class="op-label" style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block;">Forma de Pagamento Prevista *</label>
+                                    <select class="op-input" name="forma_pagamento_id" id="cnt_forma_pagamento" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 500; color: #334155; background: #fff; transition: 0.2s;" {% if not lancamento or not lancamento.forma_pagamento_id %}disabled{% endif %}>
+                                        <option value="">-- Selecione o agente primeiro --</option>
+                                        {% if lancamento and lancamento.forma_pagamento_id %}
+                                        <option value="{{ lancamento.forma_pagamento_id }}" selected>{{ lancamento.forma_pagamento.nome if lancamento.forma_pagamento else 'Forma atual' }}</option>
+                                        {% endif %}
                                     </select>
                                 </div>
                             </div>
@@ -1155,6 +1171,99 @@
                 if (res.success) { fecharModalBaixa(); arioneToast(res.message, 'success'); abrirModalGerContas("{{ tipo }}"); }
                 else { arioneToast('Erro: ' + res.error, 'danger'); }
             });
+        }
+
+        async function carregarAgentes(local, selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.innerHTML = '<option value="">Buscando agentes...</option>';
+            select.disabled = true;
+
+            const formaSelect = document.getElementById('cnt_forma_pagamento');
+            if (formaSelect) {
+                formaSelect.innerHTML = '<option value="">← Selecione o agente primeiro</option>';
+                formaSelect.disabled = true;
+            }
+
+            if (!local) {
+                select.innerHTML = '<option value="">-- Selecione o local primeiro --</option>';
+                select.disabled = false;
+                return;
+            }
+
+            try {
+                const res = await fetch(`/financeiro/api/agentes?local=${encodeURIComponent(local)}`);
+                const data = await res.json();
+
+                if (!res.ok || !Array.isArray(data)) {
+                    const message = data && data.message ? data.message : 'Erro ao carregar agentes';
+                    select.innerHTML = `<option value="">${message}</option>`;
+                    if (typeof arioneToast === 'function') arioneToast(message, 'warning');
+                    return;
+                }
+
+                if (data.length === 0) {
+                    select.innerHTML = '<option value="">Nenhum agente encontrado</option>';
+                    return;
+                }
+
+                select.innerHTML = '<option value="">-- Selecione o agente --</option>';
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = item.nome || item.descricao || `ID ${item.id}`;
+                    opt.dataset.tipo = local;
+                    select.appendChild(opt);
+                });
+                select.disabled = false;
+            } catch (e) {
+                console.error('Erro carregarAgentes:', e);
+                select.innerHTML = '<option value="">Erro ao carregar agentes</option>';
+                if (typeof arioneToast === 'function') arioneToast('Erro ao carregar agentes. Verifique a conexão.', 'danger');
+            }
+        }
+
+        async function carregarFormasPagamento(agenteId, selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.innerHTML = '<option value="">Buscando formas...</option>';
+            select.disabled = true;
+
+            if (!agenteId) {
+                select.innerHTML = '<option value="">-- Selecione o agente primeiro --</option>';
+                select.disabled = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/financeiro/api/formas-pagamento?agente_id=${encodeURIComponent(agenteId)}`);
+                const data = await response.json();
+
+                if (!response.ok || !Array.isArray(data)) {
+                    const message = data && data.message ? data.message : 'Erro ao carregar formas de pagamento';
+                    select.innerHTML = `<option value="">${message}</option>`;
+                    if (typeof arioneToast === 'function') arioneToast(message, 'warning');
+                    return;
+                }
+
+                if (data.length === 0) {
+                    select.innerHTML = '<option value="">Nenhuma forma de pagamento encontrada</option>';
+                    return;
+                }
+
+                select.innerHTML = '<option value="">-- Selecione a forma de pagamento --</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.nome || item.descricao || `ID ${item.id}`;
+                    select.appendChild(option);
+                });
+                select.disabled = false;
+            } catch (e) {
+                console.error('Erro carregarFormasPagamento:', e);
+                select.innerHTML = '<option value="">Erro ao carregar formas</option>';
+                if (typeof arioneToast === 'function') arioneToast('Erro ao carregar formas de pagamento. Verifique a conexão.', 'danger');
+            }
         }
 
         function filtrarTabelaTitulos(termo) {

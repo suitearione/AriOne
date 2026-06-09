@@ -1,0 +1,242 @@
+﻿{% extends "base_modal.html" if is_modal else "base.html" %}
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-vendas" style="background: #f8fafc; min-height: 100vh;">
+    <style>
+        .ge-modal { width: 98% !important; max-width: 1300px !important; margin: 20px auto !important; }
+        .fe-wrap.fp-wrap.mod-vendas { max-width: 1220px; margin: 0 auto; padding: 24px 0 40px; }
+        .fe-form-stage { max-width: 1160px; margin: 0 auto; }
+        .fe-card { background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 20px; }
+        .fe-card-title { padding: 18px 24px; font-size: 14px; font-weight: 800; color: #455A64; border-bottom: 1px solid #f1f5f9; background: rgba(69,90,100,0.05); display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+        .fe-card-body { padding: 24px; }
+        .fe-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+        .gf-input { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; color: #1e293b; background: #fff; transition: all 0.2s; width: 100%; box-sizing: border-box; outline: none; }
+        .gf-input:focus { border-color: #455A64; box-shadow: 0 0 0 4px rgba(69,90,100,0.1); }
+        .badge { display: inline-flex; align-items: center; justify-content: center; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+        .badge.vencido { background: rgba(192,0,0,0.12); color: #C00000; }
+        .badge.avencer { background: rgba(55,86,35,0.12); color: #375623; }
+        .metric-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+        .metric-card .label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; }
+        .metric-card .value { font-size: 24px; font-weight: 800; color: #1F3864; }
+        .metric-card.red .value { color: #C00000; }
+        .metric-card.green .value { color: #375623; }
+        .metric-card.gray .value { color: #444; }
+        .table-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 18px; }
+        .ge-btn { padding: 10px 18px; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .ge-btn:hover { background: #f1f5f9; }
+        .ge-btn.primary { background: #455A64; border-color: #455A64; color: #fff; }
+        .ge-btn.danger { background: #C00000; border-color: #C00000; color: #fff; }
+        .tbl-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid #e2e8f0; background: #fff; }
+        table { width: 100%; border-collapse: collapse; min-width: 760px; }
+        th, td { padding: 14px 16px; border-bottom: 1px solid #eef2f6; font-size: 13px; color: #334155; }
+        thead th { background: #fff; color: #455A64; font-weight: 800; text-align: left; white-space: nowrap; }
+        tbody tr:hover { background: #f8fbff; }
+        td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        td.center { text-align: center; }
+        .sel-info { font-size: 12px; color: #64748b; margin-top: 12px; }
+        @media (max-width: 980px) { .top-metrics { grid-template-columns: 1fr !important; } }
+        @media (max-width: 760px) { .table-actions { flex-direction: column; align-items: stretch; } }
+    </style>
+
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Monitoramento de Vendas em Aberto",
+        subtitulo="Vendas > Relatórios Operacionais > Pendências",
+        icone="fa-clock",
+        form_id="form-vendas-em-aberto",
+        onclick_save="cobranca()",
+        onclick_print="imprimirSelecionados()",
+        onclick_novo="clearFilters()",
+        onclick_search="focusSearchMaster()",
+        cor_tema="#455A64",
+        func_fechar="fecharModalGlobal()" if is_modal else "window.location.href='/operacoes/abas?aba=vendas'",
+        aba_retorno='vendas',
+        blueprint_retorno='operacoes',
+        tamanho="grande"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 100%; margin: 0 auto; padding: 0 24px 24px;">
+
+        <div class="fe-card" style="border-bottom: 4px solid #455A64;">
+            <div class="fe-card-body">
+                <div class="top-metrics" style="display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 16px; margin-bottom: 22px;">
+                    <div class="metric-card red"><span class="label">Total vencido</span><span class="value" id="cv">R$ 0,00</span></div>
+                    <div class="metric-card green"><span class="label">Total a vencer</span><span class="value" id="ca">R$ 0,00</span></div>
+                    <div class="metric-card gray"><span class="label">Total em aberto</span><span class="value" id="ct">R$ 0,00</span></div>
+                    <div class="metric-card gray"><span class="label">Pedidos selecionados</span><span class="value" id="csel">0</span></div>
+                </div>
+
+                <div class="table-actions">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <div>
+                            <label class="fe-label" style="margin-bottom: 4px;">Status</label>
+                            <select id="fStatus" class="gf-input" onchange="renderTable()">
+                                <option value="">Todos</option>
+                                <option value="Vencido">Vencido</option>
+                                <option value="A vencer">A vencer</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 220px;">
+                            <label class="fe-label" style="margin-bottom: 4px;">Cliente</label>
+                            <input type="text" id="fCliente" class="gf-input" placeholder="Buscar cliente..." oninput="renderTable()">
+                        </div>
+                    </div>
+                    <button class="ge-btn" onclick="clearFilters()"><i class="fas fa-times" style="margin-right: 8px;"></i> Limpar filtros</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="fe-card">
+            <div class="fe-card-body">
+                <div class="tbl-wrap">
+                    <table id="tbl">
+                        <thead>
+                            <tr>
+                                <th class="center" style="width: 40px;"><input type="checkbox" id="chkAll" onchange="toggleAll(this)" title="Selecionar todos"></th>
+                                <th style="width: 150px;">Nº Pedido</th>
+                                <th>Cliente</th>
+                                <th style="width: 120px;">Vencimento</th>
+                                <th class="num">Valor</th>
+                                <th class="num" style="width: 120px;">Dias atraso</th>
+                                <th style="width: 110px;">Status</th>
+                                <th class="center" style="width: 100px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody"></tbody>
+                        <tfoot id="tfoot"></tfoot>
+                    </table>
+                </div>
+                <div class="sel-info" id="selInfo"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const vendas = {{ vendas|tojson }};
+let selected = new Set();
+
+function fmt(v) { return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+function filtered() {
+    const s = document.getElementById('fStatus').value;
+    const c = document.getElementById('fCliente').value.toLowerCase();
+    return vendas.filter(v => (!s || v.status === s) && (!c || v.cliente.toLowerCase().includes(c)));
+}
+
+function renderTable() {
+    const rows = filtered();
+    const tb = document.getElementById('tbody');
+    const tf = document.getElementById('tfoot');
+    tb.innerHTML = '';
+    let tot = 0;
+
+    rows.forEach(v => {
+        tot += v.valor;
+        const chk = selected.has(v.pedido_id);
+        const badgeCls = v.status === 'Vencido' ? 'vencido' : 'avencer';
+        const diasCell = v.dias != null ? `<span class="badge ${badgeCls}">${v.dias} dias</span>` : `<span style="color:#94a3b8">–</span>`;
+        tb.innerHTML += `<tr>
+            <td class="center"><input type="checkbox" ${chk ? 'checked' : ''} onchange="toggleRow(${v.pedido_id}, this)"></td>
+            <td><strong>${v.pedido_numero}</strong></td>
+            <td>${v.cliente}</td>
+            <td>${v.venc}</td>
+            <td class="num">${fmt(v.valor)}</td>
+            <td class="num">${diasCell}</td>
+            <td><span class="badge ${badgeCls}">${v.status}</span></td>
+            <td class="center">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: nowrap;">
+                    <button class="ge-btn" onclick="abrirWhatsapp('${v.whatsapp}')" style="padding: 8px 10px; min-width: 0;" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                    <button class="ge-btn" onclick="abrirPedido(${v.pedido_id})" style="padding: 8px 10px; min-width: 0;" title="Ir para pedido"><i class="fas fa-arrow-right"></i></button>
+                    <button class="ge-btn" onclick="imprimirPedido(${v.pedido_id})" style="padding: 8px 12px; min-width: 0;" title="Imprimir pedido"><i class="fas fa-print"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    });
+
+    const n = rows.length;
+    tf.innerHTML = `<tr>
+        <td colspan="4" style="text-align:right; font-weight: 700;">Total (${n} pedido${n !== 1 ? 's' : ''})</td>
+        <td class="num">${fmt(tot)}</td>
+        <td colspan="3"></td>
+    </tr>`;
+    updateSelInfo();
+    document.getElementById('cv').textContent = fmt(rows.filter(v => v.status === 'Vencido').reduce((a, v) => a + v.valor, 0));
+    document.getElementById('ca').textContent = fmt(rows.filter(v => v.status === 'A vencer').reduce((a, v) => a + v.valor, 0));
+    document.getElementById('ct').textContent = fmt(tot);
+}
+
+function abrirWhatsapp(number) {
+    if (!number) {
+        alert('WhatsApp não disponível para este cliente.');
+        return;
+    }
+    const digits = number.replace(/\D/g, '');
+    const formatted = digits.startsWith('55') ? digits : `55${digits}`;
+    window.open(`https://wa.me/${formatted}`, '_blank');
+}
+
+function abrirPedido(id) {
+    window.location.href = `/operacoes/vendas/pedido/edit/${id}`;
+}
+
+function toggleRow(id, el) {
+    el.checked ? selected.add(id) : selected.delete(id);
+    updateSelInfo();
+    const f = filtered();
+    const chkAll = document.getElementById('chkAll');
+    chkAll.indeterminate = selected.size > 0 && selected.size < f.length;
+    chkAll.checked = selected.size === f.length && f.length > 0;
+}
+
+function toggleAll(el) {
+    filtered().forEach(v => el.checked ? selected.add(v.pedido_id) : selected.delete(v.pedido_id));
+    renderTable();
+}
+
+function updateSelInfo() {
+    const n = selected.size;
+    document.getElementById('csel').textContent = n;
+    const vals = vendas.filter(v => selected.has(v.pedido_id)).reduce((a, v) => a + v.valor, 0);
+    document.getElementById('selInfo').textContent = n > 0 ? `${n} pedido${n > 1 ? 's' : ''} selecionado${n > 1 ? 's' : ''} · Total selecionado: ${fmt(vals)}` : '';
+}
+
+function clearFilters() {
+    document.getElementById('fStatus').value = '';
+    document.getElementById('fCliente').value = '';
+    renderTable();
+}
+
+function imprimirPedido(id) {
+    window.open(`/operacoes/vendas/pedido/imprimir/${id}`, '_blank');
+}
+
+function imprimirSelecionados() {
+    if (selected.size === 0) {
+        alert('Selecione ao menos um pedido para impressão.');
+        return;
+    }
+    if (selected.size > 1) {
+        alert('Selecione apenas um pedido para impressão de pedido.');
+        return;
+    }
+    const id = [...selected][0];
+    imprimirPedido(id);
+}
+
+function cobranca() {
+    if (selected.size === 0) {
+        alert('Selecione ao menos um pedido para cobrar.');
+        return;
+    }
+    const nomes = vendas.filter(v => selected.has(v.pedido_id)).map(v => v.cliente).join('\n');
+    if (confirm(`Enviar cobrança para:\n\n${nomes}\n\nConfirmar?`)) {
+        alert(`Cobrança enviada para ${selected.size} cliente${selected.size > 1 ? 's' : ''}!`);
+        selected.clear();
+        renderTable();
+    }
+}
+
+renderTable();
+</script>
+{% endblock %}

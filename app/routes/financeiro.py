@@ -1219,7 +1219,9 @@ def salvar_caixa():
 
     try:
         ensure_caixa_formas_column()
-        caixa_id = request.form.get('caixa_id')
+        caixa_id_raw = request.form.get('caixa_id') or request.form.get('id_caixa') or ''
+        caixa_id_digits = ''.join(ch for ch in caixa_id_raw if ch.isdigit())
+        caixa_id = caixa_id_digits if caixa_id_digits and caixa_id_digits != '0' else None
         nome = request.form.get('nome', '').strip()
         responsavel = request.form.get('responsavel', '').strip()
         saldo_inicial = parse_money(request.form.get('saldo_inicial') or '0')
@@ -1234,8 +1236,8 @@ def salvar_caixa():
         bancos_ids = request.form.getlist('bancos_ids')
         operadoras_ids = request.form.getlist('operadoras_ids')
 
-        aplicar_todos_caixas_values = request.form.getlist('aplicar_todos_caixas')
-        aplicar_todos_caixas = any(str(val).lower() in ('1', 'on', 'true', 'yes') for val in aplicar_todos_caixas_values)
+        aplicar_todos_caixas_raw = request.form.get('aplicar_todos_caixas', '0')
+        aplicar_todos_caixas = str(aplicar_todos_caixas_raw).strip().lower() in ('1', 'on', 'true', 'yes')
 
         if caixa_id and caixa_id.isdigit():
             c = Caixa.query.get_or_404(int(caixa_id))

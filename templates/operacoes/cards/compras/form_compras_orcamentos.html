@@ -33,7 +33,7 @@
         🟡 Inicializando Compras Golden Standard...
     </div>
 
-    <form id="form-orcamento-compra" method="POST" novalidate>
+    <form id="form-orcamento-compra" action="{{ url_for('operacoes.salvar_orcamento_compra') }}" method="POST" novalidate>
 
         {# CARD 1: IDENTIFICAÇÃO #}
         <div class="fp-card">
@@ -131,7 +131,7 @@
                     <tbody>
                         <tr>
                             <td>
-                                <input type="text" class="fp-input" style="height: 32px; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700;" placeholder="SKU..." 
+                                <input type="text" class="fp-input" name="item_sku[]" style="height: 32px; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700;" placeholder="SKU..." 
                                        list="lista-skus" oninput="arioneFetchItemBySKU(this)" onblur="arioneFetchItemBySKU(this)">
                                 <datalist id="lista-skus">
                                     {% for p in produtos %}<option value="{{ p.referencia or p.id }}">{{ p.descricao|upper }}</option>{% endfor %}
@@ -139,13 +139,18 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 8px; align-items: center;">
-                                    <input list="lista-produtos" class="fp-input" style="height: 32px;" placeholder="Buscar insumo...">
+                                    <input type="hidden" name="item_insumo_id[]">
+                                    <input list="lista-produtos" name="item_descricao[]" class="fp-input" style="height: 32px;" placeholder="Buscar insumo..."
+                                           oninput="const opt = document.querySelector('#lista-produtos option[value=\'' + this.value + '\']'); if(opt) { this.closest('td').querySelector('input[name=\'item_insumo_id[]\']').value = opt.dataset.id; }">
+                                    <datalist id="lista-produtos">
+                                        {% for p in produtos %}<option value="{{ p.descricao|upper }}" data-id="{{ p.id }}">{{ p.referencia or p.id }} - {{ p.descricao|upper }}</option>{% endfor %}
+                                    </datalist>
                                     {{ comp.master_icon("produtos") }}
                                     {{ comp.plus_icon("produtos") }}
                                 </div>
                             </td>
-                            <td><input type="number" class="fp-input" style="height: 32px; text-align: center;" value="1" onfocus="this.select()" oninput="calcularTotaisCompra()"></td>
-                            <td><input type="text" class="fp-input" style="height: 32px; text-align: right;" value="0,00" onfocus="this.select()" oninput="this.value = arioneMaskMoney(this.value); calcularTotaisCompra()"></td>
+                            <td><input type="number" name="item_qtd[]" class="fp-input" style="height: 32px; text-align: center;" value="1" onfocus="this.select()" oninput="calcularTotaisCompra()"></td>
+                            <td><input type="text" name="item_preco[]" class="fp-input" style="height: 32px; text-align: right;" value="0,00" onfocus="this.select()" oninput="this.value = arioneMaskMoney(this.value); calcularTotaisCompra()"></td>
                             <td style="text-align: right; font-weight: 800; color: #27AE60;" class="col-total-linha">R$ 0,00</td>
                         </tr>
                     </tbody>
@@ -179,32 +184,46 @@
                             </div>
                         </div>
                     </div>
-                    <div class="fp-group fp-flex-1" style="display: flex; flex-direction: column; gap: 10px;">
-                        <button type="button" class="fp-btn" style="background: #2980B9; color: #fff; justify-content: center; width: 100%; border-radius: 10px; font-weight: 800; height: 48px; box-shadow: 0 4px 15px rgba(41, 128, 185, 0.2);" onclick="arioneConverterDocumento('OC-7829', this)">
-                            <i class="fas fa-check"></i> CONVERTER EM PEDIDO
+                    <div class="fp-group fp-flex-1" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: stretch;">
+                        <button type="button" class="fp-btn" style="background: #2980B9; color: #fff; justify-content: center; border-radius: 10px; font-weight: 800; height: 48px; font-size: 11px; box-shadow: 0 4px 15px rgba(41, 128, 185, 0.2);" onclick="arioneConverterDocumento('OC-7829', this)">
+                            <i class="fas fa-check"></i> CONVERTER
                         </button>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <button type="button" class="fp-btn" style="background: #f1f5f9; color: #475569; justify-content: center;" onclick="arioneToast('Gerando PDF...', 'info')">
-                                <i class="fas fa-print"></i> PDF
-                            </button>
-                            <button type="button" class="fp-btn" style="background: #25D366; color: #fff; justify-content: center;" onclick="enviarWhatsApp()">
-                                <i class="fab fa-whatsapp"></i> WHATS
-                            </button>
-                        </div>
+                        <button type="button" class="fp-btn" style="background: #f1f5f9; color: #475569; justify-content: center; border-radius: 10px; font-weight: 800; height: 48px; font-size: 11px;" onclick="arioneToast('Gerando PDF...', 'info')">
+                            <i class="fas fa-print"></i> PDF
+                        </button>
+                        <button type="button" class="fp-btn" style="background: #25D366; color: #fff; justify-content: center; border-radius: 10px; font-weight: 800; height: 48px; font-size: 11px;" onclick="enviarWhatsApp()">
+                            <i class="fab fa-whatsapp"></i> WHATSAPP
+                        </button>
                     </div>
                 </div>
             </div>
 
             <div id="tab-condicoes" class="fp-tab-panel">
                 <div class="fp-row">
-                    <div class="fp-group fp-flex-1"><label class="fp-label">Forma Pagto</label><select class="fp-input"><option>Boleto</option></select></div>
-                    <div class="fp-group fp-flex-1"><label class="fp-label">Condição</label><select class="fp-input"><option>30 Dias</option></select></div>
+                    <div class="fp-group fp-flex-1"><label class="fp-label">Forma Pagto</label>
+                        <select name="forma_pagamento_id" class="fp-input">
+                            {% for fp in formas_pagamento %}
+                                <option value="{{ fp.id }}">{{ fp.nome }}</option>
+                            {% else %}
+                                <option value="1">BOLETO</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="fp-group fp-flex-1"><label class="fp-label">Condição</label>
+                        <select name="condicao_pagamento" class="fp-input">
+                            <option value="À VISTA">À VISTA</option>
+                            <option value="30 DIAS">30 DIAS</option>
+                            <option value="30/60 DIAS">30/60 DIAS</option>
+                            <option value="30/60/90 DIAS">30/60/90 DIAS</option>
+                            <option value="SINAL + 30 DIAS">SINAL + 30 DIAS</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
             <div id="tab-fiscal" class="fp-tab-panel">
                 <div class="fp-row">
-                    <div class="fp-group fp-flex-1"><label class="fp-label">Tipo de Frete</label><select class="fp-input"><option>FOB</option><option>CIF</option></select></div>
+                    <div class="fp-group fp-flex-1"><label class="fp-label">Tipo de Frete</label><select name="frete_tipo" class="fp-input"><option value="FOB">FOB</option><option value="CIF">CIF</option></select></div>
                 </div>
             </div>
 
@@ -297,7 +316,8 @@
         const cells = row.cells;
         if (cells.length < 4) return;
 
-        const descInput = cells[1].querySelector('input');
+        const descInput = cells[1].querySelectorAll('input')[1] || cells[1].querySelector('input');
+        const idInput = cells[1].querySelectorAll('input')[0];
         const vlrInput = cells[3].querySelector('input');
 
         try {
@@ -307,6 +327,7 @@
 
             if (data.ok) {
                 if (descInput) descInput.value = data.descricao;
+                if (idInput && idInput.type === 'hidden') idInput.value = data.produto_id || data.id;
                 if (vlrInput) vlrInput.value = data.valor_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                 arioneToast('✨ Insumo identificado!', 'success');
             } else {
@@ -403,19 +424,21 @@
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>
-                <input type="text" class="fp-input" style="height: 32px; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700;" placeholder="SKU..." 
+                <input type="text" name="item_sku[]" class="fp-input" style="height: 32px; font-family: 'Roboto Mono', monospace; font-size: 11px; font-weight: 700;" placeholder="SKU..." 
                         list="lista-skus" 
                         oninput="arioneFetchItemBySKU(this)"
                         onblur="arioneFetchItemBySKU(this)">
             </td>
             <td>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <input list="lista-produtos" class="fp-input" style="height: 32px;" placeholder="Descrição...">
+                    <input type="hidden" name="item_insumo_id[]">
+                    <input list="lista-produtos" name="item_descricao[]" class="fp-input" style="height: 32px;" placeholder="Descrição..."
+                           oninput="const opt = document.querySelector('#lista-produtos option[value=\'' + this.value + '\']'); if(opt) { this.closest('td').querySelector('input[name=\'item_insumo_id[]\']').value = opt.dataset.id; }">
                     <i class="fas fa-search arione-master-icon" onclick="abrirModalMaster('produtos')" title="Ver Produto"></i>
                 </div>
             </td>
-            <td><input type="number" class="fp-input" style="height: 32px; text-align: center;" value="1" onfocus="this.select()" oninput="${funcCalculo}()"></td>
-            <td><input type="text" class="fp-input" style="height: 32px; text-align: right;" value="0,00" onfocus="this.select()" oninput="this.value = arioneMaskMoney(this.value); ${funcCalculo}()"></td>
+            <td><input type="number" name="item_qtd[]" class="fp-input" style="height: 32px; text-align: center;" value="1" onfocus="this.select()" oninput="${funcCalculo}()"></td>
+            <td><input type="text" name="item_preco[]" class="fp-input" style="height: 32px; text-align: right;" value="0,00" onfocus="this.select()" oninput="this.value = arioneMaskMoney(this.value); ${funcCalculo}()"></td>
             <td style="text-align: right; font-weight: 800; color: ${corTema};">R$ 0,00</td>
         `;
         table.appendChild(row);

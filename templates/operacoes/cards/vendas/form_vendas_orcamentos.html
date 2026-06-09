@@ -26,6 +26,7 @@ onclick_clonar="arioneClonarRegistro('form-orcamento-venda')",
 onclick_novo="arioneResetForm('form-orcamento-venda')",
 onclick_search="focusSearchMaster()",
 onclick_filter="filter-bar-orcamento",
+onclick_print="imprimirOrcamentoStampfe()",
 cor_tema="#03A9F4",
 func_fechar="fecharModalGlobal()",
 aba_retorno="vendas",
@@ -181,52 +182,7 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                         </div>
                         <div style="flex: 1;">
                             <div id="det-endereco-completo" style="display: flex; gap: 0; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 11px; color: #334155; animation: feFadeUp 0.3s ease; overflow: hidden;">
-                                {# Coluna 1: Principal #}
-                                <div style="flex: 1; padding: 15px; border-right: 1px solid #e2e8f0;">
-                                    <div style="font-weight: 900; color: #7A255F; text-transform: uppercase; font-size: 9px; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-                                        <i class="fas fa-home"></i> Endereço Principal
-                                    </div>
-                                    <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px;">
-                                        {# Linha 1: CEP | Cidade | UF #}
-                                        <div style="grid-column: span 4;">
-                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">CEP</label>
-                                            <input class="fp-input" id="det-cep" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
-                                        </div>
-                                        <div style="grid-column: span 6;">
-                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Cidade</label>
-                                            <input class="fp-input" id="det-cidade" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
-                                        </div>
-                                        <div style="grid-column: span 2;">
-                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">UF</label>
-                                            <input class="fp-input" id="det-uf" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; text-align: center; padding: 0;">
-                                        </div>
-
-                                        {# Linha 2: Logradouro | Número #}
-                                        <div style="grid-column: span 9;">
-                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Logradouro</label>
-                                            <input class="fp-input" id="det-rua" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
-                                        </div>
-                                        <div style="grid-column: span 3;">
-                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Número</label>
-                                            <input class="fp-input" id="det-num" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
-                                        </div>
-
-                                        {# Linha 3: Complemento | Bairro #}
-                                        <div style="grid-column: span 6;">
-                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Complemento</label>
-                                            <input class="fp-input" id="det-compl" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
-                                        </div>
-                                        <div style="grid-column: span 6;">
-                                            <label style="font-weight: 800; color: #94a3b8; text-transform: uppercase; font-size: 8px; display: block; margin-bottom: 2px;">Bairro</label>
-                                            <input class="fp-input" id="det-bairro" readonly style="height: 28px; font-size: 11px; background: #f8fafc; font-weight: 700; border-color: #f1f5f9; padding: 0 8px;">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {# Separador Visual: Travessão Vertical #}
-                                <div style="width: 1px; background: #e2e8f0; height: 100%;"></div>
-
-                                {# Coluna 2: Entrega #}
+                                {# Coluna única: Entrega #}
                                 <div style="flex: 1; padding: 15px; background: #fff;">
                                     <div style="font-weight: 900; color: #0072CE; text-transform: uppercase; font-size: 9px; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
                                         <div style="display: flex; align-items: center; gap: 8px;"><i class="fas fa-truck-fast"></i> Endereço para Entrega</div>
@@ -276,7 +232,6 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                     </div>
                 </div>
             </div>
-        </div>
 
         {# DATALISTS #}
         <datalist id="lista-clientes">
@@ -901,8 +856,13 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
                                     <td style="text-align: center;">
                                         <span style="font-size: 9px; font-weight: 800; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">{{ orc.status or 'ABERTO' }}</span>
                                     </td>
-                                    <td style="text-align: center;">
-                                        <button type="button" style="background: none; border: none; color: #94a3b8; cursor: pointer;"><i class="fas fa-external-link-alt"></i></button>
+                                    <td style="text-align: center; white-space: nowrap;">
+                                        <button type="button" style="background: none; border: none; color: #94a3b8; cursor: pointer; margin-right: 5px;" title="Abrir Orçamento" onclick="event.stopPropagation(); window.open('/operacoes/vendas/orcamento/edit/{{ orc.id }}', '_blank');">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </button>
+                                        <button type="button" style="background: none; border: none; color: #7A255F; cursor: pointer;" title="Imprimir Orçamento" onclick="event.stopPropagation(); window.open('/operacoes/vendas/orcamento/imprimir/{{ orc.id }}', '_blank');">
+                                            <i class="fas fa-print"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -1092,6 +1052,13 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
 <script>
     console.log('💎 AriOne Orçamento Master Luxury Loaded');
 
+    function setFieldValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if ('value' in el) el.value = value;
+        else el.innerText = value;
+    }
+
     function verificarStatusAprovado(select) {
         const btn = document.getElementById('btn-gerar-pedido');
         if (select.value === 'APROVADO') {
@@ -1215,13 +1182,13 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
             document.getElementById('det-email').innerText = opt.dataset.email || '-';
             
             // Endereço Principal (Read Only)
-            document.getElementById('det-rua').value = opt.dataset.rua || '';
-            document.getElementById('det-num').value = opt.dataset.num || '';
-            document.getElementById('det-bairro').value = opt.dataset.bairro || '';
-            document.getElementById('det-cep').value = opt.dataset.cep || '';
-            document.getElementById('det-cidade').value = opt.dataset.cidade || '';
-            document.getElementById('det-uf').value = opt.dataset.uf || '';
-            document.getElementById('det-compl').value = opt.dataset.compl || '';
+            setFieldValue('det-rua', opt.dataset.rua || '');
+            setFieldValue('det-num', opt.dataset.num || '');
+            setFieldValue('det-bairro', opt.dataset.bairro || '');
+            setFieldValue('det-cep', opt.dataset.cep || '');
+            setFieldValue('det-cidade', opt.dataset.cidade || '');
+            setFieldValue('det-uf', opt.dataset.uf || '');
+            setFieldValue('det-compl', opt.dataset.compl || '');
 
             // Endereço para Entrega (Editable)
             const isNew = !document.getElementById('orcamento_id').value;
@@ -2081,6 +2048,7 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
             }
 
             selectAgente.innerHTML = '<option value="">Selecione...</option>';
+            selectAgente.disabled = false;
             data.forEach(item => {
                 selectAgente.innerHTML += `<option value="${item.id}">${item.nome || item.banco || item.nome_fantasia || item.descricao || `ID ${item.id}`}</option>`;
             });
@@ -2095,6 +2063,7 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
         const painelParcelamento = document.getElementById('painel-parcelamento');
         if (painelParcelamento) painelParcelamento.style.display = 'none';
         selectForma.innerHTML = '<option value="">Busque ou selecione...</option>';
+        selectForma.disabled = true;
         document.getElementById('orc_forma_receb_hidden').value  = '';
         document.getElementById('orc_agente_receb_hidden').value = agenteId;
 
@@ -2116,10 +2085,12 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
 
             if (!Array.isArray(data) || data.length === 0) {
                 selectForma.innerHTML = '<option value="">Nenhuma forma de pagamento disponível</option>';
+                selectForma.disabled = true;
                 return;
             }
 
             selectForma.innerHTML = '<option value="">Busque ou selecione...</option>';
+            selectForma.disabled = false;
             data.forEach(item => {
                 const parcelasList = Array.isArray(item.parcelas) ? item.parcelas : [];
                 const parcelas = parcelasList.length > 0 ? parcelasList.length : (item.max_parcelas || 1);
@@ -2203,6 +2174,18 @@ ajuda="O formulário de Orçamentos permite simular vendas e negociar preços co
             return false;
         }
         return true;
+    }
+
+    function imprimirOrcamentoStampfe() { 
+        const orcamentoId = document.getElementById('orcamento_id')?.value || ''; 
+        
+        if (!orcamentoId || orcamentoId === '') { 
+            arioneToast('Por favor, salve o orçamento antes de efetuar a impressão.', 'warning'); 
+            return; 
+        } 
+        
+        const urlImpressao = `/operacoes/vendas/orcamento/imprimir/${orcamentoId}`; 
+        window.open(urlImpressao, '_blank'); 
     }
 </script>
 {% endblock %}
