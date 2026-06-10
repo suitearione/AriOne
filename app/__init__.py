@@ -349,6 +349,20 @@ def create_app():
                 except Exception:
                     db.session.rollback()
 
+            # ── Fix: colunas ausentes em sistema_status (Dashboard Postgres antigo)
+            _status_cols = [
+                ('dashboard_conta', 'BOOLEAN DEFAULT FALSE'),
+                ('dashboard_modulo', 'VARCHAR(50)'),
+                ('dashboard_indicador', 'VARCHAR(50)')
+            ]
+            for _col, _tipo in _status_cols:
+                try:
+                    db.session.execute(db.text(
+                        f'ALTER TABLE sistema_status ADD COLUMN IF NOT EXISTS {_col} {_tipo}'
+                    ))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
 
     # Comentado para deploy no Render - seed e migrações SQLite removidas
