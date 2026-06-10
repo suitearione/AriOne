@@ -322,6 +322,7 @@ def create_app():
                 ('fornecedor_id',       'INTEGER'),
                 ('comprador_id',        'INTEGER'),
                 ('perfil_compra',       'VARCHAR(50)'),
+                ('numero',              'VARCHAR(20)'),
                 ('condicoes_pagamento', 'VARCHAR(100)'),
                 ('forma_pagamento_id',  'INTEGER'),
                 ('valor_desconto',      'NUMERIC(16,2) DEFAULT 0'),
