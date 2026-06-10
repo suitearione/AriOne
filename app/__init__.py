@@ -317,6 +317,38 @@ def create_app():
 
                 db.session.rollback()
 
+            # ── Fix: colunas ausentes em op_compras_pedidos ────────────────────
+            _colunas_compras = [
+                ('fornecedor_id',       'INTEGER'),
+                ('comprador_id',        'INTEGER'),
+                ('perfil_compra',       'VARCHAR(50)'),
+                ('condicoes_pagamento', 'VARCHAR(100)'),
+                ('forma_pagamento_id',  'INTEGER'),
+                ('valor_desconto',      'NUMERIC(16,2) DEFAULT 0'),
+                ('outros_custos',       'NUMERIC(16,2) DEFAULT 0'),
+                ('total_frete',         'NUMERIC(16,2) DEFAULT 0'),
+                ('total_bruto',         'NUMERIC(16,2) DEFAULT 0'),
+                ('total_liquido',       'NUMERIC(16,2) DEFAULT 0'),
+                ('forma_envio',         'VARCHAR(50)'),
+                ('ent_cep',             'VARCHAR(9)'),
+                ('ent_logradouro',      'VARCHAR(150)'),
+                ('ent_numero',          'VARCHAR(20)'),
+                ('ent_bairro',          'VARCHAR(100)'),
+                ('ent_cidade',          'VARCHAR(100)'),
+                ('ent_uf',              'VARCHAR(2)'),
+                ('ent_complemento',     'VARCHAR(100)'),
+                ('rastreamento_api',    'VARCHAR(100)'),
+                ('observacoes',         'TEXT'),
+            ]
+            for _col, _tipo in _colunas_compras:
+                try:
+                    db.session.execute(db.text(
+                        f'ALTER TABLE op_compras_pedidos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'
+                    ))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
 
 
     # Comentado para deploy no Render - seed e migrações SQLite removidas
