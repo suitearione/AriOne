@@ -5,12 +5,13 @@
 #             Gerada automaticamente ao confirmar Pedido de Vendas.
 # =============================================================================
 
-from flask import Blueprint, render_template, request, jsonify
 from datetime import date
+from app.routes.operacoes import operacoes_bp
+from flask import render_template, request, jsonify
 
 # ─── Rotas ────────────────────────────────────────────────────────────────────
 
-@operacoes.route('/op/nova')
+@operacoes_bp.route('/op/nova')
 def form_producao_op():
     """
     Exibe formulário de nova OP vazia.
@@ -30,7 +31,7 @@ def form_producao_op():
     )
 
 
-@operacoes.route('/op/from-pedido/<int:pedido_id>')
+@operacoes_bp.route('/op/from-pedido/<int:pedido_id>')
 def op_from_pedido(pedido_id):
     """
     Gera OP automaticamente a partir de um Pedido de Vendas confirmado.
@@ -72,7 +73,7 @@ def op_from_pedido(pedido_id):
     )
 
 
-@operacoes.route('/op/salvar', methods=['POST'])
+@operacoes_bp.route('/op/salvar', methods=['POST'])
 def salvar_op():
     """
     Salva/atualiza uma OP.
@@ -116,7 +117,7 @@ def salvar_op():
     })
 
 
-@operacoes.route('/op/confirmar', methods=['POST'])
+@operacoes_bp.route('/op/confirmar', methods=['POST'])
 def confirmar_op():
     """
     Confirma a OP e reserva matéria-prima no estoque.
@@ -145,7 +146,7 @@ def confirmar_op():
     })
 
 
-@operacoes.route('/op/imprimir/<string:op_numero>')
+@operacoes_bp.route('/op/imprimir/<string:op_numero>')
 def imprimir_op(op_numero):
     """Página de impressão da OP."""
     # op = OrdemProducao.query.filter_by(numero=op_numero).first_or_404()

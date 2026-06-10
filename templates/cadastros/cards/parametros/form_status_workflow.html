@@ -142,10 +142,10 @@
                     <table class="ope-table">
                         <thead>
                             <tr>
-                                <th>Tipo / Nome</th>
-                                <th style="width: 120px; text-align: center;">Visualização</th>
+                                <th class="sortable" data-sort="tipo-nome" style="cursor:pointer; user-select:none;">Tipo / Nome <span class="sort-indicator"></span></th>
+                                <th class="sortable" data-sort="visualizacao" style="width: 120px; text-align: center; cursor:pointer; user-select:none;">Visualização <span class="sort-indicator"></span></th>
                                 <th style="width: 60px; text-align: center;">Ordem</th>
-                                <th style="width: 120px; text-align: center;">Dashboard</th>
+                                <th class="sortable" data-sort="dashboard" style="width: 120px; text-align: center; cursor:pointer; user-select:none;">Dashboard <span class="sort-indicator"></span></th>
                                 <th style="width: 80px; text-align: center;">Ações</th>
                             </tr>
                         </thead>
@@ -237,6 +237,55 @@
             document.getElementById('form-status-workflow').scrollIntoView({ behavior: 'smooth' });
             arioneToast('Editando status: ' + data.nome, 'info');
         }
+
+        function initStatusWorkflowSorting() {
+            const headers = document.querySelectorAll('.ope-table th.sortable');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const field = header.dataset.sort;
+                    const order = header.dataset.order === 'asc' ? 'desc' : 'asc';
+                    headers.forEach(h => {
+                        h.dataset.order = '';
+                        const indicator = h.querySelector('.sort-indicator');
+                        if (indicator) indicator.textContent = '';
+                    });
+                    header.dataset.order = order;
+                    const indicator = header.querySelector('.sort-indicator');
+                    if (indicator) indicator.textContent = order === 'asc' ? ' ▲' : ' ▼';
+                    sortStatusWorkflowTable(field, order === 'asc');
+                });
+            });
+        }
+
+        function getStatusWorkflowCellValue(row, field) {
+            const cells = row.querySelectorAll('td');
+            if (!cells.length) return '';
+            if (field === 'tipo-nome') {
+                return cells[0].textContent.trim().replace(/\s+/g, ' ').toUpperCase();
+            }
+            if (field === 'visualizacao') {
+                return cells[1].textContent.trim().replace(/\s+/g, ' ').toUpperCase();
+            }
+            if (field === 'dashboard') {
+                return cells[3].textContent.trim().replace(/\s+/g, ' ').toUpperCase();
+            }
+            return '';
+        }
+
+        function sortStatusWorkflowTable(field, asc = true) {
+            const tbody = document.querySelector('.ope-table tbody');
+            if (!tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => !row.querySelector('td[colspan]'));
+            rows.sort((a, b) => {
+                const aValue = getStatusWorkflowCellValue(a, field);
+                const bValue = getStatusWorkflowCellValue(b, field);
+                const result = aValue.localeCompare(bValue, 'pt-BR', { numeric: true, sensitivity: 'base' });
+                return asc ? result : -result;
+            });
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        document.addEventListener('DOMContentLoaded', initStatusWorkflowSorting);
 
         function salvarStatusWorkflow() {
             const form = document.getElementById('form-status-workflow');

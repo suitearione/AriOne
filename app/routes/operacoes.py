@@ -25,6 +25,8 @@ from datetime import datetime
 
 operacoes_bp = Blueprint('operacoes', __name__, url_prefix='/operacoes')
 
+import app.routes.producao  # Registrar rotas de produção
+
 # 🛠️ AUTO-MIGRAÇÃO: Garante que a coluna 'numero' exista em PedidoVenda e OrdemProducao
 def verificar_schema_operacoes():
     from sqlalchemy import text
@@ -372,15 +374,34 @@ def card_compras_pedido():
     fornecedores = Fornecedor.query.filter_by(ativo=True).all()
     compradores = Funcionario.query.filter_by(ativo=True).all()
     produtos = Produto.query.filter_by(ativo=True).all()
-    from app.models.catalogos import ProdutoVariacao
+    from app.models.catalogos import ProdutoVariacao, Insumo
     variacoes = ProdutoVariacao.query.join(Produto).filter(Produto.ativo == True).all()
+    insumos = Insumo.query.all()
     status_lista = StatusWorkflow.query.filter_by(tipo='PEDIDO DE COMPRA', ativa=True).order_by(StatusWorkflow.ordem).all()
     formas_pagamento = FormaPagamento.query.filter_by(ativa=True).order_by(FormaPagamento.nome).all()
     today = datetime.now().strftime('%Y-%m-%d')
     is_modal = request.args.get('modal') == '1'
     return render_template('operacoes/cards/compras/form_compras_pedidos.html', 
-                           fornecedores=fornecedores, compradores=compradores, produtos=produtos, variacoes=variacoes,
+                           fornecedores=fornecedores, compradores=compradores, produtos=produtos, variacoes=variacoes, insumos=insumos,
                            tipo='pedido', titulo='Pedido de Compra', today=today, is_modal=is_modal, status_lista=status_lista, formas_pagamento=formas_pagamento)
+
+@operacoes_bp.route('/cards/compras/ordem')
+@login_required
+def card_compras_ordem():
+    from app.models.sistema.status import StatusWorkflow
+    fornecedores = Fornecedor.query.filter_by(ativo=True).all()
+    compradores = Funcionario.query.filter_by(ativo=True).all()
+    produtos = Produto.query.filter_by(ativo=True).all()
+    from app.models.catalogos import ProdutoVariacao, Insumo
+    variacoes = ProdutoVariacao.query.join(Produto).filter(Produto.ativo == True).all()
+    insumos = Insumo.query.all()
+    status_lista = StatusWorkflow.query.filter_by(tipo='ORDEM DE COMPRA', ativa=True).order_by(StatusWorkflow.ordem).all()
+    formas_pagamento = FormaPagamento.query.filter_by(ativa=True).order_by(FormaPagamento.nome).all()
+    today = datetime.now().strftime('%Y-%m-%d')
+    is_modal = request.args.get('modal') == '1'
+    return render_template('operacoes/cards/compras/form_compras_pedidos.html', 
+                           fornecedores=fornecedores, compradores=compradores, produtos=produtos, variacoes=variacoes, insumos=insumos,
+                           tipo='ordem', titulo='Ordem de Compra', today=today, is_modal=is_modal, status_lista=status_lista, formas_pagamento=formas_pagamento)
 
 @operacoes_bp.route('/cards/compras/consignados')
 @login_required

@@ -13,11 +13,11 @@
 
     {# CABEÇALHO MESTRE (PADRÃO OURO) #}
     {{ comp.cabecalho_mestre_arione(
-        titulo="Pedido de Compra",
-        subtitulo="Operacional > Compras > Pedidos",
+        titulo=titulo or "Pedido de Compra",
+        subtitulo=('Operacional > Compras > Ordens' if tipo == 'ordem' else 'Operacional > Compras > Pedidos'),
         icone="fa-cart-shopping",
         form_id="form-pedido-compra",
-        onclick_save="arioneSalvarDocumento('Pedido de Compra', this, 'form-pedido-compra')",
+        onclick_save="arioneSalvarDocumento('{{ titulo or 'Pedido de Compra' }}', this, 'form-pedido-compra')",
         onclick_clonar="arioneClonarRegistro('form-pedido-compra')",
         onclick_novo="arioneResetForm('form-pedido-compra')",
         onclick_search="focusSearchMaster()",
@@ -27,7 +27,7 @@
         aba_retorno="compras",
         blueprint_retorno="operacoes",
         status="EM EDIÇÃO",
-        ajuda="O formulário de Pedidos de Compra gerencia a reposição de estoque e contratação de serviços."
+        ajuda="O formulário de {{ titulo or 'Pedido de Compra' }} gerencia a reposição de estoque e contratação de serviços."
     ) }}
 
     <form id="form-pedido-compra" action="{{ url_for('operacoes.salvar_pedido_compra') }}" method="POST" novalidate style="padding: 20px; max-width: 1600px; margin: 0 auto;">
@@ -40,7 +40,7 @@
                 {# CARD 1: IDENTIFICAÇÃO #}
                 <div class="fp-card" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
                     <div class="fp-card-title" style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; background: #fff; border-radius: 16px 16px 0 0; display: flex; align-items: center; gap: 10px; font-weight: 800; color: #1e293b;">
-                        <i class="fas fa-file-contract" style="color: #27AE60;"></i> IDENTIFICAÇÃO DO PEDIDO DE COMPRA
+                        <i class="fas fa-file-contract" style="color: #27AE60;"></i> IDENTIFICAÇÃO DE {{ titulo|upper if titulo else 'PEDIDO DE COMPRA' }}
                     </div>
                     <div class="fp-card-body" style="padding: 20px;">
                         {# LINHA 1: FORNECEDOR E COMPRADOR #}
@@ -56,11 +56,24 @@
                             </div>
                             <div class="fp-group fp-flex-2">
                                 <label class="fp-label">COMPRADOR RESPONSÁVEL</label>
-                                <select class="fp-input" name="comprador_id" style="height: 42px; font-weight: 700;">
-                                    <option value="1">COMPRADOR MASTER</option>
-                                </select>
+                                <div class="fp-input-wrapper" style="position: relative;">
+                                    <input type="hidden" name="comprador_id" id="comprador_id">
+                                    <input class="fp-input" list="lista-compradores" name="comprador_nome" id="comprador_busca" placeholder="Pesquisar comprador..." style="font-weight: 700; border-color: #cbd5e1; height: 42px; padding-left: 15px;"
+                                           oninput="this.value = this.value.toUpperCase(); syncComprador(this);">
+                                    <i class="fas fa-search" style="position: absolute; right: 15px; top: 13px; color: #94a3b8;"></i>
+                                </div>
                             </div>
                         </div>
+                        <datalist id="lista-fornecedores">
+                            {% for f in fornecedores %}
+                            <option value="{{ (f.razao_social or '')|upper }}{% if f.cnpj_cpf %} - {{ f.cnpj_cpf }}{% endif %}" data-id="{{ f.id }}"></option>
+                            {% endfor %}
+                        </datalist>
+                        <datalist id="lista-compradores">
+                            {% for c in compradores %}
+                            <option value="{{ c.nome|upper }}{% if c.cpf %} - {{ c.cpf }}{% endif %}" data-id="{{ c.id }}"></option>
+                            {% endfor %}
+                        </datalist>
 
                         {# LINHA 2: NÚMERO, DATAS, PERFIL #}
                         <div class="fp-row">
@@ -589,6 +602,20 @@
         if (opt) {
             document.getElementById('fornecedor_id').value = opt.dataset.id;
             arioneToast(`✅ Fornecedor Selecionado: ${val}`, 'success');
+        } else {
+            document.getElementById('fornecedor_id').value = '';
+        }
+    }
+
+    function syncComprador(input) {
+        const val = input.value;
+        const list = document.getElementById('lista-compradores');
+        const opt = [...list.options].find(o => o.value === val);
+        if (opt) {
+            document.getElementById('comprador_id').value = opt.dataset.id;
+            arioneToast(`✅ Comprador Selecionado: ${val}`, 'success');
+        } else {
+            document.getElementById('comprador_id').value = '';
         }
     }
 
@@ -599,6 +626,9 @@
         {% endfor %}
         {% for p in produtos if p.tipo_estoque != 'grade' %}
         { sku: '{{ (p.referencia or p.cod_interno or "")|upper }}', desc: '{{ p.descricao|upper }}', id: '{{ p.id }}' },
+        {% endfor %}
+        {% for i in insumos %}
+        { sku: '{{ (i.sku or "")|upper }}', desc: '{{ (i.descricao or i.nome or "")|upper }}', id: '{{ i.id }}' },
         {% endfor %}
     ];
 

@@ -96,6 +96,38 @@
 .btn-rm:hover { background: #fecaca; }
 .tbl-total-row td { background: var(--prd-bg); font-weight: 800; border-top: 2px solid var(--prd-border); }
 
+.arione-search-panel {
+    position: absolute;
+    z-index: 1200;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+    max-height: 320px;
+    width: auto;
+}
+.arione-search-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: background .15s ease;
+}
+.arione-search-item:hover {
+    background: #f8fafc;
+}
+.arione-search-sku {
+    font-size: 12px;
+    color: #1e293b;
+    font-weight: 700;
+}
+.arione-search-desc {
+    font-size: 11px;
+    color: #475569;
+}
+
 /* ── Status pill colorido ── */
 .status-sel {
     font-weight: 800; color: #fff; border: none; border-radius: 8px;
@@ -296,10 +328,7 @@
             <thead>
                 <tr>
                     <th style="width:30px;">#</th>
-                    <th style="min-width:200px;">Produto / SKU <i class="fas fa-search" style="color:var(--prd-pri);cursor:pointer;" onclick="abrirNavegacao('cadastros.abas','catalogos')" title="Catálogo"></i></th>
-                    <th style="min-width:100px;">Referência</th>
-                    <th style="min-width:80px;">Cor / Var.</th>
-                    <th style="min-width:90px;">Tamanho</th>
+                    <th style="min-width:250px;">Produto / SKU <i class="fas fa-search" style="color:var(--prd-pri);cursor:pointer;" onclick="abrirNavegacao('cadastros.abas','catalogos')" title="Catálogo"></i></th>
                     <th style="min-width:90px;">Qtd Planejada</th>
                     <th style="min-width:90px;">Qtd Produzida</th>
                     <th style="min-width:100px;">Unidade</th>
@@ -315,13 +344,18 @@
                     <tr data-idx="{{ loop.index }}">
                         <td style="color:var(--prd-muted);font-weight:700;">{{ loop.index }}</td>
                         <td>
-                            <input list="lista-produtos-op" class="tbl-input" name="produto[]"
+                            <input list="lista-produtos-op" class="tbl-input table-input-desc" name="produto[]"
                                    value="{{ item.nome }}" placeholder="Buscar produto..."
+                                   autocomplete="off"
+                                   oninput="syncProduto(this)"
+                                   onclick="syncProduto(this)"
                                    onchange="recalcularLinha(this)">
+                            <input type="hidden" name="produto_sku[]" class="table-input-sku" value="{{ item.referencia or item.cod_interno or '' }}">
+                            <input type="hidden" name="produto_id[]" class="table-input-id" value="{{ item.produto_id or '' }}">
+                            <input type="hidden" name="ref[]" value="{{ item.referencia or '' }}">
+                            <input type="hidden" name="cor[]" value="{{ item.cor or '' }}">
+                            <input type="hidden" name="tam[]" value="{{ item.tamanho or '' }}">
                         </td>
-                        <td><input class="tbl-input" name="ref[]" value="{{ item.referencia or '' }}" placeholder="REF-001"></td>
-                        <td><input class="tbl-input" name="cor[]" value="{{ item.cor or '' }}" placeholder="Branco"></td>
-                        <td><input class="tbl-input" name="tam[]" value="{{ item.tamanho or '' }}" placeholder="M"></td>
                         <td><input type="number" class="tbl-input qtd-plan" name="qtd_plan[]"
                                    value="{{ item.quantidade }}" min="1" onchange="recalcularLinha(this)"></td>
                         <td><input type="number" class="tbl-input qtd-prod" name="qtd_prod[]"
@@ -348,11 +382,10 @@
             </tbody>
             <tfoot>
                 <tr class="tbl-total-row">
-                    <td colspan="5" style="text-align:right;color:var(--prd-muted);font-size:11px;">TOTAL GERAL DA OP</td>
+                    <td colspan="4" style="text-align:right;color:var(--prd-muted);font-size:11px;">TOTAL GERAL DA OP</td>
                     <td id="total-qtd-plan" style="color:var(--prd-info);">0</td>
                     <td id="total-qtd-prod" style="color:var(--prd-success);">0</td>
-                    <td colspan="2" style="text-align:right;font-size:11px;color:var(--prd-muted);">CUSTO TOTAL</td>
-                    <td id="total-custo" style="color:var(--prd-acc);font-size:13px;">R$ 0,00</td>
+                    <td colspan="2" id="total-custo" style="text-align:right;color:var(--prd-acc);font-size:13px;">R$ 0,00</td>
                     <td></td>
                 </tr>
             </tfoot>
@@ -362,7 +395,7 @@
         <!-- datalist de produtos vindo do Flask -->
         <datalist id="lista-produtos-op">
             {% for p in produtos %}
-                <option data-id="{{ p.id }}" value="{{ p.nome }}">{{ p.sku or p.referencia }}</option>
+                <option data-id="{{ p.id }}" value="{{ p.referencia or p.cod_interno }}">{{ p.descricao or p.nome }}</option>
             {% endfor %}
         </datalist>
     </div>
@@ -607,6 +640,144 @@ window.aplicarCorStatus = aplicarCorStatus;
 const statusSel = document.getElementById('op-status');
 if (statusSel) aplicarCorStatus(statusSel);
 
+/* ─── Busca de produtos AriOne (igual a Orçamentos/Pedidos) ─── */
+const arioneDatabase = [
+    {% for p in produtos %}
+    {
+        sku: '{{ (p.referencia or p.cod_interno or '')|upper }}',
+        desc: '{{ (p.descricao or p.nome or '')|upper }}',
+        id: '{{ p.id }}'
+    },
+    {% endfor %}
+];
+
+let currentSearchPanel = null;
+
+function syncProduto(input) {
+    const val = input.value.toUpperCase();
+    const results = val.length < 1
+        ? arioneDatabase.slice(0, 20)
+        : arioneDatabase.filter(item => item.desc.includes(val) || item.sku.includes(val)).slice(0, 15);
+    showSearchPanel(input, results, item => {
+        input.value = item.desc;
+        const row = input.closest('tr');
+        const skuInput = row.querySelector('.table-input-sku');
+        if (skuInput) {
+            skuInput.value = item.sku;
+            fetchItemBySKU(skuInput);
+        }
+    });
+}
+
+function showSearchPanel(input, results, onSelect) {
+    closeSearchPanel();
+    if (results.length === 0) return;
+
+    const panel = document.createElement('div');
+    panel.className = 'arione-search-panel';
+    panel.style.display = 'block';
+
+    const rect = input.getBoundingClientRect();
+    panel.style.top = (window.scrollY + rect.bottom + 5) + 'px';
+    panel.style.left = (window.scrollX + rect.left) + 'px';
+    panel.style.minWidth = '320px';
+
+    results.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'arione-search-item';
+        div.innerHTML = `
+            <span class="arione-search-sku">${item.sku}</span>
+            <span class="arione-search-desc">${item.desc}</span>
+        `;
+        div.onclick = () => {
+            onSelect(item);
+            closeSearchPanel();
+        };
+        panel.appendChild(div);
+    });
+
+    document.body.appendChild(panel);
+    currentSearchPanel = panel;
+
+    const clickHandler = (e) => {
+        if (!panel.contains(e.target) && e.target !== input) {
+            closeSearchPanel();
+            document.removeEventListener('click', clickHandler);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', clickHandler), 10);
+}
+
+function closeSearchPanel() {
+    if (currentSearchPanel) {
+        currentSearchPanel.remove();
+        currentSearchPanel = null;
+    }
+}
+
+async function fetchItemBySKU(input) {
+    const sku = input.dataset.sku?.trim() || input.value.trim();
+    if (!sku) return;
+
+    const row = input.closest('tr');
+    const perfilSelect = document.querySelector('select[name="perfil_id"]');
+    const perfil = perfilSelect ? perfilSelect.options[perfilSelect.selectedIndex].text : 'Consumidor';
+
+    try {
+        const res = await fetch(`/operacoes/api/produtos/get-by-sku?sku=${encodeURIComponent(sku)}&perfil=${encodeURIComponent(perfil)}`);
+        const data = await res.json();
+
+        if (data.ok) {
+            const idField = row.querySelector('.table-input-id');
+            const skuField = row.querySelector('.table-input-sku');
+            const descField = row.querySelector('.table-input-desc');
+            const custoField = row.querySelector('.custo-unit');
+            const refField = row.querySelector('[name="ref[]"]');
+            const corField = row.querySelector('[name="cor[]"]');
+            const tamField = row.querySelector('[name="tam[]"]');
+
+            const produtoNome = (data.descricao || data.nome || data.sku || '').trim();
+            const produtoReferencia = (data.referencia || data.sku || produtoNome || '').trim();
+            const produtoCor = (data.cor || data.variacao || produtoNome || '').trim();
+            const produtoTamanho = (data.tamanho || data.tamanho_grade || produtoNome || '').trim();
+
+            if (skuField) skuField.value = data.sku || '';
+            if (descField) descField.value = produtoNome;
+            if (idField) idField.value = data.id || '';
+            if (custoField) {
+                custoField.value = (data.custo_bruto || data.valor_venda || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            if (refField) refField.value = produtoReferencia;
+            if (corField) corField.value = produtoCor;
+            if (tamField) tamField.value = produtoTamanho;
+
+            row.dataset.itemId = data.id;
+            row.dataset.variacaoId = data.variacao_id || '';
+            row.dataset.peso = data.peso || 0;
+            row.dataset.altura = data.altura || 0;
+            row.dataset.largura = data.largura || 0;
+            row.dataset.comprimento = data.comprimento || 0;
+
+            if (typeof arioneToast === 'function') {
+                arioneToast('✨ ' + (data.descricao || data.sku), 'success');
+            }
+            recalcularLinha(custoField || input);
+        }
+    } catch (err) {
+        console.error('Erro na busca por SKU:', err);
+    }
+}
+
+function fecharModalPrd() {
+    const overlay = document.getElementById('modal-overlay-prd');
+    if (overlay) {
+        overlay.classList.remove('ativo');
+        document.body.style.overflow = '';
+        return;
+    }
+    window.location.href = '{{ url_for("operacoes.abas", aba="producao") }}';
+}
+
 /* ─── Multi-Produto: Adicionar linha ─── */
 let prodIdx = document.querySelectorAll('#tbody-produtos tr').length;
 
@@ -617,8 +788,12 @@ window.adicionarProduto = function() {
     tr.dataset.idx = prodIdx;
     tr.innerHTML = `
         <td style="color:var(--prd-muted);font-weight:700;">${prodIdx}</td>
-        <td><input list="lista-produtos-op" class="tbl-input" name="produto[]"
-                   placeholder="Buscar produto..." onchange="recalcularLinha(this)"></td>
+        <td><input list="lista-produtos-op" class="tbl-input table-input-desc" name="produto[]"
+                   placeholder="Buscar produto..." autocomplete="off"
+                   oninput="syncProduto(this)" onclick="syncProduto(this)" onchange="recalcularLinha(this)">
+            <input type="hidden" name="produto_sku[]" class="table-input-sku" value="">
+            <input type="hidden" name="produto_id[]" class="table-input-id" value="">
+        </td>
         <td><input class="tbl-input" name="ref[]" placeholder="REF-001"></td>
         <td><input class="tbl-input" name="cor[]" placeholder="Cor/Variação"></td>
         <td><input class="tbl-input" name="tam[]" placeholder="Tamanho"></td>
