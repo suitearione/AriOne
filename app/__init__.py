@@ -21,19 +21,14 @@
 
 
 from pathlib import Path
-
 from flask import Flask, redirect, url_for, jsonify, request
-
 from flask_login import current_user
-
 from app.extensions import db, migrate, login_manager
-
+from datetime import datetime
 import os
 
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 
 # ── Imports de models — obrigatório para Flask-Migrate detectar as tabelas ──
