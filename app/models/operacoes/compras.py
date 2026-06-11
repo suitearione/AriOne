@@ -79,7 +79,7 @@ class PedidoCompra(db.Model):
     data_pedido = db.Column(db.DateTime, default=datetime.now)
     data_entrega = db.Column(db.Date, nullable=False)
     
-    condicao_pagamento = db.Column(db.String(100))
+    condicao_pagamento = db.Column('condicoes_pagamento', db.String(100))
     forma_pagamento_id = db.Column(db.Integer)
     
     # Resumo Financeiro

@@ -303,6 +303,25 @@ def create_app():
 
                     db.session.rollback()
 
+            try:
+
+                cols = [row[1] for row in db.session.execute(db.text("PRAGMA table_info('op_compras_pedidos')")).fetchall()]
+                if 'condicoes_pagamento' not in cols:
+                    if 'condicao_pagamento' in cols:
+                        db.session.execute(db.text('ALTER TABLE op_compras_pedidos ADD COLUMN condicoes_pagamento VARCHAR(100)'))
+                        db.session.commit()
+                        db.session.execute(db.text(
+                            'UPDATE op_compras_pedidos SET condicoes_pagamento = condicao_pagamento WHERE condicao_pagamento IS NOT NULL'
+                        ))
+                        db.session.commit()
+                    else:
+                        db.session.execute(db.text('ALTER TABLE op_compras_pedidos ADD COLUMN condicoes_pagamento VARCHAR(100)'))
+                        db.session.commit()
+
+            except Exception:
+
+                db.session.rollback()
+
         # Fix: ajustar coluna senha_hash para 256 chars (scrypt hash é maior que 128)
 
         if database_url:
@@ -988,7 +1007,7 @@ def create_app():
             ('fornecedor_id',       'INTEGER'),
             ('comprador_id',        'INTEGER'),
             ('perfil_compra',       'VARCHAR(50)'),
-            ('condicao_pagamento',  'VARCHAR(100)'),
+            ('condicoes_pagamento', 'VARCHAR(100)'),
             ('forma_pagamento_id',  'INTEGER'),
             ('valor_desconto',      'NUMERIC(16,2) DEFAULT 0'),
             ('outros_custos',       'NUMERIC(16,2) DEFAULT 0'),

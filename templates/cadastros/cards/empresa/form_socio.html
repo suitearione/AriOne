@@ -39,7 +39,7 @@
           onclick_save='submeterSocio()',
           onclick_search='focarPesquisaSocio()',
           onclick_filter='abrirModalFiltrosAvancados()',
-          onclick_list='alternarVisaoFormLista("area-formulario-socio", "card-lista-socios")',
+          onclick_list="alternarVisaoFormLista('area-formulario-socio', 'card-lista-socios')",
           onclick_clonar='clonarSocioAtivo()',
           onclick_export="arioneToast('Exportação em desenvolvimento para Sócios.','info')",
           onclick_import="arioneToast('Importação em desenvolvimento para Sócios.','info')",
@@ -520,21 +520,6 @@
 
     </div>{# /tabs #}
 
-    <div class="fe-footer-actions">
-      {% if request.args.get('modal') %}
-      <button type="button" class="fe-btn fe-btn-ghost-dark" onclick="fecharModalEmp()">
-        <i class="fas fa-times"></i> Sair
-      </button>
-      {% else %}
-      <a href="{{ url_for('cadastros.abas', aba='empresa') }}" class="fe-btn fe-btn-ghost-dark">
-        <i class="fas fa-times"></i> Cancelar
-      </a>
-      {% endif %}
-      <button type="submit" class="fe-btn fe-btn-salvar-footer">
-        <i class="fas fa-save"></i> Salvar Sócio
-      </button>
-    </div>
-
   </form>
 
   {# ══════════ LISTA DE SÓCIOS — abaixo do formulário ══════════ #}
@@ -561,7 +546,7 @@
         </thead>
         <tbody>
           {% for s in lista_socios %}
-          <tr>
+          <tr onclick="editarSocio({{ s.id }})" style="cursor:pointer;">
             <td><span class="fe-badge-id">#{{ s.id }}</span></td>
             <td><strong>{{ s.nome }}</strong>
               {% if s.profissao %}<br><small style="color:#888;">{{ s.profissao }}</small>{% endif %}
@@ -584,8 +569,8 @@
             </td>
             <td style="text-align:center;">
               <div style="display:flex; justify-content:center; gap:5px;">
-                <button type="button" class="fe-acao fe-acao-edit" title="Editar" onclick="editarSocio({{ s.id }})"><i class="fa-solid fa-edit"></i></button>
-                <button type="button" class="fe-acao" style="background:rgba(231,76,60,0.1); color:#e74c3c;" title="Excluir" onclick="confirmarExcluirSocio({{ s.id }}, '{{ s.nome }}')"><i class="fa-solid fa-trash"></i></button>
+                <button type="button" class="fe-acao fe-acao-edit" title="Editar" onclick="event.stopPropagation(); editarSocio({{ s.id }})"><i class="fa-solid fa-edit"></i></button>
+                <button type="button" class="fe-acao" style="background:rgba(231,76,60,0.1); color:#e74c3c;" title="Excluir" onclick="event.stopPropagation(); confirmarExcluirSocio({{ s.id }}, '{{ s.nome }}')"><i class="fa-solid fa-trash"></i></button>
               </div>
             </td>
           </tr>

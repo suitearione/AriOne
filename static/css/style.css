@@ -70,18 +70,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    right: auto;
     width: 46px;
     height: 46px;
     border-radius: 14px;
     background: rgba(255,255,255,0.95);
     box-shadow: 0 14px 32px rgba(0,0,0,0.14);
     color: #7A255F;
-    z-index: 10002;
-    border: none;
+    border: 1px solid rgba(226,232,240,0.85);
     cursor: pointer;
 }
 
@@ -115,6 +110,10 @@ body {
         z-index: 10002 !important;
         border: none !important;
         cursor: pointer !important;
+    }
+
+    #mobile-menu-toggle-fixed {
+        display: none !important;
     }
 
     #mobile-menu-toggle-fixed i {

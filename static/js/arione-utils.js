@@ -1251,6 +1251,16 @@ window.arioneAlternarVisaoFormLista = function(formId, listId) {
     }
 };
 
+window.alternarVisaoFormLista = function(formId, listId) {
+    if (typeof window.arioneAlternarVisaoFormLista === 'function') {
+        window.arioneAlternarVisaoFormLista(formId, listId);
+    } else if (typeof arioneAlternarVisualizacao === 'function') {
+        arioneAlternarVisualizacao(formId, listId);
+    } else {
+        console.warn('alternarVisaoFormLista não está disponível');
+    }
+};
+
 // Função genérica para clonar
 window.arioneClonar = function(formId) {
     if (formId) {

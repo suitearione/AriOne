@@ -26,7 +26,13 @@ document.addEventListener("click", function (e) {
 // ================================
 // FUNÇÃO GLOBAL: ALTERNAR VISÃO FORMULÁRIO/LISTA
 // ================================
-function alternarVisaoFormLista() {
+function alternarVisaoFormLista(formId, listId) {
+    if (formId && listId) {
+        if (typeof window.arioneAlternarVisaoFormLista === 'function') {
+            return window.arioneAlternarVisaoFormLista(formId, listId);
+        }
+    }
+
     const formCard = document.querySelector('.op-card:nth-child(1)');
     const gridCard = document.querySelector('.op-card:nth-child(2)');
     const btnList = document.querySelector('[onclick="alternarVisaoFormLista()"]');
