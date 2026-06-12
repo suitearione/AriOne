@@ -323,7 +323,7 @@ def create_app():
                 ('comprador_id',        'INTEGER'),
                 ('perfil_compra',       'VARCHAR(50)'),
                 ('numero',              'VARCHAR(20)'),
-                ('condicao_pagamento', 'VARCHAR(100)'),
+                ('condicoes_pagamento', 'VARCHAR(100)'),
                 ('forma_pagamento_id',  'INTEGER'),
                 ('valor_desconto',      'NUMERIC(16,2) DEFAULT 0'),
                 ('outros_custos',       'NUMERIC(16,2) DEFAULT 0'),
@@ -350,7 +350,7 @@ def create_app():
                 except Exception:
                     db.session.rollback()
 
-            # ── Fix: renomear condicoes_pagamento -> condicao_pagamento
+            # ── Fix: renomear condicoes_pagamento -> condicao_pagamento (alinha model)
             try:
                 db.session.execute(db.text(
                     'ALTER TABLE op_compras_pedidos RENAME COLUMN condicoes_pagamento TO condicao_pagamento'
@@ -360,7 +360,7 @@ def create_app():
                 db.session.rollback()
 
             # ── Fix: colunas ausentes em clientes
-            _colunas_clientes = [
+            for _col, _tipo in [
                 ('data_abertura',   'DATE'),
                 ('genero',          'VARCHAR(50)'),
                 ('site',            'VARCHAR(255)'),
@@ -386,12 +386,414 @@ def create_app():
                 ('bloqueio_credito','BOOLEAN DEFAULT FALSE'),
                 ('motivo_bloqueio', 'VARCHAR(255)'),
                 ('foto',            'VARCHAR(255)'),
-            ]
-            for _col, _tipo in _colunas_clientes:
+            ]:
                 try:
-                    db.session.execute(db.text(
-                        f'ALTER TABLE clientes ADD COLUMN IF NOT EXISTS {_col} {_tipo}'
-                    ))
+                    db.session.execute(db.text(f'ALTER TABLE clientes ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em empresas
+            for _col, _tipo in [
+                ('area_atuacao_resumo', 'VARCHAR(200)'),
+                ('setor_atividade',     'VARCHAR(100)'),
+                ('objeto_social',       'VARCHAR(50)'),
+                ('logo',                'VARCHAR(255)'),
+                ('tipo_pessoa',         'VARCHAR(2)'),
+                ('unidade',             'VARCHAR(10)'),
+                ('rg',                  'VARCHAR(20)'),
+                ('ie',                  'VARCHAR(20)'),
+                ('im',                  'VARCHAR(20)'),
+                ('data_nascimento',     'DATE'),
+                ('profissao',           'VARCHAR(100)'),
+                ('pis_pasep',           'VARCHAR(15)'),
+                ('email_contato',       'VARCHAR(200)'),
+                ('contato_nome',        'VARCHAR(100)'),
+                ('contato_tipo',        'VARCHAR(50)'),
+                ('slug',                'VARCHAR(100)'),
+                ('website',             'VARCHAR(200)'),
+                ('instagram',           'VARCHAR(100)'),
+                ('facebook',            'VARCHAR(100)'),
+                ('end_fat_cep',         'VARCHAR(9)'),
+                ('end_fat_logradouro',  'VARCHAR(200)'),
+                ('end_fat_numero',      'VARCHAR(20)'),
+                ('end_fat_complemento', 'VARCHAR(100)'),
+                ('end_fat_bairro',      'VARCHAR(100)'),
+                ('end_fat_cidade',      'VARCHAR(100)'),
+                ('end_fat_uf',          'VARCHAR(2)'),
+                ('end_fat_referencia',  'VARCHAR(200)'),
+                ('end_ent_cep',         'VARCHAR(9)'),
+                ('end_ent_logradouro',  'VARCHAR(200)'),
+                ('end_ent_numero',      'VARCHAR(20)'),
+                ('end_ent_complemento', 'VARCHAR(100)'),
+                ('end_ent_bairro',      'VARCHAR(100)'),
+                ('end_ent_cidade',      'VARCHAR(100)'),
+                ('end_ent_uf',          'VARCHAR(2)'),
+                ('end_ent_referencia',  'VARCHAR(200)'),
+                ('end_cor_cep',         'VARCHAR(9)'),
+                ('end_cor_logradouro',  'VARCHAR(200)'),
+                ('end_cor_numero',      'VARCHAR(20)'),
+                ('end_cor_complemento', 'VARCHAR(100)'),
+                ('end_cor_bairro',      'VARCHAR(100)'),
+                ('end_cor_cidade',      'VARCHAR(100)'),
+                ('end_cor_uf',          'VARCHAR(2)'),
+                ('end_cor_referencia',  'VARCHAR(200)'),
+                ('data_abertura',       'DATE'),
+                ('data_encerramento',   'DATE'),
+                ('motivo_encerramento', 'TEXT'),
+                ('regime_tributario',   'VARCHAR(50)'),
+                ('natureza_juridica',   'VARCHAR(10)'),
+                ('cnae_principal',      'VARCHAR(10)'),
+                ('cnae_secundario',     'VARCHAR(10)'),
+                ('retencao_irrf',       'VARCHAR(50)'),
+                ('declaracao_ir',       'VARCHAR(50)'),
+                ('nfe_serie',           'VARCHAR(10)'),
+                ('nfe_ultimo_numero',   'INTEGER'),
+                ('nfe_ambiente',        'VARCHAR(1)'),
+                ('danfe_formato',       'VARCHAR(1)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE empresas ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em fornecedores
+            for _col, _tipo in [
+                ('data_abertura',   'DATE'),
+                ('contato_nome',    'VARCHAR(100)'),
+                ('contato_cargo',   'VARCHAR(100)'),
+                ('website',         'VARCHAR(150)'),
+                ('categoria',       'VARCHAR(50)'),
+                ('avaliacao',       'VARCHAR(10)'),
+                ('prazo_entrega',   'INTEGER'),
+                ('prazo_pagamento', 'VARCHAR(50)'),
+                ('forma_pagamento', 'VARCHAR(50)'),
+                ('moeda',           'VARCHAR(10)'),
+                ('banco_nome',      'VARCHAR(100)'),
+                ('banco_codigo',    'VARCHAR(10)'),
+                ('banco_agencia',   'VARCHAR(20)'),
+                ('banco_conta',     'VARCHAR(30)'),
+                ('banco_tipo',      'VARCHAR(20)'),
+                ('pix_tipo',        'VARCHAR(20)'),
+                ('pix_chave',       'VARCHAR(150)'),
+                ('is_fp',           'BOOLEAN DEFAULT FALSE'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE fornecedores ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em funcionarios
+            for _col, _tipo in [
+                ('rg_orgao',            'VARCHAR(20)'),
+                ('rg_data_emissao',     'DATE'),
+                ('pis_pasep',           'VARCHAR(20)'),
+                ('nome_mae',            'VARCHAR(100)'),
+                ('nome_pai',            'VARCHAR(100)'),
+                ('titulo_eleitor',      'VARCHAR(20)'),
+                ('reservista',          'VARCHAR(20)'),
+                ('cnh',                 'VARCHAR(20)'),
+                ('cnh_categoria',       'VARCHAR(10)'),
+                ('tipo_sanguineo',      'VARCHAR(5)'),
+                ('alergias',            'VARCHAR(255)'),
+                ('estado_civil',        'VARCHAR(20)'),
+                ('email_pessoal',       'VARCHAR(100)'),
+                ('email_corporativo',   'VARCHAR(100)'),
+                ('matricula',           'VARCHAR(20)'),
+                ('data_demissao',       'DATE'),
+                ('tipo_contrato',       'VARCHAR(50)'),
+                ('nivel_hierarquico',   'VARCHAR(50)'),
+                ('unidade_negocio',     'VARCHAR(100)'),
+                ('turno',               'VARCHAR(50)'),
+                ('regime_escala',       'VARCHAR(20)'),
+                ('ponto_tolerancia',    'INTEGER DEFAULT 5'),
+                ('aso_data',            'DATE'),
+                ('aso_validade',        'DATE'),
+                ('epi_entregues',       'TEXT'),
+                ('salario_base',        'NUMERIC(12,2) DEFAULT 0'),
+                ('peridiocidade',       'VARCHAR(20)'),
+                ('banco',               'VARCHAR(100)'),
+                ('tipo_conta',          'VARCHAR(50)'),
+                ('agencia',             'VARCHAR(10)'),
+                ('conta',               'VARCHAR(20)'),
+                ('pix',                 'VARCHAR(100)'),
+                ('foto',                'VARCHAR(255)'),
+                ('path_documentos',     'VARCHAR(255)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE funcionarios ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em transportadoras
+            for _col, _tipo in [
+                ('rntrc',               'VARCHAR(20)'),
+                ('website',             'VARCHAR(150)'),
+                ('modal_transporte',    'VARCHAR(100)'),
+                ('tipo_servico',        'VARCHAR(100)'),
+                ('prazo_entrega',       'INTEGER'),
+                ('avaliacao',           'VARCHAR(1)'),
+                ('coleta_origem',       'VARCHAR(3)'),
+                ('entrega_final',       'VARCHAR(3)'),
+                ('entregador_final',    'VARCHAR(50)'),
+                ('coleta_veiculos',     'VARCHAR(100)'),
+                ('entrega_veiculos',    'VARCHAR(100)'),
+                ('contato_nome',        'VARCHAR(100)'),
+                ('contato_cargo',       'VARCHAR(100)'),
+                ('parceira_desde',      'DATE'),
+                ('rotas_data',          'TEXT'),
+                ('logo',                'VARCHAR(255)'),
+                ('end_com_cep',         'VARCHAR(9)'),
+                ('end_com_logradouro',  'VARCHAR(150)'),
+                ('end_com_numero',      'VARCHAR(20)'),
+                ('end_com_complemento', 'VARCHAR(100)'),
+                ('end_com_bairro',      'VARCHAR(80)'),
+                ('end_com_cidade',      'VARCHAR(80)'),
+                ('end_com_uf',          'VARCHAR(2)'),
+                ('end_ent_cep',         'VARCHAR(9)'),
+                ('end_ent_logradouro',  'VARCHAR(150)'),
+                ('end_ent_numero',      'VARCHAR(20)'),
+                ('end_ent_complemento', 'VARCHAR(100)'),
+                ('end_ent_bairro',      'VARCHAR(80)'),
+                ('end_ent_cidade',      'VARCHAR(80)'),
+                ('end_ent_uf',          'VARCHAR(2)'),
+                ('prazo_pagamento',     'VARCHAR(50)'),
+                ('forma_pagamento',     'VARCHAR(50)'),
+                ('tabela_frete',        'VARCHAR(100)'),
+                ('banco_nome',          'VARCHAR(100)'),
+                ('banco_codigo',        'VARCHAR(10)'),
+                ('banco_agencia',       'VARCHAR(20)'),
+                ('banco_conta',         'VARCHAR(20)'),
+                ('pix_chave',           'VARCHAR(100)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE transportadoras ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em socios
+            for _col, _tipo in [
+                ('foto',                'VARCHAR(255)'),
+                ('estado_civil',        'VARCHAR(30)'),
+                ('nacionalidade',       'VARCHAR(50)'),
+                ('profissao',           'VARCHAR(100)'),
+                ('email_corporativo',   'VARCHAR(120)'),
+                ('pais',                'VARCHAR(50)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE socios ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em investidores
+            for _col, _tipo in [
+                ('tipo_pessoa',     'VARCHAR(2)'),
+                ('nacionalidade',   'VARCHAR(50)'),
+                ('estado_civil',    'VARCHAR(30)'),
+                ('razao_social',    'VARCHAR(150)'),
+                ('nome_fantasia',   'VARCHAR(150)'),
+                ('ie',              'VARCHAR(30)'),
+                ('responsavel',     'VARCHAR(150)'),
+                ('cpf_responsavel', 'VARCHAR(14)'),
+                ('email2',          'VARCHAR(120)'),
+                ('pais',            'VARCHAR(50)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE investidores ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em op_compras_pedidos
+            for _col, _tipo in [
+                ('fornecedor_id',       'INTEGER'),
+                ('comprador_id',        'INTEGER'),
+                ('perfil_compra',       'VARCHAR(50)'),
+                ('numero',              'VARCHAR(20)'),
+                ('condicao_pagamento',  'VARCHAR(100)'),
+                ('forma_pagamento_id',  'INTEGER'),
+                ('valor_desconto',      'NUMERIC(16,2) DEFAULT 0'),
+                ('outros_custos',       'NUMERIC(16,2) DEFAULT 0'),
+                ('total_frete',         'NUMERIC(16,2) DEFAULT 0'),
+                ('total_bruto',         'NUMERIC(16,2) DEFAULT 0'),
+                ('total_liquido',       'NUMERIC(16,2) DEFAULT 0'),
+                ('forma_envio',         'VARCHAR(50)'),
+                ('ent_cep',             'VARCHAR(10)'),
+                ('ent_logradouro',      'VARCHAR(150)'),
+                ('ent_numero',          'VARCHAR(20)'),
+                ('ent_bairro',          'VARCHAR(100)'),
+                ('ent_cidade',          'VARCHAR(100)'),
+                ('ent_uf',              'VARCHAR(2)'),
+                ('ent_complemento',     'VARCHAR(150)'),
+                ('rastreamento_api',    'VARCHAR(100)'),
+                ('observacoes',         'TEXT'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE op_compras_pedidos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em comercial_formas_pagamento
+            for _col, _tipo in [
+                ('agrupador_operacional',  'VARCHAR(50)'),
+                ('baixa_automatica',       'BOOLEAN DEFAULT FALSE'),
+                ('tipo',                   'VARCHAR(50)'),
+                ('condicao_pagamento',     'VARCHAR(100)'),
+                ('intervalo_dias',         'INTEGER DEFAULT 0'),
+                ('parcela_minima',         'NUMERIC(16,2) DEFAULT 0'),
+                ('taxa_juros',             'NUMERIC(8,2) DEFAULT 0'),
+                ('percentual_desconto',    'NUMERIC(8,2) DEFAULT 0'),
+                ('icone',                  'VARCHAR(50)'),
+                ('cor',                    'VARCHAR(20)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE comercial_formas_pagamento ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em comercial_operadoras_financeiras
+            for _col, _tipo in [
+                ('nome_fantasia',               'VARCHAR(100)'),
+                ('cnpj',                        'VARCHAR(20)'),
+                ('site',                        'VARCHAR(255)'),
+                ('email_suporte',               'VARCHAR(100)'),
+                ('telefone_suporte',            'VARCHAR(20)'),
+                ('taxa_debito',                 'NUMERIC(8,4) DEFAULT 0'),
+                ('taxa_pix',                    'NUMERIC(8,4) DEFAULT 0'),
+                ('taxa_credito_vista',          'NUMERIC(8,4) DEFAULT 0'),
+                ('taxa_credito_parcelado',      'NUMERIC(8,4) DEFAULT 0'),
+                ('taxa_antecipacao',            'NUMERIC(8,4) DEFAULT 0'),
+                ('taxas_parcelamento',          'TEXT'),
+                ('formas_pagamento_ids',        'TEXT'),
+                ('formas_pagamento_detalhes',   'TEXT'),
+                ('icone',                       'VARCHAR(50)'),
+                ('cor',                         'VARCHAR(20)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE comercial_operadoras_financeiras ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em cat_produtos
+            for _col, _tipo in [
+                ('tipo_item',               'VARCHAR(50)'),
+                ('cod_barras',              'VARCHAR(14)'),
+                ('cod_interno',             'VARCHAR(50)'),
+                ('referencia',              'VARCHAR(50)'),
+                ('origem_produto',          'VARCHAR(50)'),
+                ('dim_comprimento',         'NUMERIC(10,2)'),
+                ('dim_largura',             'NUMERIC(10,2)'),
+                ('dim_altura',              'NUMERIC(10,2)'),
+                ('tags',                    'VARCHAR(255)'),
+                ('preco_varejo',            'NUMERIC(16,2) DEFAULT 0'),
+                ('preco_atacado',           'NUMERIC(16,2) DEFAULT 0'),
+                ('preco_promocional',       'NUMERIC(16,2) DEFAULT 0'),
+                ('tipo_estoque',            'VARCHAR(20)'),
+                ('saldo_reservado',         'NUMERIC(16,2) DEFAULT 0'),
+                ('saldo_previsto',          'NUMERIC(16,2) DEFAULT 0'),
+                ('qtd_min_varejo',          'INTEGER DEFAULT 1'),
+                ('qtd_min_atacado',         'INTEGER DEFAULT 1'),
+                ('deposito',                'VARCHAR(100)'),
+                ('prateleira',              'VARCHAR(100)'),
+                ('has_composicao',          'BOOLEAN DEFAULT FALSE'),
+                ('mov_estoque_composicao',  'BOOLEAN DEFAULT FALSE'),
+                ('ncm',                     'VARCHAR(10)'),
+                ('cest',                    'VARCHAR(10)'),
+                ('cfop',                    'VARCHAR(4)'),
+                ('origem',                  'VARCHAR(1)'),
+                ('cst',                     'VARCHAR(3)'),
+                ('aliq_icms',               'NUMERIC(8,4) DEFAULT 0'),
+                ('aliq_pis',                'NUMERIC(8,4) DEFAULT 0'),
+                ('aliq_cofins',             'NUMERIC(8,4) DEFAULT 0'),
+                ('aliq_ipi',                'NUMERIC(8,4) DEFAULT 0'),
+                ('mva',                     'NUMERIC(8,4) DEFAULT 0'),
+                ('base_st',                 'NUMERIC(8,4) DEFAULT 0'),
+                ('permite_desconto',        'BOOLEAN DEFAULT FALSE'),
+                ('desconto_maximo',         'NUMERIC(8,2) DEFAULT 0'),
+                ('vender_sem_estoque',      'BOOLEAN DEFAULT FALSE'),
+                ('exige_obs_venda',         'BOOLEAN DEFAULT FALSE'),
+                ('imprimir_nfe',            'BOOLEAN DEFAULT FALSE'),
+                ('grade_cores',             'TEXT'),
+                ('grade_tamanhos',          'TEXT'),
+                ('grade_label_adicional',   'VARCHAR(50)'),
+                ('grade_valores_adicional', 'TEXT'),
+                ('grade_matrix',            'TEXT'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE cat_produtos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em cat_insumos
+            for _col, _tipo in [
+                ('sku',             'VARCHAR(50)'),
+                ('estoque_minimo',  'NUMERIC(16,2) DEFAULT 0'),
+                ('ponto_pedido',    'NUMERIC(16,2) DEFAULT 0'),
+                ('conta_contabil',  'VARCHAR(20)'),
+                ('centro_custo',    'VARCHAR(50)'),
+                ('foto',            'VARCHAR(255)'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE cat_insumos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em financeiro_caixas
+            for _col, _tipo in [
+                ('formas_pagamento_ids',      'TEXT'),
+                ('formas_pagamento_detalhes', 'TEXT'),
+                ('bancos_ids',                'TEXT'),
+                ('operadoras_ids',            'TEXT'),
+                ('responsavel',               'VARCHAR(100)'),
+                ('data_fechamento',           'TIMESTAMP'),
+                ('observacoes',               'TEXT'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE financeiro_caixas ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em financeiro_lancamentos
+            for _col, _tipo in [
+                ('numero_documento',    'VARCHAR(50)'),
+                ('rateio_multiplo',     'BOOLEAN DEFAULT FALSE'),
+                ('data_competencia',    'TIMESTAMP'),
+                ('conta_bancaria_id',   'INTEGER'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE financeiro_lancamentos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: colunas ausentes em sistema_licencas
+            for _col, _tipo in [
+                ('cnpj_cpf',            'VARCHAR(20)'),
+                ('contato_master',      'VARCHAR(100)'),
+                ('email_gestao',        'VARCHAR(200)'),
+                ('whatsapp_gestor',     'VARCHAR(20)'),
+                ('cidade',              'VARCHAR(100)'),
+                ('uf',                  'VARCHAR(2)'),
+                ('pais',                'VARCHAR(100)'),
+                ('tipo_cobranca',       'VARCHAR(50)'),
+                ('inicio_cobranca',     'DATE'),
+                ('assinatura_url',      'VARCHAR(500)'),
+                ('anexos_json',         'TEXT'),
+                ('matriz_licenciamento','TEXT'),
+            ]:
+                try:
+                    db.session.execute(db.text(f'ALTER TABLE sistema_licencas ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
