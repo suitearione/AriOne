@@ -21,14 +21,19 @@
 
 
 from pathlib import Path
+
 from flask import Flask, redirect, url_for, jsonify, request
+
 from flask_login import current_user
+
 from app.extensions import db, migrate, login_manager
-from datetime import datetime
+
 import os
 
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 
 # ── Imports de models — obrigatório para Flask-Migrate detectar as tabelas ──
@@ -298,25 +303,6 @@ def create_app():
 
                     db.session.rollback()
 
-            try:
-
-                cols = [row[1] for row in db.session.execute(db.text("PRAGMA table_info('op_compras_pedidos')")).fetchall()]
-                if 'condicoes_pagamento' not in cols:
-                    if 'condicao_pagamento' in cols:
-                        db.session.execute(db.text('ALTER TABLE op_compras_pedidos ADD COLUMN condicoes_pagamento VARCHAR(100)'))
-                        db.session.commit()
-                        db.session.execute(db.text(
-                            'UPDATE op_compras_pedidos SET condicoes_pagamento = condicao_pagamento WHERE condicao_pagamento IS NOT NULL'
-                        ))
-                        db.session.commit()
-                    else:
-                        db.session.execute(db.text('ALTER TABLE op_compras_pedidos ADD COLUMN condicoes_pagamento VARCHAR(100)'))
-                        db.session.commit()
-
-            except Exception:
-
-                db.session.rollback()
-
         # Fix: ajustar coluna senha_hash para 256 chars (scrypt hash é maior que 128)
 
         if database_url:
@@ -337,7 +323,7 @@ def create_app():
                 ('comprador_id',        'INTEGER'),
                 ('perfil_compra',       'VARCHAR(50)'),
                 ('numero',              'VARCHAR(20)'),
-                ('condicoes_pagamento', 'VARCHAR(100)'),
+                ('condicao_pagamento', 'VARCHAR(100)'),
                 ('forma_pagamento_id',  'INTEGER'),
                 ('valor_desconto',      'NUMERIC(16,2) DEFAULT 0'),
                 ('outros_custos',       'NUMERIC(16,2) DEFAULT 0'),
@@ -359,6 +345,52 @@ def create_app():
                 try:
                     db.session.execute(db.text(
                         f'ALTER TABLE op_compras_pedidos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'
+                    ))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+
+            # ── Fix: renomear condicoes_pagamento -> condicao_pagamento
+            try:
+                db.session.execute(db.text(
+                    'ALTER TABLE op_compras_pedidos RENAME COLUMN condicoes_pagamento TO condicao_pagamento'
+                ))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
+            # ── Fix: colunas ausentes em clientes
+            _colunas_clientes = [
+                ('data_abertura',   'DATE'),
+                ('genero',          'VARCHAR(50)'),
+                ('site',            'VARCHAR(255)'),
+                ('instagram',       'VARCHAR(100)'),
+                ('origem',          'VARCHAR(50)'),
+                ('categoria',       'VARCHAR(50)'),
+                ('rating',          'VARCHAR(10)'),
+                ('cliente_desde',   'DATE'),
+                ('end_res_obs',     'VARCHAR(255)'),
+                ('end_ent_obs',     'VARCHAR(255)'),
+                ('prazo_pagamento', 'VARCHAR(50)'),
+                ('forma_pagamento', 'VARCHAR(50)'),
+                ('desconto_padrao', 'NUMERIC(5,2) DEFAULT 0'),
+                ('limite_compras',  'NUMERIC(16,2) DEFAULT 0'),
+                ('tabela_preco',    'VARCHAR(10)'),
+                ('banco',           'VARCHAR(150)'),
+                ('banco_nome',      'VARCHAR(100)'),
+                ('banco_codigo',    'VARCHAR(10)'),
+                ('banco_agencia',   'VARCHAR(20)'),
+                ('banco_conta',     'VARCHAR(30)'),
+                ('banco_tipo',      'VARCHAR(20)'),
+                ('pix_chave',       'VARCHAR(150)'),
+                ('bloqueio_credito','BOOLEAN DEFAULT FALSE'),
+                ('motivo_bloqueio', 'VARCHAR(255)'),
+                ('foto',            'VARCHAR(255)'),
+            ]
+            for _col, _tipo in _colunas_clientes:
+                try:
+                    db.session.execute(db.text(
+                        f'ALTER TABLE clientes ADD COLUMN IF NOT EXISTS {_col} {_tipo}'
                     ))
                     db.session.commit()
                 except Exception:
@@ -1002,7 +1034,7 @@ def create_app():
             ('fornecedor_id',       'INTEGER'),
             ('comprador_id',        'INTEGER'),
             ('perfil_compra',       'VARCHAR(50)'),
-            ('condicoes_pagamento', 'VARCHAR(100)'),
+            ('condicao_pagamento',  'VARCHAR(100)'),
             ('forma_pagamento_id',  'INTEGER'),
             ('valor_desconto',      'NUMERIC(16,2) DEFAULT 0'),
             ('outros_custos',       'NUMERIC(16,2) DEFAULT 0'),
