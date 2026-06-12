@@ -1,1 +1,0 @@
-"""Sincronizando historico de versoes"""
