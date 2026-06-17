@@ -460,6 +460,7 @@ def create_app():
 
             # ── Fix: colunas ausentes em fornecedores
             for _col, _tipo in [
+                ('empresa_id',      'INTEGER'),
                 ('data_abertura',   'DATE'),
                 ('contato_nome',    'VARCHAR(100)'),
                 ('contato_cargo',   'VARCHAR(100)'),
