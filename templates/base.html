@@ -473,24 +473,33 @@
             background: rgba(255, 255, 255, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 6px;
             cursor: pointer;
             align-items: center;
             justify-content: center;
-            margin-right: 8px;
             transition: all 0.3s;
-            font-size: 13px;
-            flex-shrink: 0;
+            font-size: 15px;
             padding: 0;
+            z-index: 10;
         }
         .arione-mobile-title-btn:hover {
             background: rgba(255, 255, 255, 0.25);
         }
         @media (max-width: 768px) {
+            .fe-header, .fe-header-mestre {
+                position: relative !important;
+                padding-left: 55px !important;
+                padding-right: 15px !important;
+            }
             .arione-mobile-title-btn {
                 display: flex !important;
+                position: absolute !important;
+                left: 15px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                margin: 0 !important;
             }
             .fe-header-title {
                 font-size: 13px !important;
