@@ -12,7 +12,7 @@ Revision ID: criar_tabela_versoes
 Revises: 1f268e9fc294
 Create Date: 2026-01-04
 
-\"\"\"
+"""
 from alembic import op
 import sqlalchemy as sa
 
