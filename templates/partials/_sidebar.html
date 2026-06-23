@@ -229,6 +229,9 @@
 
     <!-- ── LOGO DA EMPRESA ATIVA (IDENTIDADE VISUAL) ── -->
     {% set logo_emp = session.get('logo_empresa') %}
+    {% if logo_emp and not logo_emp.startswith('img/') %}
+        {% set logo_emp = 'img/logo/' + logo_emp %}
+    {% endif %}
     {% if not logo_emp and current_user.is_authenticated and current_user.empresa and current_user.empresa.logo %}
         {% set logo_emp = 'img/logo/' + current_user.empresa.logo %}
     {% endif %}
@@ -236,11 +239,11 @@
     {% if logo_emp %}
     <div class="sidebar-company-logo-footer" style="padding: 10px 0; text-align: center; margin: 10px 0;">
         <img src="{{ url_for('static', filename=logo_emp) }}" 
-             alt="{{ session.get('nome_fantasia') or current_user.empresa.nome_fantasia or current_user.empresa.razao_social }}"
+             alt="{{ session.get('nome_fantasia') or session.get('nome_empresa') or current_user.empresa.nome_fantasia or current_user.empresa.razao_social }}"
              style="max-width: 90%; max-height: 55px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"
              onerror="this.style.display='none'">
         <div style="font-size: 10px; color: #fff; font-weight: 700; margin-top: 6px; opacity: 0.8; font-family: 'Outfit', sans-serif; text-transform: uppercase;">
-            {{ session.get('nome_fantasia') or current_user.empresa.nome_fantasia or current_user.empresa.razao_social }}
+            {{ session.get('nome_fantasia') or session.get('nome_empresa') or current_user.empresa.nome_fantasia or current_user.empresa.razao_social }}
         </div>
     </div>
     {% endif %}
