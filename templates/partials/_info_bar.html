@@ -4,9 +4,9 @@
     <!-- BOTÃO MENU MOBILE (HAMBURGER) -->
     <button id="mobile-menu-toggle" 
             onclick="document.querySelector('.arione-sidebar').classList.toggle('mobile-open')"
-            style="display: none; background: none; border: none; font-size: 24px; color: #7A255F; cursor: pointer; padding: 6px; margin-right: 10px;"
+            style="display: none; align-items: center; justify-content: center; width: 46px !important; height: 46px !important; min-width: 46px !important; flex-shrink: 0 !important; border-radius: 14px !important; background: rgba(255,255,255,0.95) !important; border: 1px solid rgba(226,232,240,0.85) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; color: #7A255F !important; cursor: pointer !important; margin-right: 15px !important; margin-left: 0 !important; padding: 0 !important;"
             title="Abrir/Fechar Menu">
-        <i class="fas fa-bars"></i>
+        <i class="fas fa-bars" style="font-size: 18px !important;"></i>
     </button>
 
     <!-- EMPRESA ATIVA -->
@@ -114,6 +114,25 @@
     }
     body.dark-mode #global-pulse-trigger {
         background: rgba(255,255,255,0.05) !important;
+    }
+
+    /* FORÇAR ESTILO DO BOTÃO MOBILE (BYPASS DE CACHE) */
+    @media (max-width: 1200px) {
+        #mobile-menu-toggle {
+            display: flex !important;
+        }
+        
+        .arione-bar-white-new {
+            justify-content: flex-start !important;
+            flex-direction: row !important;
+            padding-left: 15px !important;
+        }
+        
+        /* Caso a left-info-group queira quebrar, não deixamos */
+        .arione-left-info-group {
+            flex-shrink: 1 !important;
+            min-width: 0 !important;
+        }
     }
 
 <style>
