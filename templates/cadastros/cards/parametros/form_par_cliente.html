@@ -1,0 +1,68 @@
+{# =============================================================================
+   Caminho  : templates/cadastros/cards/parametros/form_par_cliente.html
+   Função   : Parâmetros de Clientes (GOLDEN STANDARD)
+   ============================================================================ #}
+
+{% extends "base_modal.html" if is_modal else "base.html" %}
+
+{% import "macros/componentes.html" as comp %}
+
+{% block content %}
+<div class="fe-wrap fp-wrap mod-cliente" style="background: #f4f6f9; min-height: 100vh;">
+
+    {# CABEÇALHO MESTRE (QUIET LUXURY) #}
+    {{ comp.cabecalho_mestre_arione(
+        titulo="Parâmetros de Clientes",
+        subtitulo="Sistema > Cadastros > Parâmetros",
+        icone="fa-users",
+        form_id="form-par-cliente",
+        onclick_save="arioneSalvarDocumento('parametros_cliente', this, 'form-par-cliente')",
+        cor_tema="#7A255F",
+        func_fechar="fecharModalGlobal()",
+        tamanho="medio"
+    ) }}
+
+    <div class="fe-form-stage" style="max-width: 1000px; margin: 0 auto; padding: 0 24px;">
+        <form id="form-par-cliente" method="POST" novalidate>
+
+        {# CARD 1: CADASTRO DE CLIENTES — CAMPOS OPCIONAIS #}
+        <div class="fp-card">
+            <div class="fp-card-title">
+                <i class="fas fa-id-card"></i> Cadastro de Clientes — Campos Opcionais
+            </div>
+            <div class="fp-card-body">
+                <div class="fp-row">
+                    <div class="fp-group fp-flex-1">
+                        <label class="fp-label">Exibir Campo "Ministério" (uso para Igrejas)</label>
+                        <div style="display: flex; gap: 15px; align-items: center; height: 38px;">
+                            <label class="fp-checkbox-wrap">
+                                <input type="checkbox" name="exibir_campo_ministerio" {% if parametros and parametros.exibir_campo_ministerio %}checked{% endif %}>
+                                <span class="fp-checkbox-label">Ativar</span>
+                            </label>
+                        </div>
+                        <small style="color:#94a3b8; font-size:11px; display:block; margin-top:4px;">
+                            Só faz sentido ativar se a empresa trabalhar com igrejas. Quando ligado, o campo "Ministério" aparece na aba Comercial do cadastro de clientes.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# FOOTER #}
+        <div class="fp-footer-actions" style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px; padding:15px 24px; background:#fff; border-radius:16px; border:1px solid #e2e8f0;">
+            <button type="button" class="fp-btn" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;" onclick="fecharModalGlobal()">
+                <i class="fas fa-times"></i> CANCELAR
+            </button>
+            <button type="button" class="fp-btn fp-btn-salvar-footer" style="background: #7A255F; color: #fff;" onclick="arioneSalvarDocumento('parametros_cliente', this)">
+                <i class="fas fa-save"></i> SALVAR PARÂMETROS
+            </button>
+        </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    console.log('👤 Parâmetros de Clientes AriOne Ativado');
+</script>
+{% endblock %}

@@ -26,7 +26,7 @@
     width: 8px;                            /* Largura da barra de rolagem */
 }
 .arione-page::-webkit-scrollbar-thumb {
-    background: #7A255F;                     /* Cor da barra (Roxo AriOne) */
+    background: #0891B2;
     border-radius: 10px;                       /* Bordas arredondadas */
 }
 
@@ -36,7 +36,7 @@
 :root {
     --sidebar-width: 260px;
     --topbar-height: 60px;
-    --cor-principal: #7A255F;
+    --cor-principal: #0891B2;
     --cor-secundaria: #F4F6F9;
     --cor-texto: #343a40;
 }

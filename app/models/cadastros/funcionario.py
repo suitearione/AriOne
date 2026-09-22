@@ -26,6 +26,18 @@ class Setor(db.Model):
     def __repr__(self):
         return f'<Setor {self.nome} ({self.sigla or ""})>'
 
+class CboOcupacao(db.Model):
+    __tablename__ = 'cbo_ocupacoes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(10), unique=True, nullable=False, index=True)
+    titulo = db.Column(db.String(255), nullable=False, index=True)
+    sinonimos = db.Column(db.Text)
+    ativo = db.Column(db.Boolean, default=True, nullable=False)
+
+    def __repr__(self):
+        return f'<CBO {self.codigo} - {self.titulo}>'
+
 class Cargo(db.Model):
     __tablename__ = 'cargos'
     id = db.Column(db.Integer, primary_key=True)
@@ -33,7 +45,10 @@ class Cargo(db.Model):
     nome = db.Column(db.String(100), unique=True, nullable=False)
     descricao = db.Column(db.String(255))
     cbo = db.Column(db.String(10))  # Classificação Brasileira de Ocupações
+    cbo_id = db.Column(db.Integer, db.ForeignKey('cbo_ocupacoes.id'), nullable=True)
     ativo = db.Column(db.Boolean, default=True)
+
+    cbo_ocupacao = db.relationship('CboOcupacao', backref='cargos')
 
     def __repr__(self):
         return f'<Cargo {self.nome}>'

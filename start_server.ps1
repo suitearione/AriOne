@@ -9,22 +9,10 @@ Write-Host "         ARI ONE - NEXUS DEVELOPMENT ENVIRONMENT         " -Foregrou
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Definindo Caminhos
-$VENV_PATH = ".\.venv\Scripts\Activate.ps1"
+Write-Host "[🚀] Iniciando o Ambiente Virtual (.venv)..." -ForegroundColor Yellow
 
-if (Test-Path $VENV_PATH) {
-    Write-Host "[🚀] Ativando Ambiente Virtual (.venv)..." -ForegroundColor Yellow
-    . $VENV_PATH
-    Write-Host "[✅] Ambiente Ativado com Sucesso!" -ForegroundColor Green
-} else {
-    Write-Host "[⚠️] Ambiente Virtual não encontrado em $VENV_PATH" -ForegroundColor Red
-    Write-Host "[ℹ️] Tentando executar com o Python global..." -ForegroundColor Gray
-}
+# Executa o Python do ambiente virtual direto, sem precisar ativar script de terceiros
+& ".\.venv\Scripts\python.exe" tray_manager.py
 
-Write-Host "[🔥] Iniciando Gerenciador AriOne na Bandeja de Sistema..." -ForegroundColor Cyan
-Write-Host "[💡] O servidor rodará em segundo plano." -ForegroundColor Gray
 Write-Host ""
 Write-Host "----------------------------------------------------------" -ForegroundColor Cyan
-
-# Executando o servidor via Gerenciador de Bandeja
-python tray_manager.py

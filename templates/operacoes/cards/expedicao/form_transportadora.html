@@ -600,7 +600,7 @@
                 {% if transportadora %}
                 <a href="{{ url_for('static', filename='uploads/transportadoras/'~transportadora.id~'/'~doc.nome) }}" target="_blank" class="fe-doc-btn fe-doc-btn-view"><i class="fas fa-eye"></i></a>
                 {% if transportadora.ativo %}
-                <form method="POST" action="{{ url_for('operacoes.excluir_doc_transportadora', id=transportadora.id, nome=doc.nome) }}" style="display:inline;" onsubmit="return confirm('Remover?')">
+                <form method="POST" action="{{ url_for('cadastros.excluir_doc_transportadora', id=transportadora.id, nome=doc.nome) }}" style="display:inline;" onsubmit="return confirm('Remover?')">
                   <button class="fe-doc-btn fe-doc-btn-del"><i class="fas fa-trash"></i></button>
                 </form>
                 {% endif %}

@@ -53,7 +53,8 @@ def form_status(id=None):
         status.tipo = request.form.get('tipo', 'VENDAS').upper()
         status.cor = request.form.get('cor', '#2980B9')
         status.icone = request.form.get('icone', 'fas fa-circle')
-        status.ordem = int(request.form.get('ordem', 0))
+        _ordem = request.form.get('ordem', '').strip()
+        status.ordem = int(_ordem) if _ordem.isdigit() else 0
         status.ativa = 'ativa' in request.form
         
         try:
@@ -143,14 +144,13 @@ def abas():
     lista_abas = [
         {'id': 'administracao',  'label': 'Administração',  'icon': 'fas fa-user-shield'},
         {'id': 'conexoes',       'label': 'Conexões',       'icon': 'fas fa-plug'},
-        {'id': 'armazenamento',  'label': 'Armazenamento',  'icon': 'fas fa-database'}
+        {'id': 'armazenamento',  'label': 'Armazenamento',  'icon': 'fas fa-database'},
+        {'id': 'auditoria',      'label': 'Auditoria',      'icon': 'fas fa-history'},
+        {'id': 'versoes',        'label': 'Versões',        'icon': 'fas fa-code-branch'}
     ]
     
-    # Abas Exclusivas de Desenvolvimento
-    if ari_dev:
-        lista_abas.append({'id': 'versoes',      'label': 'Versões',      'icon': 'fas fa-code-branch'})
-        lista_abas.append({'id': 'sobre',      'label': 'Sobre AriOne', 'icon': 'fas fa-info-circle'})
-        lista_abas.append({'id': 'seguranca',  'label': 'Segurança',     'icon': 'fas fa-shield-alt'})
+    lista_abas.append({'id': 'sobre',      'label': 'Sobre AriOne', 'icon': 'fas fa-info-circle'})
+    lista_abas.append({'id': 'seguranca',  'label': 'Segurança',     'icon': 'fas fa-shield-alt'})
     
     # Dados específicos para a aba Versões (se estiver nela)
     is_dev = is_development()
@@ -315,7 +315,7 @@ def salvar_agendamento():
         'horario_db': request.form.get('horario_db', '03:00'),
         'frequencia_media': request.form.get('frequencia_media', 'daily'),
         'horario_media': request.form.get('horario_media', '04:00'),
-        'limite_retencao': int(request.form.get('limite_retencao', 30)),
+        'limite_retencao': (lambda v: int(v) if v.strip().isdigit() else 30)(request.form.get('limite_retencao', '')),
         'sync_aws': 'sync_aws' in request.form,
         'sync_google': 'sync_google' in request.form,
         'updated_at': datetime.now().isoformat()
@@ -1119,22 +1119,26 @@ def salvar_usuario():
 
         db.session.commit()
         flash(msg, 'success')
-        
+        return redirect(url_for('sistema.form_usuarios', id=u.id))
+
     except IntegrityError as e:
         db.session.rollback()
         if 'usuarios.email' in str(e).lower():
             flash(f'O e-mail "{email}" já está cadastrado para outro usuário.', 'danger')
         else:
             flash(f'Erro de integridade de dados: {str(e)}', 'danger')
-        return redirect(url_for('sistema.form_usuarios', id=u.id if u.id else ''))
+        if u.id:
+            return redirect(url_for('sistema.form_usuarios', id=u.id))
+        return redirect(url_for('sistema.form_usuarios'))
+
 
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao salvar usuário: {str(e)}', 'danger')
-        return redirect(url_for('sistema.form_usuarios', id=u.id if u.id else ''))
+        if u.id:
+            return redirect(url_for('sistema.form_usuarios', id=u.id))
+        return redirect(url_for('sistema.form_usuarios'))
         
-    return redirect(url_for('sistema.form_usuarios'))
-
 
 @sistema_bp.route('/usuarios/excluir/<int:id>', methods=['POST', 'GET'])
 def excluir_usuario(id):
@@ -1227,7 +1231,7 @@ def modal_trocar_empresa():
     # Lógica de Permissão Multi-Tenant AriOne
     # Se o usuário for Admin/Master, ele vê TODAS as empresas cadastradas
     is_admin = False
-    if current_user.perfil_obj and current_user.perfil_obj.nome in ['Administrador', 'Master', 'Sistema']:
+    if (current_user.perfil_obj and current_user.perfil_obj.nome in ['Administrador', 'Master', 'Sistema']) or (current_user.perfil in ['admin', 'master', 'sistema']):
         is_admin = True
 
     if is_admin:
@@ -1237,9 +1241,9 @@ def modal_trocar_empresa():
         if current_user.empresas_acesso:
             ids_acesso = [int(i.strip()) for i in current_user.empresas_acesso.split(',') if i.strip()]
         
-        # Se não houver IDs, mas o usuário estiver vinculado a uma empresa, permite trocar para ela
-        if not ids_acesso and current_user.empresa_id:
-            ids_acesso = [current_user.empresa_id]
+        # O usuário sempre deve ter acesso à sua empresa principal
+        if current_user.empresa_id and current_user.empresa_id not in ids_acesso:
+            ids_acesso.append(current_user.empresa_id)
             
         empresas = Empresa.query.filter(Empresa.id.in_(ids_acesso)).all() if ids_acesso else []
     
@@ -1251,7 +1255,7 @@ def trocar_empresa(id):
     """Efetiva a troca de empresa na sessão"""
     # Admin/Master tem acesso a todas as empresas
     is_admin = False
-    if current_user.perfil_obj and current_user.perfil_obj.nome in ['Administrador', 'Master', 'Sistema']:
+    if (current_user.perfil_obj and current_user.perfil_obj.nome in ['Administrador', 'Master', 'Sistema']) or (current_user.perfil in ['admin', 'master', 'sistema']):
         is_admin = True
 
     if not is_admin:
@@ -1259,11 +1263,11 @@ def trocar_empresa(id):
         if current_user.empresas_acesso:
             ids_acesso = [int(i.strip()) for i in current_user.empresas_acesso.split(',') if i.strip()]
 
-        # Se não houver IDs, mas o usuário estiver vinculado a uma empresa, permite trocar para ela
-        if not ids_acesso and current_user.empresa_id:
-            ids_acesso = [current_user.empresa_id]
+        # O usuário sempre deve ter acesso à sua empresa principal
+        if current_user.empresa_id and current_user.empresa_id not in ids_acesso:
+            ids_acesso.append(current_user.empresa_id)
 
-        if id not in ids_acesso and id != current_user.empresa_id:
+        if id not in ids_acesso:
             if request.method == 'POST':
                 return jsonify({'success': False, 'message': 'Você não tem acesso a esta empresa.'})
             flash('Você não tem acesso a esta empresa.', 'danger')
@@ -1347,7 +1351,10 @@ def migrar_setores_db():
 def limpar_base_debug():
     """Rota temporária para limpar empresas excedentes (Mantém apenas a primeira)"""
     # Verifica se é admin/master por segurança
-    if not (current_user.perfil_obj and current_user.perfil_obj.nome in ['Administrador', 'Master', 'Sistema']):
+    is_admin = False
+    if (current_user.perfil_obj and current_user.perfil_obj.nome in ['Administrador', 'Master', 'Sistema']) or (current_user.perfil in ['admin', 'master', 'sistema']):
+        is_admin = True
+    if not is_admin:
         return "Acesso negado.", 403
         
     try:
@@ -1501,5 +1508,3 @@ def card_sistema_relatorios():
                            modulo=modulo,
                            titulo=params['titulo'],
                            cor=params['cor'])
-
-

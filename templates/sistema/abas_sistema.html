@@ -123,7 +123,9 @@
             {% include 'sistema/grids/grid_versoes.html' %}
         {% elif aba_ativa == 'sobre' %}
             {% include 'sistema/grids/grid_sobre.html' %}
-        {% elif aba_ativa in ['auditoria', 'matrix_dev', 'developer_matrix'] %}
+        {% elif aba_ativa == 'auditoria' %}
+            {% include 'sistema/grids/grid_auditoria.html' %}
+        {% elif aba_ativa in ['matrix_dev', 'developer_matrix'] %}
             {% include 'sistema/grids/grid_progresso_dev.html' %}
         {% elif aba_ativa == 'seguranca' %}
             {% include 'sistema/grids/grid_seguranca.html' %}

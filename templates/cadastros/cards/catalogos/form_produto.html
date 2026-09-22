@@ -660,8 +660,9 @@ Padrão  : Golden Standard / Quiet Luxury
         p1 = "FP"; // F (Fabricação) + P (Própria) - Mantendo padrão para própria
     }
 
-    const p2 = sM.value ? getSiglaMP(sM.options[sM.selectedIndex].text) : "";
-    const p3 = sC.value ? sC.value.substring(0, 1).toUpperCase() : "";
+    // Mantém a geração disponível mesmo antes de os cadastros auxiliares estarem completos.
+    const p2 = sM.value ? getSiglaMP(sM.options[sM.selectedIndex].text) : "MAT";
+    const p3 = sC.value ? sC.value.substring(0, 1).toUpperCase() : "G";
 
     const regra = document.getElementsByName('regra_cod_interno')[0]?.value;
     const refInput = document.getElementsByName('referencia')[0];
@@ -1199,7 +1200,11 @@ Padrão  : Golden Standard / Quiet Luxury
   function parseMoney(v) { 
       if (!v) return 0;
       if (typeof v === 'number') return v;
-      return parseFloat(v.replace(/\./g, '').replace(',', '.')) || 0; 
+      const texto = v.toString().trim().replace(/R\$\s?/g, '');
+      if (texto.includes(',')) {
+          return parseFloat(texto.replace(/\./g, '').replace(',', '.')) || 0;
+      }
+    return parseFloat(texto) || 0;
   }
   
   function calcMargens() {

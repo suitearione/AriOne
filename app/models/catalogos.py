@@ -233,6 +233,7 @@ class Produto(db.Model):
     tipo_material = db.relationship('TipoMateriaPrima', backref='produtos', lazy=True)
     
     # Preços
+    custo_compra = db.Column(db.Float, default=0.0)
     preco_custo = db.Column(db.Float, default=0.0)
     preco_varejo = db.Column(db.Float, default=0.0)
     preco_atacado = db.Column(db.Float, default=0.0)

@@ -107,85 +107,113 @@ window.arioneToast = function(mensagem, tipo = 'info', duracao = 3000) {
     }, duracao);
 };
 
-window.arioneConfirm = function(mensagem, btnContexto) {
+window.arioneConfirm = function(mensagem, btnContexto, opcoes = {}) {
     return new Promise((resolve) => {
-        const modal = document.createElement('div');
-        modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999999 !important; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px); animation: feFadeIn 0.2s ease;';
-        
-        modal.innerHTML = `
-            <div style="background: #fff; border-radius: 16px; width: 90%; max-width: 400px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.25);">
-                <div style="background: var(--pri, #7A255F); padding: 15px 20px; color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-shield-alt"></i> AriOne: Confirmação
+        const textoCancelar = opcoes.cancelar || 'Cancelar';
+        const textoConfirmar = opcoes.confirmar || 'Confirmar';
+        const icone = opcoes.icone || 'fa-question';
+        const titulo = opcoes.titulo || 'Confirmação';
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.45);z-index:999999!important;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:feFadeIn 0.18s ease;';
+
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:20px;width:90%;max-width:400px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.18);font-family:'Outfit',sans-serif;animation:feFadeIn 0.18s ease;">
+                <div style="padding:32px 28px 24px;text-align:center;">
+                    <div style="width:58px;height:58px;border-radius:50%;background:var(--pri-bg,#E6F9FC);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                        <i class="fas ${icone}" style="font-size:22px;color:var(--pri,#0891B2);"></i>
+                    </div>
+                    <div style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:10px;">${titulo}</div>
+                    <div style="font-size:13px;color:#64748b;line-height:1.6;">${mensagem}</div>
                 </div>
-                <div style="padding: 24px; font-size: 14px; color: #1e293b; line-height: 1.5;">
-                    ${mensagem}
-                </div>
-                <div style="padding: 15px 20px; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9;">
-                    <button id="arione-confirm-no" style="background: none; border: 1.5px solid #cbd5e1; color: #64748b; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">CANCELAR</button>
-                    <button id="arione-confirm-yes" style="background: var(--pri, #7A255F); border: none; color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">CONFIRMAR</button>
+                <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:10px;">
+                    <button id="arione-confirm-yes" style="width:100%;background:var(--pri,#0891B2);border:none;color:#fff;padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:opacity .15s;letter-spacing:.3px;">${textoConfirmar}</button>
+                    <button id="arione-confirm-no" style="width:100%;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:background .15s;">${textoCancelar}</button>
                 </div>
             </div>
         `;
 
-        document.body.appendChild(modal);
+        document.body.appendChild(overlay);
 
-        modal.querySelector('#arione-confirm-no').onclick = function() {
-            modal.remove();
+        overlay.querySelector('#arione-confirm-yes').onmouseenter = function() { this.style.opacity = '.85'; };
+        overlay.querySelector('#arione-confirm-yes').onmouseleave = function() { this.style.opacity = '1'; };
+        overlay.querySelector('#arione-confirm-no').onmouseenter = function() { this.style.background = '#f8fafc'; };
+        overlay.querySelector('#arione-confirm-no').onmouseleave = function() { this.style.background = '#fff'; };
+
+        overlay.querySelector('#arione-confirm-no').onclick = function() {
+            overlay.remove();
             resolve(false);
         };
 
-        modal.querySelector('#arione-confirm-yes').onclick = function() {
-            modal.remove();
+        overlay.querySelector('#arione-confirm-yes').onclick = function() {
+            overlay.remove();
             resolve(true);
         };
+
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) { overlay.remove(); resolve(false); }
+        });
     });
 };
 
-window.arionePrompt = function(mensagem, valorPadrao = '') {
+window.arionePrompt = function(mensagem, valorPadrao = '', opcoes = {}) {
     return new Promise((resolve) => {
-        const modal = document.createElement('div');
-        modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999999 !important; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px); animation: feFadeIn 0.2s ease;';
-        
-        modal.innerHTML = `
-            <div style="background: #fff; border-radius: 16px; width: 90%; max-width: 420px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.25); font-family: 'Outfit', sans-serif;">
-                <div style="background: var(--pri, #7A255F); padding: 16px 22px; color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-question-circle"></i> AriOne: Entrada de Dados
+        const textoCancelar = opcoes.cancelar || 'Cancelar';
+        const textoConfirmar = opcoes.confirmar || 'Confirmar';
+        const titulo = opcoes.titulo || 'Entrada de Dados';
+        const icone = opcoes.icone || 'fa-keyboard';
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.45);z-index:999999!important;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:feFadeIn 0.18s ease;';
+
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:20px;width:90%;max-width:420px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.18);font-family:'Outfit',sans-serif;animation:feFadeIn 0.18s ease;">
+                <div style="padding:32px 28px 20px;text-align:center;">
+                    <div style="width:58px;height:58px;border-radius:50%;background:var(--pri-bg,#E6F9FC);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                        <i class="fas ${icone}" style="font-size:22px;color:var(--pri,#0891B2);"></i>
+                    </div>
+                    <div style="font-size:17px;font-weight:800;color:#0f172a;margin-bottom:6px;">${titulo}</div>
+                    <div style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;">${mensagem}</div>
+                    <input type="text" id="arione-prompt-input" value="${valorPadrao}"
+                        style="width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:600;color:#1e293b;outline:none;transition:border-color .2s;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='var(--pri,#0891B2)'"
+                        onblur="this.style.borderColor='#e2e8f0'">
                 </div>
-                <div style="padding: 24px; font-size: 14px; color: #1e293b; line-height: 1.5;">
-                    <label style="display:block; font-weight:700; color:#334155; margin-bottom:10px;">${mensagem}</label>
-                    <input type="text" id="arione-prompt-input" value="${valorPadrao}" style="width: 100%; border: 2px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #1e293b; outline: none; transition: border 0.2s;" onfocus="this.style.borderColor='var(--pri, #7A255F)'" onblur="this.style.borderColor='#cbd5e1'">
-                </div>
-                <div style="padding: 16px 22px; background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9;">
-                    <button id="arione-prompt-no" style="background: none; border: 1.5px solid #cbd5e1; color: #64748b; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">CANCELAR</button>
-                    <button id="arione-prompt-yes" style="background: var(--pri, #7A255F); border: none; color: #fff; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(122,37,95,0.2);">CONFIRMAR</button>
+                <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:10px;">
+                    <button id="arione-prompt-yes" style="width:100%;background:var(--pri,#0891B2);border:none;color:#fff;padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:opacity .15s;letter-spacing:.3px;">${textoConfirmar}</button>
+                    <button id="arione-prompt-no" style="width:100%;background:#fff;border:1.5px solid #cbd5e1;color:#64748b;padding:11px 20px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:background .15s;">${textoCancelar}</button>
                 </div>
             </div>
         `;
 
-        document.body.appendChild(modal);
+        document.body.appendChild(overlay);
 
-        const input = modal.querySelector('#arione-prompt-input');
+        const input = overlay.querySelector('#arione-prompt-input');
         setTimeout(() => input.focus(), 100);
 
+        overlay.querySelector('#arione-prompt-yes').onmouseenter = function() { this.style.opacity = '.85'; };
+        overlay.querySelector('#arione-prompt-yes').onmouseleave = function() { this.style.opacity = '1'; };
+        overlay.querySelector('#arione-prompt-no').onmouseenter = function() { this.style.background = '#f8fafc'; };
+        overlay.querySelector('#arione-prompt-no').onmouseleave = function() { this.style.background = '#fff'; };
+
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                modal.remove();
-                resolve(input.value);
-            } else if (e.key === 'Escape') {
-                modal.remove();
-                resolve(null);
-            }
+            if (e.key === 'Enter') { overlay.remove(); resolve(input.value); }
+            else if (e.key === 'Escape') { overlay.remove(); resolve(null); }
         });
 
-        modal.querySelector('#arione-prompt-no').onclick = function() {
-            modal.remove();
+        overlay.querySelector('#arione-prompt-no').onclick = function() {
+            overlay.remove();
             resolve(null);
         };
 
-        modal.querySelector('#arione-prompt-yes').onclick = function() {
-            modal.remove();
+        overlay.querySelector('#arione-prompt-yes').onclick = function() {
+            overlay.remove();
             resolve(input.value);
         };
+
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) { overlay.remove(); resolve(null); }
+        });
     });
 };
 

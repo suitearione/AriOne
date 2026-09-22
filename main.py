@@ -3,8 +3,8 @@ import os
 import sqlite3
 from dotenv import load_dotenv
 
-# Carrega variáveis do arquivo .env
-load_dotenv()
+# Carrega variáveis do arquivo .env (forçando sobreposição)
+load_dotenv(override=True)
 
 app = create_app()
 

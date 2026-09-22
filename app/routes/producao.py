@@ -11,68 +11,6 @@ from flask import render_template, request, jsonify
 
 # ─── Rotas ────────────────────────────────────────────────────────────────────
 
-@operacoes_bp.route('/op/nova')
-def form_producao_op():
-    """
-    Exibe formulário de nova OP vazia.
-    GET /operacoes/op/nova?modal=1
-    """
-    modal = request.args.get('modal', 0, type=int)
-    return render_template(
-        'operacoes/cards/producao/form_producao_op.html',
-        modal          = modal,
-        op_numero      = _gerar_numero_op(),
-        lote           = _gerar_lote(),
-        today          = date.today().isoformat(),
-        produtos       = _get_produtos(),
-        status_lista   = _get_status_lista(),
-        produtos_op    = [],
-        pedido_origem  = None,
-    )
-
-
-@operacoes_bp.route('/op/from-pedido/<int:pedido_id>')
-def op_from_pedido(pedido_id):
-    """
-    Gera OP automaticamente a partir de um Pedido de Vendas confirmado.
-    Chamado pelo endpoint de confirmação do pedido.
-
-    GET /operacoes/op/from-pedido/<pedido_id>?modal=1
-    """
-    modal = request.args.get('modal', 0, type=int)
-
-    # ── Buscar pedido ──────────────────────────────────────────────────────
-    # pedido = PedidoVenda.query.get_or_404(pedido_id)
-    pedido = _get_pedido_fake(pedido_id)          # ← substituir pela query real
-
-    # ── Montar lista de produtos da OP a partir dos itens do pedido ────────
-    # produtos_op = [
-    #     {
-    #         'nome':        item.produto.nome,
-    #         'referencia':  item.produto.referencia,
-    #         'cor':         item.cor or '',
-    #         'tamanho':     item.tamanho or '',
-    #         'quantidade':  item.quantidade,
-    #         'und':         item.produto.unidade,
-    #         'custo_unit':  item.produto.custo_producao or 0,
-    #     }
-    #     for item in pedido.itens
-    # ]
-    produtos_op = pedido.get('itens', [])
-
-    return render_template(
-        'operacoes/cards/producao/form_producao_op.html',
-        modal         = modal,
-        op_numero     = _gerar_numero_op(),
-        lote          = _gerar_lote(),
-        today         = date.today().isoformat(),
-        produtos      = _get_produtos(),
-        status_lista  = _get_status_lista(),
-        produtos_op   = produtos_op,
-        pedido_origem = pedido,
-    )
-
-
 @operacoes_bp.route('/op/salvar', methods=['POST'])
 def salvar_op():
     """
@@ -146,41 +84,11 @@ def confirmar_op():
     })
 
 
-@operacoes_bp.route('/op/imprimir/<string:op_numero>')
-def imprimir_op(op_numero):
-    """Página de impressão da OP."""
-    # op = OrdemProducao.query.filter_by(numero=op_numero).first_or_404()
-    op = {'numero': op_numero}
-    return render_template('operacoes/cards/producao/impressao_op.html', op=op)
-
-
-# =============================================================================
-# INTEGRAÇÃO: chamar ao confirmar Pedido de Vendas
-# =============================================================================
-# No seu endpoint de confirmação de pedido, adicione:
-#
-#   from flask import redirect, url_for
-#
-#   @operacoes.route('/pedido/<int:pedido_id>/confirmar', methods=['POST'])
-#   def confirmar_pedido(pedido_id):
-#       pedido = PedidoVenda.query.get_or_404(pedido_id)
-#       pedido.status = 'CONFIRMADO'
-#       db.session.commit()
-#
-#       # ─── Gera OP automaticamente ───────────────────────────────────────
-#       if pedido.gera_op:                         # flag no modelo do pedido
-#           return redirect(url_for(
-#               'operacoes.op_from_pedido',
-#               pedido_id=pedido.id,
-#               modal=1
-#           ))
-#
-#       return redirect(url_for('operacoes.card_vendas_pedido'))
-#
-# =============================================================================
-
-
 # ── Helpers (substituir por queries reais) ─────────────────────────────────────
+
+# Removidas as rotas específicas solicitadas e as referências órfãs associadas a elas.
+# Mantidas somente as rotas reais do módulo de produção que continuam ativas.
+
 
 def _gerar_numero_op():
     """Gera próximo número de OP sequencial."""
@@ -213,18 +121,3 @@ def _get_status_lista():
         {'nome': 'FINALIZADA',   'cor': '#16A085'},
         {'nome': 'CANCELADA',    'cor': '#E74C3C'},
     ]
-
-
-def _get_pedido_fake(pedido_id):
-    """Simula pedido de vendas. Substituir por PedidoVenda.query.get_or_404()."""
-    return {
-        'id':      pedido_id,
-        'numero':  f'PED-2026-{pedido_id:03d}',
-        'cliente': 'Comercial Silva Ltda',
-        'data':    date.today().strftime('%d/%m/%Y'),
-        'itens': [
-            {'nome':'CAMISA PIQUET ALGODÃO',   'referencia':'CAM-001','cor':'Branco','tamanho':'M', 'quantidade':200,'und':'PC','custo_unit':28.50},
-            {'nome':'CAMISA PIQUET ALGODÃO',   'referencia':'CAM-001','cor':'Azul',  'tamanho':'G', 'quantidade':150,'und':'PC','custo_unit':28.50},
-            {'nome':'BERMUDA TACTEL MASCULINA','referencia':'BER-007','cor':'Preto', 'tamanho':'M', 'quantidade':100,'und':'PC','custo_unit':22.00},
-        ]
-    }

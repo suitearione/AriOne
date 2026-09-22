@@ -49,8 +49,22 @@ logs/
 
 # Environment
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
+
+# Secrets e dados locais sensíveis
+instance/
+appDataDir/
+brain/
+data/
+login_check.txt
+verify_production.txt
+auditoria_operacoes_2026-09-20.md
+*.pem
+*.key
+*.crt
 
 # Backup
 *.bak
@@ -92,4 +106,19 @@ scripts/import_result.txt
 
 # Scripts avulsos de verificação
 check_clientes.py
+
+# Arquivos locais, sensíveis e acidentais
+Acesso
+**/Acesso
+.env
+.env.*
+*.dump
+*.sql
+backups/
+Bacukps/
+tatus
+canvas
+canvascanvas
+uploads/
+, cadastros e migrações*
 

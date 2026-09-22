@@ -20,6 +20,7 @@ from app.models.sistema.status import StatusWorkflow
 from app.models.sistema.parametro import ParametroSistema
 from app.utils.helpers import calcular_cronograma, parse_date, parse_money
 from app.utils.avisos import enviar_aviso
+# NOTA: producao_service importado localmente nas rotas que o usam (serviço legado — evita carregamento de modelos legados no startup)
 from app.services.logistica import LogisticaService
 from datetime import datetime
 
@@ -27,39 +28,10 @@ operacoes_bp = Blueprint('operacoes', __name__, url_prefix='/operacoes')
 
 import app.routes.producao  # Registrar rotas de produção
 
-# 🛠️ AUTO-MIGRAÇÃO: Garante que a coluna 'numero' exista em PedidoVenda e OrdemProducao
-def verificar_schema_operacoes():
-    from sqlalchemy import text
-    try:
-        MetaVenda.__table__.create(db.engine, checkfirst=True)
-    except Exception:
-        db.session.rollback()
-
-    try:
-        # Verifica Pedidos
-        db.session.execute(text("SELECT numero FROM op_vendas_pedidos LIMIT 1"))
-    except Exception:
-        db.session.rollback()
-        try:
-            db.session.execute(text("ALTER TABLE op_vendas_pedidos ADD COLUMN numero VARCHAR(20)"))
-            db.session.commit()
-        except: db.session.rollback()
-    
-    try:
-        # Verifica Produção
-        db.session.execute(text("SELECT numero FROM op_producao_ordens LIMIT 1"))
-    except Exception:
-        db.session.rollback()
-        try:
-            db.session.execute(text("ALTER TABLE op_producao_ordens ADD COLUMN numero VARCHAR(20)"))
-            db.session.commit()
-        except: db.session.rollback()
-
 @operacoes_bp.route('/vendas/central')
 @login_required
 def central_vendas():
     """🚀 Central Visual de Vendas (Cockpit Profissional)"""
-    verificar_schema_operacoes()
     from sqlalchemy import func
     from datetime import datetime, date
     
@@ -426,7 +398,7 @@ def card_compras_precos():
 @operacoes_bp.route('/cards/compras/emaberto')
 @login_required
 def card_compras_emaberto():
-    return render_template('operacoes/cards/compras/form_compras_emaberto.html')
+    return render_template('operacoes/cards/compras/form_compras_em_aberto.html')
 
 # ── PRODUÇÃO - CARDS ─────────────────────────────────────────────────────────
 
@@ -458,8 +430,6 @@ def card_producao_oficinas():
 @login_required
 def api_retorno_oficina():
     """API para processar retorno de oficina (consumo MP + entrada PA)"""
-    from producao_service import registrar_retorno_oficina
-
     data = request.get_json()
     op_id = data.get('op_id')
     local_oficina_id = data.get('local_oficina_id')
@@ -469,6 +439,7 @@ def api_retorno_oficina():
     if not op_id or not local_oficina_id:
         return jsonify({'success': False, 'message': 'OP ID e Local da Oficina são obrigatórios'}), 400
 
+    from app.utils.producao_service import registrar_retorno_oficina
     success, message = registrar_retorno_oficina(op_id, local_oficina_id, custo_servico_oficina, local_central_id)
 
     if success:
@@ -480,8 +451,6 @@ def api_retorno_oficina():
 @login_required
 def api_baixar_insumos():
     """API para baixar insumos do estoque baseado na composição do produto"""
-    from producao_service import baixar_insumos_composicao
-
     data = request.get_json()
     produto_id = data.get('produto_id')
     quantidade_produzida = data.get('quantidade_produzida')
@@ -494,6 +463,7 @@ def api_baixar_insumos():
 
     usuario_id = current_user.id if current_user.is_authenticated else None
 
+    from app.utils.producao_service import baixar_insumos_composicao
     success, result = baixar_insumos_composicao(
         produto_id=produto_id,
         quantidade_produzida=quantidade_produzida,

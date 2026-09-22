@@ -3,7 +3,7 @@
 /* ─── ESTRUTURA ─────────────────────────────────────────── */
 .arione-sidebar {
     width: 230px;
-    background-color: #7A255F;
+    background-color: #0891B2;
     height: 100vh;
     position: fixed;
     left: 0;
@@ -20,7 +20,7 @@
     position: sticky;
     top: 0;
     width: 100%;
-    background-color: #7A255F;
+    background-color: #0891B2;
     box-sizing: border-box;
     z-index: 1001;
     padding: 30px 0 10px 0;
@@ -75,7 +75,7 @@
     font-weight: 300;
     /* Ari mais leve */
     letter-spacing: -1px;
-    color: #00B7EE;
+    color: #06B6D4;
     /* Ciano Identidade AriOne */
     margin-top: -12px;
     line-height: 1.1;
@@ -144,7 +144,7 @@
     padding: 12px 10px 6px;
     font-size: 11px;
     font-weight: 800;
-    color: #00B7EE;
+    color: #06B6D4;
     /* Cor vibrante da Identidade AriOne (Verde Água/Ciano) */
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -172,13 +172,19 @@
     display: flex;
     align-items: center;
     padding: 8px 50px;
-    color: rgba(255, 255, 255, 0.80);
+    color: #f8fafc;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 750;
     letter-spacing: 0.3px;
     transition: all 0.2s;
     border-left: 3px solid transparent;
     position: relative;
+}
+
+.menu-link span {
+    color: #f8fafc;
+    font-weight: 750;
+    text-shadow: 0 1px 8px rgba(15, 23, 42, 0.22);
 }
 
 .menu-link:hover {
@@ -187,12 +193,23 @@
     border-left-color: rgba(255, 255, 255, 0.4);
 }
 
+.menu-link:hover span,
+.menu-link:focus span {
+    color: #ffffff;
+}
+
 /* ─── LINK ATIVO ────────────────────────────────────────── */
 .menu-link-ativo {
     background-color: rgba(255, 255, 255, 0.18) !important;
     color: #ffffff !important;
     border-left: 3px solid #ffffff !important;
-    font-weight: 600 !important;
+    font-weight: 800 !important;
+}
+
+.menu-link-ativo span {
+    color: #ffffff !important;
+    font-weight: 800;
+    text-shadow: 0 1px 10px rgba(15, 23, 42, 0.3);
 }
 
 .menu-link-ativo .menu-icon {
@@ -261,7 +278,7 @@
 }
 
 .menu-item:has(.icon-sistema) .menu-link-ativo {
-    border-left-color: #7A255F !important;
+    border-left-color: #06B6D4 !important;
 }
 
 .menu-item:has(.icon-develop) .menu-link-ativo {
@@ -276,7 +293,7 @@
 }
 
 .menu-link-ativo .icon-operacoes {
-    color: #00B7EE !important;
+    color: #06B6D4 !important;
     opacity: 1 !important;
     text-shadow: 0 0 10px rgba(0, 183, 238, 0.5);
 }
@@ -342,7 +359,7 @@
         z-index: 9998 !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        background-color: #7A255F !important;
+        background-color: #0891B2 !important;
         transition: left 0.3s ease !important;
         box-shadow: none !important;
     }
@@ -357,3 +374,125 @@
         max-height: calc(100vh - 200px) !important;
     }
 }
+
+/* Identidade visual clara: preserva a ordem e os links do menu. */
+.arione-sidebar,
+.menu-logo-container {
+    background: #ffffff !important;
+    color: #274b72;
+    border-right: 1px solid #e2edf6;
+    box-shadow: 4px 0 18px rgba(37, 99, 160, 0.05);
+}
+
+.menu-logo-container {
+    padding: 24px 0 16px;
+}
+
+.menu-link {
+    margin: 3px 12px;
+    padding: 11px 18px;
+    border-left: 3px solid transparent;
+    border-radius: 10px;
+    color: #315b7d;
+}
+
+.menu-link:hover {
+    background: #eef6ff;
+    color: #0b5cad;
+    border-left-color: #8fc4ed;
+}
+
+.menu-link-ativo {
+    background: #eaf4fc !important;
+    border-left-color: #2f80ed !important;
+    color: #0b5cad !important;
+    box-shadow: inset 0 0 0 1px #d8eafb;
+}
+
+.menu-section-label { color: #79a6c9; }
+.version-badge { background: #eef6ff; color: #4d789d; }
+.logo-title { color: #2f80ed; }
+.logo-subtitle { color: #6b8eac; }
+
+.sidebar-integrity-monitor {
+    background: #f2f8fd !important;
+    border-color: #dbeaf6 !important;
+}
+
+.icon-cadastros,
+.icon-operacoes,
+.icon-financeiro,
+.icon-gestao,
+.icon-fiscal,
+.icon-patrimonio,
+.icon-relatorios,
+.icon-digital,
+.icon-sistema,
+.icon-develop,
+.icon-imprimir {
+    color: #5d86ad !important;
+    text-shadow: none !important;
+}
+
+.menu-link-ativo .menu-icon {
+    color: #2f80ed !important;
+    text-shadow: none !important;
+}
+
+.sidebar-company-logo-footer div,
+.atalho-label {
+    color: #5d7892 !important;
+}
+
+/* Pele teal: mantém o menu existente, mudando apenas sua atmosfera visual. */
+.arione-sidebar,
+.menu-logo-container {
+    background-color: #0891B2 !important;
+    background-image:
+        linear-gradient(to bottom, rgba(7, 89, 133, 0.98) 0%, rgba(8, 145, 178, 0.96) 52%, rgba(6, 182, 212, 0.92) 100%),
+        repeating-linear-gradient(118deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 28px),
+        repeating-linear-gradient(28deg, transparent 0 24px, rgba(207,249,252,0.05) 24px 25px, transparent 25px 54px) !important;
+    border-right-color: rgba(207, 249, 252, 0.24);
+    box-shadow: 4px 0 24px rgba(7, 89, 133, 0.16);
+}
+
+.menu-logo-container {
+    background: linear-gradient(to bottom, rgba(6, 182, 212, 0.92) 0%, rgba(8, 145, 178, 0.96) 52%, rgba(7, 89, 133, 0.98) 100%) !important;
+}
+
+.menu-link {
+    color: #e6f9fc;
+}
+
+.menu-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border-left-color: #67e8f9;
+}
+
+.menu-link-ativo {
+    background: rgba(207, 249, 252, 0.20) !important;
+    border-left-color: #67e8f9 !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 0 0 1px rgba(204, 251, 241, 0.14);
+}
+
+.menu-section-label { color: #a5f3fc; }
+.version-badge { background: rgba(207, 249, 252, 0.14); color: #e6f9fc; }
+.logo-title { color: #a5f3fc; }
+.logo-subtitle { color: #d0f5fa; }
+.sidebar-integrity-monitor { background: rgba(255,255,255,0.10) !important; border-color: rgba(207,249,252,0.22) !important; }
+.sidebar-company-logo-footer div,
+.atalho-label { color: #e6f9fc !important; }
+.icon-cadastros,
+.icon-operacoes,
+.icon-financeiro,
+.icon-gestao,
+.icon-fiscal,
+.icon-patrimonio,
+.icon-relatorios,
+.icon-digital,
+.icon-sistema,
+.icon-develop,
+.icon-imprimir,
+.menu-link-ativo .menu-icon { color: #a5f3fc !important; }

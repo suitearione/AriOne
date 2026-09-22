@@ -3,6 +3,8 @@
 {% block content %}
 <div class="fp-wrap mod-modelos" id="ctx-mod-main">
     <style>
+        .mod-modelos [style*="#F39C12"], .mod-modelos [style*="#d35400"] { color: #06B6D4 !important; border-color: #06B6D4 !important; }
+        .mod-modelos [style*="background: #F39C12"], .mod-modelos [style*="background:#F39C12"] { background: #06B6D4 !important; }
         .arione-page { padding: 0 !important; }
         .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
         .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
@@ -23,7 +25,8 @@
             onclick_save="forceSubmitModelo()",
             onclick_search="document.getElementById('mod-search-input').focus()",
             aba_retorno='catalogos',
-            cor_tema='#F39C12'
+            func_fechar="window.location.href='/cadastros/?aba=catalogos'",
+            cor_tema='#06B6D4'
         ) }}
     </div>
 

@@ -160,11 +160,11 @@ Descrição: Renderiza as abas de navegação (Dashboard, Marketing, Pessoas).
         </div>
     </div>
 
-    <div class="arione-tabs-box" style="position: sticky; top: 0; z-index: 100; background: #fff; margin: -22px -22px 22px -22px; padding: 8px 22px; box-shadow: 0 8px 0 #fff;">
-    {{ nav.gerar_abas_arione(abas, aba_ativa, 'gestao', 'abas') }}
+    <div class="arione-tabs-box">
+        {{ nav.gerar_abas_arione(abas, aba_ativa, 'gestao', 'abas') }}
     </div>
 
-    <div class="arione-content-box">
+    <div class="arione-content-box" style="margin-top: 12px;">
         {% if aba_ativa == 'dashboard' %}
         {% include 'gestao/grids/grid_dashboard.html' %}
         {% elif aba_ativa == 'marketing' %}

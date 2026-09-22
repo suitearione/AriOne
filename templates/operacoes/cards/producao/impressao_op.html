@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 24px; background: #f8fafc; min-height: 100vh;">
+    <div style="max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); overflow: hidden;">
+        <div style="background: linear-gradient(90deg, #E67E22 0%, #D35400 100%); color: #fff; padding: 18px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+            <div>
+                <div style="font-size:11px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; opacity:0.9;">AriOne Produção</div>
+                <h2 style="margin: 6px 0 0; font-size: 1.5rem; font-weight: 800;">Ordem de Produção</h2>
+            </div>
+            <div style="background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18); border-radius:10px; padding: 10px 14px; font-size: 0.85rem; font-weight:800; letter-spacing: 1px; text-transform: uppercase;">
+                {{ op.numero }}
+            </div>
+        </div>
+
+        <div style="padding: 24px;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                    <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#64748b; font-weight:800;">Número</div>
+                    <div style="margin-top:8px; font-size:1.2rem; font-weight:800; color:#1e293b;">{{ op.numero }}</div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                    <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#64748b; font-weight:800;">Status</div>
+                    <div style="margin-top:8px; font-size:1.2rem; font-weight:800; color:#1e293b;">PLANEJADA</div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                    <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#64748b; font-weight:800;">Data</div>
+                    <div style="margin-top:8px; font-size:1.2rem; font-weight:800; color:#1e293b;">—</div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                    <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#64748b; font-weight:800;">Quantidade</div>
+                    <div style="margin-top:8px; font-size:1.2rem; font-weight:800; color:#1e293b;">—</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <div style="font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#64748b; margin-bottom:10px;">Resumo</div>
+                <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:16px; color:#7c2d12; line-height:1.6;">
+                    Esta página representa a impressão de uma ordem de produção do AriOne. Os dados reais da OP devem ser preenchidos pelo fluxo atual da produção e pelos modelos do ERP.
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="padding:12px; text-align:left; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#64748b; border-bottom:1px solid #e2e8f0;">Produto</th>
+                        <th style="padding:12px; text-align:left; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#64748b; border-bottom:1px solid #e2e8f0;">Quantidade</th>
+                        <th style="padding:12px; text-align:left; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#64748b; border-bottom:1px solid #e2e8f0;">Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; color:#1e293b;">—</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; color:#1e293b;">—</td>
+                        <td style="padding:12px; border-bottom:1px solid #f1f5f9; color:#64748b;">Sem itens cadastrados nesta visualização.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

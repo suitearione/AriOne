@@ -1,4 +1,4 @@
-{# =============================================================================
+oa noite{# =============================================================================
 Caminho : templates/cadastros/cards/empresa/form_empresa.html
 Arquivo : form_empresa.html
 Função : Cadastro Mestre de Empresa (PAAv1 GOLDEN STANDARD)
@@ -19,6 +19,22 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
     </div>
     {% endfor %}
     {% endwith %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.fe-flash').forEach(function(el) {
+                setTimeout(function() {
+                    el.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-6px)';
+                    setTimeout(function() {
+                        if (el && el.parentNode) {
+                            el.remove();
+                        }
+                    }, 350);
+                }, 4000);
+            });
+        });
+    </script>
     <style>
         .arione-page {
             padding: 0 !important;
@@ -39,7 +55,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
         }
     </style>
 
-    <form id="form-empresa-mestre" method="POST" action="/cadastros/empresa/salvar" enctype="multipart/form-data">
+    <form id="form-empresa-mestre" method="POST" action="{{ url_for('cadastros.form_empresa') }}" enctype="multipart/form-data">
         {# Hidden: ID do registro (edição vs. novo) #}
         <input type="hidden" name="id" value="{{ empresa.id|default('', true) }}">
         {# ── TOPO: CABEÇALHO MESTRE (STICKY) ── #}
@@ -151,7 +167,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                             </div>
                             <div class="fe-group fe-flex-2">
                                 <label class="fe-label">CNAE Principal</label>
-                                <select class="fe-input" name="cnae" id="cnae_select_pj" onchange="atualizarCnaeDisplay()">
+                                <select class="fe-input" name="cnae_principal" id="cnae_select_pj" onchange="atualizarCnaeDisplay()">
                                     <option value="" selected disabled>Selecione o CNAE...</option>
                                     <option value="1310-1/00" data-nome="Preparação e Fiação de Fibras Têxteis">1310-1/00 - Preparação e Fiação de Fibras Têxteis</option>
                                     <option value="1321-7/00" data-nome="Tecelagem">1321-7/00 - Tecelagem</option>
@@ -228,8 +244,8 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                             </div>
                             <div class="fe-group fe-flex-2">
                                 <label class="fe-label" id="label-cnae-ssp">SSP</label>
-                                <input class="fe-input" type="text" name="cnae" id="cnae_input_pf"
-                                    value="{{ empresa.cnae|default('', true) }}" placeholder="SSP">
+                                <input class="fe-input" type="text" name="cnae_principal" id="cnae_input_pf"
+                                    value="{{ empresa.cnae_principal|default('', true) }}" placeholder="SSP">
                             </div>
                             <div class="fe-group fe-flex-2">
                                 <label class="fe-label">Início Atividade</label>
@@ -544,7 +560,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                                     style="width: 150px; height: 150px; margin: 0 auto 20px; border: 2px dashed #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #fff;">
                                     {% if empresa and empresa.logo %}
                                     <img id="logo-preview"
-                                        src="{{ url_for('static', filename='uploads/logos/' + empresa.logo) }}"
+                                        src="{{ url_for('static', filename='img/logo/' + empresa.logo) }}"
                                         style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                     {% else %}
                                     <i class="fas fa-camera" id="logo-placeholder"
@@ -807,7 +823,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
                 display.style.display = 'block';
                 
                 // Garante que o valor correto está no campo de dados
-                const cnaeInputs = document.querySelectorAll('input[name="cnae"]');
+                const cnaeInputs = document.querySelectorAll('input[name="cnae_principal"]');
                 cnaeInputs.forEach(input => {
                     if (input !== document.getElementById('cnae_input_pf')) {
                         input.value = code;
@@ -825,7 +841,7 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
         
         // Inicializa o CNAE se já existe um valor armazenado
         const selectPj = document.getElementById('cnae_select_pj');
-        const cnaeValue = '{{ empresa.cnae|default("", true) }}';
+        const cnaeValue = '{{ empresa.cnae_principal|default("", true) }}';
         if (selectPj && cnaeValue) {
             // Tenta encontrar e selecionar a opção com esse código
             Array.from(selectPj.options).forEach(option => {
@@ -927,22 +943,9 @@ Estado : Restaurado para Versão de Estabilidade (22:00H)
 
         arioneToast('Sincronizando dados...', 'info');
         try {
-            const response = await fetch(window.location.pathname + window.location.search, {
-                method: 'POST',
-                body: new FormData(form)
-            });
-          
-            if (response.ok) {
-                arioneToast('Unidade salva com sucesso!', 'success');
-                setTimeout(() => {
-                   window.location.href = response.url; // recarrega na URL final do redirect
-            }, 1200);
-          
-            } else {
-                arioneToast('Erro ao salvar. Verifique os dados.', 'danger');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save" style="font-size: 14px;"></i>';
-            }
+            // Usa submissão nativa para que o Flask possa renderizar mensagens de erro (Flash)
+            // ou redirecionar com sucesso.
+            form.submit();
         } catch (e) {
             arioneToast('Erro crítico na persistência', 'danger');
             btn.disabled = false;

@@ -30,9 +30,15 @@ from app.extensions import db, migrate, login_manager
 
 import os
 
+from datetime import datetime
+
+from dotenv import load_dotenv
+
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / '.env', override=False)
 
 
 
@@ -41,6 +47,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 from app.models.cadastros.empresa import Empresa
 
 from app.models.usuario import Usuario
+from app.models.cadastros.funcionario import CboOcupacao
 
 from app.models.sistema.versao  import Versao
 
@@ -94,17 +101,28 @@ def create_app():
 
         app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{BASE_DIR / 'instance' / 'arione.db'}"
 
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'arione_dev_2026_secret')
+    app_env = (os.environ.get('FLASK_ENV') or '').strip().lower()
+    debug_env = (os.environ.get('FLASK_DEBUG') or os.environ.get('DEBUG_MODE') or '0').lower()
+    is_production = app_env in {'production', 'prod'} or os.environ.get('APP_ENV', '').strip().lower() == 'production'
 
-    app.config['TEMPLATES_AUTO_RELOAD'] = True  # ← PAAv1: força reload de templates sem reiniciar
-    app.config['DEBUG'] = True  # ← Força debug mode para reload
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+    app.config['DEBUG'] = False if is_production else debug_env in {'1', 'true', 'yes', 'on'}
+    app.config['TEMPLATES_AUTO_RELOAD'] = not is_production
 
 
 
     # ✅ Detecção automática de ambiente
-    # Local: nome da pasta raiz (AriOneDEV=dev). Render: FLASK_ENV=development=dev
-    app.config['IS_DEV']    = (BASE_DIR.name == 'AriOneDEV') or (os.environ.get('FLASK_ENV') == 'development')
-    app.config['AMBIENTE']  = 'Desenvolvimento' if app.config['IS_DEV'] else 'Produção'
+    # Prioriza a variável FLASK_ENV. Se não existir, usa o nome da pasta apenas em desenvolvimento local.
+    if app_env in {'', 'development', 'dev'} and 'arionedev' in BASE_DIR.name.lower():
+        app.config['IS_DEV'] = True
+    elif app_env in {'production', 'prod'}:
+        app.config['IS_DEV'] = False
+    elif app_env in {'development', 'dev'}:
+        app.config['IS_DEV'] = True
+    else:
+        app.config['IS_DEV'] = 'arionedev' in BASE_DIR.name.lower()
+
+    app.config['AMBIENTE'] = 'Desenvolvimento' if app.config['IS_DEV'] else 'Produção'
 
 
 
@@ -277,11 +295,11 @@ def create_app():
                 )
                 db.session.add(nova)
                 db.session.commit()
-                print(f'[AriOne] ✅ Versão {VERSAO_ATUAL} publicada no banco!')
+                print(f'[AriOne] OK Versao {VERSAO_ATUAL} publicada no banco!')
             else:
-                print(f'[AriOne] ℹ️ Versão {VERSAO_ATUAL} já existe.')
+                print(f'[AriOne] INFO Versao {VERSAO_ATUAL} ja existe.')
         except Exception as e:
-            print(f'[AriOne] ⚠️ Erro ao registrar versão: {e}')
+            print(f'[AriOne] AVISO Erro ao registrar versao: {e}')
             db.session.rollback()
 
         if not database_url:
@@ -305,7 +323,7 @@ def create_app():
 
         # Fix: ajustar coluna senha_hash para 256 chars (scrypt hash é maior que 128)
 
-        if database_url:
+        if True: # Modificado para rodar no SQLite
 
             try:
 
@@ -344,7 +362,7 @@ def create_app():
             for _col, _tipo in _colunas_compras:
                 try:
                     db.session.execute(db.text(
-                        f'ALTER TABLE op_compras_pedidos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'
+                        f'ALTER TABLE op_compras_pedidos ADD COLUMN {_col} {_tipo}'
                     ))
                     db.session.commit()
                 except Exception:
@@ -388,7 +406,7 @@ def create_app():
                 ('foto',            'VARCHAR(255)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE clientes ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE clientes ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -453,7 +471,7 @@ def create_app():
                 ('danfe_formato',       'VARCHAR(1)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE empresas ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE empresas ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -481,7 +499,7 @@ def create_app():
                 ('is_fp',           'BOOLEAN DEFAULT FALSE'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE fornecedores ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE fornecedores ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -524,7 +542,7 @@ def create_app():
                 ('path_documentos',     'VARCHAR(255)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE funcionarios ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE funcionarios ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -571,7 +589,7 @@ def create_app():
                 ('pix_chave',           'VARCHAR(100)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE transportadoras ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE transportadoras ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -586,7 +604,7 @@ def create_app():
                 ('pais',                'VARCHAR(50)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE socios ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE socios ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -605,7 +623,7 @@ def create_app():
                 ('pais',            'VARCHAR(50)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE investidores ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE investidores ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -635,7 +653,7 @@ def create_app():
                 ('observacoes',         'TEXT'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE op_compras_pedidos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE op_compras_pedidos ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -654,7 +672,7 @@ def create_app():
                 ('cor',                    'VARCHAR(20)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE comercial_formas_pagamento ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE comercial_formas_pagamento ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -678,7 +696,7 @@ def create_app():
                 ('cor',                         'VARCHAR(20)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE comercial_operadoras_financeiras ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE comercial_operadoras_financeiras ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -729,7 +747,7 @@ def create_app():
                 ('grade_matrix',            'TEXT'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE cat_produtos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE cat_produtos ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -744,7 +762,7 @@ def create_app():
                 ('foto',            'VARCHAR(255)'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE cat_insumos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE cat_insumos ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -760,7 +778,7 @@ def create_app():
                 ('observacoes',               'TEXT'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE financeiro_caixas ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE financeiro_caixas ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -773,7 +791,7 @@ def create_app():
                 ('conta_bancaria_id',   'INTEGER'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE financeiro_lancamentos ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE financeiro_lancamentos ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -794,7 +812,7 @@ def create_app():
                 ('matriz_licenciamento','TEXT'),
             ]:
                 try:
-                    db.session.execute(db.text(f'ALTER TABLE sistema_licencas ADD COLUMN IF NOT EXISTS {_col} {_tipo}'))
+                    db.session.execute(db.text(f'ALTER TABLE sistema_licencas ADD COLUMN {_col} {_tipo}'))
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
@@ -808,7 +826,7 @@ def create_app():
             for _col, _tipo in _status_cols:
                 try:
                     db.session.execute(db.text(
-                        f'ALTER TABLE sistema_status ADD COLUMN IF NOT EXISTS {_col} {_tipo}'
+                        f'ALTER TABLE sistema_status ADD COLUMN {_col} {_tipo}'
                     ))
                     db.session.commit()
                 except Exception:
@@ -1458,7 +1476,7 @@ def create_app():
         for col, tipo in colunas:
             try:
                 db.session.execute(db.text(
-                    f'ALTER TABLE op_compras_pedidos ADD COLUMN IF NOT EXISTS {col} {tipo}'
+                    f'ALTER TABLE op_compras_pedidos ADD COLUMN {col} {tipo}'
                 ))
                 db.session.commit()
                 resultados[col] = 'OK'

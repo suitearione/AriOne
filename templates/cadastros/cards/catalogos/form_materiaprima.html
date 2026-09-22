@@ -5,6 +5,8 @@
 <div class="fe-wrap mod-materiaprima" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
 
     <style>
+        .mod-materiaprima [style*="#E67E22"], .mod-materiaprima [style*="#C0392B"] { color: #06B6D4 !important; border-color: #06B6D4 !important; }
+        .mod-materiaprima [style*="background: #E67E22"], .mod-materiaprima [style*="background:#E67E22"] { background: #06B6D4 !important; }
         /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
         .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
         .fe-wrap { margin-top: 0 !important; }
@@ -12,6 +14,10 @@
         /* 💎 Tipografia Compacto Premium §13 */
         .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
         .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
+        .mp-field-action { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 3px 7px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #64748b; font-size: 9px; font-weight: 800; cursor: pointer; }
+        .mp-field-action:hover { color: #0891b2; border-color: #67e8f9; background: #ecfeff; }
+        .mod-materiaprima #btn-salvar-mp { display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; min-width: 220px; background: #06B6D4 !important; color: #fff !important; border: 0 !important; box-shadow: 0 4px 12px rgba(8,145,178,.22) !important; }
+        .mod-materiaprima #btn-salvar-mp:hover { background: #0891b2 !important; }
         
         .mp-foto-upload-premium {
             width: 100px; height: 100px; border: 2.5px dashed #e2e8f0; border-radius: 15px; 
@@ -29,9 +35,10 @@
             titulo='Matéria-Prima Industrial',
             subtitulo='Catálogos > Gestão de Materiais de Base e Suprimentos',
             icone='fa-layer-group',
-            cor_tema='#7A255F',
+            cor_tema='#06B6D4',
             tamanho='medio',
             aba_retorno='catalogos',
+            func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
             form_id='mp-form-area',
             list_id='mp-list-area',
             onclick_novo="novoRegistroMP()",
@@ -96,16 +103,21 @@
 
                                 <div class="fp-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                                     <div class="fp-group">
-                                        <label class="fp-label">Tipo de Material</label>
+                                        <label class="fp-label">Tipo de Material
+                                            <button type="button" class="mp-field-action" onclick="novoTipoMateriaPrima()" title="Cadastrar um novo tipo de material"><i class="fas fa-plus"></i> Novo tipo</button>
+                                        </label>
                                         <select class="fp-input" name="tipo_id" id="mp-tipo-select" style="width: 100%; background: #fff;">
                                             <option value="">Selecione...</option>
                                             {% for t in tipos_list|default([]) %}
-                                            <option value="{{ t.id }}">{{ t.nome }}</option>
+                                            <option value="{{ t.id }}" {% if materia and materia.tipo_id == t.id %}selected{% endif %}>{{ t.nome }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
                                     <div class="fp-group">
-                                        <label class="fp-label">Unidade Principal</label>
+                                        <label class="fp-label" style="display:flex; align-items:center; gap:6px;">
+                                            Unidade Principal
+                                            {{ comp.master_icon("unidades", "Gerenciar Unidades de Medida", "abrirModalMaster('unidades')") }}
+                                        </label>
                                         <select class="fp-input" name="unidade_id" id="mp-unidade-select" style="width: 100%; background: #fff;">
                                             <option value="">Selecione...</option>
                                             {% for un in unidades_list|default([]) %}
@@ -200,6 +212,30 @@
             };
 
             window.fecharFormMP = function() { novoRegistroMP(); };
+
+            window.novoTipoMateriaPrima = async function() {
+                const nome = prompt('Nome do novo tipo de material:');
+                if (!nome || !nome.trim()) return;
+                const dados = new URLSearchParams({ nome: nome.trim() });
+                try {
+                    const resposta = await fetch('/cadastros/cards/materiaprima/tipos/add', {
+                        method: 'POST',
+                        body: dados,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const resultado = await resposta.json();
+                    if (!resposta.ok || !resultado.success) {
+                        arioneToast(resultado.message || 'Não foi possível cadastrar o tipo.', 'danger');
+                        return;
+                    }
+                    arioneToast('Tipo de material cadastrado.', 'success');
+                    const select = document.getElementById('mp-tipo-select');
+                    const option = new Option(resultado.nome, resultado.id, true, true);
+                    select.add(option);
+                } catch (erro) {
+                    arioneToast('Erro de comunicação ao cadastrar o tipo.', 'danger');
+                }
+            };
 
             window.editarMP_ByRow = function(r) {
                 const id = r.dataset.id;

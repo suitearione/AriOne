@@ -14,10 +14,10 @@
     gap: 10px;
     font-size: 18px;
     font-weight: 600;
-    color: #7A255F;
+    color: #0891B2;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #7A255F;
+    border-bottom: 2px solid #0891B2;
 }
 
 .ge-cards-container {
@@ -152,7 +152,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 18px 24px;
-    background: linear-gradient(135deg, #7A255F, #a8357f);
+    background: linear-gradient(135deg, #0891B2, #06B6D4);
     border-radius: 16px 16px 0 0;
 }
 
@@ -210,8 +210,8 @@
 .ge-form-group select:focus,
 .ge-form-group textarea:focus {
     outline: none;
-    border-color: #7A255F;
-    box-shadow: 0 0 0 3px rgba(122,37,95,0.12);
+    border-color: #0891B2;
+    box-shadow: 0 0 0 3px rgba(8,145,178,0.12);
     background: #fff;
 }
 
@@ -225,7 +225,7 @@
 }
 
 .ge-btn-salvar {
-    background: linear-gradient(135deg, #7A255F, #a8357f);
+    background: linear-gradient(135deg, #0891B2, #06B6D4);
     color: #fff;
     border: none;
     padding: 11px 24px;
@@ -262,7 +262,7 @@
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    border-left: 6px solid #7A255F;
+    border-left: 6px solid #0891B2;
     transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     cursor: pointer;
     display: flex;
@@ -316,7 +316,7 @@
 .btn-acao {
     margin-top: 20px;
     background: #f8fafc;
-    color: #7A255F;
+    color: #0891B2;
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
@@ -326,7 +326,7 @@
 }
 
 .card-decisao:hover .btn-acao {
-    background: #7A255F;
+    background: #0891B2;
     color: #fff;
 }
 
@@ -378,7 +378,7 @@
 .status-dot.ok { background: #27ae60; box-shadow: 0 0 10px rgba(39, 174, 96, 0.4); }
 
 .link-ajuste {
-    color: #7A255F;
+    color: #0891B2;
     font-weight: 600;
     text-decoration: none;
     margin-left: auto;

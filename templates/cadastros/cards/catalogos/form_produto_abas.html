@@ -390,7 +390,11 @@ Função  : Conteúdo Integral das Abas e Motor de Scripts (Padrão Golden)
   function parseMoney(v) { 
       if (!v) return 0;
       if (typeof v === 'number') return v;
-      return parseFloat(v.toString().replace(/\./g, '').replace(',', '.')) || 0; 
+      const texto = v.toString().trim().replace(/R\$\s?/g, '');
+      if (texto.includes(',')) {
+          return parseFloat(texto.replace(/\./g, '').replace(',', '.')) || 0;
+      }
+    return parseFloat(texto) || 0;
   }
   
   function calcMargens() {
@@ -1077,8 +1081,11 @@ Função  : Conteúdo Integral das Abas e Motor de Scripts (Padrão Golden)
               document.getElementById('custo-fab-display').textContent = 'R$ ' + custoBase.toFixed(2).replace('.', ',');
           }
       } else {
-          // Pega do campo de entrada manual
-          custoBase = parseMoney(document.getElementById('preco_custo')?.value || '0,00');
+          const custoCompra = document.getElementById('custo_compra');
+          const custoNota = document.getElementById('preco_custo');
+          custoBase = custoCompra && custoCompra.type === 'number'
+              ? Number(custoCompra.value || 0)
+              : parseMoney(custoCompra?.value || custoNota?.value || '0,00');
       }
 
       // 2. Adicionais de Compra (IPI/Frete)

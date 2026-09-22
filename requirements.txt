@@ -36,5 +36,7 @@ google-auth-oauthlib
 # Utilitários
 redis  # Cache e filas
 celery  # Tarefas assíncronas (opcional)
+Pillow  # Ícone e imagem do gerenciador da bandeja do sistema
+pystray  # Menu da bandeja do sistema no Windows
 
 # ==================== FIM DO ARQUIVO ===========================

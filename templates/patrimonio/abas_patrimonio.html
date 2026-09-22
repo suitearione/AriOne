@@ -244,6 +244,78 @@
     }
     </script>
 
+    <div class="patrimonio-cards-wrapper" style="margin: 0 0 22px; padding: 0 10px;">
+        <div class="ge-section-title" style="display:flex; align-items:center; gap:10px; margin: 0 0 14px; color:#334155; font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:.5px;">
+            <i class="fas fa-boxes-stacked" style="color:#7F8C8D;"></i>
+            <span>Ativos Patrimoniais</span>
+        </div>
+
+        <div class="ge-cards-container patrimonio-cards-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px;">
+            <a class="ge-card patrimonio-card" href="{{ url_for('patrimonio.abas', aba='imoveis') }}" aria-label="Abrir cadastro de imóveis" style="--card-cor:#2980B9;--card-cor-bg:rgba(41,128,185,.10);">
+                <i class="fas fa-city ge-card-bg-icon"></i>
+                <span class="ge-card-icon-wrap"><i class="fas fa-city ge-card-icon"></i></span>
+                <span class="ge-card-label">Imóveis</span>
+                <span class="ge-card-desc">Terrenos e edificações</span>
+            </a>
+
+            <a class="ge-card patrimonio-card" href="{{ url_for('patrimonio.abas', aba='maquinas') }}" aria-label="Abrir cadastro de máquinas" style="--card-cor:#D35400;--card-cor-bg:rgba(211,84,0,.10);">
+                <i class="fas fa-tools ge-card-bg-icon"></i>
+                <span class="ge-card-icon-wrap"><i class="fas fa-tools ge-card-icon"></i></span>
+                <span class="ge-card-label">Máquinas</span>
+                <span class="ge-card-desc">Ativos industriais</span>
+            </a>
+
+            <a class="ge-card patrimonio-card" href="{{ url_for('patrimonio.abas', aba='equipamentos') }}" aria-label="Abrir cadastro de equipamentos" style="--card-cor:#16A085;--card-cor-bg:rgba(22,160,133,.10);">
+                <i class="fas fa-microchip ge-card-bg-icon"></i>
+                <span class="ge-card-icon-wrap"><i class="fas fa-microchip ge-card-icon"></i></span>
+                <span class="ge-card-label">Equipamentos</span>
+                <span class="ge-card-desc">Tecnologia e operação</span>
+            </a>
+
+            <a class="ge-card patrimonio-card" href="{{ url_for('patrimonio.abas', aba='veiculos') }}" aria-label="Abrir cadastro de veículos" style="--card-cor:#27AE60;--card-cor-bg:rgba(39,174,96,.10);">
+                <i class="fas fa-car ge-card-bg-icon"></i>
+                <span class="ge-card-icon-wrap"><i class="fas fa-car ge-card-icon"></i></span>
+                <span class="ge-card-label">Veículos</span>
+                <span class="ge-card-desc">Frota e transporte</span>
+            </a>
+
+            <a class="ge-card patrimonio-card" href="{{ url_for('patrimonio.abas', aba='software') }}" aria-label="Abrir cadastro de softwares" style="--card-cor:#7A255F;--card-cor-bg:rgba(122,37,95,.10);">
+                <i class="fas fa-laptop-code ge-card-bg-icon"></i>
+                <span class="ge-card-icon-wrap"><i class="fas fa-laptop-code ge-card-icon"></i></span>
+                <span class="ge-card-label">Softwares</span>
+                <span class="ge-card-desc">Licenças e ativos digitais</span>
+            </a>
+
+            <a class="ge-card patrimonio-card" href="{{ url_for('patrimonio.abas', aba='moveis') }}" aria-label="Abrir cadastro de móveis e objetos" style="--card-cor:#8E44AD;--card-cor-bg:rgba(142,68,173,.10);">
+                <i class="fas fa-couch ge-card-bg-icon"></i>
+                <span class="ge-card-icon-wrap"><i class="fas fa-couch ge-card-icon"></i></span>
+                <span class="ge-card-label">Móveis &amp; Objetos</span>
+                <span class="ge-card-desc">Mobiliário e utensílios</span>
+            </a>
+        </div>
+    </div>
+
+    <style>
+        .patrimonio-card {
+            min-height: 132px;
+            padding: 18px;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .patrimonio-card:hover {
+            text-decoration: none;
+        }
+
+        .patrimonio-card .ge-card-icon-wrap {
+            background: var(--card-cor-bg);
+        }
+
+        .patrimonio-card .ge-card-icon {
+            color: var(--card-cor);
+        }
+    </style>
+
     <div class="arione-content-box">
         {% if aba_ativa == 'imoveis' %}
             {% include 'patrimonio/grids/grid_imoveis.html' %}

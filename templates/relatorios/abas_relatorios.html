@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="arione-page-wrapper" style="padding: 20px; background: #f8fafc; min-height: 100vh;">
+    <div style="background: linear-gradient(90deg, #7A255F 0%, #A63C7A 50%, #7A255F 100%); border-radius: 14px; padding: 18px 22px; color: #fff; box-shadow: 0 10px 30px rgba(122, 37, 95, 0.20);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:16px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.12);">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div>
+                    <div style="font-size:12px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; opacity:0.9;">AriOne</div>
+                    <h2 style="margin: 4px 0 0; font-size: 1.4rem; font-weight: 800; letter-spacing: 0.5px;">Relatórios</h2>
+                </div>
+            </div>
+            <a href="{{ url_for('gestao.abas') }}" style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:10px; background: rgba(255,255,255,0.12); color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,0.15);">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+        </div>
+    </div>
+
+    <div style="margin-top: 18px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; padding: 14px 16px 0; border-bottom: 1px solid #edf2f7;">
+            {% for aba in abas %}
+            <a href="{{ url_for('relatorios.abas', aba=aba.id) }}"
+               style="padding: 10px 16px; border-radius: 10px 10px 0 0; text-decoration:none; font-size:11px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; border: 1px solid transparent; border-bottom:none; {% if aba_ativa == aba.id %} background:#f8fafc; color:#7A255F; border-color:#e2e8f0; {% else %} color:#64748b; background:#f8fafc; {% endif %}">
+                <i class="fas fa-{{ aba.icon }}" style="margin-right:6px;"></i>{{ aba.label }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <div style="padding: 22px; min-height: 260px;">
+            {% if aba_ativa == 'gerencial' %}
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:16px;">
+                    {% for item in ['Receita', 'Custos', 'Margem', 'Fluxo'] %}
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+                        <div style="font-size:10px; font-weight:800; letter-spacing:1.1px; color:#64748b; text-transform:uppercase;">{{ item }}</div>
+                        <div style="margin-top:12px; font-size: 1.7rem; font-weight:900; color:#1e293b;">—</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% elif aba_ativa == 'operacional' %}
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; color:#334155;">
+                    <h3 style="margin:0 0 12px; font-size:1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:#1e293b;">Operacional</h3>
+                    <p style="margin:0; color:#475569; line-height:1.7;">Este módulo de relatórios está pronto para receber os indicadores operacionais do ERP. A estrutura atual do AriOne já mantém o layout e os filtros no padrão visual do sistema.</p>
+                </div>
+            {% else %}
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; color:#334155;">
+                    <h3 style="margin:0 0 12px; font-size:1rem; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:#1e293b;">Administrativo</h3>
+                    <p style="margin:0; color:#475569; line-height:1.7;">Relatórios administrativos e de gestão podem ser montados seguindo o mesmo padrão de cards, filtros e navegação já usado nos demais módulos do sistema.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

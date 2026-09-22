@@ -53,7 +53,7 @@ if !errorlevel! equ 0 (
     echo [!DATAHORA!] AVISO - Nenhum processo Python ativo encontrado. >> "%LOG%"
 )
 :: Aguarda 3 segundos para garantir que o banco foi liberado
-timeout /t 3 /nobreak >nul
+ping 127.0.0.1 -n 4 >nul
 
 :: ================================================
 :: PASSO 2 - ZIP da origem AriOneDEV (so codigo fonte)
@@ -91,13 +91,14 @@ for /f "delims=" %%f in ('dir /b /o-d "%BACKUP_DEV%\AriOneDEV_backup_*.zip" 2^>n
 )
 
 :: ================================================
-:: PASSO 3 - ZIP da producao AriOne (completo + banco)
+:: PASSO 3 - ZIP da producao AriOne (COMPATÍVEL E SEGURO)
 :: ================================================
 echo.
-echo [3/6] Gerando backup de AriOne...
+echo [3/6] Gerando backup de AriOne (Producao)...
 SET "ZIP_PROD=%BACKUP_PROD%\AriOne_backup_%DATATAG%.zip"
 
-powershell -ExecutionPolicy Bypass -Command "Compress-Archive -Path '%DESTINO%\*' -DestinationPath '%ZIP_PROD%' -Force -CompressionLevel Optimal"
+:: 🔥 CORREÇÃO CRUCIAL AQUI: Seleciona itens de C:\AriOne, mas ignora a pasta 'backups' e arquivos '.log' abertos
+powershell -ExecutionPolicy Bypass -Command "$itens = Get-ChildItem '%DESTINO%' | Where-Object { $_.Name -ne 'backups' -and $_.Extension -ne '.log' }; $itens | Compress-Archive -DestinationPath '%ZIP_PROD%' -Force -CompressionLevel Optimal"
 
 if exist "%ZIP_PROD%" (
     echo       OK - AriOne_backup_%DATATAG%.zip

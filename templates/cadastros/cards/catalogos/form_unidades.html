@@ -5,6 +5,8 @@
 <div class="fe-wrap mod-unidades" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
 
     <style>
+        .mod-unidades [style*="#E67E22"] { color: #06B6D4 !important; border-color: #06B6D4 !important; }
+        .mod-unidades [style*="background: #E67E22"], .mod-unidades [style*="background:#E67E22"] { background: #06B6D4 !important; }
         /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
         .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
         .fe-wrap { margin-top: 0 !important; }
@@ -13,6 +15,8 @@
         .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
         .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
         .fp-card-title { font-size: 13px !important; font-weight: 800 !important; }
+        .mod-unidades #btn-salvar-uni { display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; min-width: 190px; background: #06B6D4 !important; color: #fff !important; border: 0 !important; box-shadow: 0 4px 12px rgba(8,145,178,.22) !important; }
+        .mod-unidades #btn-salvar-uni:hover { background: #0891b2 !important; }
         
         .uni-row:hover { background: #fffcf0 !important; cursor: pointer; transition: 0.2s; }
     </style>
@@ -23,14 +27,14 @@
             titulo='Unidades & Medidas',
             subtitulo='Catálogos > Unidades e Medidas',
             icone='fa-ruler-combined',
-            cor_tema='#7A255F',
+            cor_tema='#06B6D4',
             func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
             form_id='uni-form-area',
             onclick_novo='resetFormUnidade()',
             onclick_save='salvarUnidade()',
             onclick_search='focarPesquisaUnidade()',
             onclick_filter='abrirModalFiltrosAvancados()',
-            onclick_list='alternarVisaoFormLista()',
+            onclick_list="arioneAlternarVisualizacao('uni-form-area', 'uni-list-area')",
             onclick_clonar='clonarUnidadeAtivo()',
             onclick_export='exportarUnidadeCSV()',
             onclick_import='abrirModalImportacaoXML()',

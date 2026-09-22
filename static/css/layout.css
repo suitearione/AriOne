@@ -26,7 +26,7 @@
     width: 8px;                            /* Largura da barra de rolagem */
 }
 .arione-page::-webkit-scrollbar-thumb {
-    background: #7A255F;                     /* Cor da barra (Roxo AriOne) */
+    background: #0891B2;
     border-radius: 10px;                       /* Bordas arredondadas */
 }
 
@@ -62,7 +62,7 @@
 }
 
 .dashboard-slogan-text {
-    color: #7A255F;              /* Roxo institucional AriOne */
+    color: #0891B2;
     font-weight: 600;
     font-style: italic;
     font-size: 18px;

@@ -12,23 +12,22 @@ with app.app_context():
     # Recria as tabelas
     db.create_all()
     
-    # Busca o admin
-    admin = Usuario.query.filter_by(email='adm@arione.com').first()
+    # Busca o admin com a credencial canônica do sistema
+    admin = Usuario.query.filter_by(email='admin@arione.com.br').first()
     
     if not admin:
         print("Criando Administrador com campo senha_hash...")
-        # Criando o objeto com o nome de campo confirmado pelo erro: senha_hash
         novo_admin = Usuario(
             nome='Administrador AriOne',
-            email='adm@arione.com',
+            email='admin@arione.com.br',
             senha_hash=generate_password_hash('admin123', method='pbkdf2:sha256'),
-            role='admin' # Ajustado para garantir nivel de acesso
+            perfil='admin'
         )
         db.session.add(novo_admin)
         db.session.commit()
         print("------------------------------------------")
         print("SUCESSO: Usuario criado!")
-        print("Login: adm@arione.com")
+        print("Login: admin@arione.com.br")
         print("Senha: admin123")
         print("------------------------------------------")
     else:

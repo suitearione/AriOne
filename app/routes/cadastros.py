@@ -14,8 +14,9 @@
 
 import os
 from datetime import date, datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, Response, make_response, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, Response, make_response, session, current_app
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 from app.models.cadastros.empresa import Empresa, EmpresaContato
 from app.models.cadastros.socio import Socio, SocioEmpresa
@@ -34,51 +35,6 @@ from app import db
 from app.utils.progress import is_ari_dev, get_matrix_progress
 
 cadastros_bp = Blueprint('cadastros', __name__, url_prefix='/cadastros')
-
-@cadastros_bp.route('/api/debug/sync-db')
-def debug_sync_db():
-    from sqlalchemy import text
-    columns = [
-        ('modal_transporte', 'VARCHAR(100)'),
-        ('tipo_servico', 'VARCHAR(100)'),
-        ('prazo_entrega', 'INTEGER'),
-        ('avaliacao', 'VARCHAR(1)'),
-        ('contato_nome', 'VARCHAR(100)'),
-        ('contato_cargo', 'VARCHAR(100)'),
-        ('parceira_desde', 'DATE'),
-        ('end_com_cep', 'VARCHAR(9)'),
-        ('end_com_logradouro', 'VARCHAR(150)'),
-        ('end_com_numero', 'VARCHAR(20)'),
-        ('end_com_complemento', 'VARCHAR(100)'),
-        ('end_com_bairro', 'VARCHAR(80)'),
-        ('end_com_cidade', 'VARCHAR(80)'),
-        ('end_com_uf', 'VARCHAR(2)'),
-        ('end_ent_cep', 'VARCHAR(9)'),
-        ('end_ent_logradouro', 'VARCHAR(150)'),
-        ('end_ent_numero', 'VARCHAR(20)'),
-        ('end_ent_complemento', 'VARCHAR(100)'),
-        ('end_ent_bairro', 'VARCHAR(80)'),
-        ('end_ent_cidade', 'VARCHAR(80)'),
-        ('end_ent_uf', 'VARCHAR(2)'),
-        ('prazo_pagamento', 'VARCHAR(50)'),
-        ('forma_pagamento', 'VARCHAR(50)'),
-        ('tabela_frete', 'VARCHAR(100)'),
-        ('banco_nome', 'VARCHAR(100)'),
-        ('banco_codigo', 'VARCHAR(10)'),
-        ('banco_agencia', 'VARCHAR(20)'),
-        ('banco_conta', 'VARCHAR(20)'),
-        ('pix_chave', 'VARCHAR(100)')
-    ]
-    logs = []
-    for col_name, col_type in columns:
-        try:
-            db.session.execute(text(f"ALTER TABLE transportadoras ADD COLUMN {col_name} {col_type}"))
-            db.session.commit()
-            logs.append(f"Coluna {col_name} OK")
-        except Exception as e:
-            db.session.rollback()
-            logs.append(f"Erro {col_name}: {str(e)}")
-    return "<br>".join(logs)
 
 # ── Comercial: Ministérios e Parcerias ────────────────────────────────────
 from sqlalchemy import text
@@ -655,9 +611,14 @@ def form_empresa(id=None):
     #                 except: pass
     # except Exception as e:
     #     print(f"Erro na auto-migração de empresas: {e}")
-    pass
 
-    empresa        = Empresa.query.get(id) if id else None
+    emp_id = id
+    if request.method == 'POST':
+        form_id = request.form.get('id')
+        if form_id and form_id.strip() and form_id.strip().isdigit():
+            emp_id = int(form_id.strip())
+
+    empresa        = Empresa.query.get(emp_id) if emp_id else None
     empresas_lista = Empresa.query.order_by(Empresa.razao_social).all()
     
     # Busca Estrutura Organizacional para as abas
@@ -703,10 +664,10 @@ def form_empresa(id=None):
         # ── Validação Proativa (CNPJ Único) ──
         novo_cnpj = request.form.get('cnpj', '').strip() or None
         if novo_cnpj:
-            existente = Empresa.query.filter(Empresa.cnpj == novo_cnpj).filter(Empresa.id != id).first()
+            existente = Empresa.query.filter(Empresa.cnpj == novo_cnpj).filter(Empresa.id != emp_id).first()
             if existente:
                 flash(f"O CNPJ '{novo_cnpj}' já está cadastrado para a empresa '{existente.razao_social}'.", "danger")
-                return redirect(url_for('cadastros.form_empresa', id=id) if id else url_for('cadastros.form_empresa'))
+                return redirect(url_for('cadastros.form_empresa', id=emp_id) if emp_id else url_for('cadastros.form_empresa'))
         empresa.cnpj = novo_cnpj
 
         empresa.cpf                 = request.form.get('cpf', '').strip() or None
@@ -723,7 +684,7 @@ def form_empresa(id=None):
         # ── Dados Fiscais ──
         empresa.regime_tributario = request.form.get('regime_tributario', '').strip() or None
         empresa.natureza_juridica = request.form.get('natureza_juridica', '').strip() or None
-        empresa.cnae_principal    = request.form.get('cnae_principal', '').strip() or None
+        empresa.cnae_principal    = request.form.get('cnae_principal', '').strip() or request.form.get('cnae', '').strip() or None
         empresa.cnae_secundario   = request.form.get('cnae_secundario', '').strip() or None
         empresa.profissao         = request.form.get('profissao', '').strip() or None
         empresa.pis_pasep         = request.form.get('pis_pasep', '').strip() or None
@@ -744,10 +705,10 @@ def form_empresa(id=None):
         # ── Validação Proativa de Domínio (Slug) ──
         nova_slug = request.form.get('slug', '').strip() or None
         if nova_slug:
-            slug_existe = Empresa.query.filter(Empresa.slug == nova_slug).filter(Empresa.id != id).first()
+            slug_existe = Empresa.query.filter(Empresa.slug == nova_slug).filter(Empresa.id != emp_id).first()
             if slug_existe:
                 flash(f"O domínio '{nova_slug}' já está em uso pela empresa '{slug_existe.razao_social}'. Escolha outro domínio.", "danger")
-                return redirect(url_for('cadastros.form_empresa', id=id) if id else url_for('cadastros.form_empresa'))
+                return redirect(url_for('cadastros.form_empresa', id=emp_id) if emp_id else url_for('cadastros.form_empresa'))
         empresa.slug = nova_slug
 
         # ── Endereços (Fat, Ent, Cor) ──
@@ -810,7 +771,12 @@ def form_empresa(id=None):
                                           secure_filename(arq.filename)))
 
             db.session.commit()
-            flash('Empresa salva com sucesso!', 'success')
+            if empresa.id and empresa.id != emp_id:
+                flash('Empresa salva com sucesso!', 'success')
+            elif emp_id:
+                flash('Dados alterados com sucesso!', 'success')
+            else:
+                flash('Empresa salva com sucesso!', 'success')
             return redirect(url_for('cadastros.form_empresa', id=empresa.id))
 
         except Exception as e:
@@ -842,7 +808,7 @@ def encerrar_empresa(id):
     empresa = Empresa.query.get_or_404(id)
     if not empresa.ativa:
         flash('Esta empresa já está encerrada.', 'warning')
-        return redirect(url_for('cadastros.cards.form_empresa', id=id))
+        return redirect(url_for('cadastros.form_empresa', id=id))
     try:
         empresa.ativa               = False
         empresa.data_encerramento   = date.today()
@@ -854,7 +820,7 @@ def encerrar_empresa(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao encerrar: {str(e)}', 'danger')
-    return redirect(url_for('cadastros.cards.form_empresa', id=id))
+    return redirect(url_for('cadastros.form_empresa', id=id))
 
 
 # ── Reativar Empresa ────────────────────────────────────────────────────────
@@ -869,7 +835,7 @@ def reativar_empresa(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao reativar: {str(e)}', 'danger')
-    return redirect(url_for('cadastros.cards.form_empresa', id=id))
+    return redirect(url_for('cadastros.form_empresa', id=id))
 
 
 # ── Gateway de Módulos (Nível 1) ──────────────────────────────────────────
@@ -926,13 +892,6 @@ def card_parametros_financeiro():
     from app.models.gestao.parametros_financeiros import ParametrosFinanceiros
     empresa_id = getattr(current_user, 'empresa_id', None)
     
-    # Auto-Migração para a nova tabela
-    try:
-        with db.engine.begin() as conn:
-            db.create_all()
-    except Exception:
-        pass
-        
     q_pc = PlanoContas.query  
     q_cc = CentroCusto.query  
     
@@ -2200,11 +2159,6 @@ def _pasta_transportadora(transportadora_id):
 @login_required
 def form_entregador(id=None):
     from app.models.cadastros.entregador import Entregador
-    try:
-        db.create_all()
-    except:
-        pass
-
     entregador = Entregador.query.get(id) if id else None
     
     if request.method == 'POST':
@@ -2264,11 +2218,8 @@ def form_transportadora(id=None):
                 db.session.rollback()
         
         from app.models.cadastros.entregador import Entregador
-        db.create_all()
     except Exception:
         pass
-    # ---------------------------
-
     transportadora        = Transportadora.query.get(id) if id else None
     transportadoras_lista = Transportadora.query.order_by(Transportadora.razao_social).all()
 
@@ -2465,21 +2416,6 @@ def fragmento_produto(filename):
     except Exception as e:
         return f"Erro ao carregar fragmento: {str(e)}", 404
 
-@cadastros_bp.route('/produtos/limpeza-total-debug')
-@login_required
-def limpeza_total_produtos():
-    """Rota de emergência para limpar o catálogo de testes"""
-    try:
-        from app.models.catalogos import Produto, ProdutoVariacao, ProdutoComposicao
-        db.session.query(ProdutoComposicao).delete()
-        db.session.query(ProdutoVariacao).delete()
-        db.session.query(Produto).delete()
-        db.session.commit()
-        return "<h1>✅ Catálogo Limpo!</h1><p>Todos os produtos, variações e composições foram removidos. Pode voltar ao formulário agora.</p><a href='/cadastros/abas?aba=catalogos'>Voltar ao Sistema</a>"
-    except Exception as e:
-        db.session.rollback()
-        return f"<h1>❌ Erro na limpeza</h1><p>{str(e)}</p>"
-
 @cadastros_bp.route('/produtos/cards/form', methods=['GET', 'POST'])
 @cadastros_bp.route('/produtos/cards/form/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -2514,7 +2450,10 @@ def form_produto(id=None):
     if request.method == 'POST':
         def clean_money(val):
             if not val: return 0.0
-            return float(val.replace('R$', '').replace('.', '').replace(',', '.').strip())
+            texto = str(val).replace('R$', '').strip()
+            if ',' in texto:
+                texto = texto.replace('.', '').replace(',', '.')
+            return float(texto)
 
         def clean_float(val):
             if not val: return 0.0
@@ -2606,7 +2545,7 @@ def form_produto(id=None):
             produto.tags = request.form.get('tags')
             
             # Preços
-            produto.preco_custo = clean_money(request.form.get('preco_custo'))
+            produto.custo_compra = clean_money(request.form.get('custo_compra'))
             produto.preco_varejo = clean_money(request.form.get('preco_varejo'))
             produto.preco_atacado = clean_money(request.form.get('preco_atacado'))
             produto.preco_promocional = clean_money(request.form.get('preco_promocional'))
@@ -2676,16 +2615,19 @@ def form_produto(id=None):
                 except:
                     pass
 
-            # 🚀 Upload de Imagens do Produto
+            # Garante ID para nomear o arquivo (produto novo ainda não tem ID sem flush)
+            if not produto.id:
+                db.session.flush()
+
+            # Upload de Imagens do Produto
             if 'imagens' in request.files:
                 imagens = request.files.getlist('imagens')
                 if imagens and imagens[0].filename:
-                    # Salva a primeira imagem como foto principal
                     foto_principal = imagens[0]
                     if foto_principal and foto_principal.filename:
-                        pasta = os.path.join('static', 'uploads', 'produtos')
+                        pasta = os.path.join(current_app.static_folder, 'uploads', 'produtos')
                         os.makedirs(pasta, exist_ok=True)
-                        ext = foto_principal.filename.rsplit('.', 1)[1].lower()
+                        ext = foto_principal.filename.rsplit('.', 1)[1].lower() if '.' in foto_principal.filename else 'jpg'
                         nome_foto = f"prod_{produto.id}_principal.{ext}"
                         caminho_foto = os.path.join(pasta, nome_foto)
                         foto_principal.save(caminho_foto)
@@ -2757,6 +2699,10 @@ def form_produto(id=None):
                     comp_data = (produto.composicao or {}).get('GERAL')
                     if comp_data: persistir_itens(variacao_mestre.id, comp_data)
 
+                # Garante que o produto (incluindo produto.foto) está rastreado antes do commit
+                db.session.add(produto)
+                db.session.flush()
+
                 db.session.commit()
                 
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -2827,7 +2773,6 @@ def form_produto(id=None):
             flash(f'Produto "{produto.descricao}" salvo com sucesso!', 'success')
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                from flask import current_app
                 cores_catalogo = CorCatalogo.query.order_by(CorCatalogo.nome).all()
                 tamanhos_catalogo = TamanhoCatalogo.query.order_by(TamanhoCatalogo.nome).all()
                 grades_modelos = GradeModelo.query.order_by(GradeModelo.nome).all()
@@ -3698,15 +3643,6 @@ def excluir_atributo(id):
 @cadastros_bp.route('/cards/categorias', methods=['GET', 'POST'])
 @cadastros_bp.route('/cards/categorias/<int:id>', methods=['GET', 'POST'])
 def card_categorias(id=None):
-    from sqlalchemy import text
-    try:
-        db.session.execute(text("ALTER TABLE cat_categorias ADD COLUMN descricao TEXT"))
-        db.session.execute(text("ALTER TABLE cat_categorias ADD COLUMN cor VARCHAR(20) DEFAULT '#27AE60'"))
-        db.session.execute(text("ALTER TABLE cat_categorias ADD COLUMN icone VARCHAR(50) DEFAULT 'fa-layer-group'"))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-
     if request.method == 'POST':
         cat_id = request.form.get('id')
         categoria = Categoria.query.get(cat_id) if cat_id else None
@@ -3869,7 +3805,8 @@ def card_unidades(id=None):
             if not unidade: unidade = UnidadeMedida()
             unidade.sigla = sigla.upper()
             unidade.nome_extenso = request.form.get('nome_extenso')
-            unidade.decimais = int(request.form.get('decimais', 0))
+            _decimais = request.form.get('decimais', '').strip()
+            unidade.decimais = int(_decimais) if _decimais.isdigit() else 0
             unidade.permite_fracionamento = request.form.get('fracionamento') == 'SIM'
             db.session.add(unidade)
             db.session.commit()
@@ -3906,7 +3843,8 @@ def card_etiquetas(id=None):
             if not etiqueta: etiqueta = Etiqueta()
             etiqueta.label = label
             etiqueta.cor_hex = request.form.get('cor_hex')
-            etiqueta.prioridade = int(request.form.get('prioridade', 1))
+            _prioridade = request.form.get('prioridade', '').strip()
+            etiqueta.prioridade = int(_prioridade) if _prioridade.isdigit() else 1
             
             # Lógica de Foto/Ícone Etiqueta
             if 'foto_etiqueta' in request.files:
@@ -4085,7 +4023,7 @@ def card_materiaprima(id=None):
                     import os
                     from werkzeug.utils import secure_filename
                     filename = secure_filename(f"mp_{mp.id}_{file.filename}")
-                    upload_path = os.path.join('app', 'static', 'uploads', 'materiaprima')
+                    upload_path = os.path.join(current_app.static_folder, 'uploads', 'materiaprima')
                     os.makedirs(upload_path, exist_ok=True)
                     file.save(os.path.join(upload_path, filename))
                     mp.foto = filename
@@ -4687,8 +4625,11 @@ def cadastrar_departamento():
 @cadastros_bp.route('/cargos/novo', methods=['POST'])
 @login_required
 def cadastrar_cargo():
+    from app.models.cadastros.funcionario import CboOcupacao
+
     nome = request.form.get('nome')
     cbo = request.form.get('cbo')
+    cbo_id = request.form.get('cbo_id', type=int)
     
     if not nome:
         return jsonify({'error': 'Nome é obrigatório'}), 400
@@ -4706,13 +4647,39 @@ def cadastrar_cargo():
         c = Cargo.query.get(edit_id)
         if c:
             c.nome = nome
-            c.cbo = cbo
+            c.cbo_id = cbo_id or None
+            c.cbo = CboOcupacao.query.get(cbo_id).codigo if cbo_id and CboOcupacao.query.get(cbo_id) else cbo
     else:
-        c = Cargo(nome=nome, cbo=cbo, codigo=codigo)
+        cbo_item = CboOcupacao.query.get(cbo_id) if cbo_id else None
+        c = Cargo(nome=nome, cbo=cbo_item.codigo if cbo_item else cbo, cbo_id=cbo_id, codigo=codigo)
         db.session.add(c)
         
     db.session.commit()
     return jsonify({'success': True, 'codigo': codigo})
+
+@cadastros_bp.route('/cbo/pesquisar')
+@login_required
+def pesquisar_cbo():
+    from app.models.cadastros.funcionario import CboOcupacao
+
+    termo = request.args.get('q', '').strip()
+    if len(termo) < 2:
+        return jsonify([])
+
+    termo_like = f'%{termo}%'
+    resultados = CboOcupacao.query.filter(
+        CboOcupacao.ativo.is_(True),
+        or_(
+            CboOcupacao.codigo.ilike(termo_like),
+            CboOcupacao.titulo.ilike(termo_like),
+            CboOcupacao.sinonimos.ilike(termo_like),
+        )
+    ).order_by(CboOcupacao.titulo).limit(20).all()
+
+    return jsonify([
+        {'id': item.id, 'codigo': item.codigo, 'titulo': item.titulo}
+        for item in resultados
+    ])
 
 @cadastros_bp.route('/cargos/excluir/<int:id>')
 @login_required

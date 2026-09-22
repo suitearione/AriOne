@@ -3,6 +3,8 @@
 {% block content %}
 <div class="fp-wrap mod-subcategorias" id="ctx-sub-main">
     <style>
+        .mod-subcategorias [style*="#2ECC71"] { color: #06B6D4 !important; border-color: #06B6D4 !important; }
+        .mod-subcategorias [style*="background: #2ECC71"], .mod-subcategorias [style*="background:#2ECC71"] { background: #06B6D4 !important; }
         .arione-page { padding: 0 !important; }
         .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
     </style>
@@ -20,7 +22,8 @@
             onclick_save="salvarSubRapido()",
             onclick_search="document.getElementById('sub-search-input').focus()",
             aba_retorno='catalogos',
-            cor_tema='#2ECC71'
+            func_fechar="window.location.href='/cadastros/?aba=catalogos'",
+            cor_tema='#06B6D4'
         ) }}
     </div>
 

@@ -1,0 +1,36 @@
+<div class="card-deploy-branches" style="padding: 18px; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color:#fff;">
+                <i class="fas fa-code-branch"></i>
+            </div>
+            <div>
+                <div style="font-size:10px; font-weight:800; letter-spacing:1.2px; color:#64748b; text-transform:uppercase;">Git</div>
+                <h3 style="margin: 3px 0 0; font-size: 1.1rem; font-weight: 800; color:#1e293b;">Branches do Deploy</h3>
+            </div>
+        </div>
+        <span style="display:inline-flex; align-items:center; justify-content:center; padding:7px 12px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px;">
+            {{ branches|length }} branch(es)
+        </span>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+        {% for branch in branches %}
+        <div style="border:1px solid #e2e8f0; border-radius:12px; padding:16px; background:#f8fafc;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px;">
+                <strong style="color:#1e293b; font-size:1rem;">{{ branch.nome }}</strong>
+                <span style="padding:6px 10px; background:#dbeafe; color:#1d4ed8; border-radius:999px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.8px;">
+                    {{ 'Desenvolvimento' if branch.nome == 'develop' else 'Produção' }}
+                </span>
+            </div>
+
+            <p style="margin: 0 0 12px; color:#475569; font-size:12px; line-height:1.6;">{{ branch.desc }}</p>
+
+            <div style="display:grid; gap:8px; color:#475569; font-size:12px; line-height:1.5;">
+                <div><strong>URL:</strong> <a href="{{ branch.url }}" target="_blank" rel="noopener" style="color:#2563eb; text-decoration:none;">{{ branch.url }}</a></div>
+                <div><strong>Comando:</strong> <code style="background:#e2e8f0; color:#0f172a; border-radius:6px; padding:4px 6px; font-size:11px;">{{ branch.acao }}</code></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

@@ -4,6 +4,11 @@ Função : Bloco de Identificação e Dados Básicos (Parte 1 do Formulário)
 ============================================================================= #}
 
 <style>
+  .mod-produto .fe-info-icon,
+  .mod-produto .arione-info-icon { color: #94a3b8 !important; font-size: 10px; transition: color .18s ease; }
+  .mod-produto .fe-info-icon:hover,
+  .mod-produto .arione-info-icon:hover { color: #64748b !important; }
+
   #hero-photo-preview:hover {
     border-color: var(--pri) !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -209,7 +214,7 @@ Função : Bloco de Identificação e Dados Básicos (Parte 1 do Formulário)
             </div>
             <div class="fp-group fp-flex-1">
               <label class="fp-label">Gerar Cód. Interno
-                <i class="fas fa-question-circle arione-info-icon" style="cursor:pointer; color: var(--pri); margin-left: 5px;" 
+                <i class="fas fa-question-circle arione-info-icon" title="Como o código interno é gerado" style="cursor:pointer; margin-left: 5px;"
                    onclick="const box = document.getElementById('guide-regra'); box.style.display = box.style.display === 'none' ? 'block' : 'none';"></i>
               </label>
               <select class="fp-input fp-track" name="regra_cod_interno" onchange="gerarCodInternoRegra()" {% if produto and not produto.ativo
@@ -221,7 +226,7 @@ Função : Bloco de Identificação e Dados Básicos (Parte 1 do Formulário)
                 <option value="fornecedor" {% if produto and produto.regra_cod_interno=='fornecedor' %}selected{% endif
                   %}>Código do Fornecedor</option>
               </select>
-              <div id="guide-regra" style="display: none; background: rgba(122, 37, 95, 0.05); border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
+              <div id="guide-regra" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
                 <strong>Automático:</strong> O sistema gera sozinho.<br>
                 <strong>Livre:</strong> Você digita o código desejado.<br>
                 <strong>Fornecedor:</strong> Prefixo + Cód. do Parceiro.
@@ -230,13 +235,13 @@ Função : Bloco de Identificação e Dados Básicos (Parte 1 do Formulário)
 
             <div class="fp-group fp-flex-1">
               <label class="fp-label" style="justify-content:space-between;">Código Interno (Controle)
-                <i class="fas fa-question-circle arione-info-icon" style="cursor:pointer; color: var(--pri); margin-left: 5px;" 
+                <i class="fas fa-question-circle arione-info-icon" title="Formato do código interno" style="cursor:pointer; margin-left: 5px;"
                    onclick="const box = document.getElementById('guide-formato'); box.style.display = box.style.display === 'none' ? 'block' : 'none';"></i>
               </label>
               <input class="fp-input fp-track" type="text" name="cod_interno" id="campo-cod-interno"
                 value="{{ produto.cod_interno if produto else '' }}" placeholder="Automático" 
                 oninput="syncSkuPai(this.value)">
-              <div id="guide-formato" style="display: none; background: rgba(122, 37, 95, 0.05); border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
+              <div id="guide-formato" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
                 <strong>FP-:</strong> Fabricação Própria.<br>
                 <strong>AF-:</strong> Produto Adquirido.<br>
                 DNA: Prefixo + Iniciais MP + Cat + Sequencial.
@@ -245,13 +250,13 @@ Função : Bloco de Identificação e Dados Básicos (Parte 1 do Formulário)
 
             <div class="fp-group fp-flex-1">
               <label class="fp-label">SKU PAI
-                <i class="fas fa-question-circle arione-info-icon" style="cursor:pointer; color: var(--pri); margin-left: 5px;" 
+                <i class="fas fa-question-circle arione-info-icon" title="Este campo acompanha o Código Interno" style="cursor:pointer; margin-left: 5px;"
                    onclick="const box = document.getElementById('guide-espelho'); box.style.display = box.style.display === 'none' ? 'block' : 'none';"></i>
               </label>
               <input class="fp-input fp-track" type="text" name="referencia" id="campo-referencia"
                 value="{{ produto.referencia if produto else '' }}" placeholder="Automático" readonly tabindex="-1"
                 style="background:#f8fafc; cursor:not-allowed;">
-              <div id="guide-espelho" style="display: none; background: rgba(122, 37, 95, 0.05); border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
+              <div id="guide-espelho" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-top: 5px; font-size: 9px; color: #64748b; line-height: 1.2; animation: feFadeIn 0.3s ease;">
                 <strong>Espelhamento Digital:</strong> Este campo é um reflexo fiel do Código Interno para manter a integridade do catálogo.
               </div>
             </div>
@@ -380,20 +385,20 @@ Função : Bloco de Identificação e Dados Básicos (Parte 1 do Formulário)
               <label class="fp-label">Comprimento (cm)
                 {{ comp.info_icon("Dimensão para cálculo de cubagem no transporte.") }}
               </label>
-              <input class="fp-input" type="number" name="dim_comprimento" step="0.1" min="0"
-                value="{{ produto.dim_comprimento if produto else '' }}" placeholder="0,0" {% if produto and not
+              <input class="fp-input" type="number" name="dim_comprimento" step="0.001" min="0"
+                value="{{ produto.dim_comprimento if produto else '' }}" placeholder="0,000" {% if produto and not
                 produto.ativo %}disabled{% endif %}>
             </div>
             <div class="fp-group fp-flex-1">
               <label class="fp-label">Largura (cm)</label>
-              <input class="fp-input" type="number" name="dim_largura" step="0.1" min="0"
-                value="{{ produto.dim_largura if produto else '' }}" placeholder="0,0" {% if produto and not
+              <input class="fp-input" type="number" name="dim_largura" step="0.001" min="0"
+                value="{{ produto.dim_largura if produto else '' }}" placeholder="0,000" {% if produto and not
                 produto.ativo %}disabled{% endif %}>
             </div>
             <div class="fp-group fp-flex-1">
               <label class="fp-label">Altura (cm)</label>
-              <input class="fp-input" type="number" name="dim_altura" step="0.1" min="0"
-                value="{{ produto.dim_altura if produto else '' }}" placeholder="0,0" {% if produto and not
+              <input class="fp-input" type="number" name="dim_altura" step="0.001" min="0"
+                value="{{ produto.dim_altura if produto else '' }}" placeholder="0,000" {% if produto and not
                 produto.ativo %}disabled{% endif %}>
             </div>
           </div>

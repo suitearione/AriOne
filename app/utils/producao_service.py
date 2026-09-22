@@ -1,5 +1,5 @@
 from app import db
-from models.estoque import Produto, MovimentacaoEstoque, OrdemProducao, ItemOrdemProducao
+from app.utils.estoque import Produto, MovimentacaoEstoque, OrdemProducao, ItemOrdemProducao
 from app.models.catalogos import ProdutoComposicao
 from decimal import Decimal, ROUND_HALF_UP
 

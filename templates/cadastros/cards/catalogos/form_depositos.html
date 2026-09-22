@@ -101,7 +101,7 @@
                         </div>
                     </div>
                     <div class="fp-footer-actions" style="background: #f8fafc; padding: 12px 20px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #f1f5f9;">
-                        <button type="button" class="fp-btn-salvar" id="btn-salvar-dep" onclick="forceSubmitDeposito()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
+                        <button type="button" class="fp-btn-salvar" id="btn-salvar-dep" onclick="salvarDeposito()" style="background: #E67E22; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; font-size: 12px; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(230,126,34,0.2);">
                             <i class="fas fa-save"></i> SALVAR DEPÓSITO
                         </button>
                     </div>
@@ -214,12 +214,30 @@
             window.salvarDeposito = async function() {
                 const form = document.getElementById('dep-form');
                 if(!form.checkValidity()) { form.reportValidity(); return; }
-                const btn = document.getElementById('btn-salvar-dep-form-area');
-                btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+
+                const btn = document.getElementById('btn-salvar-dep') || document.getElementById('btn-salvar-dep-form-area');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO...';
+                }
+
                 try {
                     const r = await fetch(form.action, { method:'POST', body:new FormData(form), headers:{'X-Requested-With':'XMLHttpRequest'} });
                     if(r.ok) { arioneToast('Depósito salvo!', 'success'); setTimeout(() => location.reload(), 600); }
-                } catch(e) { arioneToast('Erro.', 'danger'); }
+                    else {
+                        const text = await r.text();
+                        console.error('Erro ao salvar depósito:', text);
+                        arioneToast('Erro ao salvar depósito.', 'danger');
+                    }
+                } catch(e) {
+                    console.error('Falha no fetch do depósito:', e);
+                    arioneToast('Erro.', 'danger');
+                } finally {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-save"></i> SALVAR DEPÓSITO';
+                    }
+                }
             };
 
             window.filtrarDepositos = function() {

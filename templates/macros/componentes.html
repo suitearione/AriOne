@@ -2,7 +2,7 @@ rquivo .md é so para instruções.
 {% macro cabecalho_modulo_arione(titulo, subtitulo, icone='fa-cog', cor_tema='#fff', onclick_relatorio='', blueprint='')
 %}
 <div class="fe-header"
-    style="background: linear-gradient(90deg, #7A255F 0%, #a63282 50%, #7A255F 100%); margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: {{ cor_tema }}; box-shadow: 0 4px 15px rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.05);">
+    style="background: linear-gradient(90deg, #0891B2 0%, #06B6D4 50%, #0891B2 100%); margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 10px 25px; color: {{ cor_tema }}; box-shadow: 0 4px 15px rgba(8,145,178,0.18); border-bottom: 1px solid rgba(255,255,255,0.05);">
     <div style="display: flex; align-items: center; gap: 14px;">
         <div
             style="width: 36px; height: 36px; background: rgba(0,0,0,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: {{ cor_tema }}; border: 1px solid rgba(255,255,255,0.05);">
@@ -40,7 +40,7 @@ rquivo .md é so para instruções.
 {% macro cabecalho_mestre_arione(titulo, subtitulo, icone='fa-cog', form_id='', onclick_save='', onclick_novo='',
 onclick_clonar='', onclick_search='', onclick_filter='', onclick_export='', onclick_import='', onclick_print='',
 onclick_email='', onclick_whatsapp='', onclick_list='', list_id='', rota_novo='', sub_key='', tela='',
-cor_tema='#7A255F', entidade='', func_fechar='', aba_retorno='', blueprint_retorno='cadastros', status='', ajuda='',
+cor_tema='#0891B2', entidade='', func_fechar='', aba_retorno='', blueprint_retorno='cadastros', status='', ajuda='',
 tamanho='grande') %}
 {# ── CONTAINER STICKY EXTERNO (PAAv1 §12-B) ── #}
 <div class="fe-header-mestre-container"
@@ -53,8 +53,8 @@ tamanho='grande') %}
 
         {# 💎 CORPO DO CABEÇALHO (PURPLE ARI-ONE GRADIENT PAAv1 §5-D) 💎 #}
         <div class="fe-header-mestre" data-form-id="{{ form_id }}"
-            style="background: linear-gradient(90deg, #7A255F 0%, #a63282 50%, #7A255F 100%) !important; 
-                    border-radius: 12px 12px 0 0; box-shadow: 0 10px 30px rgba(0,0,0,0.12); 
+                    style="background: linear-gradient(90deg, #0891B2 0%, #06B6D4 50%, #0891B2 100%) !important;
+                        border-radius: 12px 12px 0 0; box-shadow: 0 10px 30px rgba(8,145,178,0.16);
                     padding: 7px 25px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.08); border-bottom: none;">
 
             {# LADO ESQUERDO: TÍTULO E NAVEGAÇÃO #}
@@ -187,7 +187,7 @@ tamanho='grande') %}
 
         {# 🌈 ACCENT BAR (MODULE IDENTIFICATION §12-B) 🌈 #}
         <div class="fe-header-accent-bar"
-            style="height: 4px; width: 100%; background: {{ cor_tema }}; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            style="height: 4px; width: 100%; background: #06B6D4; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(8,145,178,0.12);">
         </div>
 
     </div>
@@ -275,12 +275,12 @@ tamanho='grande') %}
     }
 
     .arione-header-dropdown-item:hover {
-        background: #fdf2f8;
-        color: #7A255F;
+        background: #E6F9FC;
+        color: #0891B2;
     }
 
     .arione-header-dropdown-item:hover i {
-        color: #7A255F;
+        color: #0891B2;
     }
 </style>
 
@@ -1128,7 +1128,7 @@ tamanho='grande') %}
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #7A255F;
+            color: #0891B2;
         font-size: 11px;
         box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
         z-index: 9999;
@@ -1461,7 +1461,7 @@ document.addEventListener('DOMContentLoaded', () => {
 {% endwith %}
 {% endmacro %}
 
-{% macro cabecalho_simples_arione(titulo, subtitulo, icone='fa-cog', form_id='', onclick_save='', cor_tema='#7A255F',
+{% macro cabecalho_simples_arione(titulo, subtitulo, icone='fa-cog', form_id='', onclick_save='', cor_tema='#0891B2',
 func_fechar='') %}
 <div class="fe-header fe-header-simples" data-form-id="{{ form_id }}"
     style="position: sticky; top: 0; z-index: 1000; background: linear-gradient(135deg, {{ cor_tema }} 0%, {{ cor_tema }}cc 100%); 
@@ -1516,7 +1516,7 @@ func_fechar='') %}
     style="margin-top: 80px; padding: 40px 0; text-align: center; border-top: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; clear: both;">
     <p
         style="font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 600; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; margin: 0;">
-        © 2026 <span style="font-weight: 900; color: #7A255F; letter-spacing: 0;">Ari<span
+        © 2026 <span style="font-weight: 900; color: #0891B2; letter-spacing: 0;">Ari<span
                 style="color:#1e293b">One</span></span> Operational Suite • <span
             style="font-style: italic; opacity: 0.7;">All Rights Reserved</span>
     </p>

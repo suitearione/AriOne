@@ -43,7 +43,7 @@
 .arione-field select:focus,
 .arione-field textarea:focus {
     outline: none;
-    border-color: #7A255F;
+    border-color: #0891B2;
     box-shadow: 0 0 0 2px rgba(122, 37, 95, 0.12);
 }
 
@@ -73,9 +73,9 @@
 .arione-section-title {
     font-size: 12px;
     font-weight: 800;
-    color: #7A255F;
+    color: #0891B2;
     text-transform: uppercase;
-    border-bottom: 2px solid #7A255F;
+    border-bottom: 2px solid #0891B2;
     padding-bottom: 6px;
     margin: 30px 0 20px;
 }
@@ -106,7 +106,7 @@
 }
 
 .arione-tab-btn.active {
-    background: #7A255F;
+    background: #0891B2;
     color: #fff;
 }
 
@@ -144,7 +144,7 @@
 }
 
 .arione-btn.primary {
-    background: #7A255F;
+    background: #0891B2;
     color: #fff;
 }
 

@@ -58,9 +58,13 @@
                         <label class="fe-label">Nome do Cargo <span style="color:#e74c3c;">*</span> {{ info_icon('Nome da função ou cargo exercido.') }}</label>
                         <input class="fe-input" type="text" name="nome" id="cargo_nome" value="{{ cargo.nome if cargo else '' }}" placeholder="Ex: Diretor, Gerente, Analista" required onblur="checkDuplicateField(this, 'Cargo', 'nome')">
                     </div>
-                    <div class="fe-group">
+                    <div class="fe-group" style="position:relative;">
                         <label class="fe-label">CBO (Opcional)</label>
-                        <input class="fe-input" type="text" name="cbo" value="{{ cargo.cbo if cargo else '' }}" placeholder="0000-00">
+                        <input type="hidden" name="cbo_id" id="cargo_cbo_id" value="{{ cargo.cbo_id if cargo and cargo.cbo_id else '' }}">
+                        <input class="fe-input" type="text" id="cargo_cbo_busca" name="cbo" autocomplete="off"
+                               value="{{ (cargo.cbo_ocupacao.codigo ~ ' - ' ~ cargo.cbo_ocupacao.titulo) if cargo and cargo.cbo_ocupacao else (cargo.cbo if cargo else '') }}"
+                               placeholder="Pesquise código ou ocupação">
+                        <div id="cbo-sugestoes" style="display:none; position:absolute; z-index:20; left:0; right:0; top:100%; max-height:240px; overflow-y:auto; background:#fff; border:1px solid #dbe4ef; border-radius:0 0 8px 8px; box-shadow:0 8px 20px rgba(15,23,42,.12);"></div>
                     </div>
                 </div>
                 <div class="fe-row" style="justify-content: flex-end; margin-top: 10px;">
@@ -156,6 +160,44 @@ async function submeterCargo() {
         }
     }
 }
+
+const campoCbo = document.getElementById('cargo_cbo_busca');
+const campoCboId = document.getElementById('cargo_cbo_id');
+const listaCbo = document.getElementById('cbo-sugestoes');
+let timerCbo;
+
+if (campoCbo) {
+    campoCbo.addEventListener('input', () => {
+        campoCboId.value = '';
+        clearTimeout(timerCbo);
+        const termo = campoCbo.value.trim();
+        if (termo.length < 2) {
+            listaCbo.style.display = 'none';
+            return;
+        }
+        timerCbo = setTimeout(async () => {
+            const response = await fetch('/cadastros/cbo/pesquisar?q=' + encodeURIComponent(termo));
+            const itens = await response.json();
+            listaCbo.innerHTML = itens.length ? itens.map(item => `
+                <button type="button" data-id="${item.id}" data-valor="${item.codigo} - ${item.titulo}"
+                        style="display:block; width:100%; padding:9px 12px; text-align:left; border:0; border-bottom:1px solid #f1f5f9; background:#fff; cursor:pointer;">
+                    <strong>${item.codigo}</strong> <span>${item.titulo}</span>
+                </button>`).join('') : '<div style="padding:10px; color:#64748b;">Nenhuma ocupação encontrada.</div>';
+            listaCbo.style.display = 'block';
+            listaCbo.querySelectorAll('button').forEach(botao => botao.addEventListener('click', () => {
+                campoCboId.value = botao.dataset.id;
+                campoCbo.value = botao.dataset.valor;
+                listaCbo.style.display = 'none';
+            }));
+        }, 250);
+    });
+}
+
+document.addEventListener('click', event => {
+    if (listaCbo && !listaCbo.contains(event.target) && event.target !== campoCbo) {
+        listaCbo.style.display = 'none';
+    }
+});
 
 async function confirmarExcluirCargo(id, nome) {
     if(!confirm('Deseja realmente excluir o cargo "' + nome + '"?')) return;

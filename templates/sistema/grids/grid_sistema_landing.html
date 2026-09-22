@@ -320,7 +320,6 @@
             </div>
 
             <!-- VERSÕES -->
-            {% if is_ari_dev %}
             <div class="ge-card ge-card-premium" 
                  onclick="window.location.href='{{ url_for('sistema.versoes') }}'" 
                  style="--card-cor:#E67E22; 
@@ -373,10 +372,8 @@
                             border-radius: 10px; 
                             transition: 0.3s;"></div>
             </div>
-            {% endif %}
 
             <!-- SEGURANÇA -->
-            {% if is_ari_dev %}
             <div class="ge-card ge-card-premium" 
                  onclick="window.location.href='{{ url_for('sistema.seguranca') }}'" 
                  style="--card-cor:#C0392B; 
@@ -429,7 +426,6 @@
                             border-radius: 10px; 
                             transition: 0.3s;"></div>
             </div>
-            {% endif %}
 
         </div>
 
@@ -540,7 +536,6 @@
             </div>
 
             <!-- ROADMAP -->
-            {% if is_ari_dev %}
             <div class="ge-card ge-card-premium" 
                  onclick="window.abrirModalSobre('roadmap')" 
                  style="--card-cor:#2980B9; 
@@ -593,10 +588,8 @@
                             border-radius: 10px; 
                             transition: 0.3s;"></div>
             </div>
-            {% endif %}
 
             <!-- CARD: PARCEIROS (SINCRONIZADO) -->
-            {% if is_ari_dev %}
             <div class="ge-card" 
                  onclick="abrirModalSobre('parceiros')" 
                  style="--card-cor:#5E193E; 
@@ -636,7 +629,6 @@
                             border-radius: 10px; 
                             transition: 0.3s;"></div>
             </div>
-            {% endif %}
 
         </div>
 

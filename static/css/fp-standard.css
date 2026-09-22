@@ -5,16 +5,16 @@
    ============================================================================= */
 
 :root {
-  --pri: #7A255F; /* Roxo AriOne - Cadastros */
-  --pri-l: #9B59B6;
-  --pri-bg: #f9f5f8;
+  --pri: #0891B2;
+  --pri-l: #06B6D4;
+  --pri-bg: #E6F9FC;
   --bg: #f4f6f9;
   --card: #fff;
   --border: #e2e8f0;
   --text: #2d3748;
   --muted: #718096;
   --radius: 12px;
-  --shadow: 0 10px 30px rgba(122, 37, 95, 0.1);
+  --shadow: 0 10px 30px rgba(8, 145, 178, 0.1);
   --tr: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -26,7 +26,7 @@
 
 /* ── HEADER GOLDEN ── */
 .fp-header {
-  background: linear-gradient(135deg, var(--pri), var(--pri-d, #4A1539));
+  background: linear-gradient(135deg, var(--pri), var(--pri-d, #075985));
   padding: 16px 22px;
   border-radius: var(--radius) var(--radius) 0 0;
   display: flex;
@@ -441,7 +441,7 @@
 .mod-etiquetas { --pri: #8E44AD; --pri-d: #71368A; --pri-bg: #f8f4fb; --shadow: 0 10px 30px rgba(142, 68, 173, 0.1); }
 .mod-materiaprima { --pri: #C0392B; --pri-d: #922B21; --pri-bg: #fdf4f3; --shadow: 0 10px 30px rgba(192, 57, 43, 0.1); }
 .mod-unidades { --pri: #2980B9; --pri-d: #21618C; --pri-bg: #f4f9fd; --shadow: 0 10px 30px rgba(41, 128, 185, 0.1); }
-.mod-produto { --pri: #7A255F; --pri-d: #4A1539; --pri-bg: #f9f5f8; }
+.mod-produto { --pri: #0891B2; --pri-d: #075985; --pri-bg: #E6F9FC; }
 
 /* ── SELO GOLDEN ── */
 .fp-golden-seal {
@@ -449,7 +449,7 @@
   align-items: center;
   gap: 5px;
   background: linear-gradient(135deg, #FFD700, #FFA500);
-  color: #7A255F;
+  color: #0891B2;
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 9px;

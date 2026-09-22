@@ -29,19 +29,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --pri: #7A255F;
-            --pri-d: #4A154B;
-            --pri-l: #913a76;
-            --bg: #f4f6f9;
-            --text: #2d3748;
-            --border: #e2e8f0;
+            --pri: #0891B2;
+            --pri-d: #075985;
+            --pri-l: #06B6D4;
+            --bg: #E6F9FC;
+            --text: #183b56;
+            --border: #cbeaf0;
             --btn: linear-gradient(135deg, var(--pri), var(--pri-d));
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html {
             width: 100%; min-height: 100vh;
             display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #e0e6ed 0%, #f4f6f9 100%);
+            background: #E6F9FC;
             font-family: 'Inter', 'Segoe UI', sans-serif;
             overflow-x: hidden; overflow-y: auto;
         }
@@ -51,14 +51,14 @@
             margin: 0 auto;
             background: #fff; border-radius: 12px;
             display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 18px 42px rgba(8,145,178,0.12); border: 1px solid var(--border);
         }
         .arione-bar {
             width: 100%; height: 60px;
             background: var(--btn);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 25px; color: #fff; flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(122,37,95,0.2);
+            box-shadow: 0 4px 10px rgba(8,145,178,0.18);
             z-index: 10;
         }
         .content-area { display: flex; flex: 1; overflow: hidden; min-height: 0; }
@@ -68,7 +68,7 @@
             position: relative; overflow-y: auto; overflow-x: hidden; background: #ffffff;
         }
         .art-side {
-            flex: 1; background: linear-gradient(135deg, #fafbfc 0%, #f1f4f8 100%);
+            flex: 1; background: #f8fdfe;
             border-left: 1px solid var(--border);
             display: flex; align-items: center; justify-content: center; position: relative;
         }
@@ -211,7 +211,7 @@
             }
         }
         .chip-icon { font-size: 320px; color: var(--pri); opacity: 0.03; position: absolute; transform: scale(1.2); }
-        .lock-icon { position: absolute; font-size: 110px; color: var(--pri); opacity: 0.8; filter: drop-shadow(0 10px 15px rgba(122,37,95,0.2)); transition: all 0.4s ease; }
+        .lock-icon { position: absolute; font-size: 110px; color: var(--pri); opacity: 0.8; filter: drop-shadow(0 10px 15px rgba(8,145,178,0.16)); transition: all 0.4s ease; }
         .painel { width: 100%; max-width: 320px; position: absolute; transition: all 0.4s ease; }
         .painel.ativo   { opacity: 1; transform: translateX(0);    pointer-events: all; }
         .painel.inativo { opacity: 0; transform: translateX(-40px); pointer-events: none; }
@@ -223,28 +223,28 @@
             border: 1.5px solid var(--border); border-radius: 8px; font-size: 1rem; color: var(--text);
             background: #fcfcfc; transition: all 0.3s ease;
         }
-        .input-field:focus { outline: none; border-color: var(--pri); background: #fff; box-shadow: 0 0 0 4px rgba(122,37,95,0.08); }
+        .input-field:focus { outline: none; border-color: var(--pri); background: #fff; box-shadow: 0 0 0 4px rgba(6,182,212,0.14); }
         .empresa-select {
             width: 100%; padding: 15px 16px; margin-bottom: 16px;
             border: 1.5px solid var(--border); border-radius: 8px; font-size: 1rem; color: var(--text);
             background: #fcfcfc; cursor: pointer; transition: all 0.3s ease;
         }
-        .empresa-select:focus { outline: none; border-color: var(--pri); box-shadow: 0 0 0 4px rgba(122,37,95,0.08); }
+        .empresa-select:focus { outline: none; border-color: var(--pri); box-shadow: 0 0 0 4px rgba(6,182,212,0.14); }
         .btn-submit {
             width: 100%; padding: 16px; border: none; border-radius: 8px;
             background: var(--btn);
             color: #fff; font-weight: 700; font-size: 0.95rem;
             text-transform: uppercase; cursor: pointer; letter-spacing: 1px;
-            box-shadow: 0 6px 15px rgba(122,37,95,0.25); transition: all 0.3s ease;
+            box-shadow: 0 6px 15px rgba(8,145,178,0.20); transition: all 0.3s ease;
         }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(122,37,95,0.35); }
-        .btn-submit:active { transform: translateY(0); box-shadow: 0 4px 10px rgba(122,37,95,0.2); }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(8,145,178,0.24); }
+        .btn-submit:active { transform: translateY(0); box-shadow: 0 4px 10px rgba(8,145,178,0.16); }
         .btn-voltar {
             background: none; border: none; color: #888; font-size: 0.9rem; font-weight: 600;
             cursor: pointer; margin-top: 14px; display: flex; align-items: center; justify-content: center;
             gap: 6px; padding: 10px; width: 100%; transition: all 0.2s; border-radius: 8px;
         }
-        .btn-voltar:hover { background: #f4f6f9; color: var(--pri); }
+        .btn-voltar:hover { background: var(--bg); color: var(--pri); }
         .flash-msg {
             width: 100%; padding: 12px 14px; border-radius: 8px;
             margin-bottom: 16px; font-size: 0.9rem; font-weight: 600; text-align: center;
@@ -254,8 +254,8 @@
         .flash-warning { background: #fffbeb; color: #744210; border: 1px solid #fbd38d; }
         .user-badge {
             display: flex; align-items: center; gap: 10px;
-            background: #fbf5fc; border-radius: 8px; padding: 12px 16px;
-            margin-bottom: 20px; border: 1px solid #eedbf2;
+            background: var(--bg); border-radius: 8px; padding: 12px 16px;
+            margin-bottom: 20px; border: 1px solid var(--border);
         }
         .user-badge i { color: var(--pri); font-size: 20px; }
         .user-badge span { font-size: 0.95rem; font-weight: 700; color: var(--pri-d); }
@@ -278,7 +278,11 @@
 <div class="login-container">
 
     <div class="arione-bar">
-        <span style="font-weight:900;font-size:1.6rem;">AriOne</span>
+        <span style="display:flex;align-items:center;">
+            <img src="{{ url_for('static', filename='img/logoAriOne.png') }}?v=2"
+                 alt="AriOne"
+                 style="width:92px;height:42px;object-fit:contain;">
+        </span>
         <span style="font-size:0.9rem;font-weight:900;">Único, tudo em um.</span>
     </div>
 
@@ -296,10 +300,10 @@
                     {% endfor %}
                 {% endwith %}
 
-                <form id="form-credenciais">
-                    <input type="email" id="email" name="email" class="input-field" placeholder="E-mail" required>
+                <form id="form-credenciais" novalidate>
+                    <input type="email" id="email" name="email" class="input-field" placeholder="E-mail" autocomplete="username" required>
                     <div class="senha-wrapper">
-                        <input type="password" id="senha" name="senha" class="input-field" placeholder="Senha" required style="padding-right:45px; margin-bottom:14px;">
+                        <input type="password" id="senha" name="senha" class="input-field" placeholder="Senha" autocomplete="current-password" required style="padding-right:45px; margin-bottom:14px;">
                         <button type="button" class="btn-olho" id="btn-olho">
                             <i class="fas fa-eye" id="olho-icon"></i>
                         </button>
@@ -308,6 +312,7 @@
                     <button type="submit" class="btn-submit">
                         <i class="fas fa-arrow-right"></i> Continuar
                     </button>
+                    <a href="{{ url_for('auth.esqueci_senha') }}" style="display:block; margin-top:14px; text-align:center; color:var(--pri); font-size:0.85rem; font-weight:700; text-decoration:none;">Esqueci minha senha</a>
                 </form>
             </div>
 
@@ -377,23 +382,42 @@
         const email = document.getElementById('email').value;
         const senha = document.getElementById('senha').value;
         const erroDiv = document.getElementById('erro-credenciais');
+        const botao = this.querySelector('button[type="submit"]');
 
-        const resp = await fetch('{{ url_for("auth.validar_credenciais") }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, senha })
-        });
-
-        const data = await resp.json();
-
-        if (data.ok) {
-            document.getElementById('badge-email').textContent = email;
-            document.getElementById('hidden-email').value = email;
-            document.getElementById('hidden-senha').value = senha;
-            erroDiv.style.display = 'none';
-            irParaEmpresa();
-        } else {
+        erroDiv.style.display = 'none';
+        if (!email.trim() || !senha) {
+            erroDiv.textContent = 'Informe o e-mail e a senha.';
             erroDiv.style.display = 'block';
+            return;
+        }
+
+        botao.disabled = true;
+        botao.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VALIDANDO...';
+
+        try {
+            const resp = await fetch('{{ url_for("auth.validar_credenciais") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ email, senha })
+            });
+
+            const data = await resp.json();
+
+            if (resp.ok && data.ok) {
+                document.getElementById('badge-email').textContent = email;
+                document.getElementById('hidden-email').value = email;
+                document.getElementById('hidden-senha').value = senha;
+                irParaEmpresa();
+            } else {
+                erroDiv.textContent = 'E-mail ou senha incorretos.';
+                erroDiv.style.display = 'block';
+            }
+        } catch (error) {
+            erroDiv.textContent = 'Não foi possível validar as credenciais. Verifique se o servidor está conectado.';
+            erroDiv.style.display = 'block';
+        } finally {
+            botao.disabled = false;
+            botao.innerHTML = '<i class="fas fa-arrow-right"></i> Continuar';
         }
     });
 

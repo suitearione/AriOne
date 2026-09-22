@@ -2,6 +2,8 @@
 {% block content %}
 <div class="fp-wrap mod-marcas" id="ctx-mar-{{ mar_id|default('new') }}">
     <style>
+        .mod-marcas [style*="#E67E22"] { color: #06B6D4 !important; border-color: #06B6D4 !important; }
+        .mod-marcas [style*="background: #E67E22"], .mod-marcas [style*="background:#E67E22"] { background: #06B6D4 !important; }
         .arione-page { padding: 0 !important; }
         .fp-wrap { height: auto !important; overflow: visible !important; padding: 0 !important; }
     </style>
@@ -13,7 +15,7 @@
             titulo='Branding & Marcas',
             subtitulo='Catálogos > Marcas e Fabricantes',
             icone='fa-trademark',
-            cor_tema='#E67E22',
+            cor_tema='#06B6D4',
             func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
             form_id='mar-form-area',
             onclick_novo='resetFormMarca()',

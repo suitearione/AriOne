@@ -40,12 +40,25 @@ Função  : Módulo de Abas Complementares (Preços, Fiscal, PDV, Imagens)
         
         <div id="box-custo-resale">
             <div class="fp-group">
-                <label class="fp-label">Custo de Aquisição (Nota)
-                    {{ comp.info_icon("Valor unitário pago ao fornecedor na última compra.") }}
+                <label class="fp-label">Custo de Compra
+                    {{ comp.info_icon("Valor de compra usado como base para os cálculos de preço e margem.") }}
                 </label>
-                <input class="fp-input fp-mask-money fp-track" type="text" name="preco_custo" id="preco_custo" 
-                       value="{{ '%.2f'|format(produto.preco_custo|float)|replace('.',',') if produto and produto.preco_custo else '0,00' }}" 
-                       style="font-size:18px; font-weight:800; color:#C0392B;" oninput="recalcPrecosCore()">
+                <input class="fp-input" type="number" name="custo_compra" id="custo_compra"
+                       value="{{ '%.2f'|format(produto.custo_compra|float) if produto and produto.custo_compra else '0.00' }}"
+                       min="0" step="0.01" inputmode="decimal" autocomplete="off"
+                       aria-label="Custo de Compra"
+                       style="font-size:18px; font-weight:800; color:#C0392B; cursor:text;"
+                       oninput="recalcPrecosCore()">
+            </div>
+
+            <div class="fp-group" style="margin-top:12px;">
+                <label class="fp-label">Custo de Aquisição (Nota)
+                    {{ comp.info_icon("Atualizado automaticamente com o valor unitário da última compra emitida.") }}
+                </label>
+                <input class="fp-input" type="number" id="preco_custo"
+                       value="{{ '%.2f'|format(produto.preco_custo|float) if produto and produto.preco_custo else '0.00' }}"
+                       readonly aria-readonly="true" tabindex="-1"
+                       style="background:#f8fafc; color:#64748b; cursor:not-allowed;">
             </div>
             
             <div class="fp-row" style="margin-top:10px;">
@@ -148,11 +161,25 @@ Função  : Módulo de Abas Complementares (Preços, Fiscal, PDV, Imagens)
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+            const custoNota = document.getElementById('preco_custo');
+            if (custoNota) {
+                    custoNota.removeAttribute('readonly');
+                    custoNota.removeAttribute('disabled');
+            }
+    });
+</script>
+
+<script>
   // ════ FUNÇÕES DE CÁLCULO ════
   function parseMoney(v) {
       if (!v) return 0;
       if (typeof v === 'number') return v;
-      return parseFloat(v.toString().replace(/\./g, '').replace(',', '.')) || 0;
+      const texto = v.toString().trim().replace(/R\$\s?/g, '');
+      if (texto.includes(',')) {
+          return parseFloat(texto.replace(/\./g, '').replace(',', '.')) || 0;
+      }
+      return parseFloat(texto) || 0;
   }
 
   function formatMoney(val) {
@@ -257,7 +284,11 @@ Função  : Módulo de Abas Complementares (Preços, Fiscal, PDV, Imagens)
               document.getElementById('custo-fab-display').textContent = 'R$ ' + custoBase.toFixed(2).replace('.', ',');
           }
       } else {
-          custoBase = parseMoney(document.getElementById('preco_custo')?.value || '0,00');
+          const custoCompra = document.getElementById('custo_compra');
+          const custoNota = document.getElementById('preco_custo');
+          custoBase = custoCompra && custoCompra.type === 'number'
+              ? Number(custoCompra.value || 0)
+              : parseMoney(custoCompra?.value || custoNota?.value || '0,00');
       }
 
       // 2. Adicionais de Compra (IPI/Frete)

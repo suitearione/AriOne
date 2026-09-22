@@ -5,6 +5,8 @@
 <div class="fe-wrap mod-categorias" style="background: #f4f7fa; min-height: 100vh; padding: 0 !important;">
 
     <style>
+        .mod-categorias [style*="#E67E22"] { color: #06B6D4 !important; border-color: #06B6D4 !important; }
+        .mod-categorias [style*="background: #E67E22"], .mod-categorias [style*="background:#E67E22"] { background: #06B6D4 !important; }
         /* 🛡️ PAAv1 §12-E: Blindagem de Topo */
         .arione-page { padding-top: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
         .fe-wrap { margin-top: 0 !important; }
@@ -13,6 +15,14 @@
         .fp-label { font-size: 10px !important; font-weight: 800 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: 0.5px; margin-bottom: 4px; display: block; }
         .fp-input { font-size: 12px !important; padding: 7px 10px !important; border: 1.5px solid #e2e8f0 !important; border-radius: 6px !important; }
         .fp-card-title { font-size: 13px !important; font-weight: 800 !important; }
+        .mod-categorias #btn-salvar-cat,
+        .mod-categorias #modal-sub-rapida button[onclick="salvarSubcategoriaRapida()"] { display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; background: #06B6D4 !important; color: #fff !important; border: 0 !important; box-shadow: 0 4px 12px rgba(8,145,178,.22) !important; }
+        .mod-categorias #btn-salvar-cat { min-width: 240px; }
+        .mod-categorias #btn-adicionar-sub { display: inline-flex; align-items: center; gap: 6px; background: #06B6D4 !important; color: #fff !important; border: 0 !important; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 8px rgba(8,145,178,.18); }
+        .mod-categorias #btn-adicionar-sub:hover { background: #0891b2 !important; }
+        .mod-categorias #modal-sub-rapida button[onclick="salvarSubcategoriaRapida()"] { width: 100%; }
+        .mod-categorias #btn-salvar-cat:hover,
+        .mod-categorias #modal-sub-rapida button[onclick="salvarSubcategoriaRapida()"]:hover { background: #0891b2 !important; }
         
         .cat-acc-header { transition: 0.2s; border-left: 4px solid transparent; }
         .cat-acc-header:hover { background: #f0f4f8; border-left-color: #E67E22; }
@@ -24,7 +34,7 @@
             titulo='Grupos & Categorias',
             subtitulo='Catálogos > Grupos e Categorias',
             icone='fa-layer-group',
-            cor_tema='#7A255F',
+            cor_tema='#06B6D4',
             func_fechar="window.location.href='" ~ url_for('cadastros.abas', aba='catalogos') ~ "'",
             form_id='cat-form-area',
             onclick_novo='resetFormCategoria()',
@@ -88,7 +98,7 @@
                         <div style="margin-top: 20px; border: 1px solid #f1f5f9; border-radius: 10px; overflow: hidden;">
                             <div style="background: #f8fafc; padding: 10px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase;"><i class="fas fa-sitemap"></i> Subcategorias Associadas</span>
-                                <button type="button" onclick="adicionarLinhaSubcategoria()" style="background: #E67E22; border:none; color:#fff; font-size: 10px; padding: 4px 12px; border-radius: 6px; font-weight: 800; cursor:pointer;"><i class="fas fa-plus"></i> ADICIONAR SUB</button>
+                                <button type="button" id="btn-adicionar-sub" onclick="adicionarLinhaSubcategoria()"><i class="fas fa-plus"></i> ADICIONAR SUBCATEGORIA</button>
                             </div>
                             <table class="arione-table-hcm" id="tbl-subcategorias">
                                 <thead>
@@ -214,7 +224,7 @@
                         </select>
                     </div>
                 </div>
-                <button type="button" onclick="salvarSubcategoriaRapida()" style="width:100%; background:#E67E22; color:#fff; border:none; padding:12px; border-radius:8px; font-weight:900; margin-top:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.2);">GRAVAR SUBCATEGORIA</button>
+                <button type="button" onclick="salvarSubcategoriaRapida()" style="width:100%; background:#E67E22; color:#fff; border:none; padding:12px; border-radius:8px; font-weight:900; margin-top:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(230,126,34,0.2);"><i class="fas fa-save"></i> GRAVAR SUBCATEGORIA</button>
             </div>
         </div>
     </div>

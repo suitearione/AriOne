@@ -4,9 +4,9 @@
 :root {
     --sidebar-width: 230px;
     --topbar-height: 70px;
-    --cor-principal: #7A255F;
-    --cor-secundaria: #F4F6F9;
-    --cor-texto: #343a40;
+    --cor-principal: #0891B2;
+    --cor-secundaria: #E6F9FC;
+    --cor-texto: #183b56;
 }
 
 * { box-sizing: border-box; }
@@ -75,7 +75,7 @@ body {
     border-radius: 14px;
     background: rgba(255,255,255,0.95);
     box-shadow: 0 14px 32px rgba(0,0,0,0.14);
-    color: #7A255F;
+    color: #0891B2;
     border: 1px solid rgba(226,232,240,0.85);
     cursor: pointer;
 }
@@ -106,7 +106,7 @@ body {
         border-radius: 14px !important;
         background: rgba(255,255,255,0.95) !important;
         box-shadow: 0 14px 32px rgba(0,0,0,0.14) !important;
-        color: #7A255F !important;
+        color: #0891B2 !important;
         z-index: 10002 !important;
         border: none !important;
         cursor: pointer !important;
@@ -225,7 +225,7 @@ body {
             top: 0 !important;
             z-index: 9998 !important;
             overflow-y: auto !important;
-            background-color: #7A255F !important;
+            background-color: #0891B2 !important;
             border-right: 1px solid rgba(255,255,255,0.08) !important;
             box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
             transition: left 0.3s ease !important;
@@ -320,7 +320,7 @@ body {
 
 .arione-titulo-bloco {
     margin-bottom: 10px;
-    color: #5E193E;
+    color: #075985;
     font-weight: 600;
     font-size: 18px;
 }
@@ -516,7 +516,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
-    background: linear-gradient(135deg,#5E193E,#7a2252);
+    background: linear-gradient(135deg,#075985,#0891B2);
     border-radius: 14px 14px 0 0;
     color: #fff;
 
@@ -530,8 +530,8 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 18px 14px;
-    background: var(--card-cor-bg, rgba(122,37,95,0.08));
-    border: 1.5px solid var(--card-cor, #7A255F);
+    background: var(--card-cor-bg, rgba(8,145,178,0.08));
+    border: 1.5px solid var(--card-cor, #0891B2);
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -549,7 +549,7 @@ body {
 .ge-card-bg-icon {
     position: absolute;
     font-size: 64px;
-    color: var(--card-cor, #7A255F);
+    color: var(--card-cor, #0891B2);
     opacity: 0.07;
     right: -8px;
     bottom: -8px;
@@ -561,7 +561,7 @@ body {
     height: 44px;
     border-radius: 50%;
     background: #fff;
-    border: 2px solid var(--card-cor, #7A255F);
+    border: 2px solid var(--card-cor, #0891B2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -569,13 +569,13 @@ body {
 
 .ge-card-icon {
     font-size: 20px;
-    color: var(--card-cor, #7A255F);
+    color: var(--card-cor, #0891B2);
 }
 
 .ge-card-label {
     font-size: 13px;
     font-weight: 700;
-    color: var(--card-cor, #7A255F);
+    color: var(--card-cor, #0891B2);
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
@@ -596,10 +596,184 @@ body {
     gap: 10px;
     font-size: 16px;
     font-weight: 700;
-    color: #5E193E;
+    color: #075985;
     margin-bottom: 16px;
     padding-bottom: 8px;
-    border-bottom: 2px solid #5E193E;
+    border-bottom: 2px solid #075985;
+}
+
+/* =======================================================
+   ARIONE LIGHT UI - acabamento visual centralizado
+   Mantém a estrutura existente e atua somente na apresentação.
+   ======================================================= */
+:root {
+    --arione-blue: #0891B2;
+    --arione-blue-dark: #075985;
+    --arione-blue-soft: #E6F9FC;
+    --arione-sky: #06B6D4;
+    --arione-bg: #E6F9FC;
+    --arione-surface: #ffffff;
+    --arione-border: #dbe7f1;
+    --arione-text: #18324a;
+    --arione-muted: #6b7f92;
+    --arione-shadow: 0 8px 24px rgba(25, 72, 112, 0.08);
+}
+
+html, body,
+body.arione-body {
+    background: var(--arione-bg) !important;
+    color: var(--arione-text);
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', sans-serif !important;
+}
+
+.arione-main-wrapper,
+.arione-page,
+.arione-new-header-container {
+    background-color: #E6F9FC !important;
+    background-image:
+        linear-gradient(135deg, rgba(255,255,255,0.68) 0%, rgba(230,249,252,0.30) 45%, rgba(186,230,238,0.18) 100%),
+        repeating-linear-gradient(116deg, rgba(8,145,178,0.025) 0 1px, transparent 1px 34px),
+        repeating-linear-gradient(24deg, transparent 0 26px, rgba(255,255,255,0.38) 26px 27px, transparent 27px 62px) !important;
+}
+
+.arione-topbar,
+.arione-bar-white-new,
+.arione-new-header-container > header {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-bottom: 1px solid var(--arione-border) !important;
+    box-shadow: 0 2px 12px rgba(25, 72, 112, 0.06) !important;
+}
+
+.arione-company-name-header,
+.arione-user-name,
+.arione-new-header-container header,
+.arione-page h1,
+.arione-page h2,
+.arione-page h3,
+.arione-page h4 {
+    color: var(--arione-text);
+}
+
+.arione-date-display,
+.ge-card-desc,
+.info-divider {
+    color: var(--arione-muted) !important;
+}
+
+.arione-global-search,
+.tool-search-input,
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+    background: #ffffff !important;
+    border: 1px solid var(--arione-border) !important;
+    border-radius: 9px !important;
+    color: var(--arione-text) !important;
+    box-shadow: none !important;
+}
+
+.arione-global-search:focus,
+.tool-search-input:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #74b9e6 !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14) !important;
+    outline: none !important;
+}
+
+button,
+.fe-btn,
+.fp-btn,
+.arione-btn-salvar {
+    border-radius: 9px !important;
+    box-shadow: 0 3px 10px rgba(25, 72, 112, 0.10);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+button:hover,
+.fe-btn:hover,
+.fp-btn:hover,
+.arione-btn-salvar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(25, 72, 112, 0.14);
+}
+
+.arione-page-wrapper,
+.arione-content-box,
+.arione-tabs-box,
+.ge-card,
+.fp-card,
+.fe-card,
+.op-card-luxury {
+    background: var(--arione-surface) !important;
+    border: 1px solid var(--arione-border) !important;
+    box-shadow: var(--arione-shadow) !important;
+}
+
+.ge-card:hover,
+.fp-card:hover,
+.fe-card:hover,
+.op-card-luxury:hover {
+    border-color: #a9cce6 !important;
+    box-shadow: 0 12px 28px rgba(25, 72, 112, 0.12) !important;
+}
+
+.ge-card-label,
+.fe-table-listing td,
+table td {
+    color: var(--arione-text);
+}
+
+.fe-table-listing th,
+table th {
+    background: var(--arione-blue-soft) !important;
+    color: #315b7d !important;
+    border-bottom: 1px solid var(--arione-border) !important;
+}
+
+.fe-table-listing td,
+table td {
+    border-bottom-color: #edf3f8 !important;
+}
+
+.fe-table-listing tbody tr:hover,
+table tbody tr:hover {
+    background: #f7fbfe !important;
+}
+
+.arione-abas-container,
+.arione-tabs-box {
+    border-color: var(--arione-border) !important;
+}
+
+.arione-aba.active,
+.ge-section-title {
+    color: var(--arione-blue) !important;
+    border-bottom-color: #67E8F9 !important;
+}
+
+.arione-header-premium,
+.fe-header,
+.ge-modal-header {
+    background: linear-gradient(135deg, #0891B2, #06B6D4) !important;
+    box-shadow: 0 8px 20px rgba(8, 145, 178, 0.16) !important;
+}
+
+.arione-input-block label,
+.fe-label,
+.fp-label {
+    color: #315b7d !important;
+}
+
+.alert,
+.flash-message {
+    border-radius: 9px !important;
+    border: 1px solid var(--arione-border);
+    box-shadow: 0 4px 12px rgba(25, 72, 112, 0.07);
 }
 
 
@@ -738,7 +912,7 @@ body {
 .ge-form-section-title {
     font-size: 13px;
     font-weight: 700;
-    color: #5E193E;
+    color: #075985;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 10px 0 6px;
@@ -754,6 +928,86 @@ body {
     margin-top: 2px;
 }
 
+/* Dashboard de Gestão: composição clara inspirada no painel de referência. */
+.arione-page-wrapper > .fe-header {
+    background: #ffffff !important;
+    color: #0b5cad !important;
+    border: 1px solid #dbe7f1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 5px 18px rgba(37, 99, 160, 0.08) !important;
+}
+
+.arione-page-wrapper > .fe-header h2,
+.arione-page-wrapper > .fe-header div,
+.arione-page-wrapper > .fe-header button,
+.arione-page-wrapper > .fe-header a {
+    color: #0b5cad !important;
+}
+
+.arione-page-wrapper > .fe-header > div:first-child > div:first-child {
+    background: #eaf4fc !important;
+    border-color: #d8eafb !important;
+}
+
+.db-grid-content {
+    max-width: 1500px;
+    padding: 4px 0 18px;
+}
+
+.db-grid-content .db-section-title {
+    color: #4d6e8d;
+    letter-spacing: .7px;
+}
+
+.db-grid-content .db-section-title i,
+.db-grid-content .db-card-header i {
+    color: #2f80ed !important;
+}
+
+.db-grid-content .ge-quick-pill {
+    border-left-color: #8fc4ed !important;
+    border-color: #dbe7f1;
+    box-shadow: 0 3px 12px rgba(37, 99, 160, 0.06);
+}
+
+.db-grid-content .ge-quick-pill i {
+    color: #2f80ed !important;
+}
+
+.db-grid-content .db-card,
+.db-grid-content .db-op-card,
+.db-grid-content .db-fin-card,
+.db-grid-content .db-conta-item {
+    border-color: #dbe7f1;
+    box-shadow: 0 5px 18px rgba(37, 99, 160, 0.06);
+}
+
+.db-grid-content .db-op-card,
+.db-grid-content .db-fin-card {
+    border-top-color: #8fc4ed !important;
+}
+
+.db-grid-content .db-op-icon,
+.db-grid-content .db-conta-icon {
+    background: #eaf4fc !important;
+    color: #2f80ed !important;
+}
+
+.db-grid-content .db-fin-destaque {
+    background: #f4f9fe !important;
+    border-left-color: #2f80ed !important;
+}
+
+.db-grid-content .db-fin-destaque .db-fin-value {
+    color: #0b5cad !important;
+}
+
+@media (max-width: 700px) {
+    .db-grid-content { padding-left: 2px; padding-right: 2px; }
+    .db-bento-container { gap: 14px; }
+    .db-card { padding: 15px 16px !important; }
+}
+
 
 .ge-modal-title { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; }
 .ge-modal-icon  { font-size: 20px; }
@@ -765,7 +1019,83 @@ body {
 .ge-form-group input, .ge-form-group select { padding: 9px 11px; border: 1.5px solid #ddd; border-radius: 7px; font-size: 13px; }
 .ge-form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
 .ge-btn-cancelar { background: #f5f5f5; color: #555; border: none; padding: 9px 18px; border-radius: 7px; font-weight: 600; cursor: pointer; }
-.ge-btn-salvar   { background: linear-gradient(135deg,#7A255F,#9b3177); color: #fff; border: none; padding: 9px 20px; border-radius: 7px; font-weight: 600; cursor: pointer; }
+.ge-btn-salvar   { background: linear-gradient(135deg,#0891B2,#06B6D4); color: #fff; border: none; padding: 9px 20px; border-radius: 7px; font-weight: 600; cursor: pointer; }
+
+/* Identidade verde-água aplicada sobre o acabamento claro existente. */
+:root {
+    --arione-blue: #0891B2;
+    --arione-blue-dark: #075985;
+    --arione-blue-soft: #E6F9FC;
+    --arione-sky: #06B6D4;
+    --arione-bg: #E6F9FC;
+    --arione-border: #cbeaf0;
+    --arione-text: #183b56;
+    --arione-muted: #6d8495;
+    --arione-shadow: 0 8px 24px rgba(8, 145, 178, 0.09);
+}
+
+html, body,
+body.arione-body,
+.arione-main-wrapper,
+.arione-page,
+.arione-new-header-container {
+    background: var(--arione-bg) !important;
+}
+
+.arione-topbar,
+.arione-bar-white-new,
+.arione-new-header-container > header {
+    background-image: linear-gradient(110deg, rgba(255,255,255,0.98), rgba(230,249,252,0.76)) !important;
+    border-bottom-color: rgba(8,145,178,0.16) !important;
+    box-shadow: 0 3px 16px rgba(8,145,178,0.10) !important;
+}
+
+.arione-page-wrapper,
+.arione-content-box,
+.arione-tabs-box {
+    background: rgba(255, 255, 255, 0.84) !important;
+    box-shadow: 0 10px 30px rgba(8,145,178,0.07) !important;
+}
+
+.arione-aba.active,
+.ge-section-title {
+    color: var(--arione-blue) !important;
+    border-bottom-color: #8bd8cc !important;
+}
+
+.arione-header-premium,
+.fe-header,
+.ge-modal-header {
+    background: linear-gradient(135deg, #0891B2, #06B6D4) !important;
+    box-shadow: 0 8px 22px rgba(8, 145, 178, 0.18) !important;
+}
+
+.arione-input-block label,
+.fe-label,
+.fp-label,
+.db-grid-content .db-section-title {
+    color: #397078 !important;
+}
+
+.db-grid-content .ge-quick-pill,
+.db-grid-content .db-card,
+.db-grid-content .db-op-card,
+.db-grid-content .db-fin-card,
+.db-grid-content .db-conta-item {
+    border-color: var(--arione-border);
+    box-shadow: 0 6px 20px rgba(8, 145, 178, 0.09);
+}
+
+.db-grid-content .ge-quick-pill { border-left-color: #65cfc1 !important; }
+.db-grid-content .ge-quick-pill i,
+.db-grid-content .db-section-title i,
+.db-grid-content .db-card-header i { color: #0891B2 !important; }
+.db-grid-content .db-op-card,
+.db-grid-content .db-fin-card { border-top-color: #65cfc1 !important; }
+.db-grid-content .db-op-icon,
+.db-grid-content .db-conta-icon { background: #E6F9FC !important; color: #0891B2 !important; }
+.db-grid-content .db-fin-destaque { background: #E6F9FC !important; border-left-color: #0891B2 !important; }
+.db-grid-content .db-fin-destaque .db-fin-value { color: #075985 !important; }
 
 /* =======================================================
    DROPDOWN MENU ARIONE GOLDEN (Padrão Ouro)
@@ -842,7 +1172,7 @@ body {
 
 .fe-btn-highlight {
     background: #fff !important;
-    color: #7A255F !important;
+    color: #0891B2 !important;
     font-weight: 800;
 }
 
